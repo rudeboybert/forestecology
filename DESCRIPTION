@@ -1,11 +1,22 @@
 Package: forestecology
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
+Title: Methods and data for forest ecology model selection and assessment.
+Version: 0.1.0.9000
+Authors@R: c(
+    person("Albert Y.", "Kim", email = "albert.ys.kim@gmail.com", role = c("aut", "cre")),
+    person("David", "Allen", email = "dallen@middlebury.edu", role = "aut")
+    )
+Maintainer: Albert Y. Kim <albert.ys.kim@gmail.com>
+Description: Hello world
     Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 6.0.1
+URL: https://github.com/rudeboybert/forestecology
+BugReports: https://github.com/rudeboybert/forestecology/issues
+Suggests: 
+    testthat
+Imports: 
+    magrittr
