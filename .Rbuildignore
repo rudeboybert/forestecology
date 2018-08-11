@@ -5,4 +5,5 @@
 ^README\.Rmd$
 ^README\.md$
 ^CODE_OF_CONDUCT\.md$
+^driver\.R$
 ^data-raw$
