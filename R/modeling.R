@@ -4,7 +4,8 @@
 #' @param model_number Number of model out of 1-5 from paper
 #'
 #' @import dplyr
-#' @return A list ouf outputs
+#' @importFrom stats as.formula
+#' @return A list of outputs
 #' @export
 #' @examples
 #' 1+1
@@ -70,11 +71,13 @@ get_model_specs <- function(forest, model_number){
 
 #' Fit bayesian model
 #'
-#' @param focal_trees training set
 #' @param focal_vs_comp from \code{\link{create_focal_vs_comp}}
 #' @param run_shuffle boolean
 #'
 #' @import dplyr
+#' @importFrom stats model.matrix
+#' @importFrom tidyr unnest
+#' @importFrom tidyr spread
 #' @return Posterior parameter values
 #' @export
 #'
@@ -162,6 +165,8 @@ fit_bayesian_model <- function(focal_vs_comp, run_shuffle = FALSE){
 #' @param posterior_param Output of \code{\link{fit_bayesian_model}}
 #'
 #' @import dplyr
+#' @importFrom stats model.matrix
+#' @importFrom tidyr nest
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'

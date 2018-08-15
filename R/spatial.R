@@ -38,13 +38,17 @@ define_bigwoods_buffer <- function(bigwoods, max_dist){
 #'
 #' @inheritParams define_bigwoods_buffer
 #' @param forest data frame containing tree data
+#' @param cv_fold_size grid size for spatial crossvalidation fold
 #'
 #' @return The same \code{forest} data frame but with a new numerical variable
 #'   \code{fold} indicating the fold number.
 #' @export
 #' @import dplyr
+#' @importFrom stringr str_c
 #' @examples
 #' library(ggplot2)
+#' max_dist <- 7.5
+#' cv_fold_size <- 100
 #' bigwoods <- bigwoods %>%
 #'   define_bigwoods_buffer(max_dist) %>%
 #'   define_cv_grid(cv_fold_size)
@@ -75,6 +79,7 @@ define_cv_grid <- function(forest, cv_fold_size){
 #'   all its neighbors in a nested list.
 #' @export
 #' @import dplyr
+#' @importFrom tidyr nest
 #' @examples
 #' 1+1
 get_cv_fold_info <- function(forest, cv_fold_size){

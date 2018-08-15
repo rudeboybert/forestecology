@@ -12,7 +12,7 @@ get_model_specs(forest, model_number)
 \item{model_number}{Number of model out of 1-5 from paper}
 }
 \value{
-A list ouf outputs
+A list of outputs
 }
 \description{
 Define notion of species based on model choice

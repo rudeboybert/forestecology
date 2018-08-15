@@ -16,13 +16,11 @@ bigwoods_study_region
 Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
 }
 \examples{
-{
 library(ggplot2)
 ggplot(data = bigwoods, aes(x,y)) +
   geom_point() +
   coord_fixed(ratio=1) +
-  geom_path(data = study_region_vertices, col = "red", size = 1)
-}
+  geom_path(data = bigwoods_study_region, col = "red", size = 1)
 }
 \seealso{
 \code{\link{families}}

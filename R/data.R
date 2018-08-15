@@ -8,11 +8,11 @@
 #'   \item{species}{Linnaean species name}
 #'   \item{family_phylo}{Corresponding species phylogenetic family}
 #'   \item{trait_group}{Corresponding species trait-based cluster}
-#'   \item{x}{x-coordinate (meters from reference point)}
-#'   \item{y}{y-coordinate (meters from reference point)}
-#'   \item{growth}{Average annual growth in diameter at breast height from 2008-2014 (6 years)}
+#'   \item{x}{x-coordinate meters from reference point}
+#'   \item{y}{y-coordinate meters from reference point}
+#'   \item{growth}{Average annual growth in diameter at breast height from 2008-2014 6 years}
 #'   \item{dbh08}{Diameter at breast high in 2008}
-#'   \item{dhb14}{Diameter at breast high in 2014}
+#'   \item{dbh14}{Diameter at breast high in 2014}
 #'   \item{code14}{Code}
 #' }
 #' @seealso \code{\link{families}}
@@ -29,13 +29,12 @@
 #'   \item{y}{y-coordinate (meters from reference point)}
 #' }
 #' @seealso \code{\link{families}}
-#' @examples{
+#' @examples
 #' library(ggplot2)
 #' ggplot(data = bigwoods, aes(x,y)) +
 #'   geom_point() +
 #'   coord_fixed(ratio=1) +
-#'   geom_path(data = study_region_vertices, col = "red", size = 1)
-#' }
+#'   geom_path(data = bigwoods_study_region, col = "red", size = 1)
 "bigwoods_study_region"
 
 

@@ -10,8 +10,6 @@ fit_bayesian_model(focal_vs_comp, run_shuffle = FALSE)
 \item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
 
 \item{run_shuffle}{boolean}
-
-\item{focal_trees}{training set}
 }
 \value{
 Posterior parameter values

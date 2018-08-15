@@ -8,6 +8,8 @@ define_cv_grid(forest, cv_fold_size)
 }
 \arguments{
 \item{forest}{data frame containing tree data}
+
+\item{cv_fold_size}{grid size for spatial crossvalidation fold}
 }
 \value{
 The same \code{forest} data frame but with a new numerical variable
@@ -18,6 +20,8 @@ Define spatial crossvalidation grid
 }
 \examples{
 library(ggplot2)
+max_dist <- 7.5
+cv_fold_size <- 100
 bigwoods <- bigwoods \%>\%
   define_bigwoods_buffer(max_dist) \%>\%
   define_cv_grid(cv_fold_size)

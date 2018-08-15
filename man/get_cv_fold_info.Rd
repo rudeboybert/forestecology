@@ -8,6 +8,8 @@ get_cv_fold_info(forest, cv_fold_size)
 }
 \arguments{
 \item{forest}{data frame containing tree data}
+
+\item{cv_fold_size}{grid size for spatial crossvalidation fold}
 }
 \value{
 A "nested" dataframe with the fold number, its rough centroid, and
