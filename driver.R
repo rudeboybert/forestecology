@@ -4,17 +4,12 @@ max_dist <- 7.5
 cv_fold_size <- 100
 model_number <- 4
 
+# Set up bigwoods data
 bigwoods <- bigwoods %>%
   define_bigwoods_buffer(max_dist) %>%
-  define_cv_grid(cv_fold_size) %>%
-  # Convert to factor
-  mutate(
-    species = factor(species),
-    family_phylo = factor(family_phylo),
-    trait_group = factor(trait_group)
-  )
+  define_cv_grid(cv_fold_size)
 
-# CV fold/grid info
+# Get crossvalidation fold/grid info
 folds <- bigwoods %>%
   get_cv_fold_info(cv_fold_size)
 
@@ -50,9 +45,27 @@ for(i in 1:n_folds){
   print(i)
 }
 
+# Study results
 ggplot(focal_vs_comp, aes(growth, growth_hat, alpha = 0.2)) +
   geom_point() +
   geom_abline(intercept = 0, slope = 1, col = "red", size = 1) +
   facet_wrap(~species, nrow = 2) +
   coord_fixed()
 
+# Study results
+focal_vs_comp <- focal_vs_comp %>%
+  mutate(
+    error = growth - growth_hat,
+    error_bin = cut_number(error, n = 5)
+    )
+ggplot(focal_vs_comp, aes(x = x, y, col = error)) +
+  geom_point(size = 0.4) +
+  coord_fixed(ratio = 1) +
+  scale_color_gradient2(low="blue", mid="white", high="red") +
+  theme_bw() +
+  facet_wrap(~species, nrow = 2)
+ggplot(focal_vs_comp, aes(x = x, y, col = error_bin) +
+  geom_point(size = 0.4) +
+  coord_fixed(ratio = 1) +
+  theme_bw() +
+  facet_wrap(~species, nrow = 2)
