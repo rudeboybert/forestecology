@@ -4,8 +4,7 @@
 \alias{create_focal_vs_comp}
 \title{Create main data frame for analysis}
 \usage{
-create_focal_vs_comp(forest, max_dist, folds, notion_of_focal_species,
-  notion_of_comp_species)
+create_focal_vs_comp(forest, max_dist, folds, model_specs)
 }
 \arguments{
 \item{forest}{data frame containing tree data}
@@ -15,9 +14,7 @@ considered a competitor tree}
 
 \item{folds}{CV fold information from \code{\link{define_cv_grid}}}
 
-\item{notion_of_focal_species}{from \code{\link{get_model_specs}}}
-
-\item{notion_of_comp_species}{from \code{\link{get_model_specs}}}
+\item{model_specs}{from \code{\link{get_model_specs}}}
 }
 \value{
 \code{focal_vs_comp} data frame

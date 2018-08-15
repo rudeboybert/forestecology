@@ -4,10 +4,12 @@
 \alias{fit_bayesian_model}
 \title{Fit bayesian model}
 \usage{
-fit_bayesian_model(focal_vs_comp, run_shuffle = FALSE)
+fit_bayesian_model(focal_vs_comp, model_specs, run_shuffle = FALSE)
 }
 \arguments{
 \item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
+
+\item{model_specs}{from \code{\link{get_model_specs}}}
 
 \item{run_shuffle}{boolean}
 }

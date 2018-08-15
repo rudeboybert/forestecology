@@ -14,19 +14,16 @@ folds <- bigwoods %>%
 
 # Modeling and species stuff
 model_specs <- get_model_specs(bigwoods, model_number)
-notion_of_focal_species <- model_specs$notion_of_focal_species
-notion_of_competitor_species <- model_specs$notion_of_competitor_species
-model_formula <- model_specs$model_formula
-species_of_interest <- model_specs$species_of_interest
 
 # Focal vs comp main dataframe for analysis
-focal_vs_comp <- create_focal_vs_comp(
-  bigwoods, max_dist, folds, notion_of_focal_species, notion_of_comp_species
-)
+focal_vs_comp <- bigwoods %>%
+  create_focal_vs_comp(max_dist, folds, model_specs)
 
-posterior_param <- fit_bayesian_model(focal_vs_comp)
+# Fit and predict
+posterior_param <- focal_vs_comp %>%
+  fit_bayesian_model(model_specs)
 focal_vs_comp <- focal_vs_comp %>%
-  predict_bayesian_model(posterior_param)
+  predict_bayesian_model(model_specs, posterior_param)
 
 
 

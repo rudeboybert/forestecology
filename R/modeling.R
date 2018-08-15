@@ -73,6 +73,7 @@ get_model_specs <- function(forest, model_number){
 #'
 #' @param focal_vs_comp from \code{\link{create_focal_vs_comp}}
 #' @param run_shuffle boolean
+#' @inheritParams create_focal_vs_comp
 #'
 #' @import dplyr
 #' @importFrom stats model.matrix
@@ -83,7 +84,10 @@ get_model_specs <- function(forest, model_number){
 #'
 #' @examples
 #' 1+1
-fit_bayesian_model <- function(focal_vs_comp, run_shuffle = FALSE){
+fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE){
+  # Get model formula
+  model_formula <- model_specs$model_formula
+
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
     unnest() %>%
@@ -163,6 +167,7 @@ fit_bayesian_model <- function(focal_vs_comp, run_shuffle = FALSE){
 #'
 #' @inheritParams fit_bayesian_model
 #' @param posterior_param Output of \code{\link{fit_bayesian_model}}
+#' @inheritParams create_focal_vs_comp
 #'
 #' @import dplyr
 #' @importFrom stats model.matrix
@@ -172,7 +177,10 @@ fit_bayesian_model <- function(focal_vs_comp, run_shuffle = FALSE){
 #'
 #' @examples
 #' 1+1
-predict_bayesian_model <- function(focal_vs_comp, posterior_param){
+predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
+  # Get model formula
+  model_formula <- model_specs$model_formula
+
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
     unnest() %>%

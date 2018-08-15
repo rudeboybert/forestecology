@@ -62,8 +62,7 @@
 #' @inheritParams define_cv_grid
 #' @inheritParams define_bigwoods_buffer
 #' @param folds CV fold information from \code{\link{define_cv_grid}}
-#' @param notion_of_focal_species from \code{\link{get_model_specs}}
-#' @param notion_of_comp_species from \code{\link{get_model_specs}}
+#' @param model_specs from \code{\link{get_model_specs}}
 #' @return \code{focal_vs_comp} data frame
 #' @export
 #' @import dplyr
@@ -71,11 +70,14 @@
 #' @seealso \code{\link{define_cv_grid}} and \code{\link{get_model_specs}}
 #' @examples
 #' 1+1
-create_focal_vs_comp <- function(forest,
-                                 max_dist,
-                                 folds,
-                                 notion_of_focal_species,
-                                 notion_of_comp_species){
+create_focal_vs_comp <- function(forest, max_dist, folds, model_specs){
+
+  # Extract model specifications
+  notion_of_focal_species <- model_specs$notion_of_focal_species
+  notion_of_competitor_species <- model_specs$notion_of_competitor_species
+  model_formula <- model_specs$model_formula
+  species_of_interest <- model_specs$species_of_interest
+
   # 1. Define focal trees where notion of "species" depends on
   # notion_of_focal_species
   focal_trees <- forest %>%
