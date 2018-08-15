@@ -1,6 +1,7 @@
 library(tidyverse)
 library(usethis)
 library(sp)
+library(snakecase)
 
 families <- "data-raw/species_list.csv" %>%
   read_csv() %>%
@@ -17,9 +18,14 @@ families <- "data-raw/species_list.csv" %>%
     family_phylo = family,
     trait_group = traitclust2
   ) %>%
-  select(-c(family, traitclust2))
+  select(-c(family, traitclust2)) %>%
+  # Convert all to snake_case
+  mutate(
+    spcode = snakecase::to_any_case(spcode),
+    family_phylo = snakecase::to_any_case(family_phylo),
+    trait_group = snakecase::to_any_case(trait_group)
+  )
 usethis::use_data(families, overwrite = TRUE)
-
 
 # Boundary polygon of bigwoods region
 bigwoods_study_region <-
@@ -51,6 +57,8 @@ bigwoods <- "data-raw/BigWoods2015.csv" %>%
     dbh14 = gbh14/pi,
     growth = (dbh14-dbh08)/(2014-2008)
   ) %>%
+  # Convert species to snake_case
+  mutate(species = snakecase::to_any_case(species)) %>%
   # Join with families data. If no matched family_philo or trait_groud found,
   # assign to "Misc"
   left_join(families, by = c("species" = "spcode")) %>%

@@ -104,5 +104,7 @@ get_cv_fold_info <- function(forest, cv_fold_size){
       bind_rows(fold_neighbors)
   }
 
+  fold_neighbors <- fold_neighbors %>%
+    arrange(fold)
   return(fold_neighbors)
 }
