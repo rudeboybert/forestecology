@@ -75,5 +75,5 @@ bigwoods <- "data-raw/BigWoods2015.csv" %>%
   tibble::rownames_to_column(var = "ID") %>%
   # Clean up variables
   select(ID, species, family_phylo, trait_group, x, y, growth, dbh08, dbh14,
-         code14)
+         code14) %>%
 usethis::use_data(bigwoods, overwrite = TRUE)

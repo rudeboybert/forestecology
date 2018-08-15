@@ -109,12 +109,24 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE){
       group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold, comp_species)
   }
 
-  # Continue processing focal_trees_new
+  # Continue processing focal_trees
   focal_trees <- focal_trees %>%
     spread(comp_species, biomass_total, fill = 0) %>%
     group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold) %>%
     summarise_all(funs(sum)) %>%
     arrange(focal_ID)
+
+  # Add biomass=0 for any species for which there are no trees
+  species_levels <- levels(focal_trees$species)
+  missing_species <- species_levels[!species_levels %in% names(focal_trees)]
+  if(length(missing_species) > 0){
+    for(i in 1:length(missing_species)){
+      focal_trees <- focal_trees %>%
+        mutate(!!missing_species[i] := 0)
+    }
+    focal_trees <- focal_trees %>%
+      select(everything(), !!species_levels)
+  }
 
   # Matrix objects for analytic computation of all posteriors
   X <- model.matrix(model_formula, data = focal_trees)
@@ -194,12 +206,24 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
     ) %>%
     arrange(focal_ID)
 
-  # Continue processing focal_trees_new
+  # Continue processing focal_trees
   focal_trees <- focal_trees %>%
     spread(comp_species, biomass_total, fill = 0) %>%
     group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold) %>%
     summarise_all(funs(sum)) %>%
     arrange(focal_ID)
+
+  # Add biomass=0 for any species for which there are no trees
+  species_levels <- levels(focal_trees$species)
+  missing_species <- species_levels[!species_levels %in% names(focal_trees)]
+  if(length(missing_species) > 0){
+    for(i in 1:length(missing_species)){
+      focal_trees <- focal_trees %>%
+        mutate(!!missing_species[i] := 0)
+    }
+    focal_trees <- focal_trees %>%
+      select(everything(), !!species_levels)
+  }
 
   # Matrix objects for analytic computation of all posteriors
   X <- model.matrix(model_formula, data = focal_trees)

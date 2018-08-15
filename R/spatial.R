@@ -81,7 +81,23 @@ define_cv_grid <- function(forest, cv_fold_size){
 #' @import dplyr
 #' @importFrom tidyr nest
 #' @examples
-#' 1+1
+#' library(ggplot2)
+#' max_dist <- 7.5
+#' cv_fold_size <- 100
+#'
+#' # Define buffer and crossvalidation grid
+#' bigwoods <- bigwoods %>%
+#'   define_bigwoods_buffer(max_dist) %>%
+#'   define_cv_grid(cv_fold_size)
+#'
+#' # CV fold/grid info
+#' folds <- bigwoods %>%
+#'   get_cv_fold_info(cv_fold_size)
+#'
+#' ggplot(data = bigwoods, aes(x = x, y = y)) +
+#'   geom_point(aes(col = factor(fold))) +
+#'   coord_fixed(ratio = 1) +
+#'   geom_text(data = folds, aes(x = x, y = y, label = fold), size = 10)
 get_cv_fold_info <- function(forest, cv_fold_size){
   # Save output here
   fold_neighbors <- NULL
