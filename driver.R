@@ -29,6 +29,9 @@ focal_vs_comp <- focal_vs_comp %>%
 # Fit and predict using crossvalidation:
 n_folds <- max(focal_vs_comp$fold)
 focal_vs_comp$growth_hat <- NA
+focal_vs_comp <- focal_vs_comp %>%
+  mutate(species = factor(species))
+
 for(i in 1:n_folds){
   train <- focal_vs_comp %>%
     filter(fold != i)
@@ -64,7 +67,7 @@ ggplot(focal_vs_comp, aes(x = x, y, col = error)) +
   scale_color_gradient2(low="blue", mid="white", high="red") +
   theme_bw() +
   facet_wrap(~species, nrow = 2)
-ggplot(focal_vs_comp, aes(x = x, y, col = error_bin) +
+ggplot(focal_vs_comp, aes(x = x, y, col = error_bin)) +
   geom_point(size = 0.4) +
   coord_fixed(ratio = 1) +
   theme_bw() +

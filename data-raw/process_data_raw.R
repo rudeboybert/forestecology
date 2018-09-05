@@ -66,6 +66,13 @@ bigwoods <- "data-raw/BigWoods2015.csv" %>%
     family_phylo = ifelse(is.na(family_phylo), "Misc", family_phylo),
     trait_group = ifelse(is.na(trait_group), "Misc", trait_group),
   ) %>%
+  # Convert all species info to factors b/c of issue of rare levels not being
+  # included in training set, but then appearing in test set.
+  mutate(
+    species = factor(species),
+    family_phylo = factor(family_phylo),
+    trait_group = factor(trait_group)
+  ) %>%
   # Remove 32 + 113 = 145 of 50178 that aren't strictly in interior of study
   # region boundary polygon b/c of issues with forming crossvalidation grid
   # later
@@ -75,5 +82,5 @@ bigwoods <- "data-raw/BigWoods2015.csv" %>%
   tibble::rownames_to_column(var = "ID") %>%
   # Clean up variables
   select(ID, species, family_phylo, trait_group, x, y, growth, dbh08, dbh14,
-         code14) %>%
+         code14)
 usethis::use_data(bigwoods, overwrite = TRUE)
