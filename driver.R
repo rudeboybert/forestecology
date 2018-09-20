@@ -61,14 +61,64 @@ focal_vs_comp <- focal_vs_comp %>%
     error = growth - growth_hat,
     error_bin = cut_number(error, n = 5)
     )
+
+# Spatial patterns in residuals
 ggplot(focal_vs_comp, aes(x = x, y, col = error)) +
   geom_point(size = 0.4) +
   coord_fixed(ratio = 1) +
   scale_color_gradient2(low="blue", mid="white", high="red") +
   theme_bw() +
-  facet_wrap(~species, nrow = 2)
+  facet_wrap(~species, nrow = 2) +
+  labs(title = "Spatial distribution of residuals (continuous scale)")
+
+
 ggplot(focal_vs_comp, aes(x = x, y, col = error_bin)) +
   geom_point(size = 0.4) +
   coord_fixed(ratio = 1) +
+  scale_colour_brewer(palette = "RdBu") +
   theme_bw() +
-  facet_wrap(~species, nrow = 2)
+  facet_wrap(~species, nrow = 2) +
+  labs(title = "Spatial distribution of residuals (binned)")
+
+
+
+
+# Prior parameters for sigma2:
+a_0 <- 250
+b_0 <- 25
+
+# Prior parameters for betas and lambdas:
+mu_0 <- rep(0, length(posterior_param$mu_star)) %>%
+  matrix(ncol = 1)
+V_0 <- length(posterior_param$mu_star) %>% diag()
+
+sigma_2_mu_0 <- b_0/(a_0-1)
+sigma_2_var_0 <- b_0^2 / ((a_0 - 1)^2 * (a_0 - 2))
+
+
+# Resulting prior mean, variance, and distribution of betas & lambdas:
+nu_0 <- 2*a_0
+Sigma_0 <- (b_0/a_0)*V_0
+
+# Resulting posterior mean, variance, and distribution of betas & lambdas:
+nu_star <- 2*posterior_param$a_star
+Sigma_star <- (posterior_param$b_star/posterior_param$a_star)*posterior_param$V_star
+
+beta_lambda_posterior_df <-
+  rmvt(10000, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
+  data.frame() %>%
+  as_tibble() %>%
+  purrr::set_names(colnames(posterior_param$V_star)) %>%
+  tidyr::gather(type, value)
+
+# Plot all prior distributions:
+posterior_distributions <- beta_lambda_posterior_df
+
+
+ggplot(posterior_distributions, aes(x=value)) +
+  geom_density(size = 0.75) +
+  facet_wrap(~type, scales = "free", ncol = 6) +
+  labs(title = "Posterior distributions") +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  theme_bw()
+
