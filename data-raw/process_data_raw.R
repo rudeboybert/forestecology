@@ -43,7 +43,7 @@ bigwoods <- "data-raw/BigWoods2015.csv" %>%
   # Remove initially non-necessary variables
   select(
     -starts_with("not new"), -starts_with("notes"),
-    -c(quad, row, xsample, side, ysample, tag, stem, year)
+    -c(quad, row, xsample, side, ysample, tag, stem)
   ) %>%
   # Note readr package reads blanks as NA's. Convert these to blank to ""
   mutate(
@@ -55,7 +55,7 @@ bigwoods <- "data-raw/BigWoods2015.csv" %>%
     dbh03 = gbh03/pi,
     dbh08 = gbh08/pi,
     dbh14 = gbh14/pi,
-    growth = (dbh14-dbh08)/(2014-2008)
+    growth = (dbh14-dbh08)/(2014-year_08)
   ) %>%
   # Convert species to snake_case
   mutate(species = snakecase::to_any_case(species)) %>%
