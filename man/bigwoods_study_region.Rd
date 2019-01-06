@@ -17,12 +17,12 @@ Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
 }
 \examples{
 library(ggplot2)
-ggplot(data = bigwoods, aes(x,y)) +
-  geom_point() +
-  coord_fixed(ratio=1) +
-  geom_path(data = bigwoods_study_region, col = "red", size = 1)
+ggplot(bigwoods, aes(x = x, y = y)) +
+  # Mark study region boundary
+  geom_path(data = bigwoods_study_region, size = 1) +
+  coord_fixed(ratio = 1)
 }
 \seealso{
-\code{\link{families}}
+\code{\link{families}} \code{\link{define_bigwoods_buffer}}
 }
 \keyword{datasets}
