@@ -45,8 +45,7 @@ get_model_specs <- function(forest, model_number){
   # + "species" (46 levels) or
   # + "family_phylo" (23 levels) or
   # + "trait_group" (6 levels)
-  notion_of_spp_indexer <-
-    c(rep("species", 2), "family_phylo", "trait_group", "species")
+  notion_of_spp_indexer <- c(rep("species", 2), "family_phylo", "trait_group", "species")
   notion_of_focal_species <- notion_of_spp_indexer[model_number]
   notion_of_competitor_species <- notion_of_spp_indexer[model_number]
 
@@ -72,7 +71,8 @@ get_model_specs <- function(forest, model_number){
 #' Fit bayesian model
 #'
 #' @param focal_vs_comp from \code{\link{create_focal_vs_comp}}
-#' @param run_shuffle boolean
+#' @param run_shuffle boolean as to whether to run permutation test shuffle
+#' @param prior_hyperparameters list of a0, b0, mu_0 and V_0
 #' @inheritParams create_focal_vs_comp
 #'
 #' @import dplyr
@@ -84,7 +84,9 @@ get_model_specs <- function(forest, model_number){
 #'
 #' @examples
 #' 1+1
-fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE){
+fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
+                               prior_hyperparameters = NULL){
+
   # Get model formula
   model_formula <- model_specs$model_formula
 
@@ -135,16 +137,24 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE){
     matrix(ncol = 1)
   n <- nrow(X)
 
+
   # Set priors ----------------------------------------------------------------
-  # Prior parameters for sigma2:
-  a_0 <- 250
-  b_0 <- 25
+  # If no prior_hyperparameters specified
+  if(is.null(prior_hyperparameters)){
+    # Prior parameters for sigma2:
+    a_0 <- 250
+    b_0 <- 25
 
-  # Prior parameters for betas and lambdas:
-  mu_0 <- rep(0, ncol(X)) %>%
-    matrix(ncol = 1)
-  V_0 <- ncol(X) %>% diag()
-
+    # Prior parameters for betas and lambdas:
+    mu_0 <- rep(0, ncol(X)) %>%
+      matrix(ncol = 1)
+    V_0 <- ncol(X) %>% diag()
+  } else {
+    a_0 <- prior_hyperparameters$a_0
+    b_0 <- prior_hyperparameters$b_0
+    mu_0 <- prior_hyperparameters$mu_0
+    V_0 <- prior_hyperparameters$V_0
+  }
 
   # Compute posteriors --------------------------------------------------------
   # Posterior parameters for betas and lambdas:
@@ -165,13 +175,13 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE){
   #   mutate(growth_hat = as.vector(X %*% mu_star))
 
   # Return posterior parameters
-  list(
-    mu_star = mu_star,
-    V_star = V_star,
+  posterior_hyperparameters <- list(
     a_star = a_star,
-    b_star = b_star
-  ) %>%
-    return()
+    b_star = b_star,
+    mu_star = mu_star,
+    V_star = V_star
+  )
+  return(posterior_hyperparameters)
 }
 
 
