@@ -20,20 +20,29 @@ Return information on each fold in crossvalidation grid
 }
 \examples{
 library(ggplot2)
-max_dist <- 7.5
-cv_fold_size <- 100
+library(dplyr)
 
-# Define buffer and crossvalidation grid
+# Define crossvalidation folds/grid
 bigwoods <- bigwoods \%>\%
-  define_bigwoods_buffer(max_dist) \%>\%
-  define_cv_grid(cv_fold_size)
+  define_cv_grid(cv_fold_size = 100) \%>\%
+  mutate(fold = factor(fold))
 
 # CV fold/grid info
 folds <- bigwoods \%>\%
-  get_cv_fold_info(cv_fold_size)
+  get_cv_fold_info(cv_fold_size = 100)
 
+# Plot fold numbers
 ggplot(data = bigwoods, aes(x = x, y = y)) +
-  geom_point(aes(col = factor(fold))) +
+  geom_point(aes(col = fold)) +
   coord_fixed(ratio = 1) +
   geom_text(data = folds, aes(x = x, y = y, label = fold), size = 10)
+
+# Check that neighbors are correct:
+library(stringr)
+library(tidyr)
+neighbors <- folds \%>\%
+  unnest() \%>\%
+  group_by(fold) \%>\%
+  summarize(neighbors = str_c(neighbor, collapse = ","))
+neighbors
 }

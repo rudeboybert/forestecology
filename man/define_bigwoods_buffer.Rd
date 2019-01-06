@@ -15,13 +15,25 @@ considered a competitor tree}
 \value{
 The same \code{\link{bigwoods}} data frame but with a new boolean
 variable \code{buffer} indicating if a tree is in the study region buffer
-area.
+area. This uses \code{\link{bigwoods_study_region}} to define the boundary:
 }
 \description{
 Identify which trees are in buffer region of bigwoods.
 }
 \examples{
-1+1
+library(ggplot2)
+
+# Create buffer variable:
+bigwoods <- bigwoods \%>\%
+  define_bigwoods_buffer(max_dist = 7.5)
+
+ggplot(bigwoods, aes(x = x, y = y)) +
+  # Mark study region boundary
+  geom_path(data = bigwoods_study_region, size = 1) +
+  # Mark buffer vs non-buffer trees:
+  geom_point(aes(col = buffer)) +
+  coord_fixed(ratio = 1) +
+  labs(title = "Study region boundary and buffer region")
 }
 \seealso{
 \code{\link{bigwoods}}

@@ -20,13 +20,14 @@ Define spatial crossvalidation grid
 }
 \examples{
 library(ggplot2)
-max_dist <- 7.5
-cv_fold_size <- 100
+library(dplyr)
+
+# Define crossvalidation folds/grid
 bigwoods <- bigwoods \%>\%
-  define_bigwoods_buffer(max_dist) \%>\%
-  define_cv_grid(cv_fold_size)
+  define_cv_grid(cv_fold_size = 100) \%>\%
+  mutate(fold = factor(fold))
 
 ggplot(data = bigwoods, aes(x = x, y = y)) +
-  geom_point(aes(col = factor(fold))) +
+  geom_point(aes(col = fold)) +
   coord_fixed(ratio = 1)
 }

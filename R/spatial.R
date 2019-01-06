@@ -5,14 +5,26 @@
 #'   considered a competitor tree
 #' @return The same \code{\link{bigwoods}} data frame but with a new boolean
 #'   variable \code{buffer} indicating if a tree is in the study region buffer
-#'   area.
+#'   area. This uses \code{\link{bigwoods_study_region}} to define the boundary:
 #' @export
 #' @import dplyr
 #' @importFrom sp point.in.polygon
 #' @seealso \code{\link{bigwoods}}
 #'
 #' @examples
-#' 1+1
+#' library(ggplot2)
+#'
+#' # Create buffer variable:
+#' bigwoods <- bigwoods %>%
+#'   define_bigwoods_buffer(max_dist = 7.5)
+#'
+#' ggplot(bigwoods, aes(x = x, y = y)) +
+#'   # Mark study region boundary
+#'   geom_path(data = bigwoods_study_region, size = 1) +
+#'   # Mark buffer vs non-buffer trees:
+#'   geom_point(aes(col = buffer)) +
+#'   coord_fixed(ratio = 1) +
+#'   labs(title = "Study region boundary and buffer region")
 define_bigwoods_buffer <- function(bigwoods, max_dist){
   bigwoods_study_region <- bigwoods_study_region %>%
     # Define boundary: which trees fall within max_dist of boundary
@@ -22,10 +34,12 @@ define_bigwoods_buffer <- function(bigwoods, max_dist){
       y_buff = y + max_dist * c(1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1)
     )
 
+  x_buff <- bigwoods_study_region$x_buff
+  y_buff <- bigwoods_study_region$y_buff
+
   bigwoods <- bigwoods %>%
     mutate(
-      inside = sp::point.in.polygon(x, y, bigwoods_study_region$x_buff,
-                                    bigwoods_study_region$y_buff),
+      inside = sp::point.in.polygon(x, y, x_buff, y_buff),
       buffer = ifelse(inside == 0, TRUE, FALSE)
     ) %>%
     select(-inside)
@@ -47,14 +61,15 @@ define_bigwoods_buffer <- function(bigwoods, max_dist){
 #' @importFrom stringr str_c
 #' @examples
 #' library(ggplot2)
-#' max_dist <- 7.5
-#' cv_fold_size <- 100
+#' library(dplyr)
+#'
+#' # Define crossvalidation folds/grid
 #' bigwoods <- bigwoods %>%
-#'   define_bigwoods_buffer(max_dist) %>%
-#'   define_cv_grid(cv_fold_size)
+#'   define_cv_grid(cv_fold_size = 100) %>%
+#'   mutate(fold = factor(fold))
 #'
 #' ggplot(data = bigwoods, aes(x = x, y = y)) +
-#'   geom_point(aes(col = factor(fold))) +
+#'   geom_point(aes(col = fold)) +
 #'   coord_fixed(ratio = 1)
 define_cv_grid <- function(forest, cv_fold_size){
   forest <- forest %>%
@@ -82,22 +97,31 @@ define_cv_grid <- function(forest, cv_fold_size){
 #' @importFrom tidyr nest
 #' @examples
 #' library(ggplot2)
-#' max_dist <- 7.5
-#' cv_fold_size <- 100
+#' library(dplyr)
 #'
-#' # Define buffer and crossvalidation grid
+#' # Define crossvalidation folds/grid
 #' bigwoods <- bigwoods %>%
-#'   define_bigwoods_buffer(max_dist) %>%
-#'   define_cv_grid(cv_fold_size)
+#'   define_cv_grid(cv_fold_size = 100) %>%
+#'   mutate(fold = factor(fold))
 #'
 #' # CV fold/grid info
 #' folds <- bigwoods %>%
-#'   get_cv_fold_info(cv_fold_size)
+#'   get_cv_fold_info(cv_fold_size = 100)
 #'
+#' # Plot fold numbers
 #' ggplot(data = bigwoods, aes(x = x, y = y)) +
-#'   geom_point(aes(col = factor(fold))) +
+#'   geom_point(aes(col = fold)) +
 #'   coord_fixed(ratio = 1) +
 #'   geom_text(data = folds, aes(x = x, y = y, label = fold), size = 10)
+#'
+#' # Check that neighbors are correct:
+#' library(stringr)
+#' library(tidyr)
+#' neighbors <- folds %>%
+#'   unnest() %>%
+#'   group_by(fold) %>%
+#'   summarize(neighbors = str_c(neighbor, collapse = ","))
+#' neighbors
 get_cv_fold_info <- function(forest, cv_fold_size){
   # Save output here
   fold_neighbors <- NULL
@@ -114,6 +138,7 @@ get_cv_fold_info <- function(forest, cv_fold_size){
       ) %>%
       pull(fold) %>%
       unique() %>%
+      sort() %>%
       data_frame(neighbor = .) %>%
       mutate(
         fold = i,
@@ -129,3 +154,4 @@ get_cv_fold_info <- function(forest, cv_fold_size){
     arrange(fold)
   return(fold_neighbors)
 }
+
