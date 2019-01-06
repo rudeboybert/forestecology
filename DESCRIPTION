@@ -1,6 +1,6 @@
 Package: forestecology
 Type: Package
-Title: Methods and data for forest ecology model selection and assessment
+Title: Methods and Data for Forest Ecology Model Selection and Assessment
 Version: 0.1.0.9000
 Authors@R: c(
     person("Albert Y.", "Kim", email = "albert.ys.kim@gmail.com", role = c("aut", "cre")),
