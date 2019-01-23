@@ -12,40 +12,54 @@
 get_model_specs <- function(forest, model_number){
   # Define model formula to use out of 5 possible choices defined in paper
   # TODO: Generalize this for any species/family list
+
   model_1_formula <-
     "growth ~ species + dbh + dbh*species"
 
   model_2_formula <-
     "growth ~ species + dbh + dbh*species + biomass + biomass*species"
 
-  model_3_formula <- forest$family_phylo %>%
+  model_3_formula <- forest$trait_group %>%
     unique() %>%
     sort() %>%
     paste(., "*species", sep = "", collapse = " + ") %>%
     paste("growth ~ species + dbh + dbh*species + ", .)
 
-  model_4_formula <- forest$trait_group %>%
+  model_4_formula <-
+    "growth ~ species + dbh + dbh*species"
+
+  model_5_formula <-
+    "growth ~ species + dbh + dbh*species + biomass + biomass*species"
+
+  model_6_formula <- forest$family_phylo %>%
     unique() %>%
     sort() %>%
     paste(., "*species", sep = "", collapse = " + ") %>%
     paste("growth ~ species + dbh + dbh*species + ", .)
 
-  model_5_formula <- forest$species %>%
+  model_7_formula <-
+    "growth ~ species + dbh + dbh*species"
+
+  model_8_formula <-
+    "growth ~ species + dbh + dbh*species + biomass + biomass*species"
+
+  model_9_formula <- forest$species %>%
     unique() %>%
     sort() %>%
     paste(., "*species", sep = "", collapse = " + ") %>%
     paste("growth ~ species + dbh + dbh*species + ", .)
 
+  # Convert to formula object:
   model_formula <- model_number %>%
     paste("model_", ., "_formula", sep="") %>%
     get() %>%
     as.formula()
 
   # Notion of species for both focal and competitor trees. Either:
-  # + "species" (46 levels) or
+  # + "trait_group" (6 levels) or
   # + "family_phylo" (23 levels) or
-  # + "trait_group" (6 levels)
-  notion_of_spp_indexer <- c(rep("species", 2), "family_phylo", "trait_group", "species")
+  # + "species" (46 levels)
+  notion_of_spp_indexer <- c(rep("trait_group", 3), rep("family_phylo", 3), rep("species", 3))
   notion_of_focal_species <- notion_of_spp_indexer[model_number]
   notion_of_competitor_species <- notion_of_spp_indexer[model_number]
 
