@@ -129,7 +129,11 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
   focal_trees <- focal_trees %>%
     spread(comp_species, biomass_total, fill = 0) %>%
     group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold) %>%
-    summarise_all(funs(sum)) %>%
+    #
+    # Hack! fix this with purrr later.
+    #
+    summarise_all(list(sum)) %>%
+    filter(!is.na(growth)) %>%
     arrange(focal_ID)
 
   # Add biomass=0 for any species for which there are no trees
