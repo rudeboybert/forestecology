@@ -129,12 +129,17 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
   focal_trees <- focal_trees %>%
     spread(comp_species, biomass_total, fill = 0) %>%
     group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold) %>%
-    summarise_all(funs(sum)) %>%
+    #
+    # Hack! fix this with purrr later.
+    #
+    summarise_all(list(sum)) %>%
+    filter(!is.na(growth)) %>%
     arrange(focal_ID)
 
   # Add biomass=0 for any species for which there are no trees
-  species_levels <- levels(focal_trees$species)
-  missing_species <- species_levels[!species_levels %in% names(focal_trees)]
+  species_levels <- model_specs$species_of_interest
+  missing_species <- species_levels[!species_levels %in% names(focal_trees)] %>%
+    as.character()
   if(length(missing_species) > 0){
     for(i in 1:length(missing_species)){
       focal_trees <- focal_trees %>%
@@ -234,12 +239,17 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
   focal_trees <- focal_trees %>%
     spread(comp_species, biomass_total, fill = 0) %>%
     group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold) %>%
-    summarise_all(funs(sum)) %>%
+    #
+    # Hack! fix this with purrr later.
+    #
+    summarise_all(list(sum)) %>%
+    filter(!is.na(growth)) %>%
     arrange(focal_ID)
 
   # Add biomass=0 for any species for which there are no trees
-  species_levels <- levels(focal_trees$species)
-  missing_species <- species_levels[!species_levels %in% names(focal_trees)]
+  species_levels <- model_specs$species_of_interest
+  missing_species <- species_levels[!species_levels %in% names(focal_trees)] %>%
+    as.character()
   if(length(missing_species) > 0){
     for(i in 1:length(missing_species)){
       focal_trees <- focal_trees %>%
