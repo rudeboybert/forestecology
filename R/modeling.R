@@ -120,7 +120,7 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
   # Shuffle group label only if flag is set
   if(run_shuffle){
     focal_trees <- focal_trees %>%
-      group_by(focal_ID) %>%
+      group_by(species) %>%
       mutate(comp_species = sample(comp_species)) %>%
       group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold, comp_species)
   }
