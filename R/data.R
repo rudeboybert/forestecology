@@ -104,7 +104,9 @@ create_focal_vs_comp <- function(forest, max_dist, folds, model_specs){
     rename(dbh = dbh08) %>%
     mutate(
       comp_ID = 1:n(),
-      basal_area = dbh^2*0.00007854
+      # This assumes dbh is in cm, the resulting basal area will be in meters^2
+      # https://en.wikipedia.org/wiki/Basal_area
+      basal_area = 0.0001 * pi * (dbh/2)^2
     ) %>%
     select(comp_ID, ID, species, x, y, dbh, basal_area, fold)
 
