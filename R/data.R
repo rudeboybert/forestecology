@@ -193,9 +193,7 @@ create_focal_vs_comp <- function(forest, max_dist, folds, model_specs){
       ID,
       focal_ID, species, spCode, x, y, dbh, growth, fold,
       comp_species, comp_biomass, #comp_ID, dist, comp_dbh,
-    ) %>%
-      group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold) %>%
-    nest(.key = "comp")
+    )
 
   return(focal_vs_comp)
 }

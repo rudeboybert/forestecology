@@ -106,7 +106,6 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
 
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
-    unnest() %>%
     group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold, comp_species) %>%
     # Sum biomass & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
@@ -228,7 +227,6 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
-    unnest() %>%
     group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold, comp_species) %>%
     # Sum biomass & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
@@ -242,12 +240,17 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
   # Continue processing focal_trees
   focal_trees <- focal_trees %>%
     ungroup() %>%
+    # sum biomass and n_comp for competitors of same species. we need to do this
+    # for the cases when we do permutation shuffle.
+    group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold, comp_species) %>%
+    summarise_all(list(sum)) %>%
+    ungroup() %>%
+    # compute biomass for each tree type
     spread(comp_species, biomass_total, fill = 0) %>%
     group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold) %>%
-    #
-    # Hack! fix this with purrr later.
-    #
     summarise_all(list(sum)) %>%
+    ungroup() %>%
+    # sort by focal tree ID number
     arrange(focal_ID)
 
   # Add biomass=0 for any species for which there are no trees
@@ -272,8 +275,13 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 
   # Make posterior predictions
   mu_star <- posterior_param$mu_star
-  focal_vs_comp <- focal_vs_comp %>%
+  focal_trees <- focal_trees %>%
     mutate(growth_hat = as.vector(X %*% mu_star)) %>%
+    select(focal_ID, growth_hat)
+
+  focal_vs_comp <- focal_vs_comp %>%
+    select(-growth_hat) %>%
+    left_join(focal_trees, by = "focal_ID") %>%
     select(ID, focal_ID, species, spCode, x, y, dbh, growth, growth_hat, fold, everything())
 
   return(focal_vs_comp)
