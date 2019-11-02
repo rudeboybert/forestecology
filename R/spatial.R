@@ -9,6 +9,7 @@
 #' @export
 #' @import dplyr
 #' @importFrom sp point.in.polygon
+#' @importFrom concaveman concaveman
 #' @seealso \code{\link{bigwoods}}
 #'
 #' @examples
@@ -26,20 +27,22 @@
 #'   coord_fixed(ratio = 1) +
 #'   labs(title = "Study region boundary and buffer region")
 define_bigwoods_buffer <- function(bigwoods, max_dist){
-  bigwoods_study_region <- bigwoods_study_region %>%
-    # Define boundary: which trees fall within max_dist of boundary
-    # TODO: Need to generalize this
-    mutate(
-      x_buff = x + max_dist * c(1, 1, 1, 1, 1, 1, -1, -1, -1, -1, -1, -1, 1),
-      y_buff = y + max_dist * c(1, 1, 1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1)
-    )
+  bounding_points <- concaveman::concaveman(matrix(c(bigwoods$x,bigwoods$y),ncol=2))
+  bounding_points <- tibble(x= bounding_points[,1],y=bounding_points[,2])
+  centroid <- bounding_polygon %>%
+    summarise(x = mean(x), y= mean(y) )
+  bounding_points <- bounding_points %>%
+    mutate(x_dir = ifelse(x-centroid$x>0,-1,1),
+           y_dir = ifelse(y-centroid$y>0,-1,1),
+           x_buff = x + max_dist*x_dir,
+           y_buff = y + max_dist*y_dir)
 
-  x_buff <- bigwoods_study_region$x_buff
-  y_buff <- bigwoods_study_region$y_buff
+  x_buff <- bounding_points$x_buff
+  y_buff <- bounding_points$y_buff
 
   bigwoods <- bigwoods %>%
     mutate(
-      inside = sp::point.in.polygon(x, y, x_buff, y_buff),
+      inside = sp::point.in.polygon(x,y,x_buff,y_buff),
       buffer = ifelse(inside == 0, TRUE, FALSE)
     ) %>%
     select(-inside)
