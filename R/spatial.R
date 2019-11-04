@@ -29,7 +29,7 @@
 define_bigwoods_buffer <- function(bigwoods, max_dist){
   bounding_points <- concaveman::concaveman(matrix(c(bigwoods$x,bigwoods$y),ncol=2))
   bounding_points <- tibble(x= bounding_points[,1],y=bounding_points[,2])
-  centroid <- bounding_polygon %>%
+  centroid <- bounding_points %>%
     summarise(x = mean(x), y= mean(y) )
   bounding_points <- bounding_points %>%
     mutate(x_dir = ifelse(x-centroid$x>0,-1,1),
