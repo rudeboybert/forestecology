@@ -28,4 +28,5 @@ Imports:
     sp,
     ggplot2,
     stringr,
-    tidyr
+    tidyr,
+    concaveman

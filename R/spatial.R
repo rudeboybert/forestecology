@@ -1,3 +1,7 @@
+globalVariables(c(
+  "x_dir", "y_dir"
+))
+
 #' Identify which trees are in buffer region of bigwoods.
 #'
 #' @param bigwoods \code{\link{bigwoods}} data frame
@@ -28,7 +32,7 @@
 #'   labs(title = "Study region boundary and buffer region")
 define_bigwoods_buffer <- function(bigwoods, max_dist){
   bounding_points <- concaveman::concaveman(matrix(c(bigwoods$x,bigwoods$y),ncol=2))
-  bounding_points <- tibble(x= bounding_points[,1],y=bounding_points[,2])
+  bounding_points <- tibble(x= bounding_points[,1], y=bounding_points[,2])
   centroid <- bounding_points %>%
     summarise(x = mean(x), y= mean(y) )
   bounding_points <- bounding_points %>%
