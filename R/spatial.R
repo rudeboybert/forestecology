@@ -153,7 +153,7 @@ get_cv_fold_info <- function(forest, cv_fold_size){
         y = center_tree$y
       ) %>%
       select(fold, x, y, neighbor) %>%
-      nest(neighbor) %>%
+      nest(data=c(neighbor)) %>%
       bind_rows(fold_neighbors)
   }
 
