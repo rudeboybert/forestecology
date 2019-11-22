@@ -57,6 +57,39 @@
 "families"
 
 
+#' Create growth_df from two census_df
+#'
+#' @param census_df1 This is a table with data from the first census
+#' @param census_df2 This is a table with data from the second census
+#' @param id The name of the varialbe in the census files which links individuals
+#' @param species_df A table with data about each species
+#' @return growth_df data frame
+#' @export
+#' @import dplyr
+#' @seealso
+#' @examples
+#' 1+1
+create_growth_df <- function(census_df1, census_df2, id, species_df) {
+
+  growth_df <- census_df1 %>%
+    # left join because we want all trees from census 1 (competitors) but
+    # only want trees from census 2 that were alive in 1 (to see how much they grew)
+    left_join(census_df2, by = id, suffix = c('','2')) %>%
+    mutate(
+      n_days = difftime(ExactDate2, ExactDate) %>% as.numeric(),
+      n_years = n_days/365.25,
+      growth = (dbh2 - dbh)/n_years
+    ) %>%
+    inner_join(species_df, by = 'sp') %>%
+    select(
+      ID = stemID, species = sp, family_phylo = family, trait_group = trait_group,
+      x = gx, y = gy, growth, dbh2 = dbh, dbh2, code = code_2018
+    ) %>%
+    mutate_at(c('species','family_phylo','trait_group'),function (x) as.factor(x))
+
+}
+
+
 #' Create main data frame for analysis
 #'
 #' @inheritParams define_cv_grid
@@ -85,8 +118,8 @@ create_focal_vs_comp <- function(forest, max_dist, folds, model_specs){
     mutate_(species = notion_of_focal_species) %>%
     select(-c(family_phylo, trait_group)) %>%
     # Only alive both dates, not in buffer
-    filter(dbh08>0, dbh14>0, !buffer, code14 != 'R') %>%
-    rename(dbh = dbh08) %>%
+    filter(dbh1>0, dbh2>0, !buffer, code != 'R') %>%
+    rename(dbh = dbh1) %>%
     # Assign species numerical code.
     mutate(spCode = as.numeric(factor(species))) %>%
     # ID numbers to join focal trees with competitor trees
@@ -100,8 +133,8 @@ create_focal_vs_comp <- function(forest, max_dist, folds, model_specs){
     mutate_(species = notion_of_competitor_species) %>%
     select(-c(family_phylo,trait_group)) %>%
     # Only species alive in 2008
-    filter(dbh08>0) %>%
-    rename(dbh = dbh08) %>%
+    filter(dbh1>0) %>%
+    rename(dbh = dbh1) %>%
     mutate(
       comp_ID = 1:n(),
       # This assumes dbh is in cm, the resulting basal area will be in meters^2
