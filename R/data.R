@@ -72,6 +72,7 @@
 create_growth_df <- function(census_df1, census_df2, id, species_df) {
 
   growth_df <- census_df1 %>%
+    filter(dbh > 0) %>%
     # left join because we want all trees from census 1 (competitors) but
     # only want trees from census 2 that were alive in 1 (to see how much they grew)
     left_join(census_df2, by = id, suffix = c('','2')) %>%
@@ -83,7 +84,7 @@ create_growth_df <- function(census_df1, census_df2, id, species_df) {
     inner_join(species_df, by = 'sp') %>%
     select(
       ID = stemID, species = sp, family_phylo = family, trait_group = trait_group,
-      x = gx, y = gy, growth, dbh2 = dbh, dbh2, code = code_2018
+      x = gx, y = gy, growth, dbh1 = dbh, dbh2, code = code_2018
     ) %>%
     mutate_at(c('species','family_phylo','trait_group'),function (x) as.factor(x))
 
