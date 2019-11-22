@@ -87,6 +87,7 @@ create_growth_df <- function(census_df1, census_df2, id, species_df) {
     ) %>%
     mutate_at(c('species','family_phylo','trait_group'),function (x) as.factor(x))
 
+  return(growth_df)
 }
 
 
