@@ -14,7 +14,7 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.0.0
 URL: https://github.com/rudeboybert/forestecology
 BugReports: https://github.com/rudeboybert/forestecology/issues
 Depends:
