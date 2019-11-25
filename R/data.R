@@ -96,7 +96,6 @@ create_growth_df <- function(census_df1, census_df2, id, species_df) {
 #'
 #' @inheritParams define_cv_grid
 #' @inheritParams define_bigwoods_buffer
-#' @param folds CV fold information from \code{\link{define_cv_grid}}
 #' @param model_specs from \code{\link{get_model_specs}}
 #' @return \code{focal_vs_comp} data frame
 #' @export
@@ -105,7 +104,16 @@ create_growth_df <- function(census_df1, census_df2, id, species_df) {
 #' @seealso \code{\link{define_cv_grid}} and \code{\link{get_model_specs}}
 #' @examples
 #' 1+1
-create_focal_vs_comp <- function(forest, max_dist, folds, model_specs){
+create_focal_vs_comp <- function(forest, max_dist, cv_fold_size, model_specs){
+
+  # get folds info
+  folds <- growth_df %>%
+    filter(!buffer) %>%
+    get_cv_fold_info(cv_fold_size) %>%
+    mutate(
+      x = round(x/(cv_fold_size/2))*(cv_fold_size/2),
+      y = round(y/(cv_fold_size/2))*(cv_fold_size/2)
+    )
 
   # Extract model specifications
   notion_of_focal_species <- model_specs$notion_of_focal_species
@@ -228,7 +236,8 @@ create_focal_vs_comp <- function(forest, max_dist, folds, model_specs){
       ID,
       focal_ID, species, spCode, x, y, dbh, growth, fold,
       comp_species, comp_biomass, #comp_ID, dist, comp_dbh,
-    )
+    ) %>%
+    mutate(growth_hat = NA)
 
   return(focal_vs_comp)
 }
