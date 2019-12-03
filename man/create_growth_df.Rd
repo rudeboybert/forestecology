@@ -24,6 +24,3 @@ Create growth_df from two census_df
 \examples{
 1+1
 }
-\seealso{
-
-}

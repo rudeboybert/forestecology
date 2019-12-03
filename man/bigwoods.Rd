@@ -3,7 +3,7 @@
 \docType{data}
 \name{bigwoods}
 \alias{bigwoods}
-\title{Bigwoods forest data}
+\title{Michigan Big Woods research plot data}
 \format{A data frame with 50023 rows and 10 variables:
 \describe{
 \item{ID}{Tree ID}
@@ -21,7 +21,20 @@
 bigwoods
 }
 \description{
-Census of trees in bigwoods forest
+The \href{https://deepblue.lib.umich.edu/data/concern/data_sets/ht24wj48w}{Big Woods}
+data come from three censuses of a 23 ha forest research plots. All
+free-standing vegetation greater than 1 cm diameter at 1.3 m height (diameter
+at breast height; DBH) were tagged, identified, spatially mapped and had
+their DBH measured. The original census took place in 2008 and covered only
+12 ha. A second census took place from 2008-2010 and expanded the plot to its
+current 23 ha. Finally a third census took place in 2014. In the second and
+third censuses the original trees were found, recorded for survival,
+remeasured, and new individuals were tagged.
+}
+\details{
+This plot is part of the Smithsonian Institution's Forest Global Earth
+Observatory \href{https://forestgeo.si.edu/}{(ForestGEO)} global network of
+forest research sites.
 }
 \seealso{
 \code{\link{families}}

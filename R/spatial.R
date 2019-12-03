@@ -57,7 +57,6 @@ define_bigwoods_buffer <- function(bigwoods, max_dist){
 
 #' Define spatial crossvalidation grid
 #'
-#' @inheritParams define_bigwoods_buffer
 #' @param forest data frame containing tree data
 #' @param cv_fold_size grid size for spatial crossvalidation fold
 #'

@@ -4,7 +4,7 @@
 \alias{create_focal_vs_comp}
 \title{Create main data frame for analysis}
 \usage{
-create_focal_vs_comp(forest, max_dist, folds, model_specs)
+create_focal_vs_comp(forest, max_dist, cv_fold_size, model_specs)
 }
 \arguments{
 \item{forest}{data frame containing tree data}
@@ -12,7 +12,7 @@ create_focal_vs_comp(forest, max_dist, folds, model_specs)
 \item{max_dist}{Maximum distance from a focal tree for another tree to be
 considered a competitor tree}
 
-\item{folds}{CV fold information from \code{\link{define_cv_grid}}}
+\item{cv_fold_size}{grid size for spatial crossvalidation fold}
 
 \item{model_specs}{from \code{\link{get_model_specs}}}
 }
