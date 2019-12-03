@@ -66,7 +66,6 @@
 #' @return growth_df data frame
 #' @export
 #' @import dplyr
-#' @seealso
 #' @examples
 #' 1+1
 create_growth_df <- function(census_df1, census_df2, id, species_df) {
