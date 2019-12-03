@@ -16,6 +16,9 @@ if(getRversion() >= "2.15.1")
       "species", "focal_ID", "ID", "spCode", "fold", "basal_area", "dbh",
       "focal_ID_neighbor", "focal_bw_ID", "comp_species", "comp_biomass",
       "inside", "growth", "biomass_total", "model_formula", "growth_hat",
-      "comp_ID", "x", "y", "x_fold", "y_fold", "neighbor", ".",
-      "notion_of_competitor_species", ":="
+      "comp_ID", "x", "y", "x_fold", "y_fold", "neighbor",
+      "notion_of_competitor_species",
+      "ExactDate", "ExactDate2", "code", "code_2018", "dbh1", "dbh2", "family",
+      "growth_df", "gx", "gy", "n_days", "n_years", "sp", "stemID",
+      ".", ":="
       ))
