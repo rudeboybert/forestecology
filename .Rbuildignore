@@ -7,3 +7,4 @@
 ^CODE_OF_CONDUCT\.md$
 ^driver\.R$
 ^data-raw$
+^README_cache$

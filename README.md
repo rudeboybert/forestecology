@@ -5,6 +5,8 @@
 
 [![Travis Build
 Status](https://travis-ci.org/rudeboybert/forestecology.svg?branch=master)](https://travis-ci.org/rudeboybert/forestecology)
+[![Lifecycle:
+stable](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/forestecology)](https://cran.r-project.org/package=forestecology)
 
@@ -24,34 +26,40 @@ And the development version from [GitHub](https://github.com/) with:
 devtools::install_github("rudeboybert/forestecology")
 ```
 
-## Example
+## Example analysis
 
-This is a basic example which shows you how to solve a common problem:
+We present an example analysis using the [Michigan Big Woods research
+plot data](https://doi.org/10.7302/wx55-kt18) which is part of the
+Smithsonian Institution’s [Forest Global Earth Observatory
+(ForestGEO)](https://forestgeo.si.edu/) global network of forest
+research sites.
+
+Porting over code from `SCBI.R`
 
 ``` r
-## basic example code
+library(tidyverse)
+library(forestecology)
+library(snakecase)
+
+# Read in Big Woods census and species data
+bw_2008 <- read_delim("https://deepblue.lib.umich.edu/data/downloads/z603qx485", delim = "\t") %>% 
+  select(
+    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
+    ExactDate = date, code_2008 = codes
+  )
+bw_2014 <- read_delim("https://deepblue.lib.umich.edu/data/downloads/1831ck00f", delim = "\t") %>% 
+  select(
+    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
+    ExactDate = date, code_2014 = codes
+  )
+bw_species <- read_delim("https://deepblue.lib.umich.edu/data/downloads/000000086", delim = "\t") %>% 
+  mutate(spcode = to_any_case(spcode)) %>% 
+  left_join(families, by = "spcode") %>% 
+  mutate(
+    sp = str_sub(genus, 1, 2), 
+    sp = str_c(sp, str_sub(species, 1, 2)),
+    sp = tolower(sp),
+    latin = str_c(genus, species, sep = " ")
+  ) %>% 
+  select(sp, genus, species, family, latin, trait_group)
 ```
-
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
-
-``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
-```
-
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date.
-
-You can also embed plots, for example:
-
-<img src="man/figures/README-pressure-1.png" width="100%" />
-
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub\!
