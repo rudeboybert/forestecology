@@ -1,102 +1,41 @@
-#' Michigan Big Woods research plot data
+#' Compute growth of trees
 #'
-#' The \href{https://deepblue.lib.umich.edu/data/concern/data_sets/ht24wj48w}{Big Woods}
-#' data come from three censuses of a 23 ha forest research plots. All
-#' free-standing vegetation greater than 1 cm diameter at 1.3 m height (diameter
-#' at breast height; DBH) were tagged, identified, spatially mapped and had
-#' their DBH measured. The original census took place in 2008 and covered only
-#' 12 ha. A second census took place from 2008-2010 and expanded the plot to its
-#' current 23 ha. Finally a third census took place in 2014. In the second and
-#' third censuses the original trees were found, recorded for survival,
-#' remeasured, and new individuals were tagged.
+#' Based on two tree censuses compute the average annual growth in dbh for all
+#' trees that were alive at (TODO: fill this in).
 #'
-#' @details This plot is part of the Smithsonian Institution's Forest Global Earth
-#' Observatory \href{https://forestgeo.si.edu/}{(ForestGEO)} global network of
-#' forest research sites.
-#' @format A data frame with 50023 rows and 10 variables:
-#' \describe{
-#'   \item{ID}{Tree ID}
-#'   \item{species}{Linnaean species name}
-#'   \item{family_phylo}{Corresponding species phylogenetic family}
-#'   \item{trait_group}{Corresponding species trait-based cluster}
-#'   \item{x}{x-coordinate meters from reference point}
-#'   \item{y}{y-coordinate meters from reference point}
-#'   \item{growth}{Average annual growth in diameter at breast height from 2008-2014 6 years}
-#'   \item{dbh08}{Diameter at breast high in 2008}
-#'   \item{dbh14}{Diameter at breast high in 2014}
-#'   \item{code14}{Code}
-#' }
-#' @seealso \code{\link{families}}
-"bigwoods"
-
-
-#' Bigwoods forest study region boundary
+#' @param census_df1 A data frame of the first census.
+#' @param census_df2 A data frame of the second (later) census
+#' @param id Name of variable common to \code{census_df1} and \code{census_df2}
+#' allowing you to join/merge both data frames.
 #'
-#' Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
-#'
-#' @format A data frame with 13 rows and 2 variables:
-#' \describe{
-#'   \item{x}{x-coordinate (meters from reference point)}
-#'   \item{y}{y-coordinate (meters from reference point)}
-#' }
-#' @seealso \code{\link{families}} \code{\link{define_bigwoods_buffer}}
-#' @examples
-#' library(ggplot2)
-#' ggplot(bigwoods, aes(x = x, y = y)) +
-#'   # Mark study region boundary
-#'   geom_path(data = bigwoods_study_region, size = 1) +
-#'   coord_fixed(ratio = 1)
-"bigwoods_study_region"
-
-
-
-#' Phylogenic groupings and trait based clustering of various tree species
-#'
-#' A dataset mapping various tree species to their phylogenetic families and
-#' trait-based (rather than evolutionary relationship-based) clusters.
-#'
-#' @format A data frame with 50 rows and 3 variables:
-#' \describe{
-#'   \item{spcode}{Linnaean species name}
-#'   \item{family_phylo}{Taxonomic/phylogenetic grouping at higher level than family.}
-#'   \item{trait_group}{Clustering of species based on their traits rather than
-#'   their evolutionary relationships.}
-#' }
-#' @source See \url{https://en.wikipedia.org/wiki/Family_(biology)} for
-#'   biological/taxonomical definition of family.
-#' @seealso \code{\link{bigwoods}}
-"families"
-
-
-#' Create growth_df from two census_df
-#'
-#' @param census_df1 This is a table with data from the first census
-#' @param census_df2 This is a table with data from the second census
-#' @param id The name of the varialbe in the census files which links individuals
-#' @param species_df A table with data about each species
-#' @return growth_df data frame
+#' @return growth_df A data frame with \code{growth}: average annual growth in dbh.
 #' @export
 #' @import dplyr
 #' @examples
 #' 1+1
-create_growth_df <- function(census_df1, census_df2, id, species_df) {
+create_growth_df <- function(census_df1, census_df2, id) {
+
+  # TODO: Write following checks
+  # - Both census data frames have id, dbh, date, and codes. Then check types
+
+  # Limit second census data to only those variables that can change
+  census_df2 <- census_df2 %>%
+    select(id, dbh, date, codes)
 
   growth_df <- census_df1 %>%
     filter(dbh > 0) %>%
-    # left join because we want all trees from census 1 (competitors) but
+    # TODO: Hey Dave, don't we want inner_join here then?
+    # left_join because we want all trees from census 1 (competitors) but
     # only want trees from census 2 that were alive in 1 (to see how much they grew)
-    left_join(census_df2, by = id, suffix = c('','2')) %>%
+    left_join(census_df2, by = id, suffix = c("1", "2")) %>%
+    # Compute avg annual growth:
     mutate(
-      n_days = difftime(ExactDate2, ExactDate) %>% as.numeric(),
+      n_days = difftime(date2, date1),
+      n_days = as.numeric(n_days),
       n_years = n_days/365.25,
-      growth = (dbh2 - dbh)/n_years
+      growth = (dbh2 - dbh1)/n_years
     ) %>%
-    inner_join(species_df, by = 'sp') %>%
-    select(
-      ID = stemID, species = sp, family_phylo = family, trait_group = trait_group,
-      x = gx, y = gy, growth, dbh1 = dbh, dbh2, code = code_2018
-    ) %>%
-    mutate_at(c('species','family_phylo','trait_group'),function (x) as.factor(x))
+    select(-c(n_days, n_years, date1, date2))
 
   return(growth_df)
 }
@@ -251,4 +190,3 @@ create_focal_vs_comp <- function(forest, max_dist, cv_fold_size, model_specs){
 
   return(focal_vs_comp)
 }
-

@@ -15,14 +15,13 @@ families <- "data-raw/species_list.csv" %>%
       spcode == "Highbush Blueberry" ~ "highbush blueberry",
       TRUE ~ spcode
     ),
-    family_phylo = family,
     trait_group = traitclust2
   ) %>%
-  select(-c(family, traitclust2)) %>%
+  select(-c(traitclust2)) %>%
   # Convert all to snake_case
   mutate(
     spcode = to_any_case(spcode),
-    family_phylo = to_any_case(family_phylo),
+    family = to_any_case(family),
     trait_group = to_any_case(trait_group)
   )
 usethis::use_data(families, overwrite = TRUE)
