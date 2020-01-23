@@ -1,3 +1,7 @@
+globalVariables(c(
+  "codes", "date1", "date2"
+))
+
 #' Compute growth of trees
 #'
 #' Based on two tree censuses compute the average annual growth in dbh for all
