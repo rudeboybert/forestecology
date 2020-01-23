@@ -13,10 +13,12 @@
 #' @import dplyr
 #' @examples
 #' 1+1
-create_growth_df <- function(census_df1, census_df2, id) {
+compute_growth <- function(census_df1, census_df2, id) {
 
   # TODO: Write following checks
-  # - Both census data frames have id, dbh, date, and codes. Then check types
+  # - Both census data frames have variables: id, dbh, date, and codes.
+  # - Check variable types: chr, dbl, date/dttm, NA
+  # - Check that id uniquely identifies rows
 
   # Limit second census data to only those variables that can change
   census_df2 <- census_df2 %>%
