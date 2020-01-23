@@ -8,3 +8,4 @@
 ^driver\.R$
 ^data-raw$
 ^README_cache$
+^testing\.R$
