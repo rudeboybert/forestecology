@@ -160,3 +160,17 @@ ggplot(growth_df, aes(x = growth, y = ..density.., fill = site)) +
   coord_cartesian(xlim = c(-5, 10))
 ```
 
+
+
+### Add spatial information
+
+
+**Big Woods**:
+
+```{r, cache = TRUE}
+```
+
+**SCBI**:
+
+```{r, cache = TRUE}
+```

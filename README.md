@@ -147,3 +147,9 @@ ggplot(growth_df, aes(x = growth, y = ..density.., fill = site)) +
 ```
 
 <img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+
+### Add spatial information
+
+**Big Woods**:
+
+**SCBI**:
