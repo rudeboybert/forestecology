@@ -23,6 +23,7 @@ compute_growth <- function(census_df1, census_df2, id) {
   # - Both census data frames have variables: id, dbh, date, and codes.
   # - Check variable types: chr, dbl, date/dttm, NA
   # - Check that id uniquely identifies rows
+  # - Prompt use with message: "Assuming dbh are in cm"
 
   # Limit second census data to only those variables that can change
   census_df2 <- census_df2 %>%
