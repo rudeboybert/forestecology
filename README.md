@@ -225,7 +225,9 @@ we
 # spatial blocking by specified range with random assignment
 ```
 
-If the above doesn’t work, the go back to what we used for PLOS paper.
+  - If the above doesn’t work, the go back to what we used for PLOS
+    paper.
+  - Consider making `growth_df` an `sf` object
 
 **Big Woods**:
 
