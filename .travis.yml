@@ -18,7 +18,6 @@ notifications:
     on_success: change
     on_failure: change
 
-
 # Stuff related to V8 package:
 # https://github.com/jeroen/V8/blob/master/.travis.yml
 addons:
@@ -26,3 +25,4 @@ addons:
     packages:
       - libv8-dev
       - libudunits2-dev
+      - gdal-config
