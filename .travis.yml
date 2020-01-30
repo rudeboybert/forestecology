@@ -25,4 +25,4 @@ addons:
     packages:
       - libv8-dev
       - libudunits2-dev
-      - gdal-config
+      - gdal
