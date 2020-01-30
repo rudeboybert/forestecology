@@ -25,4 +25,6 @@ addons:
     packages:
       - libv8-dev
       - libudunits2-dev
-      - gdal-bin
+      - libgdal-dev
+      - libgeos-dev
+      - libproj-dev
