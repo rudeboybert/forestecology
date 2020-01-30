@@ -43,8 +43,10 @@ library(tidyverse)
 library(forestecology)
 library(snakecase)
 library(skimr)
+library(sf)
+library(sfheaders)
 # devtools::install_github("rvalavi/blockCV")
-library(blockCV)
+# library(blockCV)
 ```
 
 ### Load & preprocess data
@@ -230,5 +232,52 @@ we
   - Consider making `growth_df` an `sf` object
 
 **Big Woods**:
+
+``` r
+square <- tibble(
+  x = c(0,0,1,1),
+  y = c(0,1,1,0)
+) %>% 
+  sf_polygon()
+buffer <- square %>% 
+  st_buffer(dist = -0.1)
+ggplot() +
+  geom_sf(data = square) +
+  geom_sf(data = buffer, col="red") 
+```
+
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
+
+``` r
+
+
+
+# Bigwoods study region boundary polygon
+bw_boundary <- bigwoods_study_region %>% 
+  sf_polygon()
+
+# Buffer polygon
+bw_buffer <- bw_boundary %>%
+  st_buffer(dist = -25)
+
+# Sample of 5000 trees
+set.seed(76)
+bw_trees_sample <- bw_growth_df %>% 
+  sample_n(5000) %>% 
+  select(x = gx, y = gy) %>% 
+  st_as_sf(coords = c("x", "y"))
+
+index <- st_intersects(bw_trees_sample, bw_buffer, sparse = FALSE)
+bw_trees_sample <- bw_trees_sample %>% 
+  mutate(buffer = index)
+
+# Plot
+ggplot() +
+  geom_sf(data = bw_boundary) +
+  geom_sf(data = bw_buffer, col="red") +
+  geom_sf(data = bw_trees_sample, aes(col=buffer), size = 0.5)
+```
+
+<img src="man/figures/README-unnamed-chunk-11-2.png" width="100%" />
 
 **SCBI**:

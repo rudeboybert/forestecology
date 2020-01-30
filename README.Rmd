@@ -13,7 +13,8 @@ knitr::opts_chunk$set(
   fig.width = 16/2,
   fig.height = 9/2,
   message = FALSE,
-  warning = FALSE
+  warning = FALSE,
+  cache = TRUE
 )
 ```
 
@@ -52,8 +53,10 @@ library(tidyverse)
 library(forestecology)
 library(snakecase)
 library(skimr)
+library(sf)
+library(sfheaders)
 # devtools::install_github("rvalavi/blockCV")
-library(blockCV)
+# library(blockCV)
 ```
 
 
@@ -65,7 +68,7 @@ We first load and preprocess the data corresponding to the two census reflecting
 
 **Big Woods**:
 
-```{r, cache=TRUE}
+```{r}
 # Read in Big Woods census data from 2008 & 2014
 bw_2008 <- 
   "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>% 
@@ -102,7 +105,7 @@ bw_species <-
 
 **SCBI**:
 
-```{r, cache=TRUE}
+```{r}
 scbi_2013 <- 
   "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem2.csv" %>% 
   read_csv() %>% 
@@ -131,7 +134,7 @@ The resulting data frames are named with some variation of `growth_df`.
 
 **Big Woods**:
 
-```{r, cache=TRUE}
+```{r}
 census_df1 <- bw_2008
 census_df2 <- bw_2014
 id <- "treeID"
@@ -145,7 +148,7 @@ bw_growth_df <-
 
 **SCBI**:
 
-```{r, cache=TRUE}
+```{r}
 census_df1 <- scbi_2013
 census_df2 <- scbi_2018
 id <- "stemID"
@@ -203,7 +206,43 @@ Using the [`blockCV`](https://github.com/rvalavi/blockCV) package, in particular
 **Big Woods**:
 
 ```{r, cache = TRUE}
+square <- tibble(
+  x = c(0,0,1,1),
+  y = c(0,1,1,0)
+) %>% 
+  sf_polygon()
+buffer <- square %>% 
+  st_buffer(dist = -0.1)
+ggplot() +
+  geom_sf(data = square) +
+  geom_sf(data = buffer, col="red") 
 
+
+
+# Bigwoods study region boundary polygon
+bw_boundary <- bigwoods_study_region %>% 
+  sf_polygon()
+
+# Buffer polygon
+bw_buffer <- bw_boundary %>%
+  st_buffer(dist = -25)
+
+# Sample of 5000 trees
+set.seed(76)
+bw_trees_sample <- bw_growth_df %>% 
+  sample_n(5000) %>% 
+  select(x = gx, y = gy) %>% 
+  st_as_sf(coords = c("x", "y"))
+
+index <- st_intersects(bw_trees_sample, bw_buffer, sparse = FALSE)
+bw_trees_sample <- bw_trees_sample %>% 
+  mutate(buffer = index)
+
+# Plot
+ggplot() +
+  geom_sf(data = bw_boundary) +
+  geom_sf(data = bw_buffer, col="red") +
+  geom_sf(data = bw_trees_sample, aes(col=buffer), size = 0.5)
 ```
 
 **SCBI**:
