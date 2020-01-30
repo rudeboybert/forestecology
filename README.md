@@ -154,8 +154,8 @@ scbi_growth_df <-
   compute_growth(census_df1, census_df2, id)
 ```
 
-\*\*EDA of both BigWoods & SCBI\*: Note the large variation in growths
-for the SCBI trees over the BigWoods trees.
+**EDA of both BigWoods & SCBI**: Note the large variation in growths for
+the SCBI trees over the BigWoods trees.
 
 ``` r
 growth_df <- bind_rows(
@@ -199,6 +199,8 @@ cv_fold_size <- 100
 max_dist <- 7.5
 ```
 
+#### Defining buffers
+
 For a focal tree of interest, the `max_dist` of 7.5 meters acts as a
 radius defining a neighborhood within which all trees are considered
 competitors. In other words, all trees within 7.5 meters of the focal
@@ -211,25 +213,6 @@ everything else, but near things are more related than distant things.”
 autocorrelation is inversely-related to distance. However, we further
 assume that once trees are more than 7.5 meters apart, this
 autocorrelation is negligeable.
-
-Using the [`blockCV`](https://github.com/rvalavi/blockCV) package, in
-particular the example code in the package
-[vignette](http://htmlpreview.github.io/?https://github.com/rvalavi/blockCV/blob/master/vignettes/BlockCV_for_SDM.html),
-we
-
-  - Define the blocking structure
-  - Determine the degree of spatial autocorrelation for various
-    `max_dist` values
-
-<!-- end list -->
-
-``` r
-# spatial blocking by specified range with random assignment
-```
-
-  - If the above doesn’t work, the go back to what we used for PLOS
-    paper.
-  - Consider making `growth_df` an `sf` object
 
 **Big Woods**:
 
@@ -246,11 +229,9 @@ ggplot() +
   geom_sf(data = buffer, col="red") 
 ```
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
 
 ``` r
-
-
 
 # Bigwoods study region boundary polygon
 bw_boundary <- bigwoods_study_region %>% 
@@ -258,7 +239,7 @@ bw_boundary <- bigwoods_study_region %>%
 
 # Buffer polygon
 bw_buffer <- bw_boundary %>%
-  st_buffer(dist = -25)
+  st_buffer(dist = -max_dist)
 
 # Sample of 5000 trees
 set.seed(76)
@@ -278,6 +259,19 @@ ggplot() +
   geom_sf(data = bw_trees_sample, aes(col=buffer), size = 0.5)
 ```
 
-<img src="man/figures/README-unnamed-chunk-11-2.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-10-2.png" width="100%" />
 
 **SCBI**:
+
+#### Spatial cross-validation
+
+Using the [`blockCV`](https://github.com/rvalavi/blockCV) package, in
+particular the example code in the package
+[vignette](http://htmlpreview.github.io/?https://github.com/rvalavi/blockCV/blob/master/vignettes/BlockCV_for_SDM.html),
+we
+
+  - Define the blocking structure
+  - Determine the degree of spatial autocorrelation for various
+    `max_dist` values
+  - If the above doesn’t work, the go back to what we used for PLOS
+    paper.
