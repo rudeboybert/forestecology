@@ -137,7 +137,7 @@ The resulting data frames are named with some variation of `growth_df`.
 ```{r}
 census_df1 <- bw_2008
 # we need to filter out the resprouts
-census_df2 <- bw_2014 %>% filter(codes != 'R')
+census_df2 <- bw_2014 %>% filter(!str_detect(codes,'R'))
 id <- "treeID"
 
 bw_growth_df <- 
