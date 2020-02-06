@@ -132,7 +132,8 @@ The resulting data frames are named with some variation of `growth_df`.
 
 ``` r
 census_df1 <- bw_2008
-census_df2 <- bw_2014
+# we need to filter out the resprouts
+census_df2 <- bw_2014 %>% filter(codes != 'R')
 id <- "treeID"
 
 bw_growth_df <- 
@@ -151,7 +152,9 @@ id <- "stemID"
 
 scbi_growth_df <- 
   # Merge both censuses and compute growth:
-  compute_growth(census_df1, census_df2, id)
+  compute_growth(census_df1, census_df2, id) %>%
+  # they are mesuaring in mm while we are measuring in cm!!!
+  mutate(growth = growth/10)
 ```
 
 **EDA of both BigWoods & SCBI**: Note the large variation in growths for
@@ -163,9 +166,9 @@ growth_df <- bind_rows(
   scbi_growth_df %>% select(growth) %>% mutate(site = "scbi")
 )
 ggplot(growth_df, aes(x = growth, y = ..density.., fill = site)) +
-  geom_histogram(alpha = 0.5, position = "identity", binwidth = 0.5) +
+  geom_histogram(alpha = 0.5, position = "identity", binwidth = 0.05) +
   labs(x = "Average annual growth in dbh") +
-  coord_cartesian(xlim = c(-5, 10))
+  coord_cartesian(xlim = c(-0.5, 1))
 ```
 
 <img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
