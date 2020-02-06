@@ -170,7 +170,7 @@ growth_df <- bind_rows(
 )
 ggplot(growth_df, aes(x = growth, y = ..density.., fill = site)) +
   geom_histogram(alpha = 0.5, position = "identity", binwidth = 0.05) +
-  labs(x = "Average annual growth in dbh") +
+  labs(x = "Average annual growth in dbh (cm per yr)") +
   coord_cartesian(xlim = c(-0.5, 1))
 ```
 
