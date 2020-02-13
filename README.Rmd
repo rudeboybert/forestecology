@@ -56,7 +56,7 @@ library(skimr)
 library(sf)
 library(sfheaders)
 # devtools::install_github("rvalavi/blockCV")
-# library(blockCV)
+library(blockCV)
 ```
 
 
@@ -275,6 +275,51 @@ ggplot() +
 
 
 #### Spatial cross-validation
+
+**Big Woods**:
+
+```{r, cache = TRUE}
+bw_cv_grid <- spatialBlock(
+  speciesData = bw_growth_df, theRange = 100, k = 28, yOffset = 0.6
+)
+
+# Add foldID to data
+bw_growth_df <- bw_growth_df %>% 
+  mutate(
+    foldID = bw_cv_grid$foldID,
+    foldID = factor(foldID)
+  )
+
+# Visualize grid
+bw_cv_grid$plots +
+  geom_sf(data = bw_growth_df, aes(col=foldID), size = 0.1)
+```
+
+
+
+**SCBI**:
+
+```{r, cache = TRUE}
+scbi_cv_grid <- spatialBlock(
+  speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.6
+)
+
+# Add foldID to data
+scbi_growth_df <- scbi_growth_df %>% 
+  mutate(
+    foldID = scbi_cv_grid$foldID,
+    foldID = factor(foldID)
+  )
+
+# Visualize grid
+scbi_cv_grid$plots +
+  geom_sf(data = scbi_growth_df, aes(col=foldID), size = 0.1)
+```
+
+
+
+
+
 
 Using the [`blockCV`](https://github.com/rvalavi/blockCV) package, in particular the example code in the package [vignette](http://htmlpreview.github.io/?https://github.com/rvalavi/blockCV/blob/master/vignettes/BlockCV_for_SDM.html), we
 
