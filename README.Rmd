@@ -195,20 +195,28 @@ max_dist <- 7.5
 
 For a focal tree of interest, the `max_dist` of `r max_dist` meters acts as a radius defining a neighborhood within which all trees are considered competitors. In other words, all trees within `r max_dist` meters of the focal tree are considered competitor trees. Other studies have estimated this distance; we used `r max_dist` meters as an average of estimated values [@canham2004, @canham2006, @uriarte2004, @tatsumi2013]. Following Tobler's first law of geography that "everything is related to everything else, but near things are more related than distant things." @tobler1970firstlawofgeo, we assume that the degree of spatial autocorrelation is inversely-related to distance. However, we further assume that once trees are more than `r max_dist` meters apart, this autocorrelation is negligeable. 
 
-**Big Woods**:
+**Example of buffer at work**:
 
 ```{r, cache = TRUE}
-square <- tibble(
+# Boundary polygon
+square_boundary <- tibble(
   x = c(0,0,1,1),
   y = c(0,1,1,0)
 ) %>% 
   sf_polygon()
-buffer <- square %>% 
-  st_buffer(dist = -0.1)
-ggplot() +
-  geom_sf(data = square) +
-  geom_sf(data = buffer, col="red") 
 
+# Buffer polygon
+square_buffer <- square_boundary %>% 
+  st_buffer(dist = -0.1)
+
+ggplot() +
+  geom_sf(data = square_boundary) +
+  geom_sf(data = square_buffer, col="red") 
+```
+
+**Big Woods**:
+
+```{r, cache = TRUE}
 # Bigwoods study region boundary polygon
 bw_boundary <- bigwoods_study_region %>% 
   sf_polygon()
@@ -217,27 +225,52 @@ bw_boundary <- bigwoods_study_region %>%
 bw_buffer <- bw_boundary %>%
   st_buffer(dist = -max_dist)
 
-# Sample of 5000 trees
-set.seed(76)
-bw_trees_sample <- bw_growth_df %>% 
-  sample_n(5000) %>% 
-  select(x = gx, y = gy) %>% 
-  st_as_sf(coords = c("x", "y"))
+# Convert data frame to sf object
+bw_growth_df <- bw_growth_df %>% 
+  st_as_sf(coords = c("gx", "gy"))
 
-index <- st_intersects(bw_trees_sample, bw_buffer, sparse = FALSE)
-bw_trees_sample <- bw_trees_sample %>% 
+# ID which points are in buffer and which are not
+index <- st_intersects(bw_growth_df, bw_buffer, sparse = FALSE)
+bw_growth_df <- bw_growth_df %>% 
   mutate(buffer = index)
 
 # Plot
 ggplot() +
   geom_sf(data = bw_boundary) +
   geom_sf(data = bw_buffer, col="red") +
-  geom_sf(data = bw_trees_sample, aes(col=buffer), size = 0.5)
+  # Only random sample of 1000 trees:
+  geom_sf(data = bw_growth_df %>% sample_n(1000), aes(col=buffer), size = 0.5)
 ```
 
 **SCBI**:
 
 ```{r, cache = TRUE}
+# Bigwoods study region boundary polygon
+scbi_boundary <- tibble(
+  x = c(0, 0, 400, 400, 0),
+  y = c(0, 640, 640, 0, 0)
+) %>% 
+  sf_polygon()
+
+# Buffer polygon
+scbi_buffer <- scbi_boundary %>%
+  st_buffer(dist = -max_dist)
+
+# Convert data frame to sf object
+scbi_growth_df <- scbi_growth_df %>% 
+  st_as_sf(coords = c("gx", "gy"))
+
+# ID which points are in buffer and which are not
+index <- st_intersects(scbi_growth_df, scbi_buffer, sparse = FALSE)
+scbi_growth_df <- scbi_growth_df %>% 
+  mutate(buffer = index)
+
+# Plot
+ggplot() +
+  geom_sf(data = scbi_boundary) +
+  geom_sf(data = scbi_buffer, col="red") +
+  # Only random sample of 1000 trees:
+  geom_sf(data = scbi_growth_df %>% sample_n(1000), aes(col=buffer), size = 0.5)
 ```
 
 
