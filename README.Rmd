@@ -275,7 +275,9 @@ ggplot() +
 
 ```{r}
 bw_cv_grid <- spatialBlock(
-  speciesData = bw_growth_df, theRange = 100, k = 28, yOffset = 0.6, verbose = FALSE
+  speciesData = bw_growth_df, theRange = 100, k = 28, 
+  xOffset = 0.5, yOffset = 0.99999,
+  verbose = FALSE
 )
 
 # Add foldID to data
