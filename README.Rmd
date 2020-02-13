@@ -41,6 +41,8 @@ And the development version from [GitHub](https://github.com/) with:
 remotes::install_github("rudeboybert/forestecology")
 ```
 
+
+
 ## Example analysis
 
 We present an example analysis using:
@@ -58,7 +60,6 @@ library(sfheaders)
 # devtools::install_github("rvalavi/blockCV")
 library(blockCV)
 ```
-
 
 
 
@@ -312,6 +313,42 @@ scbi_growth_df <- scbi_growth_df %>%
 scbi_cv_grid$plots +
   geom_sf(data = scbi_growth_df, aes(col=foldID), size = 0.1)
 ```
+
+
+
+### Model specification
+
+* Model formula: Growth as a function of 
+
+* `get_model_specs()`. Inputs:
+    + define identification/grouping classification
+    + `growth_df` format
+* `create_focal_and_comp()`. Inputs:
+    + `growth_df`
+    + `max_dist`: who are your competitors
+    + `model_specs`: grouping of competitor biomasses
+
+
+
+### Model fit and prediction
+
+* `fit_bayesian_model()`. 
+    + Inputs: `focal_and_comp`, `model_specs`
+    + Output: `posterior_param`
+* `predict_bayesian_model()`. 
+    + Inputs: `focal_and_comp`, `model_specs`, `posterior_param`
+    + Output: `focal_and_comp` with updated `growth_hat` variable
+* Show observed vs predicted growth
+* CV: `run_cv()` is a wrapper to `fit_bayesian_model()` and `predict_bayesian_model()`. 
+* Permutation test:
+  + Add line to that shuffles competitor species within `focal_and_comp` just before fitting model
+  + permutation AND CV: add `run_shuffle` argument to `run_cv()`
+
+
+
+### Model output and performance
+
+* Make plot posterior parameter functions
 
 
 

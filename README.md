@@ -356,8 +356,37 @@ scbi_cv_grid$plots +
 
 <img src="man/figures/README-unnamed-chunk-14-2.png" width="100%" />
 
-  - Define the blocking structure
-  - Determine the degree of spatial autocorrelation for various
-    `max_dist` values
-  - If the above doesn’t work, the go back to what we used for PLOS
-    paper.
+### Model specification
+
+  - Model formula: Growth as a function of
+
+  - `get_model_specs()`. Inputs:
+    
+      - define identification/grouping classification
+      - `growth_df` format
+
+  - `create_focal_and_comp()`. Inputs:
+    
+      - `growth_df`
+      - `max_dist`: who are your competitors
+      - `model_specs`: grouping of competitor biomasses
+
+### Model fit and prediction
+
+  - `fit_bayesian_model()`.
+      - Inputs: `focal_and_comp`, `model_specs`
+      - Output: `posterior_param`
+  - `predict_bayesian_model()`.
+      - Inputs: `focal_and_comp`, `model_specs`, `posterior_param`
+      - Output: `focal_and_comp` with updated `growth_hat` variable
+  - Show observed vs predicted growth
+  - CV: `run_cv()` is a wrapper to `fit_bayesian_model()` and
+    `predict_bayesian_model()`.
+  - Permutation test:
+      - Add line to that shuffles competitor species within
+        `focal_and_comp` just before fitting model
+      - permutation AND CV: add `run_shuffle` argument to `run_cv()`
+
+### Model output and performance
+
+  - Make plot posterior parameter functions
