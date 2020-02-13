@@ -161,9 +161,7 @@ scbi_growth_df <-
   mutate(growth = growth/10)
 ```
 
-**EDA of both BigWoods & SCBI**: Note the large variation in growths for the SCBI trees over the BigWoods trees.
-
-```{r, cache = TRUE}
+```{r}
 growth_df <- bind_rows(
   bw_growth_df %>% select(growth) %>% mutate(site = "bw"),
   scbi_growth_df %>% select(growth) %>% mutate(site = "scbi")
@@ -197,7 +195,7 @@ For a focal tree of interest, the `max_dist` of `r max_dist` meters acts as a ra
 
 **Example of buffer at work**:
 
-```{r, cache = TRUE}
+```{r}
 # Boundary polygon
 square_boundary <- tibble(
   x = c(0,0,1,1),
@@ -216,7 +214,7 @@ ggplot() +
 
 **Big Woods**:
 
-```{r, cache = TRUE}
+```{r}
 # Bigwoods study region boundary polygon
 bw_boundary <- bigwoods_study_region %>% 
   sf_polygon()
@@ -244,12 +242,9 @@ ggplot() +
 
 **SCBI**:
 
-```{r, cache = TRUE}
+```{r}
 # Bigwoods study region boundary polygon
-scbi_boundary <- tibble(
-  x = c(0, 0, 400, 400, 0),
-  y = c(0, 640, 640, 0, 0)
-) %>% 
+scbi_boundary <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
   sf_polygon()
 
 # Buffer polygon
@@ -278,9 +273,9 @@ ggplot() +
 
 **Big Woods**:
 
-```{r, cache = TRUE}
+```{r}
 bw_cv_grid <- spatialBlock(
-  speciesData = bw_growth_df, theRange = 100, k = 28, yOffset = 0.6
+  speciesData = bw_growth_df, theRange = 100, k = 28, yOffset = 0.6, verbose = FALSE
 )
 
 # Add foldID to data
@@ -295,13 +290,11 @@ bw_cv_grid$plots +
   geom_sf(data = bw_growth_df, aes(col=foldID), size = 0.1)
 ```
 
-
-
 **SCBI**:
 
-```{r, cache = TRUE}
+```{r}
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.6
+  speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.6, verbose = FALSE
 )
 
 # Add foldID to data
@@ -326,6 +319,5 @@ Using the [`blockCV`](https://github.com/rvalavi/blockCV) package, in particular
 * Define the blocking structure
 * Determine the degree of spatial autocorrelation for various `max_dist` values
 * If the above doesn't work, the go back to what we used for PLOS paper.
-
 
 

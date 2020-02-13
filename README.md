@@ -46,7 +46,7 @@ library(skimr)
 library(sf)
 library(sfheaders)
 # devtools::install_github("rvalavi/blockCV")
-# library(blockCV)
+library(blockCV)
 ```
 
 ### Load & preprocess data
@@ -156,9 +156,6 @@ scbi_growth_df <-
   # they are mesuaring in mm while we are measuring in cm!!!
   mutate(growth = growth/10)
 ```
-
-**EDA of both BigWoods & SCBI**: Note the large variation in growths for
-the SCBI trees over the BigWoods trees.
 
 ``` r
 growth_df <- bind_rows(
@@ -272,10 +269,7 @@ ggplot() +
 
 ``` r
 # Bigwoods study region boundary polygon
-scbi_boundary <- tibble(
-  x = c(0, 0, 400, 400, 0),
-  y = c(0, 640, 640, 0, 0)
-) %>% 
+scbi_boundary <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
   sf_polygon()
 
 # Buffer polygon
@@ -302,6 +296,58 @@ ggplot() +
 <img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
 
 #### Spatial cross-validation
+
+**Big Woods**:
+
+``` r
+bw_cv_grid <- spatialBlock(
+  speciesData = bw_growth_df, theRange = 100, k = 28, yOffset = 0.6, verbose = FALSE
+)
+```
+
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+
+``` r
+
+# Add foldID to data
+bw_growth_df <- bw_growth_df %>% 
+  mutate(
+    foldID = bw_cv_grid$foldID,
+    foldID = factor(foldID)
+  )
+
+# Visualize grid
+bw_cv_grid$plots +
+  geom_sf(data = bw_growth_df, aes(col=foldID), size = 0.1)
+```
+
+<img src="man/figures/README-unnamed-chunk-13-2.png" width="100%" />
+
+**SCBI**:
+
+``` r
+scbi_cv_grid <- spatialBlock(
+  speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.6, verbose = FALSE
+)
+```
+
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+
+``` r
+
+# Add foldID to data
+scbi_growth_df <- scbi_growth_df %>% 
+  mutate(
+    foldID = scbi_cv_grid$foldID,
+    foldID = factor(foldID)
+  )
+
+# Visualize grid
+scbi_cv_grid$plots +
+  geom_sf(data = scbi_growth_df, aes(col=foldID), size = 0.1)
+```
+
+<img src="man/figures/README-unnamed-chunk-14-2.png" width="100%" />
 
 Using the [`blockCV`](https://github.com/rvalavi/blockCV) package, in
 particular the example code in the package
