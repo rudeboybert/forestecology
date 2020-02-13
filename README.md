@@ -297,6 +297,11 @@ ggplot() +
 
 #### Spatial cross-validation
 
+We use the [`blockCV`](https://github.com/rvalavi/blockCV) package to
+define the spatial grid, whose elements will act as the folds in our
+leave-one-out (by “one” we meen “one grid block”) cross-validation
+scheme.
+
 **Big Woods**:
 
 ``` r
@@ -350,11 +355,6 @@ scbi_cv_grid$plots +
 ```
 
 <img src="man/figures/README-unnamed-chunk-14-2.png" width="100%" />
-
-Using the [`blockCV`](https://github.com/rvalavi/blockCV) package, in
-particular the example code in the package
-[vignette](http://htmlpreview.github.io/?https://github.com/rvalavi/blockCV/blob/master/vignettes/BlockCV_for_SDM.html),
-we
 
   - Define the blocking structure
   - Determine the degree of spatial autocorrelation for various
