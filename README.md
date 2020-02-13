@@ -133,7 +133,7 @@ The resulting data frames are named with some variation of `growth_df`.
 ``` r
 census_df1 <- bw_2008
 # we need to filter out the resprouts
-census_df2 <- bw_2014 %>% filter(codes != 'R')
+census_df2 <- bw_2014 %>% filter(!str_detect(codes,'R'))
 id <- "treeID"
 
 bw_growth_df <- 
@@ -157,9 +157,6 @@ scbi_growth_df <-
   mutate(growth = growth/10)
 ```
 
-**EDA of both BigWoods & SCBI**: Note the large variation in growths for
-the SCBI trees over the BigWoods trees.
-
 ``` r
 growth_df <- bind_rows(
   bw_growth_df %>% select(growth) %>% mutate(site = "bw"),
@@ -167,7 +164,7 @@ growth_df <- bind_rows(
 )
 ggplot(growth_df, aes(x = growth, y = ..density.., fill = site)) +
   geom_histogram(alpha = 0.5, position = "identity", binwidth = 0.05) +
-  labs(x = "Average annual growth in dbh") +
+  labs(x = "Average annual growth in dbh (cm per yr)") +
   coord_cartesian(xlim = c(-0.5, 1))
 ```
 
@@ -265,6 +262,34 @@ ggplot() +
 <img src="man/figures/README-unnamed-chunk-10-2.png" width="100%" />
 
 **SCBI**:
+
+``` r
+scbi_boundary <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
+  sf_polygon()
+
+# Buffer polygon
+scbi_buffer <- scbi_boundary %>%
+  st_buffer(dist = -max_dist)
+
+# Sample of 5000 trees
+set.seed(76)
+scbi_trees_sample <- scbi_growth_df %>% 
+  sample_n(5000) %>% 
+  select(x = gx, y = gy) %>% 
+  st_as_sf(coords = c("x", "y"))
+
+index <- st_intersects(scbi_trees_sample, scbi_buffer, sparse = FALSE)
+scbi_trees_sample <- scbi_trees_sample %>% 
+  mutate(buffer = index)
+
+# Plot
+ggplot() +
+  geom_sf(data = scbi_boundary) +
+  geom_sf(data = scbi_buffer, col="red") +
+  geom_sf(data = scbi_trees_sample, aes(col=buffer), size = 0.5)
+```
+
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 #### Spatial cross-validation
 

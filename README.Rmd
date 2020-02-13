@@ -161,8 +161,6 @@ scbi_growth_df <-
   mutate(growth = growth/10)
 ```
 
-**EDA of both BigWoods & SCBI**: Note the large variation in growths for the SCBI trees over the BigWoods trees.
-
 ```{r, cache = TRUE}
 growth_df <- bind_rows(
   bw_growth_df %>% select(growth) %>% mutate(site = "bw"),
@@ -238,6 +236,29 @@ ggplot() +
 **SCBI**:
 
 ```{r, cache = TRUE}
+scbi_boundary <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
+  sf_polygon()
+
+# Buffer polygon
+scbi_buffer <- scbi_boundary %>%
+  st_buffer(dist = -max_dist)
+
+# Sample of 5000 trees
+set.seed(76)
+scbi_trees_sample <- scbi_growth_df %>% 
+  sample_n(5000) %>% 
+  select(x = gx, y = gy) %>% 
+  st_as_sf(coords = c("x", "y"))
+
+index <- st_intersects(scbi_trees_sample, scbi_buffer, sparse = FALSE)
+scbi_trees_sample <- scbi_trees_sample %>% 
+  mutate(buffer = index)
+
+# Plot
+ggplot() +
+  geom_sf(data = scbi_boundary) +
+  geom_sf(data = scbi_buffer, col="red") +
+  geom_sf(data = scbi_trees_sample, aes(col=buffer), size = 0.5)
 ```
 
 
@@ -248,6 +269,5 @@ Using the [`blockCV`](https://github.com/rvalavi/blockCV) package, in particular
 * Define the blocking structure
 * Determine the degree of spatial autocorrelation for various `max_dist` values
 * If the above doesn't work, the go back to what we used for PLOS paper.
-
 
 
