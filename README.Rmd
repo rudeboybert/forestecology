@@ -74,6 +74,7 @@ We first load and preprocess the data corresponding to the two census reflecting
 bw_2008 <- 
   "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>% 
   read_delim(delim = "\t") %>% 
+  mutate(spcode = to_any_case(spcode)) %>%
   select(
     treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
     date, codes
@@ -81,6 +82,7 @@ bw_2008 <-
 bw_2014 <- 
   "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>% 
   read_delim(delim = "\t") %>% 
+  mutate(spcode = to_any_case(spcode)) %>%
   select(
     treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
     date, codes
@@ -101,7 +103,11 @@ bw_species <-
     latin = str_c(genus, species, sep = " "),
     latin = to_any_case(latin)
   ) %>% 
-  select(sp, spcode, genus, species, latin, family, trait_group)
+  select(sp = spcode, genus, species, latin, family, trait_group)
+
+bw_2008 <- bw_2008 %>%
+  left_join(bw_species,by='sp')
+
 ```
 
 **SCBI**:
@@ -318,7 +324,19 @@ scbi_cv_grid$plots +
 
 ### Model specification
 
-* Model formula: Growth as a function of 
+Next we specify the growth model we want. We will model growth as a function of tree identiy, size, and the size and identiy of its neighbors. The model can be run on different grouping of individuals (e.g., based on species or trait groupings). It can also be run with different measures of competition. 
+
+* `model_number = 1`: No competition growth only depends on `dbh` and individual grouping.
+* `model_number = 2`: Competition but identity of competitor does not matter, just sum of competitior biomass.
+* `model_number = 3`: Full model with competition and competitor identity.
+
+```{r}
+bw_specs <- get_model_specs(bw_2008, 3, 'trait_group')
+bw_specs
+
+scbi_specs <- get_model_specs(scbi_2013, 3, 'sp')
+
+```
 
 * `get_model_specs()`. Inputs:
     + define identification/grouping classification

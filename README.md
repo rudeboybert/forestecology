@@ -65,6 +65,7 @@ correct names, types (`dbl`, `data`, `factor`).
 bw_2008 <- 
   "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>% 
   read_delim(delim = "\t") %>% 
+  mutate(spcode = to_any_case(spcode)) %>%
   select(
     treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
     date, codes
@@ -72,6 +73,7 @@ bw_2008 <-
 bw_2014 <- 
   "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>% 
   read_delim(delim = "\t") %>% 
+  mutate(spcode = to_any_case(spcode)) %>%
   select(
     treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
     date, codes
@@ -92,7 +94,10 @@ bw_species <-
     latin = str_c(genus, species, sep = " "),
     latin = to_any_case(latin)
   ) %>% 
-  select(sp, spcode, genus, species, latin, family, trait_group)
+  select(sp = spcode, genus, species, latin, family, trait_group)
+
+bw_2008 <- bw_2008 %>%
+  left_join(bw_species,by='sp')
 ```
 
 **SCBI**:
@@ -358,15 +363,48 @@ scbi_cv_grid$plots +
 
 ### Model specification
 
-  - Model formula: Growth as a function of
+Next we specify the growth model we want. We will model growth as a
+function of tree identiy, size, and the size and identiy of its
+neighbors. The model can be run on different grouping of individuals
+(e.g., based on species or trait groupings). It can also be run with
+different measures of competition.
+
+  - `model_number = 1`: No competition growth only depends on `dbh` and
+    individual grouping.
+  - `model_number = 2`: Competition but identity of competitor does not
+    matter, just sum of competitior biomass.
+  - `model_number = 3`: Full model with competition and competitor
+    identity.
+
+<!-- end list -->
+
+``` r
+bw_specs <- get_model_specs(bw_2008, 3, 'trait_group')
+
+bw_specs
+#> $model_formula
+#> growth ~ trait_group + dbh + dbh * trait_group + biomass + biomass * 
+#>     trait_group + evergreen * trait_group + maple * trait_group + 
+#>     misc * trait_group + oak * trait_group + short_tree * trait_group + 
+#>     shrub * trait_group
+#> <environment: 0x7fba060b7f60>
+#> 
+#> $notion_of_focal_species
+#> [1] "trait_group"
+#> 
+#> $notion_of_competitor_species
+#> [1] "trait_group"
+#> 
+#> $species_of_interest
+#> [1] "oak"        "evergreen"  "maple"      "shrub"      "short_tree"
+#> [6] "misc"
+scbi_specs <- get_model_specs(scbi_2013, 3, 'sp')
+```
 
   - `get_model_specs()`. Inputs:
-    
       - define identification/grouping classification
       - `growth_df` format
-
   - `create_focal_and_comp()`. Inputs:
-    
       - `growth_df`
       - `max_dist`: who are your competitors
       - `model_specs`: grouping of competitor biomasses

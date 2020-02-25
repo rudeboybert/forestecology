@@ -9,45 +9,24 @@
 #' @export
 #' @examples
 #' 1+1
-get_model_specs <- function(forest, model_number){
+get_model_specs <- function(forest, model_number, species_notion){
   # Define model formula to use out of 5 possible choices defined in paper
   # TODO: Generalize this for any species/family list
 
   model_1_formula <-
-    "growth ~ species + dbh + dbh*species"
+    paste0("growth ~ ", species_notion, " + dbh + dbh*", species_notion)
 
   model_2_formula <-
-    "growth ~ species + dbh + dbh*species + biomass + biomass*species"
+    paste0("growth ~ ", species_notion, " + dbh + dbh*", species_notion, " + biomass + biomass*", species_notion)
 
-  model_3_formula <- forest$trait_group %>%
+
+  model_3_formula <- forest %>%
+    pull(species_notion) %>%
     unique() %>%
     sort() %>%
-    paste(., "*species", sep = "", collapse = " + ") %>%
-    paste("growth ~ species + dbh + dbh*species + ", .)
-
-  model_4_formula <-
-    "growth ~ species + dbh + dbh*species"
-
-  model_5_formula <-
-    "growth ~ species + dbh + dbh*species + biomass + biomass*species"
-
-  model_6_formula <- forest$family_phylo %>%
-    unique() %>%
-    sort() %>%
-    paste(., "*species", sep = "", collapse = " + ") %>%
-    paste("growth ~ species + dbh + dbh*species + ", .)
-
-  model_7_formula <-
-    "growth ~ species + dbh + dbh*species"
-
-  model_8_formula <-
-    "growth ~ species + dbh + dbh*species + biomass + biomass*species"
-
-  model_9_formula <- forest$species %>%
-    unique() %>%
-    sort() %>%
-    paste(., "*species", sep = "", collapse = " + ") %>%
-    paste("growth ~ species + dbh + dbh*species + ", .)
+    paste0('`', ., '`') %>%
+    paste(., "*", species_notion, sep = "", collapse = " + ") %>%
+    paste(model_2_formula,'+', .)
 
   # Convert to formula object:
   model_formula <- model_number %>%
@@ -55,26 +34,18 @@ get_model_specs <- function(forest, model_number){
     get() %>%
     as.formula()
 
-  # Notion of species for both focal and competitor trees. Either:
-  # + "trait_group" (6 levels) or
-  # + "family_phylo" (23 levels) or
-  # + "species" (46 levels)
-  notion_of_spp_indexer <- c(rep("trait_group", 3), rep("family_phylo", 3), rep("species", 3))
-  notion_of_focal_species <- notion_of_spp_indexer[model_number]
-  notion_of_competitor_species <- notion_of_spp_indexer[model_number]
-
   # Species of interest to model. These should be a subset of the species
   # correspoding to notion_of_focal_species.
   species_of_interest <- forest %>%
-    select_(notion_of_focal_species) %>%
+    select(species_notion) %>%
     distinct() %>%
     pull()
 
   # Return output list
   output <- list(
     model_formula = model_formula,
-    notion_of_focal_species = notion_of_focal_species,
-    notion_of_competitor_species = notion_of_competitor_species,
+    notion_of_focal_species = species_notion,
+    notion_of_competitor_species = species_notion,
     species_of_interest = species_of_interest
   )
   return(output)
