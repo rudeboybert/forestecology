@@ -144,8 +144,7 @@ id <- "treeID"
 bw_growth_df <- 
   # Merge both censuses and compute growth:
   compute_growth(census_df1, census_df2, id) %>% 
-  mutate(sp = to_any_case(sp)) %>% 
-  left_join(bw_species, by = c("sp" = "spcode"))
+  mutate(sp = to_any_case(sp))
 ```
 
 **SCBI**:
@@ -258,10 +257,10 @@ bw_growth_df <- bw_growth_df %>%
 # ID which points are in buffer and which are not
 index <- st_intersects(bw_growth_df, bw_buffer, sparse = FALSE)
 bw_growth_df <- bw_growth_df %>% 
-  mutate(buffer = index)
+  mutate(buffer = index[,1])
 
 # Plot
-ggplot() +
+ggplot() +  
   geom_sf(data = bw_boundary) +
   geom_sf(data = bw_buffer, col="red") +
   # Only random sample of 1000 trees:
@@ -288,7 +287,7 @@ scbi_growth_df <- scbi_growth_df %>%
 # ID which points are in buffer and which are not
 index <- st_intersects(scbi_growth_df, scbi_buffer, sparse = FALSE)
 scbi_growth_df <- scbi_growth_df %>% 
-  mutate(buffer = index)
+  mutate(buffer = index[,1])
 
 # Plot
 ggplot() +
@@ -401,13 +400,21 @@ bw_specs
 scbi_specs <- get_model_specs(scbi_2013, 3, 'sp')
 ```
 
-  - `get_model_specs()`. Inputs:
-      - define identification/grouping classification
-      - `growth_df` format
-  - `create_focal_and_comp()`. Inputs:
-      - `growth_df`
-      - `max_dist`: who are your competitors
-      - `model_specs`: grouping of competitor biomasses
+Next we create the `focal_vs_comp` object which connects each tree to
+the trees in its competitive neighborhood (with `max_dist`). This
+required `growth_df`, `max_dist`, `cv_fold_size`, and `model_specs` as
+inputs.
+
+**DA NOTE: THIS IS BROKEN HERE\!\! The problem is the new `sf` structure
+of `growth_df` breaks `get_cv_fold_info` which is called in
+`create_focal_vs_comp`. Also at some point `fold` in `growth_bf` became
+`foldID`. So I had to go change that in a bunch of the package
+code.**
+
+``` r
+#bw_focal_vs_comp <- create_focal_vs_comp(bw_growth_df, max_dist, cv_fold_size, bw_specs)
+#scbi_focal_vs_comp <- create_focal_vs_comp(scbi_growth_df, max_dist, cv_fold_size, scbi_specs)
+```
 
 ### Model fit and prediction
 
