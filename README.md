@@ -369,25 +369,24 @@ neighbors. The model can be run on different grouping of individuals
 (e.g., based on species or trait groupings). It can also be run with
 different measures of competition.
 
-  - `model_number = 1`: No competition growth only depends on `dbh` and
-    individual grouping.
+  - `model_number = 1`: No competition growth only depends on focal tree
+    `dbh` and grouping.
   - `model_number = 2`: Competition but identity of competitor does not
-    matter, just sum of competitior biomass.
-  - `model_number = 3`: Full model with competition and competitor
+    matter, just sum of competitior basal area.
+  - `model_number = 3`: Full model with competition including competitor
     identity.
 
 <!-- end list -->
 
 ``` r
 bw_specs <- get_model_specs(bw_2008, 3, 'trait_group')
-
 bw_specs
 #> $model_formula
 #> growth ~ trait_group + dbh + dbh * trait_group + biomass + biomass * 
 #>     trait_group + evergreen * trait_group + maple * trait_group + 
 #>     misc * trait_group + oak * trait_group + short_tree * trait_group + 
 #>     shrub * trait_group
-#> <environment: 0x7fba060b7f60>
+#> <environment: 0x7fdd78ed1b60>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -398,6 +397,7 @@ bw_specs
 #> $species_of_interest
 #> [1] "oak"        "evergreen"  "maple"      "shrub"      "short_tree"
 #> [6] "misc"
+
 scbi_specs <- get_model_specs(scbi_2013, 3, 'sp')
 ```
 

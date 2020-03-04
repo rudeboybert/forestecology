@@ -63,7 +63,7 @@ compute_growth <- function(census_df1, census_df2, id) {
 create_focal_vs_comp <- function(forest, max_dist, cv_fold_size, model_specs){
 
   # get folds info
-  folds <- growth_df %>%
+  folds <- forest %>%
     filter(!buffer) %>%
     get_cv_fold_info(cv_fold_size) %>%
     mutate(

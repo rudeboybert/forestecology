@@ -150,8 +150,7 @@ id <- "treeID"
 bw_growth_df <- 
   # Merge both censuses and compute growth:
   compute_growth(census_df1, census_df2, id) %>% 
-  mutate(sp = to_any_case(sp)) %>% 
-  left_join(bw_species, by = c("sp" = "spcode"))
+  mutate(sp = to_any_case(sp))
 ```
 
 **SCBI**:
@@ -237,10 +236,10 @@ bw_growth_df <- bw_growth_df %>%
 # ID which points are in buffer and which are not
 index <- st_intersects(bw_growth_df, bw_buffer, sparse = FALSE)
 bw_growth_df <- bw_growth_df %>% 
-  mutate(buffer = index)
+  mutate(buffer = index[,1])
 
 # Plot
-ggplot() +
+ggplot() +  
   geom_sf(data = bw_boundary) +
   geom_sf(data = bw_buffer, col="red") +
   # Only random sample of 1000 trees:
@@ -265,7 +264,7 @@ scbi_growth_df <- scbi_growth_df %>%
 # ID which points are in buffer and which are not
 index <- st_intersects(scbi_growth_df, scbi_buffer, sparse = FALSE)
 scbi_growth_df <- scbi_growth_df %>% 
-  mutate(buffer = index)
+  mutate(buffer = index[,1])
 
 # Plot
 ggplot() +
@@ -326,9 +325,9 @@ scbi_cv_grid$plots +
 
 Next we specify the growth model we want. We will model growth as a function of tree identiy, size, and the size and identiy of its neighbors. The model can be run on different grouping of individuals (e.g., based on species or trait groupings). It can also be run with different measures of competition. 
 
-* `model_number = 1`: No competition growth only depends on `dbh` and individual grouping.
-* `model_number = 2`: Competition but identity of competitor does not matter, just sum of competitior biomass.
-* `model_number = 3`: Full model with competition and competitor identity.
+* `model_number = 1`: No competition growth only depends on focal tree `dbh` and grouping.
+* `model_number = 2`: Competition but identity of competitor does not matter, just sum of competitior basal area.
+* `model_number = 3`: Full model with competition including competitor identity.
 
 ```{r}
 bw_specs <- get_model_specs(bw_2008, 3, 'trait_group')
@@ -338,14 +337,13 @@ scbi_specs <- get_model_specs(scbi_2013, 3, 'sp')
 
 ```
 
-* `get_model_specs()`. Inputs:
-    + define identification/grouping classification
-    + `growth_df` format
-* `create_focal_and_comp()`. Inputs:
-    + `growth_df`
-    + `max_dist`: who are your competitors
-    + `model_specs`: grouping of competitor biomasses
+Next we create the `focal_vs_comp` object which connects each tree to the trees in its competitive neighborhood (with `max_dist`). This required `growth_df`, `max_dist`, `cv_fold_size`, and `model_specs` as inputs.
 
+```{r}
+bw_focal_vs_comp <- create_focal_vs_comp(bw_growth_df, max_dist, cv_fold_size, bw_specs)
+scbi_focal_vs_comp <- create_focal_vs_comp(scbi_growth_df, max_dist, cv_fold_size, scbi_specs)
+
+```
 
 
 ### Model fit and prediction

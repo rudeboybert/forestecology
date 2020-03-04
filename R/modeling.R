@@ -17,7 +17,7 @@ get_model_specs <- function(forest, model_number, species_notion){
     paste0("growth ~ ", species_notion, " + dbh + dbh*", species_notion)
 
   model_2_formula <-
-    paste0("growth ~ ", species_notion, " + dbh + dbh*", species_notion, " + biomass + biomass*", species_notion)
+    paste0("growth ~ ", species_notion, " + dbh + dbh*", species_notion, " + comp_basal_area + comp_basal_area*", species_notion)
 
 
   model_3_formula <- forest %>%
