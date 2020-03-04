@@ -90,7 +90,7 @@ create_focal_vs_comp <- function(forest, max_dist, cv_fold_size, model_specs){
     mutate(spCode = as.numeric(factor(species))) %>%
     # ID numbers to join focal trees with competitor trees
     mutate(focal_ID = 1:n()) %>%
-    select(focal_ID, ID, species, spCode, x, y, dbh, growth, fold)
+    select(focal_ID, ID, species, spCode, x, y, dbh, growth, foldID)
 
   # 2. Define competitor trees where notion of "species" depends on
   # notion_of_competitor_species
@@ -107,7 +107,7 @@ create_focal_vs_comp <- function(forest, max_dist, cv_fold_size, model_specs){
       # https://en.wikipedia.org/wiki/Basal_area
       basal_area = 0.0001 * pi * (dbh/2)^2
     ) %>%
-    select(comp_ID, ID, species, x, y, dbh, basal_area, fold)
+    select(comp_ID, ID, species, x, y, dbh, basal_area, foldID)
 
 
   # 2. Define distances of focal trees to other focal trees.
@@ -119,11 +119,11 @@ create_focal_vs_comp <- function(forest, max_dist, cv_fold_size, model_specs){
   # notion_of_competitor_species == "species"
   # species_of_interest == unique(bw$species)
   focal_vs_focal <- NULL
-  for(i in 1:max(forest$fold)){
+  for(i in 1:max(forest$foldID)){
     x <- focal_trees %>%
-      filter(fold == i)
+      filter(foldID == i)
     y <- focal_trees %>%
-      filter(fold %in% unlist(folds$data[folds$fold == i]))
+      filter(foldID %in% unlist(folds$data[folds$foldID == i]))
 
     D <- proxy::dist(x=x[, c("x", "y")], y=y[, c("x", "y")])
 
@@ -155,11 +155,11 @@ create_focal_vs_comp <- function(forest, max_dist, cv_fold_size, model_specs){
   # notion_of_competitor_species == "species"
   # species_of_interest == unique(bw$species)
   focal_vs_comp <- NULL
-  for(i in 1:max(forest$fold)){
+  for(i in 1:max(forest$foldID)){
     x <- focal_trees %>%
-      filter(fold == i)
+      filter(foldID == i)
     y <- comp_trees %>%
-      filter(fold %in% unlist(folds$data[i]))
+      filter(foldID %in% unlist(folds$data[i]))
 
     D <- proxy::dist(x=x[, c("x", "y")], y=y[, c("x", "y")])
 
@@ -174,7 +174,7 @@ create_focal_vs_comp <- function(forest, max_dist, cv_fold_size, model_specs){
       # Focal trees cannot be competitors with themselves. Remove these cases:
       filter(focal_bw_ID != ID) %>%
       group_by(focal_ID) %>%
-      select(-c(x, y, focal_bw_ID, ID, fold))
+      select(-c(x, y, focal_bw_ID, ID, foldID))
 
     focal_vs_comp <- focal_vs_comp %>%
       bind_rows(focal_vs_comp_fold_i)
@@ -190,7 +190,7 @@ create_focal_vs_comp <- function(forest, max_dist, cv_fold_size, model_specs){
     left_join(focal_trees, by = "focal_ID") %>%
     select(
       ID,
-      focal_ID, species, spCode, x, y, dbh, growth, fold,
+      focal_ID, species, spCode, x, y, dbh, growth, foldID,
       comp_species, comp_biomass, #comp_ID, dist, comp_dbh,
     ) %>%
     mutate(growth_hat = NA)

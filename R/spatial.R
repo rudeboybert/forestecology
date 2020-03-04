@@ -132,9 +132,9 @@ get_cv_fold_info <- function(forest, cv_fold_size){
   # Save output here
   fold_neighbors <- NULL
 
-  for(i in 1:n_distinct(forest$fold)){
+  for(i in 1:n_distinct(forest$foldID)){
     center_tree <- forest %>%
-      filter(fold == i) %>%
+      filter(foldID == i) %>%
       summarise(x = mean(x), y = mean(y))
 
     fold_neighbors <- forest %>%
@@ -142,7 +142,7 @@ get_cv_fold_info <- function(forest, cv_fold_size){
         between(x, center_tree$x - cv_fold_size, center_tree$x + cv_fold_size),
         between(y, center_tree$y - cv_fold_size, center_tree$y + cv_fold_size)
       ) %>%
-      pull(fold) %>%
+      pull(foldID) %>%
       unique() %>%
       sort() %>%
       data_frame(neighbor = .) %>%
@@ -151,13 +151,13 @@ get_cv_fold_info <- function(forest, cv_fold_size){
         x = center_tree$x,
         y = center_tree$y
       ) %>%
-      select(fold, x, y, neighbor) %>%
+      select(foldID, x, y, neighbor) %>%
       nest(data=c(neighbor)) %>%
       bind_rows(fold_neighbors)
   }
 
   fold_neighbors <- fold_neighbors %>%
-    arrange(fold)
+    arrange(foldID)
   return(fold_neighbors)
 }
 
