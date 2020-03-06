@@ -9,3 +9,4 @@
 ^data-raw$
 ^README_cache$
 ^etc$
+^cv_folds_sanity_check$

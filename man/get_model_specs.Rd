@@ -4,12 +4,14 @@
 \alias{get_model_specs}
 \title{Define notion of species based on model choice}
 \usage{
-get_model_specs(forest, model_number)
+get_model_specs(forest, model_number, species_notion)
 }
 \arguments{
 \item{forest}{data frame containing tree data}
 
-\item{model_number}{Number of model out of 1-5 from paper}
+\item{model_number}{Number of model out of 1-3 from paper}
+
+\item{species_notion}{Notion of grouping of individuals}
 }
 \value{
 A list of outputs

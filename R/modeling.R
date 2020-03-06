@@ -1,24 +1,23 @@
 #' Define notion of species based on model choice
 #'
 #' @inheritParams define_cv_grid
-#' @param model_number Number of model out of 1-5 from paper
+#' @param model_number Number of model out of 1-3 from paper
+#' @param species_notion Notion of grouping of individuals
 #'
 #' @import dplyr
 #' @importFrom stats as.formula
+#' @importFrom stringr str_c
 #' @return A list of outputs
 #' @export
 #' @examples
 #' 1+1
 get_model_specs <- function(forest, model_number, species_notion){
-  # Define model formula to use out of 5 possible choices defined in paper
-  # TODO: Generalize this for any species/family list
-
+  # Define 3 possible models for 3 notions of competition
   model_1_formula <-
-    paste0("growth ~ ", species_notion, " + dbh + dbh*", species_notion)
+    paste0("growth ~ ", species_notion, " + dbh + dbh * ", species_notion)
 
   model_2_formula <-
-    paste0("growth ~ ", species_notion, " + dbh + dbh*", species_notion, " + comp_basal_area + comp_basal_area*", species_notion)
-
+    paste0("growth ~ ", species_notion, " + dbh + dbh * ", species_notion, " + comp_basal_area + comp_basal_area * ", species_notion)
 
   model_3_formula <- forest %>%
     pull(species_notion) %>%
@@ -26,9 +25,9 @@ get_model_specs <- function(forest, model_number, species_notion){
     sort() %>%
     paste0('`', ., '`') %>%
     paste(., "*", species_notion, sep = "", collapse = " + ") %>%
-    paste(model_2_formula,'+', .)
+    paste(model_2_formula, '+', .)
 
-  # Convert to formula object:
+  # Convert desied model to formula object:
   model_formula <- model_number %>%
     paste("model_", ., "_formula", sep="") %>%
     get() %>%
@@ -37,9 +36,8 @@ get_model_specs <- function(forest, model_number, species_notion){
   # Species of interest to model. These should be a subset of the species
   # correspoding to notion_of_focal_species.
   species_of_interest <- forest %>%
-    select(species_notion) %>%
-    distinct() %>%
-    pull()
+    pull(species_notion) %>%
+    unique()
 
   # Return output list
   output <- list(

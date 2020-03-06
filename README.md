@@ -138,7 +138,8 @@ The resulting data frames are named with some variation of `growth_df`.
 ``` r
 census_df1 <- bw_2008
 # we need to filter out the resprouts
-census_df2 <- bw_2014 %>% filter(!str_detect(codes,'R'))
+census_df2 <- bw_2014 %>% 
+  filter(!str_detect(codes, 'R'))
 id <- "treeID"
 
 bw_growth_df <- 
@@ -255,9 +256,9 @@ bw_growth_df <- bw_growth_df %>%
   st_as_sf(coords = c("gx", "gy"))
 
 # ID which points are in buffer and which are not
-index <- st_intersects(bw_growth_df, bw_buffer, sparse = FALSE)
+buffer_index <- !st_intersects(bw_growth_df, bw_buffer, sparse = FALSE)
 bw_growth_df <- bw_growth_df %>% 
-  mutate(buffer = index[,1])
+  mutate(buffer = as.vector(buffer_index))
 
 # Plot
 ggplot() +  
@@ -285,9 +286,9 @@ scbi_growth_df <- scbi_growth_df %>%
   st_as_sf(coords = c("gx", "gy"))
 
 # ID which points are in buffer and which are not
-index <- st_intersects(scbi_growth_df, scbi_buffer, sparse = FALSE)
+buffer_index <- st_intersects(scbi_growth_df, scbi_buffer, sparse = FALSE)
 scbi_growth_df <- scbi_growth_df %>% 
-  mutate(buffer = index[,1])
+  mutate(buffer = as.vector(buffer_index))
 
 # Plot
 ggplot() +
@@ -309,10 +310,11 @@ scheme.
 **Big Woods**:
 
 ``` r
+set.seed(76)
 bw_cv_grid <- spatialBlock(
-  speciesData = bw_growth_df, theRange = 100, k = 28, 
-  xOffset = 0.5, yOffset = 0.99999,
-  verbose = FALSE
+  speciesData = bw_growth_df, theRange = 100, verbose = FALSE,
+  # Some guess work in figuring this out:
+  k = 28, xOffset = 0.5, yOffset = 0
 )
 ```
 
@@ -323,22 +325,28 @@ bw_cv_grid <- spatialBlock(
 # Add foldID to data
 bw_growth_df <- bw_growth_df %>% 
   mutate(
-    foldID = bw_cv_grid$foldID,
-    foldID = factor(foldID)
-  )
+    foldID = bw_cv_grid$foldID
+  ) 
 
-# Visualize grid
+# Visualize grid. Why does fold 19 repeat?
 bw_cv_grid$plots +
-  geom_sf(data = bw_growth_df, aes(col=foldID), size = 0.1)
+  geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col=factor(foldID)), size = 0.1)
 ```
 
 <img src="man/figures/README-unnamed-chunk-13-2.png" width="100%" />
+
+``` r
+
+# Remove weird folds with no trees in them from viz above
+bw_growth_df <- bw_growth_df %>%
+  filter(!foldID %in% c(19, 23, 21, 17, 8, 19))
+```
 
 **SCBI**:
 
 ``` r
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.6, verbose = FALSE
+  speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.9999, verbose = FALSE
 )
 ```
 
@@ -349,13 +357,12 @@ scbi_cv_grid <- spatialBlock(
 # Add foldID to data
 scbi_growth_df <- scbi_growth_df %>% 
   mutate(
-    foldID = scbi_cv_grid$foldID,
-    foldID = factor(foldID)
+    foldID = scbi_cv_grid$foldID
   )
 
 # Visualize grid
 scbi_cv_grid$plots +
-  geom_sf(data = scbi_growth_df, aes(col=foldID), size = 0.1)
+  geom_sf(data = scbi_growth_df, aes(col=factor(foldID)), size = 0.1)
 ```
 
 <img src="man/figures/README-unnamed-chunk-14-2.png" width="100%" />
@@ -363,10 +370,10 @@ scbi_cv_grid$plots +
 ### Model specification
 
 Next we specify the growth model we want. We will model growth as a
-function of tree identiy, size, and the size and identiy of its
-neighbors. The model can be run on different grouping of individuals
-(e.g., based on species or trait groupings). It can also be run with
-different measures of competition.
+function of tree identity, size (in dbh), and the identity and size (in
+dbh) of its neighbors. The model can be run on different grouping of
+individuals (e.g., based on species or trait groupings). It can also be
+run with different notions of competition:
 
   - `model_number = 1`: No competition growth only depends on focal tree
     `dbh` and grouping.
@@ -378,14 +385,15 @@ different measures of competition.
 <!-- end list -->
 
 ``` r
-bw_specs <- get_model_specs(bw_2008, 3, 'trait_group')
+bw_specs <- bw_growth_df %>% 
+  get_model_specs(model_number = 3, species_notion = 'trait_group')
 bw_specs
 #> $model_formula
-#> growth ~ trait_group + dbh + dbh * trait_group + biomass + biomass * 
-#>     trait_group + evergreen * trait_group + maple * trait_group + 
-#>     misc * trait_group + oak * trait_group + short_tree * trait_group + 
-#>     shrub * trait_group
-#> <environment: 0x7fdd78ed1b60>
+#> growth ~ trait_group + dbh + dbh * trait_group + comp_basal_area + 
+#>     comp_basal_area * trait_group + evergreen * trait_group + 
+#>     maple * trait_group + misc * trait_group + oak * trait_group + 
+#>     short_tree * trait_group + shrub * trait_group
+#> <environment: 0x7fdcc730de10>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -397,23 +405,40 @@ bw_specs
 #> [1] "oak"        "evergreen"  "maple"      "shrub"      "short_tree"
 #> [6] "misc"
 
-scbi_specs <- get_model_specs(scbi_2013, 3, 'sp')
+scbi_specs <- scbi_growth_df %>% 
+  get_model_specs(model_number = 3, species_notion = 'sp')
 ```
 
-Next we create the `focal_vs_comp` object which connects each tree to
-the trees in its competitive neighborhood (with `max_dist`). This
-required `growth_df`, `max_dist`, `cv_fold_size`, and `model_specs` as
-inputs.
+Next we create the `focal_vs_comp` data frame which connects each tree
+in `growth_df` to the trees in its competitive neighborhood range (as
+defined by `max_dist`). So for example, if `growth_df` consisted of two
+focal trees with two and three neighbors respectively, `focal_vs_comp`
+would consist of 5 rows.
 
-**DA NOTE: THIS IS BROKEN HERE\!\! The problem is the new `sf` structure
-of `growth_df` breaks `get_cv_fold_info` which is called in
-`create_focal_vs_comp`. Also at some point `fold` in `growth_bf` became
-`foldID`. So I had to go change that in a bunch of the package
-code.**
+This requires the `growth_df` data frame, `max_dist` scalar defining
+competitive range, `cv_fold_size` defining the size of the spatial
+cross-validation blocks, and `model_specs` as inputs.
 
 ``` r
-#bw_focal_vs_comp <- create_focal_vs_comp(bw_growth_df, max_dist, cv_fold_size, bw_specs)
-#scbi_focal_vs_comp <- create_focal_vs_comp(scbi_growth_df, max_dist, cv_fold_size, scbi_specs)
+focal_vs_comp_bw <- bw_growth_df %>% 
+  create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
+```
+
+``` r
+glimpse(focal_vs_comp_bw)
+#> Observations: 431,244
+#> Variables: 11
+#> $ focal_ID                <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+#> $ comp_ID                 <dbl> 2, 3, 4, 5, 6, 7, 8, 81, 82, 83, 84, 85, 86, …
+#> $ dist                    <dbl> 2.370654, 3.413210, 3.905125, 4.162932, 4.601…
+#> $ foldID                  <int> 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 1…
+#> $ geometry                <POINT> POINT (8.7 107.5), POINT (8.7 107.5), POINT…
+#> $ growth                  <dbl> 0.40377706, 0.40377706, 0.40377706, 0.4037770…
+#> $ focal_notion_of_species <fct> oak, oak, oak, oak, oak, oak, oak, oak, oak, …
+#> $ dbh                     <dbl> 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.…
+#> $ comp_notion_of_species  <fct> evergreen, maple, maple, maple, maple, maple,…
+#> $ comp_basal_area         <dbl> 0.0027339710, 0.1604599864, 0.0013202543, 0.0…
+#> $ growth_hat              <lgl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
 ```
 
 ### Model fit and prediction
