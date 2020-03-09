@@ -425,28 +425,25 @@ competitive range, `cv_fold_size` defining the size of the spatial
 cross-validation blocks, and `model_specs` as inputs.
 
 ``` r
-focal_vs_comp_bw <- bw_growth_df %>% 
-  create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
+#focal_vs_comp_bw <- bw_growth_df %>% 
+#  create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
 ```
 
 ``` r
-glimpse(focal_vs_comp_bw)
-#> Observations: 431,244
-#> Variables: 11
-#> $ focal_ID                <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-#> $ comp_ID                 <dbl> 2, 3, 4, 5, 6, 7, 8, 81, 82, 83, 84, 85, 86, …
-#> $ dist                    <dbl> 2.370654, 3.413210, 3.905125, 4.162932, 4.601…
-#> $ foldID                  <int> 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 1…
-#> $ geometry                <POINT> POINT (8.7 107.5), POINT (8.7 107.5), POINT…
-#> $ growth                  <dbl> 0.40377706, 0.40377706, 0.40377706, 0.4037770…
-#> $ focal_notion_of_species <fct> oak, oak, oak, oak, oak, oak, oak, oak, oak, …
-#> $ dbh                     <dbl> 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.…
-#> $ comp_notion_of_species  <fct> evergreen, maple, maple, maple, maple, maple,…
-#> $ comp_basal_area         <dbl> 0.0027339710, 0.1604599864, 0.0013202543, 0.0…
-#> $ growth_hat              <lgl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
+#glimpse(focal_vs_comp_bw)
 ```
 
 ### Model fit and prediction
+
+Now we are ready to fit the competition model with `fit_bayesian_model`
+this takes two inputs: `focal_vs_comp` the data frame with focal trees
+connected to their competitors and `model_specs` which specifies the
+notion of
+competition.
+
+``` r
+#bw_fit_model <- focal_vs_comp_bw %>% fit_bayesian_model(model_specs = bw_specs)
+```
 
   - `fit_bayesian_model()`.
       - Inputs: `focal_and_comp`, `model_specs`

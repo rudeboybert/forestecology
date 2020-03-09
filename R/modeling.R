@@ -101,7 +101,7 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
     summarise_all(list(sum)) %>%
     ungroup() %>%
     # compute biomass for each tree type
-    spread(comp_notion_of_species, basal_area_total, fill = 0) %>%
+    pivot_wider(names_from = comp_notion_of_species, values_from = basal_area_total, values_fill = list(basal_area_total = 0)) %>%
     group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID) %>%
     summarise_all(list(sum)) %>%
     ungroup() %>%
