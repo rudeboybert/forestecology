@@ -192,17 +192,18 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
 #' @examples
 #' 1+1
 predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
+
   # Get model formula
   model_formula <- model_specs$model_formula
 
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
-    group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold, comp_species) %>%
-    # Sum biomass & count of all neighbors; set to 0 for cases of no neighbors
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
+    # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
     summarise(
-      biomass_total = sum(comp_biomass),
-      biomass = sum(comp_biomass),
+      basal_area_total = sum(comp_basal_area),
+      comp_basal_area = sum(comp_basal_area),
       n_comp = n()
     ) %>%
     arrange(focal_ID)
@@ -212,16 +213,17 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
     ungroup() %>%
     # sum biomass and n_comp for competitors of same species. we need to do this
     # for the cases when we do permutation shuffle.
-    group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold, comp_species) %>%
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
     summarise_all(list(sum)) %>%
     ungroup() %>%
     # compute biomass for each tree type
-    spread(comp_species, biomass_total, fill = 0) %>%
-    group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold) %>%
+    pivot_wider(names_from = comp_notion_of_species, values_from = basal_area_total, values_fill = list(basal_area_total = 0)) %>%
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID) %>%
     summarise_all(list(sum)) %>%
     ungroup() %>%
     # sort by focal tree ID number
-    arrange(focal_ID)
+    arrange(focal_ID) %>%
+    rename(!!model_specs$notion_of_focal_species := focal_notion_of_species)
 
   # Add biomass=0 for any species for which there are no trees
   species_levels <- model_specs$species_of_interest
@@ -252,7 +254,8 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
   focal_vs_comp <- focal_vs_comp %>%
     select(-growth_hat) %>%
     left_join(focal_trees, by = "focal_ID") %>%
-    select(ID, focal_ID, species, spCode, x, y, dbh, growth, growth_hat, fold, everything())
+    select(focal_ID, focal_notion_of_species, dbh, growth, growth_hat, foldID, everything())
 
+  # why do we return focal_vs_comp?? Shouldn't we return focal_trees (one row per focal tree not per interaction)
   return(focal_vs_comp)
 }
