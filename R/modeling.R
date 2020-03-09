@@ -75,12 +75,12 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
 
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
-    group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold, comp_species) %>%
-    # Sum biomass & count of all neighbors; set to 0 for cases of no neighbors
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
+    # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
     summarise(
-      biomass_total = sum(comp_biomass),
-      biomass = sum(comp_biomass),
+      basal_area_total = sum(comp_basal_area),
+      comp_basal_area = sum(comp_basal_area),
       n_comp = n()
     ) %>%
     arrange(focal_ID)
@@ -88,8 +88,8 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
   # Shuffle group label only if flag is set
   if(run_shuffle){
     focal_trees <- focal_trees %>%
-      group_by(species) %>%
-      mutate(comp_species = sample(comp_species))
+      group_by(focal_notion_of_species) %>%
+      mutate(comp_notion_of_species = sample(comp_notion_of_species))
   }
 
   # Continue processing focal_trees
@@ -97,16 +97,17 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
     ungroup() %>%
     # sum biomass and n_comp for competitors of same species. we need to do this
     # for the cases when we do permutation shuffle.
-    group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold, comp_species) %>%
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
     summarise_all(list(sum)) %>%
     ungroup() %>%
     # compute biomass for each tree type
-    spread(comp_species, biomass_total, fill = 0) %>%
-    group_by(ID, focal_ID, species, spCode, x, y, dbh, growth, fold) %>%
+    spread(comp_notion_of_species, basal_area_total, fill = 0) %>%
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID) %>%
     summarise_all(list(sum)) %>%
     ungroup() %>%
     # sort by focal tree ID number
-    arrange(focal_ID)
+    arrange(focal_ID) %>%
+    rename(!!model_specs$notion_of_focal_species := focal_notion_of_species)
 
   # Add biomass=0 for any species for which there are no trees
   species_levels <- model_specs$species_of_interest

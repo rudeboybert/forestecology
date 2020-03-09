@@ -357,6 +357,12 @@ glimpse(focal_vs_comp_bw)
 
 ### Model fit and prediction
 
+Now we are ready to fit the competition model with `fit_bayesian_model` this takes two inputs: `focal_vs_comp` the data frame with focal trees connected to their competitors and `model_specs` which specifies the notion of competition.
+
+```{r}
+bw_fit_model <- focal_vs_comp_bw %>% fit_bayesian_model(model_specs = bw_specs)
+```
+
 * `fit_bayesian_model()`. 
     + Inputs: `focal_and_comp`, `model_specs`
     + Output: `posterior_param`

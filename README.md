@@ -393,7 +393,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7fdcc730de10>
+#> <environment: 0x7fcbc7ce7c40>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -402,8 +402,13 @@ bw_specs
 #> [1] "trait_group"
 #> 
 #> $species_of_interest
-#> [1] "oak"        "evergreen"  "maple"      "shrub"      "short_tree"
-#> [6] "misc"
+#> Geometry set for 25269 features 
+#> geometry type:  POINT
+#> dimension:      XY
+#> bbox:           xmin: -301.3 ymin: 0 xmax: 497.9 ymax: 400
+#> epsg (SRID):    NA
+#> proj4string:    NA
+#> First 5 geometries:
 
 scbi_specs <- scbi_growth_df %>% 
   get_model_specs(model_number = 3, species_notion = 'sp')
