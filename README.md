@@ -475,8 +475,10 @@ bw_predict <- focal_vs_comp_bw %>%
   predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model)
 
 bw_predict %>%
+  group_by(focal_ID) %>%
+  summarise(growth = mean(growth), growth_hat = mean(growth_hat)) %>%
   ggplot(aes(growth, growth_hat)) +
-  geom_point() +
+  geom_point(size = 0.5, color = rgb(0,0,0,0.25)) +
   stat_smooth(method = 'lm') +
   geom_abline(slope = 1, intercept = 0)
 ```
