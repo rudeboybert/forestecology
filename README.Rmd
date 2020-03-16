@@ -371,6 +371,9 @@ This output has the posterior parameters for the specified competition model. If
 bw_predict <- focal_vs_comp_bw %>% 
   predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model)
 
+# TODO: Convert output of predict_bayesian_model() to be of focal_vs_focal type
+# TODO: Preserve geometry variable, that way we can easily create residual plots
+
 bw_predict %>%
   group_by(focal_ID, focal_notion_of_species) %>%
   # Since for the same focal tree all growth & growth_hat values are the same:
