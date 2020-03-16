@@ -470,12 +470,14 @@ bw_predict <- focal_vs_comp_bw %>%
   predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model)
 
 bw_predict %>%
-  group_by(focal_ID) %>%
+  group_by(focal_ID, focal_notion_of_species) %>%
+  # Since for the same focal tree all growth & growth_hat values are the same:
   summarise(growth = mean(growth), growth_hat = mean(growth_hat)) %>%
-  ggplot(aes(growth, growth_hat)) +
+  ggplot(aes(x = growth, y = growth_hat)) +
   geom_point(size = 0.5, color = rgb(0,0,0,0.25)) +
   stat_smooth(method = 'lm') +
   geom_abline(slope = 1, intercept = 0) +
+  coord_fixed() + 
   labs(x = "Observed growth in dbh", y = "Predicted growth in dbh")
 ```
 
