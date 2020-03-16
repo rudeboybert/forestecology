@@ -276,7 +276,7 @@ ggplot() +
 ```
 
 
-#### Spatial cross-validation
+#### Defining spatial cross-validation folds
 
 We use the [`blockCV`](https://github.com/rvalavi/blockCV) package to define the spatial grid, whose elements will act as the folds in our leave-one-out (by "one" we meen "one grid block") cross-validation scheme. 
 
@@ -383,23 +383,29 @@ bw_predict %>%
   stat_smooth(method = 'lm') +
   geom_abline(slope = 1, intercept = 0) +
   coord_fixed() + 
-  labs(x = "Observed growth in dbh", y = "Predicted growth in dbh")
+  labs(
+    x = "Observed growth in dbh", y = "Predicted growth in dbh", 
+    title = "Predicted vs Observed Growth"
+  )
 ```
 
-* `predict_bayesian_model()`. 
-    + Inputs: `focal_and_comp`, `model_specs`, `posterior_param`
-    + Output: `focal_and_comp` with updated `growth_hat` variable
-* Show observed vs predicted growth
+
+
+### Run spatial cross-validation
+
 * CV: `run_cv()` is a wrapper to `fit_bayesian_model()` and `predict_bayesian_model()`. 
+
+
+### Run permutations
+
 * Permutation test:
   + Add line to that shuffles competitor species within `focal_and_comp` just before fitting model
   + permutation AND CV: add `run_shuffle` argument to `run_cv()`
 
 
+### Visualize posterior distributions
 
-### Model output and performance
-
-* Make plot posterior parameter functions
+* Plot posterior distributions of all parameters
 
 
 
