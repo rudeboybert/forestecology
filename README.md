@@ -300,7 +300,7 @@ ggplot() +
 
 <img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
 
-#### Spatial cross-validation
+#### Defining spatial cross-validation folds
 
 We use the [`blockCV`](https://github.com/rvalavi/blockCV) package to
 define the spatial grid, whose elements will act as the folds in our
@@ -469,6 +469,9 @@ understand what controls individual growth.
 bw_predict <- focal_vs_comp_bw %>% 
   predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model)
 
+# TODO: Convert output of predict_bayesian_model() to be of focal_vs_focal type
+# TODO: Preserve geometry variable, that way we can easily create residual plots
+
 bw_predict %>%
   group_by(focal_ID, focal_notion_of_species) %>%
   # Since for the same focal tree all growth & growth_hat values are the same:
@@ -478,22 +481,26 @@ bw_predict %>%
   stat_smooth(method = 'lm') +
   geom_abline(slope = 1, intercept = 0) +
   coord_fixed() + 
-  labs(x = "Observed growth in dbh", y = "Predicted growth in dbh")
+  labs(
+    x = "Observed growth in dbh", y = "Predicted growth in dbh", 
+    title = "Predicted vs Observed Growth"
+  )
 ```
 
 <img src="man/figures/README-unnamed-chunk-19-1.png" width="100%" />
 
-  - `predict_bayesian_model()`.
-      - Inputs: `focal_and_comp`, `model_specs`, `posterior_param`
-      - Output: `focal_and_comp` with updated `growth_hat` variable
-  - Show observed vs predicted growth
+### Run spatial cross-validation
+
   - CV: `run_cv()` is a wrapper to `fit_bayesian_model()` and
     `predict_bayesian_model()`.
+
+### Run permutations
+
   - Permutation test:
       - Add line to that shuffles competitor species within
         `focal_and_comp` just before fitting model
       - permutation AND CV: add `run_shuffle` argument to `run_cv()`
 
-### Model output and performance
+### Visualize posterior distributions
 
-  - Make plot posterior parameter functions
+  - Plot posterior distributions of all parameters
