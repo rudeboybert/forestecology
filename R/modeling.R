@@ -17,8 +17,7 @@ get_model_specs <- function(forest, model_number, species_notion){
     paste0("growth ~ ", species_notion, " + dbh + dbh * ", species_notion)
 
   model_2_formula <-
-    paste0("growth ~ ", species_notion, " + dbh + dbh * ", species_notion,
-           " + comp_basal_area + comp_basal_area * ", species_notion)
+    paste0("growth ~ ", species_notion, " + dbh + dbh * ", species_notion, " + comp_basal_area + comp_basal_area * ", species_notion)
 
   model_3_formula <- forest %>%
     pull(species_notion) %>%
@@ -71,14 +70,12 @@ get_model_specs <- function(forest, model_number, species_notion){
 fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
                                prior_hyperparameters = NULL){
 
-  # Save original group_by variables
-  group_variables <- group_vars(focal_vs_comp)
-
   # Get model formula
   model_formula <- model_specs$model_formula
 
-  # Prepare data for regression generate data frame of all focal trees
+  # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
     # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
     summarise(
@@ -92,26 +89,21 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
   if(run_shuffle){
     focal_trees <- focal_trees %>%
       group_by(focal_notion_of_species) %>%
-      mutate(comp_notion_of_species = sample(comp_notion_of_species)) %>%
-      # Revert group_by variables
-      group_by_at(vars(one_of(group_variables)))
+      mutate(comp_notion_of_species = sample(comp_notion_of_species))
   }
 
   # Continue processing focal_trees
-  focal_trees_2 <- focal_trees %>%
-    filter(focal_ID %in% c(1:1500)) %>%
+  focal_trees <- focal_trees %>%
+    ungroup() %>%
     # sum biomass and n_comp for competitors of same species. we need to do this
     # for the cases when we do permutation shuffle.
-    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID,
-             comp_notion_of_species) %>%
-    summarise_at(vars(basal_area_total, comp_basal_area, n_comp), sum) %>%
-    # compute biomass for each tree type
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
+    summarise_all(list(sum)) %>%
     ungroup() %>%
-    pivot_wider(names_from = comp_notion_of_species,
-                values_from = basal_area_total,
-                values_fill = list(basal_area_total = 0)) %>%
-    # Revert group_by variables
-    summarise_at(vars(basal_area_total, comp_basal_area, n_comp), sum) %>%
+    # compute biomass for each tree type
+    pivot_wider(names_from = comp_notion_of_species, values_from = basal_area_total, values_fill = list(basal_area_total = 0)) %>%
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID) %>%
+    summarise_all(list(sum)) %>%
     ungroup() %>%
     # sort by focal tree ID number
     arrange(focal_ID) %>%
@@ -121,7 +113,6 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
   species_levels <- model_specs$species_of_interest
   missing_species <- species_levels[!species_levels %in% names(focal_trees)] %>%
     as.character()
-
   if(length(missing_species) > 0){
     for(i in 1:length(missing_species)){
       focal_trees <- focal_trees %>%
@@ -207,8 +198,7 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
-    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID,
-             comp_notion_of_species) %>%
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
     # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
     summarise(
@@ -227,9 +217,7 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
     summarise_all(list(sum)) %>%
     ungroup() %>%
     # compute biomass for each tree type
-    pivot_wider(names_from = comp_notion_of_species,
-                values_from = basal_area_total,
-                values_fill = list(basal_area_total = 0)) %>%
+    pivot_wider(names_from = comp_notion_of_species, values_from = basal_area_total, values_fill = list(basal_area_total = 0)) %>%
     group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID) %>%
     summarise_all(list(sum)) %>%
     ungroup() %>%

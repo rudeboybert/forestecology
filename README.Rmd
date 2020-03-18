@@ -348,7 +348,7 @@ This requires the `growth_df` data frame, `max_dist` scalar defining competitive
 
 ```{r}
 focal_vs_comp_bw <- bw_growth_df %>% 
-  create_focal_vs_comp(max_dist = max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
+  create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
 ```
 
 ```{r}
