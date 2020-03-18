@@ -184,7 +184,16 @@ create_focal_vs_comp <- function(growth_df, max_dist, model_specs, cv_grid, id, 
   focal_vs_comp <- focal_vs_comp %>%
     arrange(focal_ID, comp_ID) %>%
     mutate(growth_hat = NA) %>%
-    select(everything(), growth, growth_hat)
+    select(
+      # Relating to focal tree:
+      focal_ID, focal_notion_of_species, dbh, foldID, geometry, growth,
+      # Relating to competitor tree:
+      comp_ID, dist, comp_notion_of_species, comp_basal_area
+    )
+    # Should we do grouping here?
+    # group_by(focal_ID, focal_notion_of_species, dbh, foldID, geometry, growth) %>%
+    # should we convert to sf object here?
+    # st_as_sf()
 
   return(focal_vs_comp)
 }

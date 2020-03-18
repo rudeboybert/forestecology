@@ -368,18 +368,16 @@ This output has the posterior parameters for the specified competition model. If
 
 
 ```{r}
-bw_predict <- focal_vs_comp_bw %>% 
-  predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model)
+bw_growth_df <- focal_vs_comp_bw %>% 
+  predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>% 
+  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+  
+bw_growth_df <- bw_growth_df %>% 
+  st_as_sf()
 
-# TODO: Convert output of predict_bayesian_model() to be of focal_vs_focal type
-# TODO: Preserve geometry variable, that way we can easily create residual plots
-
-bw_predict %>%
-  group_by(focal_ID, focal_notion_of_species) %>%
-  # Since for the same focal tree all growth & growth_hat values are the same:
-  summarise(growth = mean(growth), growth_hat = mean(growth_hat)) %>%
-  ggplot(aes(x = growth, y = growth_hat)) +
-  geom_point(size = 0.5, color = rgb(0,0,0,0.25)) +
+# Observed vs predicted growth  
+ggplot(bw_growth_df, aes(x = growth, y = growth_hat)) +
+  geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = 'lm') +
   geom_abline(slope = 1, intercept = 0) +
   coord_fixed() + 
@@ -387,6 +385,25 @@ bw_predict %>%
     x = "Observed growth in dbh", y = "Predicted growth in dbh", 
     title = "Predicted vs Observed Growth"
   )
+
+reslab <- expression(paste('Residual (cm ',y^{-1},')'))
+bw_growth_df %>% 
+  # Need to investigate missingness
+  filter(!is.na(growth_hat)) %>% 
+  mutate(
+    error = growth - growth_hat,
+    error_bin = cut_number(error, n = 5), 
+    error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
+  ) %>% 
+  ggplot() + 
+  geom_sf(aes(col = error_compress), size = 0.4) + 
+  theme_bw() + 
+  scale_color_gradient2(
+    low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
+    name = reslab,
+    breaks = seq(from = -0.75, to = 0.75, by = 0.25),
+    labels = c('< -0.75', '-0.5', '0.25', '0', '0.25', '0.5', '> 0.75')) +
+  labs(x = "Meter", y = "Meter")
 ```
 
 

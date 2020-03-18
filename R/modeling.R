@@ -251,11 +251,6 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
     mutate(growth_hat = as.vector(X %*% mu_star)) %>%
     select(focal_ID, growth_hat)
 
-  focal_vs_comp <- focal_vs_comp %>%
-    select(-growth_hat) %>%
-    left_join(focal_trees, by = "focal_ID") %>%
-    select(focal_ID, focal_notion_of_species, dbh, growth, growth_hat, foldID, everything())
-
   # why do we return focal_vs_comp?? Shouldn't we return focal_trees (one row per focal tree not per interaction)
-  return(focal_vs_comp)
+  return(focal_trees)
 }

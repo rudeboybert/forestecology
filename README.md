@@ -393,7 +393,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7f9f4b2b2120>
+#> <environment: 0x7f9398eb90e0>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -427,18 +427,17 @@ focal_vs_comp_bw <- bw_growth_df %>%
 ``` r
 glimpse(focal_vs_comp_bw)
 #> Observations: 431,244
-#> Variables: 11
+#> Variables: 10
 #> $ focal_ID                <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-#> $ comp_ID                 <dbl> 2, 3, 4, 5, 6, 7, 8, 81, 82, 83, 84, 85, 86, …
-#> $ dist                    <dbl> 2.370654, 3.413210, 3.905125, 4.162932, 4.601…
+#> $ focal_notion_of_species <fct> oak, oak, oak, oak, oak, oak, oak, oak, oak, …
+#> $ dbh                     <dbl> 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.…
 #> $ foldID                  <int> 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 1…
 #> $ geometry                <POINT> POINT (8.7 107.5), POINT (8.7 107.5), POINT…
 #> $ growth                  <dbl> 0.40377706, 0.40377706, 0.40377706, 0.4037770…
-#> $ focal_notion_of_species <fct> oak, oak, oak, oak, oak, oak, oak, oak, oak, …
-#> $ dbh                     <dbl> 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.…
+#> $ comp_ID                 <dbl> 2, 3, 4, 5, 6, 7, 8, 81, 82, 83, 84, 85, 86, …
+#> $ dist                    <dbl> 2.370654, 3.413210, 3.905125, 4.162932, 4.601…
 #> $ comp_notion_of_species  <fct> evergreen, maple, maple, maple, maple, maple,…
 #> $ comp_basal_area         <dbl> 0.0027339710, 0.1604599864, 0.0013202543, 0.0…
-#> $ growth_hat              <lgl> NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, NA, N…
 ```
 
 ### Model fit and prediction
@@ -466,18 +465,16 @@ be used to get predicted growths for each individual (with
 understand what controls individual growth.
 
 ``` r
-bw_predict <- focal_vs_comp_bw %>% 
-  predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model)
+bw_growth_df <- focal_vs_comp_bw %>% 
+  predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>% 
+  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+  
+bw_growth_df <- bw_growth_df %>% 
+  st_as_sf()
 
-# TODO: Convert output of predict_bayesian_model() to be of focal_vs_focal type
-# TODO: Preserve geometry variable, that way we can easily create residual plots
-
-bw_predict %>%
-  group_by(focal_ID, focal_notion_of_species) %>%
-  # Since for the same focal tree all growth & growth_hat values are the same:
-  summarise(growth = mean(growth), growth_hat = mean(growth_hat)) %>%
-  ggplot(aes(x = growth, y = growth_hat)) +
-  geom_point(size = 0.5, color = rgb(0,0,0,0.25)) +
+# Observed vs predicted growth  
+ggplot(bw_growth_df, aes(x = growth, y = growth_hat)) +
+  geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = 'lm') +
   geom_abline(slope = 1, intercept = 0) +
   coord_fixed() + 
@@ -488,6 +485,30 @@ bw_predict %>%
 ```
 
 <img src="man/figures/README-unnamed-chunk-19-1.png" width="100%" />
+
+``` r
+
+reslab <- expression(paste('Residual (cm ',y^{-1},')'))
+bw_growth_df %>% 
+  # Need to investigate missingness
+  filter(!is.na(growth_hat)) %>% 
+  mutate(
+    error = growth - growth_hat,
+    error_bin = cut_number(error, n = 5), 
+    error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
+  ) %>% 
+  ggplot() + 
+  geom_sf(aes(col = error_compress), size = 0.4) + 
+  theme_bw() + 
+  scale_color_gradient2(
+    low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
+    name = reslab,
+    breaks = seq(from = -0.75, to = 0.75, by = 0.25),
+    labels = c('< -0.75', '-0.5', '0.25', '0', '0.25', '0.5', '> 0.75')) +
+  labs(x = "Meter", y = "Meter")
+```
+
+<img src="man/figures/README-unnamed-chunk-19-2.png" width="100%" />
 
 ### Run spatial cross-validation
 
