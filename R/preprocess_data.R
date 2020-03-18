@@ -140,7 +140,11 @@ create_focal_vs_comp <- function(growth_df, max_dist, model_specs, cv_grid, id, 
     # and cyan larger dots are the test set. orange ones separating test set
     # from training set (trees in all other folds)
     if(plot_folds){
-      plot_title <- str_c("fold ", all_folds[i], ": Small black dots = competitor, cyan dots = test set, orange dots = buffer")
+      plot_title <- str_c(
+        "fold ", all_folds[i],
+        ": Small black dots = competitor, cyan dots = test set, orange dots = buffer"
+      )
+
       ggplot() +
         geom_sf(data = bw_boundary, col = "black") +
         geom_sf(data = current_fold_boundary, col = "black") +
@@ -184,7 +188,10 @@ create_focal_vs_comp <- function(growth_df, max_dist, model_specs, cv_grid, id, 
   focal_vs_comp <- focal_vs_comp %>%
     arrange(focal_ID, comp_ID) %>%
     mutate(growth_hat = NA) %>%
-    select(everything(), growth, growth_hat)
+    select(everything(), growth, growth_hat) %>%
+    st_as_sf() %>%
+    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID,
+             comp_notion_of_species)
 
   return(focal_vs_comp)
 }
