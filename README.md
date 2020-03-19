@@ -382,7 +382,7 @@ run with different notions of competition:
   - `model_number = 3`: Full model with competition including competitor
     identity.
 
-<!-- end list -->
+**Big Woods**:
 
 ``` r
 bw_specs <- bw_growth_df %>% 
@@ -393,7 +393,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7f9398eb90e0>
+#> <environment: 0x7f8097c05d68>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -404,9 +404,6 @@ bw_specs
 #> $species_of_interest
 #> [1] "oak"        "evergreen"  "maple"      "shrub"      "short_tree"
 #> [6] "misc"
-
-scbi_specs <- scbi_growth_df %>% 
-  get_model_specs(model_number = 3, species_notion = 'sp')
 ```
 
 Next we create the `focal_vs_comp` data frame which connects each tree
@@ -440,7 +437,70 @@ glimpse(focal_vs_comp_bw)
 #> $ comp_basal_area         <dbl> 0.0027339710, 0.1604599864, 0.0013202543, 0.0…
 ```
 
+**SCBI**:
+
+``` r
+scbi_specs <- scbi_growth_df %>% 
+  get_model_specs(model_number = 3, species_notion = 'sp')
+scbi_specs
+#> $model_formula
+#> growth ~ sp + dbh + dbh * sp + comp_basal_area + comp_basal_area * 
+#>     sp + acne * sp + acpl * sp + acru * sp + acsp * sp + aial * 
+#>     sp + amar * sp + astr * sp + beth * sp + caca * sp + caco * 
+#>     sp + cade * sp + cagl * sp + caovl * sp + cato * sp + ceca * 
+#>     sp + ceoc * sp + chvi * sp + coal * sp + coam * sp + cofl * 
+#>     sp + crpr * sp + crsp * sp + divi * sp + elum * sp + eual * 
+#>     sp + fagr * sp + fram * sp + frni * sp + frpe * sp + havi * 
+#>     sp + ilve * sp + juci * sp + juni * sp + libe * sp + litu * 
+#>     sp + loma * sp + nysy * sp + pato * sp + pipu * sp + pist * 
+#>     sp + pivi * sp + ploc * sp + prav * sp + prse * sp + prsp * 
+#>     sp + qual * sp + quco * sp + qufa * sp + qumi * sp + qupr * 
+#>     sp + quru * sp + quve * sp + romu * sp + rops * sp + saal * 
+#>     sp + saca * sp + tiam * sp + ulam * sp + ulru * sp + ulsp * 
+#>     sp + unk * sp + viac * sp + vipr * sp + vire * sp
+#> <environment: 0x7f80b05617a8>
+#> 
+#> $notion_of_focal_species
+#> [1] "sp"
+#> 
+#> $notion_of_competitor_species
+#> [1] "sp"
+#> 
+#> $species_of_interest
+#>  [1] "libe"  "nysy"  "havi"  "astr"  "ilve"  "acru"  "saca"  "frni"  "romu" 
+#> [10] "acne"  "caca"  "beth"  "qual"  "tiam"  "fagr"  "quru"  "ceoc"  "litu" 
+#> [19] "vipr"  "juni"  "amar"  "cagl"  "caco"  "cato"  "ceca"  "prav"  "divi" 
+#> [28] "loma"  "saal"  "fram"  "cofl"  "quve"  "ulru"  "prse"  "caovl" "qupr" 
+#> [37] "ulam"  "unk"   "juci"  "frpe"  "coam"  "elum"  "chvi"  "aial"  "cade" 
+#> [46] "acpl"  "crsp"  "ploc"  "qumi"  "vire"  "pist"  "pato"  "crpr"  "qufa" 
+#> [55] "rops"  "quco"  "pivi"  "pipu"  "coal"  "acsp"  "prsp"  "ulsp"  "eual" 
+#> [64] "viac"
+```
+
+``` r
+focal_vs_comp_scbi <- scbi_growth_df %>% 
+  create_focal_vs_comp(max_dist, model_specs = scbi_specs, cv_grid = scbi_cv_grid, id = "stemID")
+```
+
+``` r
+glimpse(focal_vs_comp_scbi)
+#> Observations: 230,270
+#> Variables: 10
+#> $ focal_ID                <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
+#> $ focal_notion_of_species <fct> libe, libe, libe, libe, libe, libe, libe, lib…
+#> $ dbh                     <dbl> 48.8, 48.8, 48.8, 48.8, 48.8, 48.8, 48.8, 48.…
+#> $ foldID                  <int> 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 2…
+#> $ geometry                <POINT> POINT (3.7 73), POINT (3.7 73), POINT (3.7 …
+#> $ growth                  <dbl> 0.2997492, 0.2997492, 0.2997492, 0.2997492, 0…
+#> $ comp_ID                 <dbl> 1050, 1053, 1055, 1056, 1057, 1058, 1059, 106…
+#> $ dist                    <dbl> 4.2426407, 4.2520583, 2.9154759, 3.3301652, 2…
+#> $ comp_notion_of_species  <fct> astr, astr, libe, libe, libe, libe, libe, lib…
+#> $ comp_basal_area         <dbl> 0.41168687, 0.03976078, 0.09294088, 0.1378852…
+```
+
 ### Model fit and prediction
+
+**Big Woods**:
 
 Now we are ready to fit the competition model with `fit_bayesian_model`
 this takes two inputs: `focal_vs_comp` the data frame with focal trees
@@ -484,7 +544,7 @@ ggplot(bw_growth_df, aes(x = growth, y = growth_hat)) +
   )
 ```
 
-<img src="man/figures/README-unnamed-chunk-19-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-22-1.png" width="100%" />
 
 ``` r
 
@@ -508,7 +568,60 @@ bw_growth_df %>%
   labs(x = "Meter", y = "Meter")
 ```
 
-<img src="man/figures/README-unnamed-chunk-19-2.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-22-2.png" width="100%" />
+
+**SCBI**:
+
+``` r
+scbi_fit_model <- focal_vs_comp_scbi %>% 
+  fit_bayesian_model(model_specs = scbi_specs)
+```
+
+``` r
+scbi_growth_df <- focal_vs_comp_scbi %>% 
+  predict_bayesian_model(model_specs = scbi_specs, posterior_param = scbi_fit_model) %>% 
+  right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
+
+scbi_growth_df <- scbi_growth_df %>% 
+  st_as_sf()
+
+# Observed vs predicted growth  
+ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
+  geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
+  stat_smooth(method = 'lm') +
+  geom_abline(slope = 1, intercept = 0) +
+  coord_fixed() + 
+  labs(
+    x = "Observed growth in dbh", y = "Predicted growth in dbh", 
+    title = "Predicted vs Observed Growth"
+  )
+```
+
+<img src="man/figures/README-unnamed-chunk-24-1.png" width="100%" />
+
+``` r
+
+reslab <- expression(paste('Residual (cm ',y^{-1},')'))
+scbi_growth_df %>% 
+  # Need to investigate missingness
+  filter(!is.na(growth_hat)) %>% 
+  mutate(
+    error = growth - growth_hat,
+    error_bin = cut_number(error, n = 5), 
+    error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
+  ) %>% 
+  ggplot() + 
+  geom_sf(aes(col = error_compress), size = 0.4) + 
+  theme_bw() + 
+  scale_color_gradient2(
+    low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
+    name = reslab,
+    breaks = seq(from = -0.75, to = 0.75, by = 0.25),
+    labels = c('< -0.75', '-0.5', '0.25', '0', '0.25', '0.5', '> 0.75')) +
+  labs(x = "Meter", y = "Meter")
+```
+
+<img src="man/figures/README-unnamed-chunk-24-2.png" width="100%" />
 
 ### Run spatial cross-validation
 
