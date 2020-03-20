@@ -254,3 +254,45 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
   # why do we return focal_vs_comp?? Shouldn't we return focal_trees (one row per focal tree not per interaction)
   return(focal_trees)
 }
+
+
+#' Run the bayesain model with spatial cross validation
+#'
+#' @inheritParams fit_bayesian_model
+#' @param max_dist
+#' @param cv_grid
+#'
+#' @import dplyr
+#' @import sf
+#' @importFrom stats model.matrix
+#' @importFrom tidyr nest
+#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
+#' @export
+#'
+#' @examples
+#' 1+1
+run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
+                        run_shuffle = FALSE, prior_hyperparameters = NULL){
+
+  folds <- focal_vs_comp %>% pull(foldID) %>% unique()
+  focal_trees <- tibble(focal_ID = NA, growth_hat  = NA)
+
+  for (i in folds)
+  {
+    ### Need to deal with the buffer issue!!! Buffer out max_dist
+    ### It looks like our new cv_grid is a spatialBlock object (from blockCV)
+    ## not sure how to pull the coordiants out of that fold
+
+    train <- focal_vs_comp %>% filter(foldID != i)
+    test <- focal_vs_comp %>% filter(foldID == i)
+
+    # test <- test %>% filter out buffer
+
+    fold_fit <- train %>% fit_bayesian_model(model_specs)
+    fold_predict <- test %>% predict_bayesian_model(model_specs, fold_fit)
+    focal_trees <- focal_trees %>% rbind(fold_predict) %>% filter(!is.na(focal_ID))
+
+  }
+
+  return(focal_trees)
+}
