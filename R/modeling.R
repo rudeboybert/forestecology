@@ -259,13 +259,11 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 #' Run the bayesain model with spatial cross validation
 #'
 #' @inheritParams fit_bayesian_model
-#' @param max_dist
-#' @param cv_grid
+#' @param max_dist distance of competitive neighborhood
+#' @param cv_grid length of the cross validation grid
 #'
 #' @import dplyr
 #' @import sf
-#' @importFrom stats model.matrix
-#' @importFrom tidyr nest
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'

@@ -625,8 +625,21 @@ scbi_growth_df %>%
 
 ### Run spatial cross-validation
 
-  - CV: `run_cv()` is a wrapper to `fit_bayesian_model()` and
-    `predict_bayesian_model()`.
+For the above results we fit the model to the entire data set, and then
+make predictions across the entire data set from that fit. This could
+lead to overfitting because we are using the training data to also test
+the model. If model error is spatially correlated this could be a large
+issue (cite important sources here\!). We can use the spatial block
+structure we defined above to deal with with. The function `run_cv` goes
+through each fold in the `cv_grid` and fits the model on all the other
+folds. Then applies that fit to the focal fold. It is a wrapper for
+`fit_bayesain_model` and `predict_bayesain_model` but fits a seperate
+model for each fold.
+
+``` r
+scbi_cv_predict <- focal_vs_comp_scbi %>%
+  run_cv(model_specs = scbi_specs, max_dist = max_dist, cv_grid = scbi_cv_grid)
+```
 
 ### Run permutations
 
