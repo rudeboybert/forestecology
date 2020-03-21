@@ -59,6 +59,7 @@ library(sf)
 library(sfheaders)
 # devtools::install_github("rvalavi/blockCV")
 library(blockCV)
+library(tictoc)
 ```
 
 
@@ -477,9 +478,26 @@ scbi_growth_df %>%
 
 For the above results we fit the model to the entire data set, and then make predictions across the entire data set from that fit. This could lead to overfitting because we are using the training data to also test the model. If model error is spatially correlated this could be a large issue (cite important sources here!). We can use the spatial block structure we defined above to deal with with. The function `run_cv` goes through each fold in the `cv_grid` and fits the model on all the other folds. Then applies that fit to the focal fold. It is a wrapper for `fit_bayesain_model` and `predict_bayesain_model` but fits a seperate model for each fold.
 
-```{r, eval = F}
+Here I cheated `run_cv` to run the cross valididation for just two training set. It runs on the whole data set up just for `test = fold 23` and `test = fold 2`. Just to see how long it takes.
+```{r}
+tic()
+
 scbi_cv_predict <- focal_vs_comp_scbi %>%
   run_cv(model_specs = scbi_specs, max_dist = max_dist, cv_grid = scbi_cv_grid)
+toc()
+```
+
+Running just two folds took 5440 seconds. There are 28 folds. So running everything should take 5440 * 14 / 60 / 60 = 21 hours. 
+
+Comapre results
+
+```{r}
+
+scbi_cv_predict %>%
+  inner_join(scbi_growth_df, by = 'focal_ID', suffix = c('_cv','')) %>%
+  summarise(rmse_cv = sqrt(mean((growth - growth_hat_cv)^2)),
+            rmse = sqrt(mean((growth - growth_hat)^2)) )
+  
 ```
 
 ### Run permutations
@@ -492,8 +510,6 @@ scbi_cv_predict <- focal_vs_comp_scbi %>%
 ### Visualize posterior distributions
 
 * Plot posterior distributions of all parameters
-
-
 
 
 

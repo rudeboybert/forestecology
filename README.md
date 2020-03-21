@@ -47,6 +47,7 @@ library(sf)
 library(sfheaders)
 # devtools::install_github("rvalavi/blockCV")
 library(blockCV)
+library(tictoc)
 ```
 
 ### Load & preprocess data
@@ -636,9 +637,34 @@ folds. Then applies that fit to the focal fold. It is a wrapper for
 `fit_bayesain_model` and `predict_bayesain_model` but fits a seperate
 model for each fold.
 
+Here I cheated `run_cv` to run the cross valididation for just two
+training set. It runs on the whole data set up just for `test = fold 23`
+and `test = fold 2`. Just to see how long it takes.
+
 ``` r
+tic()
+
 scbi_cv_predict <- focal_vs_comp_scbi %>%
   run_cv(model_specs = scbi_specs, max_dist = max_dist, cv_grid = scbi_cv_grid)
+toc()
+#> 5440.784 sec elapsed
+```
+
+Running just two folds took 5440 seconds. There are 28 folds. So running
+everything should take 5440 \* 14 / 60 / 60 = 21 hours.
+
+Comapre results
+
+``` r
+
+scbi_cv_predict %>%
+  inner_join(scbi_growth_df, by = 'focal_ID', suffix = c('_cv','')) %>%
+  summarise(rmse_cv = sqrt(mean((growth - growth_hat_cv)^2)),
+            rmse = sqrt(mean((growth - growth_hat)^2)) )
+#> # A tibble: 1 x 2
+#>   rmse_cv  rmse
+#>     <dbl> <dbl>
+#> 1   0.168 0.127
 ```
 
 ### Run permutations

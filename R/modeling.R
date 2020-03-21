@@ -263,7 +263,6 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 #' @param cv_grid length of the cross validation grid
 #'
 #' @import dplyr
-#' @import sf
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'
@@ -272,7 +271,9 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
                         run_shuffle = FALSE, prior_hyperparameters = NULL){
 
-  folds <- focal_vs_comp %>% pull(foldID) %>% unique()
+  # cheat for a second to see how long it takes to do two folds
+  folds <- c(23, 2)
+  # folds <- focal_vs_comp %>% pull(foldID) %>% unique()
   focal_trees <- tibble(focal_ID = NA, growth_hat  = NA)
 
   for (i in folds)
