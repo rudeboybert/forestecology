@@ -394,7 +394,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7fa092f17b78>
+#> <environment: 0x7ff11faa8c98>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -459,7 +459,7 @@ scbi_specs
 #>     sp + quru * sp + quve * sp + romu * sp + rops * sp + saal * 
 #>     sp + saca * sp + tiam * sp + ulam * sp + ulru * sp + ulsp * 
 #>     sp + unk * sp + viac * sp + vipr * sp + vire * sp
-#> <environment: 0x7fa08a018548>
+#> <environment: 0x7ff11f32ca60>
 #> 
 #> $notion_of_focal_species
 #> [1] "sp"
@@ -626,6 +626,8 @@ scbi_growth_df %>%
 
 ### Run spatial cross-validation
 
+**SCBI**
+
 For the above results we fit the model to the entire data set, and then
 make predictions across the entire data set from that fit. This could
 lead to overfitting because we are using the training data to also test
@@ -637,23 +639,27 @@ folds. Then applies that fit to the focal fold. It is a wrapper for
 `fit_bayesain_model` and `predict_bayesain_model` but fits a seperate
 model for each fold.
 
-Here I cheated `run_cv` to run the cross valididation for just two
-training set. It runs on the whole data set up just for `test = fold 23`
-and `test = fold 2`. Just to see how long it takes.
+This will fit the model for each fold. On each fold it fits the data for
+all trees outside of that fold. If you have N folds then `run_cv` will
+take N-times longer than `fit_bayesain_model`. Here I cheated `run_cv`
+to fit for just `test = fold 23` and `test = fold 2`. It still fits to
+all other folds for those two, but only does it twice (rather than 28
+times for the SCBI data set). Do this with the arguement `all_folds =
+FALSE`.
 
 ``` r
 tic()
-
 scbi_cv_predict <- focal_vs_comp_scbi %>%
-  run_cv(model_specs = scbi_specs, max_dist = max_dist, cv_grid = scbi_cv_grid)
+  run_cv(model_specs = scbi_specs, max_dist = max_dist, cv_grid = scbi_cv_grid, all_folds = FALSE)
 toc()
-#> 2119.076 sec elapsed
+#> 2118.53 sec elapsed
 ```
 
-Running just two folds took 5440 seconds. There are 28 folds. So running
-everything should take 5440 \* 14 / 60 / 60 = 21 hours.
+Running just two folds took 2119 seconds. There are 28 folds. So running
+everything should take 2119 \* 14 / 60 / 60 = 8 hours.
 
-Comapre results
+Then we can compare the results to show that the RMSE for the
+cross-validated fit is larger than for the none CV fit above.
 
 ``` r
 
@@ -665,6 +671,36 @@ scbi_cv_predict %>%
 #>   rmse_cv  rmse `n()`
 #>     <dbl> <dbl> <int>
 #> 1   0.183 0.133  1858
+```
+
+**Big Woods**
+
+Big woods is faster because it has fewer trees, but also because we are
+fitting the model for trait groups (6 groups) rather than species for
+SCBI (40 species). The lambda matrix is much smaller (6 x 6 versus 40 x
+40). Means it fits much faster.
+
+``` r
+tic()
+bw_cv_predict <- focal_vs_comp_bw %>%
+  run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid)
+toc()
+#> 193.16 sec elapsed
+```
+
+Big Woods must faster because it is a smaller plot? Mabye also because
+we are fitting the trait group version (6 spp versus 40 for SCBI).
+
+``` r
+
+bw_cv_predict %>%
+  inner_join(bw_growth_df, by = 'focal_ID', suffix = c('_cv','')) %>%
+  summarise(rmse_cv = sqrt(mean((growth - growth_hat_cv)^2)),
+            rmse = sqrt(mean((growth - growth_hat)^2)), n() )
+#> # A tibble: 1 x 3
+#>   rmse_cv  rmse `n()`
+#>     <dbl> <dbl> <int>
+#> 1   0.161 0.160 15848
 ```
 
 ### Run permutations

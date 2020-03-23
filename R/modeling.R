@@ -271,11 +271,17 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 #' @examples
 #' 1+1
 run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
-                        run_shuffle = FALSE, prior_hyperparameters = NULL){
+                        run_shuffle = FALSE, prior_hyperparameters = NULL,
+                        all_folds = TRUE){
 
-  # cheat for a second to see how long it takes to do two folds
-  folds <- c(23, 2)
-  # folds <- focal_vs_comp %>% pull(foldID) %>% unique()
+  # if subset is true just two folds
+  if (all_folds)
+  {
+    folds <- focal_vs_comp %>% pull(foldID) %>% unique()
+  } else {
+    folds <- c(23, 2)
+  }
+
   focal_trees <- tibble(focal_ID = NA, growth_hat  = NA)
 
   for (i in folds)
