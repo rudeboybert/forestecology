@@ -496,7 +496,7 @@ Comapre results
 scbi_cv_predict %>%
   inner_join(scbi_growth_df, by = 'focal_ID', suffix = c('_cv','')) %>%
   summarise(rmse_cv = sqrt(mean((growth - growth_hat_cv)^2)),
-            rmse = sqrt(mean((growth - growth_hat)^2)) )
+            rmse = sqrt(mean((growth - growth_hat)^2)), n() )
   
 ```
 

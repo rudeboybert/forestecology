@@ -394,7 +394,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7f83bc5e25d0>
+#> <environment: 0x7fa092f17b78>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -459,7 +459,7 @@ scbi_specs
 #>     sp + quru * sp + quve * sp + romu * sp + rops * sp + saal * 
 #>     sp + saca * sp + tiam * sp + ulam * sp + ulru * sp + ulsp * 
 #>     sp + unk * sp + viac * sp + vipr * sp + vire * sp
-#> <environment: 0x7f83baa59540>
+#> <environment: 0x7fa08a018548>
 #> 
 #> $notion_of_focal_species
 #> [1] "sp"
@@ -647,7 +647,7 @@ tic()
 scbi_cv_predict <- focal_vs_comp_scbi %>%
   run_cv(model_specs = scbi_specs, max_dist = max_dist, cv_grid = scbi_cv_grid)
 toc()
-#> 5440.784 sec elapsed
+#> 2119.076 sec elapsed
 ```
 
 Running just two folds took 5440 seconds. There are 28 folds. So running
@@ -660,11 +660,11 @@ Comapre results
 scbi_cv_predict %>%
   inner_join(scbi_growth_df, by = 'focal_ID', suffix = c('_cv','')) %>%
   summarise(rmse_cv = sqrt(mean((growth - growth_hat_cv)^2)),
-            rmse = sqrt(mean((growth - growth_hat)^2)) )
-#> # A tibble: 1 x 2
-#>   rmse_cv  rmse
-#>     <dbl> <dbl>
-#> 1   0.168 0.127
+            rmse = sqrt(mean((growth - growth_hat)^2)), n() )
+#> # A tibble: 1 x 3
+#>   rmse_cv  rmse `n()`
+#>     <dbl> <dbl> <int>
+#> 1   0.183 0.133  1858
 ```
 
 ### Run permutations

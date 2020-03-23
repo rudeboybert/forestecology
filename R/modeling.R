@@ -263,6 +263,8 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 #' @param cv_grid length of the cross validation grid
 #'
 #' @import dplyr
+#' @import sf
+#' @import sfheaders
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'
@@ -278,19 +280,28 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
 
   for (i in folds)
   {
-    ### Need to deal with the buffer issue!!! Buffer out max_dist
-    ### It looks like our new cv_grid is a spatialBlock object (from blockCV)
-    ## not sure how to pull the coordiants out of that fold
 
+    # first pull out the train set and full test set
     train <- focal_vs_comp %>% filter(foldID != i)
-    test <- focal_vs_comp %>% filter(foldID == i)
+    test_full <- focal_vs_comp %>% filter(foldID == i)
 
-    # test <- test %>% filter out buffer
+    # now buffer off the test fold by max_dist
+    # sort of sloppy! But I think works
+    test_fold <- cv_grid$blocks %>% subset(folds == i)
+    test_fold_boundary_bf <- tibble(
+        x = c(test_fold@bbox[1,1],test_fold@bbox[1,2],test_fold@bbox[1,2],test_fold@bbox[1,1],test_fold@bbox[1,1]),
+        y = c(test_fold@bbox[2,1],test_fold@bbox[2,1],test_fold@bbox[2,2],test_fold@bbox[2,2],test_fold@bbox[2,1]) ) %>%
+      sf_polygon %>%
+      st_buffer(dist = -max_dist)
+    test_fold_interior <- test_full %>%
+      st_as_sf() %>%
+      st_intersects(test_fold_boundary_bf,sparse = F)
+    test <- test_full %>% filter(test_fold_interior)
 
+    # now pretty easy to just call the two functions!
     fold_fit <- train %>% fit_bayesian_model(model_specs)
     fold_predict <- test %>% predict_bayesian_model(model_specs, fold_fit)
     focal_trees <- focal_trees %>% rbind(fold_predict) %>% filter(!is.na(focal_ID))
-
   }
 
   return(focal_trees)
