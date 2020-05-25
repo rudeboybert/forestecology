@@ -10,7 +10,7 @@ status](https://www.r-pkg.org/badges/version/forestecology)](https://cran.r-proj
 
 ## Installation
 
-You can install the released version of forestecology from
+You can install the released version of `forestecology` from
 [CRAN](https://CRAN.R-project.org) with:
 
 ``` r
