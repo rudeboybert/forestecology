@@ -329,13 +329,6 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
     test_fold <- cv_grid$blocks %>%
       subset(folds == i)
 
-    # Previous:
-    # test_fold_boundary_bf <- tibble(
-    #   x = c(test_fold@bbox[1,1], test_fold@bbox[1,2], test_fold@bbox[1,2], test_fold@bbox[1,1], test_fold@bbox[1,1]),
-    #   y = c(test_fold@bbox[2,1], test_fold@bbox[2,1], test_fold@bbox[2,2], test_fold@bbox[2,2], test_fold@bbox[2,1])
-    # ) %>%
-    #   sf_polygon() %>%
-    #   st_buffer(dist = -max_dist)
     test_fold_boundary <- test_fold %>%
       st_bbox() %>%
       st_as_sfc()
