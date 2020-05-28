@@ -271,43 +271,107 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 #' @examples
 #' 1+1
 run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
-                        run_shuffle = FALSE, prior_hyperparameters = NULL,
-                        all_folds = TRUE){
+                   run_shuffle = FALSE, prior_hyperparameters = NULL,
+                   all_folds = TRUE){
+
+  if(FALSE){
+    # Code to test SCBI
+    focal_vs_comp <- focal_vs_comp_scbi
+    model_specs <- scbi_specs
+    cv_grid <- scbi_cv_grid
+
+    run_shuffle = FALSE
+    prior_hyperparameters = NULL
+    all_folds = FALSE
+
+
+    # Code to test BigWoods
+    focal_vs_comp <- focal_vs_comp_bw
+    model_specs <- bw_specs
+    cv_grid <- bw_cv_grid
+
+    run_shuffle = FALSE
+    prior_hyperparameters = NULL
+    all_folds = TRUE
+  }
+
 
   # if subset is true just two folds
-  if (all_folds)
-  {
-    folds <- focal_vs_comp %>% pull(foldID) %>% unique()
+  if (all_folds) {
+    folds <- focal_vs_comp %>%
+      pull(foldID) %>%
+      unique() %>%
+      sort()
   } else {
     folds <- c(23, 2)
   }
 
+  # Store resulting y-hat for each focal tree here
   focal_trees <- tibble(focal_ID = NA, growth_hat  = NA)
 
-  for (i in folds)
-  {
-
+  for (i in folds){
     # first pull out the train set and full test set
-    train <- focal_vs_comp %>% filter(foldID != i)
-    test_full <- focal_vs_comp %>% filter(foldID == i)
+    train <- focal_vs_comp %>%
+      filter(foldID != i)
+    test_full <- focal_vs_comp %>%
+      filter(foldID == i)
+
+    if(FALSE){
+      # Visualize original folds
+      cv_grid$plots
+
+      # View training set (slow)
+      train %>% st_as_sf() %>% ggplot() + geom_sf()
+    }
 
     # now buffer off the test fold by max_dist
     # sort of sloppy! But I think works
-    test_fold <- cv_grid$blocks %>% subset(folds == i)
-    test_fold_boundary_bf <- tibble(
-        x = c(test_fold@bbox[1,1],test_fold@bbox[1,2],test_fold@bbox[1,2],test_fold@bbox[1,1],test_fold@bbox[1,1]),
-        y = c(test_fold@bbox[2,1],test_fold@bbox[2,1],test_fold@bbox[2,2],test_fold@bbox[2,2],test_fold@bbox[2,1]) ) %>%
-      sf_polygon %>%
+    test_fold <- cv_grid$blocks %>%
+      subset(folds == i)
+
+    # Previous:
+    # test_fold_boundary_bf <- tibble(
+    #   x = c(test_fold@bbox[1,1], test_fold@bbox[1,2], test_fold@bbox[1,2], test_fold@bbox[1,1], test_fold@bbox[1,1]),
+    #   y = c(test_fold@bbox[2,1], test_fold@bbox[2,1], test_fold@bbox[2,2], test_fold@bbox[2,2], test_fold@bbox[2,1])
+    # ) %>%
+    #   sf_polygon() %>%
+    #   st_buffer(dist = -max_dist)
+    test_fold_boundary <- test_fold %>%
+      st_bbox() %>%
+      st_as_sfc()
+
+    test_fold_boundary_buffer <- test_fold_boundary %>%
       st_buffer(dist = -max_dist)
+
     test_fold_interior <- test_full %>%
       st_as_sf() %>%
-      st_intersects(test_fold_boundary_bf,sparse = F)
-    test <- test_full %>% filter(test_fold_interior)
+      st_intersects(test_fold_boundary_buffer, sparse = FALSE)
+
+    test <- test_full %>%
+      filter(test_fold_interior)
+
+    if(FALSE){
+      # Visualize original folds
+      cv_grid$plots
+
+      # Visualize test set trees + boundary
+      ggplot() +
+        geom_sf(data = test_fold_boundary, col = "black") +
+        geom_sf(data = test_fold_boundary_buffer, col = "red") +
+        geom_sf(data = test_full %>% st_as_sf(), col = "black") +
+        geom_sf(data = test %>% st_as_sf(), col = "red")
+    }
 
     # now pretty easy to just call the two functions!
-    fold_fit <- train %>% fit_bayesian_model(model_specs)
-    fold_predict <- test %>% predict_bayesian_model(model_specs, fold_fit)
-    focal_trees <- focal_trees %>% rbind(fold_predict) %>% filter(!is.na(focal_ID))
+    fold_fit <- train %>%
+      fit_bayesian_model(model_specs)
+    fold_predict <- test %>%
+      predict_bayesian_model(model_specs, fold_fit)
+
+    # Append results
+    focal_trees <- focal_trees %>%
+      bind_rows(fold_predict) %>%
+      filter(!is.na(focal_ID))
   }
 
   return(focal_trees)

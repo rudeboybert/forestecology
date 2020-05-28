@@ -10,7 +10,8 @@ run_cv(
   max_dist,
   cv_grid,
   run_shuffle = FALSE,
-  prior_hyperparameters = NULL
+  prior_hyperparameters = NULL,
+  all_folds = TRUE
 )
 }
 \arguments{
