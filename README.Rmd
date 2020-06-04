@@ -358,7 +358,7 @@ if (!file.exists("focal_vs_comp_bw.Rdata")) {
     create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
   toc()
 } else {
-  load("focal_vs_comp_bw.Rdata)
+  load("focal_vs_comp_bw.Rdata")
 }
 ```
 

@@ -388,7 +388,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7fc9bae14a20>
+#> <environment: 0x7fa73ada7320>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -412,17 +412,21 @@ competitive range, `cv_fold_size` defining the size of the spatial
 cross-validation blocks, and `model_specs` as inputs.
 
 ``` r
-tic()
-focal_vs_comp_bw <- bw_growth_df %>% 
-  create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
-toc()
-#> 153.416 sec elapsed
+if (!file.exists("focal_vs_comp_bw.Rdata")) {
+  tic()
+  focal_vs_comp_bw <- bw_growth_df %>% 
+    create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
+  toc()
+} else {
+  load("focal_vs_comp_bw.Rdata")
+}
+#> 205.044 sec elapsed
 ```
 
 ``` r
 glimpse(focal_vs_comp_bw)
-#> Observations: 431,244
-#> Variables: 10
+#> Rows: 431,244
+#> Columns: 10
 #> $ focal_ID                <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
 #> $ focal_notion_of_species <fct> oak, oak, oak, oak, oak, oak, oak, oak, oak, …
 #> $ dbh                     <dbl> 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.…
@@ -468,7 +472,7 @@ tic()
 bw_fit_model <- focal_vs_comp_bw %>% 
   fit_bayesian_model(model_specs = bw_specs)
 toc()
-#> 1.356 sec elapsed
+#> 2.164 sec elapsed
 ```
 
 This output has the posterior parameters for the specified competition
@@ -635,7 +639,7 @@ tic()
 bw_cv_predict <- focal_vs_comp_bw %>%
   run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid)
 toc()
-#> 198.26 sec elapsed
+#> 278.514 sec elapsed
 ```
 
 Big Woods must faster because it is a smaller plot? Mabye also because
