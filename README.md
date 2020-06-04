@@ -388,7 +388,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7fc9bae14a20>
+#> <environment: 0x7ff11faa8c98>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -416,7 +416,7 @@ tic()
 focal_vs_comp_bw <- bw_growth_df %>% 
   create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
 toc()
-#> 153.416 sec elapsed
+#> 168.21 sec elapsed
 ```
 
 ``` r
@@ -468,7 +468,7 @@ tic()
 bw_fit_model <- focal_vs_comp_bw %>% 
   fit_bayesian_model(model_specs = bw_specs)
 toc()
-#> 1.356 sec elapsed
+#> 1.565 sec elapsed
 ```
 
 This output has the posterior parameters for the specified competition
@@ -635,7 +635,7 @@ tic()
 bw_cv_predict <- focal_vs_comp_bw %>%
   run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid)
 toc()
-#> 198.26 sec elapsed
+#> 193.16 sec elapsed
 ```
 
 Big Woods must faster because it is a smaller plot? Mabye also because
