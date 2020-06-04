@@ -352,10 +352,14 @@ Next we create the `focal_vs_comp` data frame which connects each tree in `growt
 This requires the `growth_df` data frame, `max_dist` scalar defining competitive range, `cv_fold_size` defining the size of the spatial cross-validation blocks, and `model_specs` as inputs.
 
 ```{r, eval = run_bw}
-tic()
-focal_vs_comp_bw <- bw_growth_df %>% 
-  create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
-toc()
+if (!file.exists("focal_vs_comp_bw.Rdata")) {
+  tic()
+  focal_vs_comp_bw <- bw_growth_df %>% 
+    create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
+  toc()
+} else {
+  load("focal_vs_comp_bw.Rdata)
+}
 ```
 
 ```{r, eval = run_bw}
