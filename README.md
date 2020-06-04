@@ -65,7 +65,8 @@ correct names, types (`dbl`, `data`, `factor`).
 **Big Woods**:
 
 ``` r
-# Read in Big Woods census data from 2008 & 2014
+# Big Woods
+# Read in census data from 2008 & 2014
 bw_2008 <- 
   "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>% 
   read_delim(delim = "\t") %>% 
@@ -83,7 +84,7 @@ bw_2014 <-
     date, codes
   )
 
-# Read in bigwoods grouping classification data
+# Read in grouping classification data
 bw_species <- 
   "https://deepblue.lib.umich.edu/data/downloads/000000086" %>% 
   read_delim(delim = "\t") %>% 
@@ -107,6 +108,7 @@ bw_2008 <- bw_2008 %>%
 **SCBI**:
 
 ``` r
+# SCBI
 scbi_2013 <- 
   "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem2.csv" %>% 
   read_csv() %>% 
@@ -140,6 +142,7 @@ The resulting data frames are named with some variation of `growth_df`.
 **Big Woods**:
 
 ``` r
+# Big Woods
 census_df1 <- bw_2008
 # we need to filter out the resprouts
 census_df2 <- bw_2014 %>% 
@@ -155,6 +158,7 @@ bw_growth_df <-
 **SCBI**:
 
 ``` r
+# SCBI
 census_df1 <- scbi_2013
 census_df2 <- scbi_2018
 id <- "stemID"
@@ -169,6 +173,7 @@ scbi_growth_df <-
 **Comparison**:
 
 ``` r
+# Both Big Woods & SCBI
 growth_df <- bind_rows(
   bw_growth_df %>% select(growth) %>% mutate(site = "bw"),
   scbi_growth_df %>% select(growth) %>% mutate(site = "scbi")
@@ -247,7 +252,8 @@ ggplot() +
 **Big Woods**:
 
 ``` r
-# Bigwoods study region boundary polygon
+# Bigwoods
+# Study region boundary polygon
 bw_boundary <- bigwoods_study_region %>% 
   sf_polygon()
 
@@ -277,7 +283,8 @@ ggplot() +
 **SCBI**:
 
 ``` r
-# Bigwoods study region boundary polygon
+# SCBI
+# Study region boundary polygon
 scbi_boundary <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
   sf_polygon()
 
@@ -312,6 +319,7 @@ scheme.
 **Big Woods**:
 
 ``` r
+# Big Woods
 set.seed(76)
 bw_cv_grid <- spatialBlock(
   speciesData = bw_growth_df, theRange = 100, verbose = FALSE,
@@ -347,6 +355,7 @@ bw_growth_df <- bw_growth_df %>%
 **SCBI**:
 
 ``` r
+# SCBI
 scbi_cv_grid <- spatialBlock(
   speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.9999, verbose = FALSE
 )
@@ -380,6 +389,7 @@ run with different notions of competition:
 **Big Woods**:
 
 ``` r
+# Big Woods
 bw_specs <- bw_growth_df %>% 
   get_model_specs(model_number = 3, species_notion = 'trait_group')
 bw_specs
@@ -388,7 +398,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7fa73ada7320>
+#> <environment: 0x7fca1f418780>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -412,18 +422,21 @@ competitive range, `cv_fold_size` defining the size of the spatial
 cross-validation blocks, and `model_specs` as inputs.
 
 ``` r
+# Big Woods
 if (!file.exists("focal_vs_comp_bw.Rdata")) {
   tic()
   focal_vs_comp_bw <- bw_growth_df %>% 
     create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
   toc()
+  save(focal_vs_comp_bw, file = "focal_vs_comp_bw.Rdata")
 } else {
   load("focal_vs_comp_bw.Rdata")
 }
-#> 205.044 sec elapsed
+#> 187.06 sec elapsed
 ```
 
 ``` r
+# Big Woods
 glimpse(focal_vs_comp_bw)
 #> Rows: 431,244
 #> Columns: 10
@@ -442,12 +455,14 @@ glimpse(focal_vs_comp_bw)
 **SCBI**:
 
 ``` r
+# SCBI
 scbi_specs <- scbi_growth_df %>% 
   get_model_specs(model_number = 3, species_notion = 'sp')
 scbi_specs
 ```
 
 ``` r
+# SCBI
 tic()
 focal_vs_comp_scbi <- scbi_growth_df %>% 
   create_focal_vs_comp(max_dist, model_specs = scbi_specs, cv_grid = scbi_cv_grid, id = "stemID")
@@ -455,6 +470,7 @@ toc()
 ```
 
 ``` r
+# SCBI
 glimpse(focal_vs_comp_scbi)
 ```
 
@@ -468,11 +484,12 @@ connected to their competitors and `model_specs` which specifies the
 notion of competition.
 
 ``` r
+# Big Woods
 tic()
 bw_fit_model <- focal_vs_comp_bw %>% 
   fit_bayesian_model(model_specs = bw_specs)
 toc()
-#> 2.164 sec elapsed
+#> 2.043 sec elapsed
 ```
 
 This output has the posterior parameters for the specified competition
@@ -488,6 +505,7 @@ be used to get predicted growths for each individual (with
 understand what controls individual growth.
 
 ``` r
+# Big Woods
 bw_growth_df <- focal_vs_comp_bw %>% 
   predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>% 
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
@@ -536,6 +554,7 @@ bw_growth_df %>%
 **SCBI**:
 
 ``` r
+# SCBI
 tic()
 scbi_fit_model <- focal_vs_comp_scbi %>% 
   fit_bayesian_model(model_specs = scbi_specs)
@@ -543,6 +562,7 @@ toc()
 ```
 
 ``` r
+# SCBI
 scbi_growth_df <- focal_vs_comp_scbi %>% 
   predict_bayesian_model(model_specs = scbi_specs, posterior_param = scbi_fit_model) %>% 
   right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
@@ -605,6 +625,7 @@ times for the SCBI data set). Do this with the arguement `all_folds =
 FALSE`.
 
 ``` r
+# SCBI
 tic()
 scbi_cv_predict <- focal_vs_comp_scbi %>%
   run_cv(model_specs = scbi_specs, max_dist = max_dist, cv_grid = scbi_cv_grid, all_folds = FALSE)
@@ -618,6 +639,7 @@ Then we can compare the results to show that the RMSE for the
 cross-validated fit is larger than for the none CV fit above.
 
 ``` r
+# SCBI
 scbi_cv_predict %>%
   inner_join(scbi_growth_df, by = 'focal_ID', suffix = c('_cv','')) %>%
   summarise(
@@ -635,11 +657,12 @@ SCBI (40 species). The lambda matrix is much smaller (6 x 6 versus 40 x
 40). Means it fits much faster.
 
 ``` r
+# Big Woods
 tic()
 bw_cv_predict <- focal_vs_comp_bw %>%
   run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid)
 toc()
-#> 278.514 sec elapsed
+#> 244.33 sec elapsed
 ```
 
 Big Woods must faster because it is a smaller plot? Mabye also because
@@ -649,6 +672,7 @@ We have a problem: not all focal trees have a CV predicted value of
 growth\_hat
 
 ``` r
+# Big Woods
 bw_growth_df %>% 
   left_join(bw_cv_predict, by = 'focal_ID', suffix = c('', '_cv')) %>% 
   mutate(has_cv = !is.na(growth_hat_cv)) %>% 
