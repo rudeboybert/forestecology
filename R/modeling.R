@@ -369,3 +369,20 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
 
   return(focal_trees)
 }
+
+#' Plot beta_0 parameters
+#'
+#' @inheritParams fit_bayesian_model
+#' @param posterior_param Output of \code{\link{fit_bayesian_model}}
+#'
+#' @import ggridges
+#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
+#' @export
+#'
+#' @examples
+#' 1+1
+plot_beta0 <- function(posterior_param){
+
+
+}
+

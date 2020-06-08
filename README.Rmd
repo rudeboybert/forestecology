@@ -594,7 +594,11 @@ bw_growth_df %>%
 
 * Plot posterior distributions of all parameters
 
+```{r, eval = run_bw}
 
+# plot_beta0(bw_fit_model)
+
+```
 
 
 
