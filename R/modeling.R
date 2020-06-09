@@ -381,7 +381,113 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
 #'
 #' @examples
 #' 1+1
-plot_beta0 <- function(posterior_param){
+plot_beta0 <- function(posterior_param, model_specs){
+
+  # how we did it in the paper
+  if (FALSE)
+  {
+    n_sim <- 100
+    nu_star <- 2*posterior_param$a_star
+    Sigma_star <- (posterior_param$b_star/posterior_param$a_star)*posterior_param$V_star
+
+    beta_lambda_posterior_df <-
+      rmvt(n_sim, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
+      data.frame() %>%
+      as_tibble() %>%
+      purrr::set_names(colnames(posterior_param$V_star)) %>%
+      tidyr::gather(type, value)
+
+    coefficient_types <- beta_lambda_posterior_df %>%
+      select(type) %>%
+      distinct() %>%
+      mutate(
+        coefficient_type =
+          case_when(
+            type == "(Intercept)" ~ "intercept",
+            type %in% str_c("species", model_specs$species_of_interest) ~ "intercept",
+            str_detect(type, "dbh") ~ "dbh",
+            type %in% model_specs$species_of_interest ~ "competition",
+            str_detect(type, ":") ~ "competition",
+            # Need this for everything else that aren't the two cases above:
+            TRUE ~ "NA"
+          ))
+
+    beta_lambda_posterior_df <- beta_lambda_posterior_df %>%
+      left_join(coefficient_types, by = "type") %>%
+      select(type, coefficient_type, value) %>%
+      group_by(type, coefficient_type) %>%
+      mutate(sim_ID = 1:n()) %>%
+      select(sim_ID, everything()) %>%
+      ungroup()
+
+    baseline_species <- model_specs$species_of_interest[1] %>% as.character()
+
+    posterior_sample <- beta_lambda_posterior_df %>%
+      filter(coefficient_type == "intercept")
+
+    posterior_sample_baseline <- posterior_sample %>%
+      filter(type == "(Intercept)") %>%
+      rename(offset = value) %>%
+      select(sim_ID, offset)
+
+    posterior_beta_0 <- posterior_sample %>%
+      left_join(posterior_sample_baseline, by = "sim_ID") %>%
+      mutate(
+        offset = ifelse(type == "(Intercept)", 0, offset),
+        value = value + offset,
+        type = ifelse(type == "(Intercept)", baseline_species, str_sub(type, 8))
+      ) %>%
+      mutate(type = str_to_title(type)) %>%
+      select(-offset)
+
+    ggplot(posterior_beta_0, aes(x=value, y = fct_rev(type))) +
+      geom_density_ridges() +
+      geom_vline(xintercept = 0, linetype = "dashed") +
+      xlim(c(-0.1,0.5)) +
+      labs(
+        x = expression(paste(beta[0], " (cm ",y^{-1},')')),
+        y = model_specs$notion_of_competitor_species
+      )
+  }
+
+
+  # do we have to sample from the distribution to make the curves?
+  # since we know mu and sigma, can't we just plot the exact curves?
+  # would this be faster?
+  # I am having a hard time pulling them out from the posterior_param object
+  # but here is my thought
+
+  params <- tibble(species = c('Oak', 'Maple', 'Hickory', 'Cherry'),
+                   mu = c(0.1, 0.05, 0.15, 0.075),
+                   sigma = c(0.025, 0.015, 0.05, 0.03))
+
+  x_lims <- params %>%
+    mutate(max_val = mu + sigma*4,
+           min_val = mu - sigma*4) %>%
+    summarise(min_val = min(min_val), max_val = max(max_val)) %>%
+    as.numeric()
+
+  x_range_len <- 500
+  x_range <- seq(from = x_lims[1], to = x_lims[2], length = x_range_len)
+
+  posterior_curves <- tibble(species = rep(params$species[1], x_range_len),
+                             x = x_range,
+                             y = dnorm(x_range,params$mu[1],params$sigma[1]))
+
+  # can you do this will purrr??
+  for (sp in 2:dim(params)[1])
+  {
+    to_add <- tibble(species = rep(params$species[sp], x_range_len),
+                               x = x_range,
+                               y = dnorm(x_range,params$mu[sp],params$sigma[sp]))
+
+    posterior_curves <- rbind(posterior_curves, to_add)
+  }
+
+  ggplot(posterior_curves, aes(x = x, y = species, height = y)) +
+    geom_density_ridges(stat = 'identity') +
+    geom_vline(xintercept = 0, linetype = "dashed")
+
 
 
 }
