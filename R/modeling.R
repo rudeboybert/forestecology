@@ -290,9 +290,9 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
     model_specs <- bw_specs
     cv_grid <- bw_cv_grid
 
-    run_shuffle = FALSE
-    prior_hyperparameters = NULL
-    all_folds = TRUE
+    run_shuffle <- FALSE
+    prior_hyperparameters <- NULL
+    all_folds <- TRUE
   }
 
 
@@ -310,10 +310,10 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
   focal_trees <- tibble(focal_ID = NA, growth_hat  = NA)
 
   for (i in folds){
-    # first pull out the train set and full test set
-    train <- focal_vs_comp %>%
+    # first pull out the test set and the full train set
+    train_full <- focal_vs_comp %>%
       filter(foldID != i)
-    test_full <- focal_vs_comp %>%
+    test <- focal_vs_comp %>%
       filter(foldID == i)
 
     if(FALSE){
@@ -321,11 +321,10 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
       cv_grid$plots
 
       # View training set (slow)
-      train %>% st_as_sf() %>% ggplot() + geom_sf()
+      train %>% sample_frac(0.01) %>% st_as_sf() %>% ggplot() + geom_sf()
     }
 
     # now buffer off the test fold by max_dist
-    # sort of sloppy! But I think works
     test_fold <- cv_grid$blocks %>%
       subset(folds == i)
 
@@ -333,15 +332,16 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
       st_bbox() %>%
       st_as_sfc()
 
+    # Buffer extends out from test set boundary
     test_fold_boundary_buffer <- test_fold_boundary %>%
-      st_buffer(dist = -max_dist)
+      st_buffer(dist = max_dist)
 
-    test_fold_interior <- test_full %>%
+    train_fold_boolean <- train_full %>%
       st_as_sf() %>%
       st_intersects(test_fold_boundary_buffer, sparse = FALSE)
 
-    test <- test_full %>%
-      filter(test_fold_interior)
+    train <- train_full %>%
+      filter(!train_fold_boolean)
 
     if(FALSE){
       # Visualize original folds
@@ -349,9 +349,9 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
 
       # Visualize test set trees + boundary
       ggplot() +
-        geom_sf(data = test_fold_boundary, col = "black") +
         geom_sf(data = test_fold_boundary_buffer, col = "red") +
-        geom_sf(data = test_full %>% st_as_sf(), col = "black") +
+        geom_sf(data = test_fold_boundary, col = "black") +
+        geom_sf(data = train %>% sample_frac(0.01) %>% st_as_sf(), col = "blue", alpha = 0.1) +
         geom_sf(data = test %>% st_as_sf(), col = "red")
     }
 
