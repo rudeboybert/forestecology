@@ -398,7 +398,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7fca1f418780>
+#> <environment: 0x7fe8c8c8f9b0>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -432,7 +432,7 @@ if (!file.exists("focal_vs_comp_bw.Rdata")) {
 } else {
   load("focal_vs_comp_bw.Rdata")
 }
-#> 187.06 sec elapsed
+#> 196.964 sec elapsed
 ```
 
 ``` r
@@ -489,7 +489,7 @@ tic()
 bw_fit_model <- focal_vs_comp_bw %>% 
   fit_bayesian_model(model_specs = bw_specs)
 toc()
-#> 2.043 sec elapsed
+#> 1.709 sec elapsed
 ```
 
 This output has the posterior parameters for the specified competition
@@ -658,46 +658,101 @@ SCBI (40 species). The lambda matrix is much smaller (6 x 6 versus 40 x
 
 ``` r
 # Big Woods
+if (!file.exists("bw_cv_predict.Rdata")) {
 tic()
 bw_cv_predict <- focal_vs_comp_bw %>%
   run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid)
 toc()
-#> 244.33 sec elapsed
+  save(bw_cv_predict, file = "bw_cv_predict.Rdata")
+} else {
+  load("bw_cv_predict.Rdata")
+}
+#> 567.708 sec elapsed
 ```
 
 Big Woods must faster because it is a smaller plot? Mabye also because
 we are fitting the trait group version (6 spp versus 40 for SCBI).
 
-We have a problem: not all focal trees have a CV predicted value of
-growth\_hat
-
 ``` r
 # Big Woods
-bw_growth_df %>% 
-  left_join(bw_cv_predict, by = 'focal_ID', suffix = c('', '_cv')) %>% 
-  mutate(has_cv = !is.na(growth_hat_cv)) %>% 
-  st_as_sf() %>% 
-  ggplot() +
+bw_growth_df <- bw_growth_df %>% 
+  left_join(bw_cv_predict, by = "focal_ID", suffix = c('', '_cv')) %>% 
+  mutate(has_cv = !is.na(growth_hat))
+
+ggplot(bw_growth_df) +
   geom_sf(size = 0.1, aes(col = has_cv))
 ```
 
 <img src="man/figures/README-unnamed-chunk-28-1.png" width="100%" />
 
+It appears not all trees have a CV predicted value of `growth_hat`. This
+is because either:
+
+  - The tree is part of the buffer
+  - The tree was dropped in the `create_focal_vs_comp()` phase
+
+<!-- end list -->
+
 ``` r
+# This code is a hideous sanity check of the two facts above. To delete.
+trees_dropped_during_create_focal_vs_comp <- 
+  setdiff(unique(bw_growth_df$focal_ID), unique(focal_vs_comp_bw$focal_ID)) %>% 
+  sort()
+trees_with_no_cv <- bw_growth_df %>% 
+  filter(!has_cv) %>% 
+  pull(focal_ID) %>% 
+  sort()
+mean(trees_dropped_during_create_focal_vs_comp == trees_with_no_cv)
+#> [1] 1
+```
+
+Let’s remove these trees that have no
+
+``` r
+bw_growth_df <- bw_growth_df %>% 
+  filter(!is.na(growth_hat))
+```
+
+Let’s compute summary statistics of our cross-validated errors:
+
+``` r
+# Big Woods
 bw_growth_df %>% 
-  left_join(bw_cv_predict, by = 'focal_ID', suffix = c('', '_cv')) %>%
-  filter(!is.na(growth_hat_cv)) %>% 
   as_tibble() %>% 
   summarise(
-    rmse_cv = sqrt(mean((growth - growth_hat_cv)^2)),
+    rmse_cv = sqrt(mean((growth - growth_hat)^2)),
     rmse = sqrt(mean((growth - growth_hat)^2)), 
     n = n() 
   )
 #> # A tibble: 1 x 3
 #>   rmse_cv  rmse     n
 #>     <dbl> <dbl> <int>
-#> 1   0.161 0.160 15848
+#> 1   0.161 0.161 20390
 ```
+
+Let’s visualize the spatial distribution of our cross-validated errors:
+
+``` r
+# Big Woods
+bw_growth_df <- bw_growth_df %>%
+  mutate(
+    error = growth - growth_hat,
+    error_bin = cut_number(error, n = 5),
+    error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
+  )
+
+ggplot(bw_growth_df) +
+  geom_sf(aes(col = error_compress), size = 0.4) +
+  scale_color_gradient2(
+    low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
+    name = expression(paste("Residual (cm ", y^{-1}, ")")),
+    breaks = seq(from = -0.75, to = 0.75, by = 0.25),
+    labels = c("< -0.75", "-0.5", "0.25", "0", "0.25", "0.5", "> 0.75")
+  ) +
+  labs(x = "Meter", y = "Meter")
+```
+
+<img src="man/figures/README-unnamed-chunk-32-1.png" width="100%" />
 
 ### Run permutations
 
@@ -709,3 +764,10 @@ bw_growth_df %>%
 ### Visualize posterior distributions
 
   - Plot posterior distributions of all parameters
+
+<!-- end list -->
+
+``` r
+
+# plot_beta0(bw_fit_model)
+```
