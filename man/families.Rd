@@ -4,13 +4,15 @@
 \name{families}
 \alias{families}
 \title{Phylogenic groupings and trait based clustering of various tree species}
-\format{A data frame with 50 rows and 3 variables:
+\format{
+A data frame with 50 rows and 3 variables:
 \describe{
 \item{spcode}{Linnaean species name}
 \item{family}{Taxonomic/phylogenetic grouping at higher level than family.}
 \item{trait_group}{Clustering of species based on their traits rather than
 their evolutionary relationships.}
-}}
+}
+}
 \source{
 See \url{https://en.wikipedia.org/wiki/Family_(biology)} for
 biological/taxonomical definition of family.

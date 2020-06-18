@@ -357,7 +357,7 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
 
     # now pretty easy to just call the two functions!
     fold_fit <- train %>%
-      fit_bayesian_model(model_specs)
+      fit_bayesian_model(model_specs, run_shuffle = run_shuffle)
     fold_predict <- test %>%
       predict_bayesian_model(model_specs, fold_fit)
 

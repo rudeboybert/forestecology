@@ -4,7 +4,8 @@
 \name{bigwoods}
 \alias{bigwoods}
 \title{Michigan Big Woods research plot data}
-\format{A data frame with 50023 rows and 10 variables:
+\format{
+A data frame with 50023 rows and 10 variables:
 \describe{
 \item{ID}{Tree ID}
 \item{species}{Linnaean species name}
@@ -16,7 +17,8 @@
 \item{dbh08}{Diameter at breast high in 2008}
 \item{dbh14}{Diameter at breast high in 2014}
 \item{code14}{Code}
-}}
+}
+}
 \usage{
 bigwoods
 }

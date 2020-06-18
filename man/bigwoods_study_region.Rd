@@ -4,11 +4,13 @@
 \name{bigwoods_study_region}
 \alias{bigwoods_study_region}
 \title{Bigwoods forest study region boundary}
-\format{A data frame with 13 rows and 2 variables:
+\format{
+A data frame with 13 rows and 2 variables:
 \describe{
 \item{x}{x-coordinate (meters from reference point)}
 \item{y}{y-coordinate (meters from reference point)}
-}}
+}
+}
 \usage{
 bigwoods_study_region
 }

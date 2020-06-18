@@ -48,6 +48,8 @@ library(sfheaders)
 # devtools::install_github("rvalavi/blockCV")
 library(blockCV)
 library(tictoc)
+library(yardstick)
+library(viridis)
 
 run_scbi <- FALSE
 run_bw <- TRUE
@@ -350,6 +352,9 @@ bw_cv_grid$plots +
 # Remove weird folds with no trees in them from viz above
 bw_growth_df <- bw_growth_df %>%
   filter(!foldID %in% c(19, 23, 21, 17, 8, 19))
+
+# Save original
+bw_growth_df_orig <- bw_growth_df
 ```
 
 **SCBI**:
@@ -390,7 +395,7 @@ run with different notions of competition:
 
 ``` r
 # Big Woods
-bw_specs <- bw_growth_df %>% 
+bw_specs <- bw_growth_df_orig %>% 
   get_model_specs(model_number = 3, species_notion = 'trait_group')
 bw_specs
 #> $model_formula
@@ -398,7 +403,7 @@ bw_specs
 #>     comp_basal_area * trait_group + evergreen * trait_group + 
 #>     maple * trait_group + misc * trait_group + oak * trait_group + 
 #>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7fe8c8c8f9b0>
+#> <environment: 0x7fc410c68ba8>
 #> 
 #> $notion_of_focal_species
 #> [1] "trait_group"
@@ -425,14 +430,13 @@ cross-validation blocks, and `model_specs` as inputs.
 # Big Woods
 if (!file.exists("focal_vs_comp_bw.Rdata")) {
   tic()
-  focal_vs_comp_bw <- bw_growth_df %>% 
+  focal_vs_comp_bw <- bw_growth_df_orig %>% 
     create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
   toc()
   save(focal_vs_comp_bw, file = "focal_vs_comp_bw.Rdata")
 } else {
   load("focal_vs_comp_bw.Rdata")
 }
-#> 196.964 sec elapsed
 ```
 
 ``` r
@@ -489,7 +493,7 @@ tic()
 bw_fit_model <- focal_vs_comp_bw %>% 
   fit_bayesian_model(model_specs = bw_specs)
 toc()
-#> 1.709 sec elapsed
+#> 2.043 sec elapsed
 ```
 
 This output has the posterior parameters for the specified competition
@@ -508,7 +512,7 @@ understand what controls individual growth.
 # Big Woods
 bw_growth_df <- focal_vs_comp_bw %>% 
   predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>% 
-  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+  right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID"))
   
 bw_growth_df <- bw_growth_df %>% 
   st_as_sf()
@@ -667,7 +671,6 @@ toc()
 } else {
   load("bw_cv_predict.Rdata")
 }
-#> 567.708 sec elapsed
 ```
 
 Big Woods must faster because it is a smaller plot? Mabye also because
@@ -760,6 +763,154 @@ ggplot(bw_growth_df) +
       - Add line to that shuffles competitor species within
         `focal_and_comp` just before fitting model
       - permutation AND CV: add `run_shuffle` argument to `run_cv()`
+
+<!-- end list -->
+
+``` r
+# Number of permutation shuffles:
+num_shuffle <- 4
+
+# Compute observed RMSE for all models, but only do permutation shuffling for
+# models 3,6,9
+model_numbers <- c(3)
+
+# Save results here
+run_time <- rep(0, length(model_numbers))
+observed_RMSE <- rep(0, length(model_numbers))
+observed_RMSE_CV <- rep(0, length(model_numbers))
+shuffle_RMSE <- list()
+shuffle_RMSE_CV <- list()
+
+for(i in 1:length(model_numbers)){
+  # Start clock
+  tic()
+
+  # Modeling and species stuff
+  model_number <- model_numbers[i]
+  bw_specs <- bw_growth_df %>% 
+    get_model_specs(model_number = model_number, species_notion = 'trait_group')
+
+  # Focal vs comp main dataframe for analysis
+  # Computed earlier
+  load("focal_vs_comp_bw.Rdata")
+
+  
+  # 1. Compute observed test statistic: RMSE with no cross-validation ----
+  # Fit model (compute posterior parameters)
+  bw_fit_model <- focal_vs_comp_bw %>% 
+    fit_bayesian_model(model_specs = bw_specs)
+  
+  # Make predictions, compute and save RMSE, and reset
+  observed_RMSE[i] <- focal_vs_comp_bw %>% 
+    predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>% 
+    right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
+    rmse(truth = growth, estimate = growth_hat) %>%
+    pull(.estimate)
+
+  # 2. Compute observed test statistic: RMSE with cross-validation ----
+  observed_RMSE_CV[i] <- focal_vs_comp_bw %>%
+    run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid) %>% 
+    right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
+    rmse(truth = growth, estimate = growth_hat) %>%
+    pull(.estimate)
+
+
+  # 3. Permutation distribution: RMSE with no cross-validation ----
+  # Only do permutation shuffling for models 3, 6, 9
+  if(model_number %in% c(3, 6, 9)){
+    # Compute num_shuffle permutation test statistics
+    shuffle_RMSE[[i]] <- numeric(length = num_shuffle)
+    
+    for(j in 1:num_shuffle){
+      # Fit model (compute posterior parameters) with shuffling
+      bw_fit_model_shuffle <- focal_vs_comp_bw %>% 
+        fit_bayesian_model(model_specs = bw_specs, run_shuffle = TRUE)
+      
+      # Make predictions, compute and save RMSE, and reset
+      shuffle_RMSE[[i]][j] <- focal_vs_comp_bw %>% 
+        predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model_shuffle) %>% 
+        right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
+        rmse(truth = growth, estimate = growth_hat) %>%
+        pull(.estimate)
+    }
+  } else {
+    shuffle_RMSE[[i]] <- NA
+  }
+
+  # 4. Permutation distribution: RMSE with cross-validation ----
+  # Only do permutation shuffling for models 3, 6, 9
+  if(model_number %in% c(3, 6, 9)){
+    # Compute num_shuffle permutation test statistics
+    shuffle_RMSE_CV[[i]] <- numeric(length = num_shuffle)
+
+    # Compute num_shuffle permutation test statistics
+    for(j in 1:num_shuffle){
+      # Compute and save RMSE, and reset
+      shuffle_RMSE_CV[[i]][j] <- focal_vs_comp_bw %>%
+        run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid, run_shuffle = TRUE) %>% 
+        right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
+        rmse(truth = growth, estimate = growth_hat) %>%
+        pull(.estimate)
+
+      # Status update
+      str_c("Model ", model_numbers[i], ", shuffle with permutation ", j) %>% print()
+    }
+  } else {
+    shuffle_RMSE_CV[[i]] <- NA
+  }
+
+  # 5. Stop clock and save
+  clock <- toc(quiet = TRUE)
+  run_time[i] <- clock$toc - clock$tic
+}
+
+model_comp_tbl <- tibble(
+  model_number = model_numbers,
+  run_time = run_time,
+  observed_RMSE = observed_RMSE,
+  observed_RMSE_CV = observed_RMSE_CV,
+  shuffle_RMSE = shuffle_RMSE,
+  shuffle_RMSE_CV = shuffle_RMSE_CV,
+)
+
+save(model_comp_tbl, file = "model_comp_tbl_4_shuffles.RData")
+```
+
+``` r
+load("model_comp_tbl_4_shuffles.RData")
+model_comp <- bind_rows(
+  model_comp_tbl %>% select(model_number, run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
+  model_comp_tbl %>% select(model_number, run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
+) %>%
+  gather(type, RMSE, -c(model_number, run_time, CV)) %>%
+  arrange(CV, model_number) %>%
+  mutate(
+    model_number = case_when(
+      model_number == 3 ~ "1. Trait-based (6): lambda = 6 x 6",
+      model_number == 6 ~ "2. Phylogenetic family (20): lambda = 20 x 20",
+      model_number == 9 ~ "3. Actual species (36): lambda = 36 x 36"
+    )
+  )
+
+model_comp_observed <- model_comp %>%
+  filter(type == "observed") %>%
+  unnest()
+model_comp_shuffle <- model_comp %>%
+  filter(type == "shuffle") %>%
+  unnest()
+
+xlab <- expression(paste('RMSE (cm ',y^{-1},')'))
+
+ggplot() +
+  geom_vline(data = model_comp_observed, aes(xintercept = RMSE, col = CV), linetype = "dashed", show.legend = F) +
+  geom_histogram(data = model_comp_shuffle, aes(x = RMSE, fill = CV), bins = 200) +
+  labs(fill = "Cross-validated?", x = xlab) +
+  facet_wrap(~model_number, ncol = 1) +
+  scale_color_viridis(discrete = TRUE, option = "D")+
+  scale_fill_viridis(discrete = TRUE)
+```
+
+<img src="man/figures/README-unnamed-chunk-34-1.png" width="100%" />
 
 ### Visualize posterior distributions
 
