@@ -872,7 +872,7 @@ model_comp_tbl <- tibble(
   shuffle_RMSE_CV = shuffle_RMSE_CV,
 )
 
-save(model_comp_tbl, file = str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_99_shuffles.RData"))
+save(model_comp_tbl, file = str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles.RData"))
 ```
 
 **Plot results**:
