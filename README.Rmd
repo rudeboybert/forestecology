@@ -920,6 +920,10 @@ ggplot() +
 
 * Plot posterior distributions of all parameters
 
+We might be interested in the posterior distributions of parameters. The betas tell us about how fast each species grows and how this depends on DBH. The lambdas, which are often of more interest, are the species-specific competition coefficents. The full lambda matrix gives competition strength between species. There is a rich literature how this matrxi (cite). 
+
+Because of the strucutre of the `bw_fit_model` object we cannot simply draw these curves based on the posterior distribution. `bw_fit_model` gives the parameteres *compared* to a baseline. This is often not of interest. So to display these parameters as we care about them we have to sample from the baseline distrubiton and from the comparison one to get the posterior distribution of interest. 
+
 ```{r, eval = run_bw}
 
 # plot_beta0(bw_fit_model)

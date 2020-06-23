@@ -376,6 +376,8 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
 #' @param posterior_param Output of \code{\link{fit_bayesian_model}}
 #'
 #' @import ggridges
+#' @importFrom mvnfast rmvt
+
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'
@@ -451,42 +453,6 @@ plot_beta0 <- function(posterior_param, model_specs){
   }
 
 
-  # do we have to sample from the distribution to make the curves?
-  # since we know mu and sigma, can't we just plot the exact curves?
-  # would this be faster?
-  # I am having a hard time pulling them out from the posterior_param object
-  # but here is my thought
-
-  params <- tibble(species = c('Oak', 'Maple', 'Hickory', 'Cherry'),
-                   mu = c(0.1, 0.05, 0.15, 0.075),
-                   sigma = c(0.025, 0.015, 0.05, 0.03))
-
-  x_lims <- params %>%
-    mutate(max_val = mu + sigma*4,
-           min_val = mu - sigma*4) %>%
-    summarise(min_val = min(min_val), max_val = max(max_val)) %>%
-    as.numeric()
-
-  x_range_len <- 500
-  x_range <- seq(from = x_lims[1], to = x_lims[2], length = x_range_len)
-
-  posterior_curves <- tibble(species = rep(params$species[1], x_range_len),
-                             x = x_range,
-                             y = dnorm(x_range,params$mu[1],params$sigma[1]))
-
-  # can you do this will purrr??
-  for (sp in 2:dim(params)[1])
-  {
-    to_add <- tibble(species = rep(params$species[sp], x_range_len),
-                               x = x_range,
-                               y = dnorm(x_range,params$mu[sp],params$sigma[sp]))
-
-    posterior_curves <- rbind(posterior_curves, to_add)
-  }
-
-  ggplot(posterior_curves, aes(x = x, y = species, height = y)) +
-    geom_density_ridges(stat = 'identity') +
-    geom_vline(xintercept = 0, linetype = "dashed")
 
 
 
