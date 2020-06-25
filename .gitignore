@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 .DS_Store
+forestecology.Rcheck/
+forestecology*.tar.gz
+forestecology*.tgz
