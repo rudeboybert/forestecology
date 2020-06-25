@@ -885,27 +885,29 @@ bw_growth_df_orig <- bw_growth_df
 
 ``` r
 # Number of permutation shuffles:
-num_shuffle <- 4
+num_shuffle <- 2
 
 # Compute observed RMSE for all models, but only do permutation shuffling for
 # models 3,6,9
 model_numbers <- c(3)
+species_notion_vector <- c("trait_group", "family", "species")
 
 # Save results here
-run_time <- rep(0, length(model_numbers))
-observed_RMSE <- rep(0, length(model_numbers))
-observed_RMSE_CV <- rep(0, length(model_numbers))
+run_time <- rep(0, length(species_notion_vector))
+observed_RMSE <- rep(0, length(species_notion_vector))
+observed_RMSE_CV <- rep(0, length(species_notion_vector))
 shuffle_RMSE <- list()
 shuffle_RMSE_CV <- list()
 
-for(i in 1:length(model_numbers)){
+for(i in 1:length(species_notion_vector)){
   # Start clock
   tic()
 
   # Modeling and species stuff
-  model_number <- model_numbers[i]
+  model_number <- 3
+  species_notion <- species_notion_vector[i]
   bw_specs <- bw_growth_df %>% 
-    get_model_specs(model_number = model_number, species_notion = 'trait_group')
+    get_model_specs(model_number = model_number, species_notion = species_notion)
 
   # Focal vs comp main dataframe for analysis
   focal_vs_comp_bw <- bw_growth_df_orig %>% 
@@ -969,7 +971,7 @@ for(i in 1:length(model_numbers)){
         pull(.estimate)
 
       # Status update
-      str_c("Model ", model_numbers[i], ", shuffle with permutation ", j) %>% print()
+      str_c("notion of species: ", species_notion_vector[i], ", shuffle with permutation ", j) %>% print()
     }
   } else {
     shuffle_RMSE_CV[[i]] <- NA
@@ -989,7 +991,7 @@ model_comp_tbl <- tibble(
   shuffle_RMSE_CV = shuffle_RMSE_CV,
 )
 
-save(model_comp_tbl, file = str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_99_shuffles.RData"))
+save(model_comp_tbl, file = str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles.RData"))
 ```
 
 **Plot results**:
