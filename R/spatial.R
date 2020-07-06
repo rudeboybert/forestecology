@@ -2,6 +2,64 @@ globalVariables(c(
   "x_dir", "y_dir"
 ))
 
+#' Computer buffer to a region.
+#'
+#' @param region region to be buffered
+#' @param direction "in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.
+#' @param max_dist size of buffer in same units as geometry in \code{region}
+#' @return As \code{sf} object corresponding to buffer
+#' @export
+#' @importFrom sfheaders sf_polygon
+#' @importFrom sf st_buffer
+# #' @seealso \code{\link{bigwoods}}
+#' @examples
+#' library(tibble)
+#' library(sfheaders)
+#' library(ggplot2)
+#'
+#' # Example square region to be buffered (as sf object)
+#' region <- tibble(
+#'   x = c(0, 0, 1, 1),
+#'   y = c(0, 1, 1, 0)
+#' ) %>%
+#'   sf_polygon()
+#'
+#' # Size of buffer
+#' size <- 0.05
+#'
+#' # Compute "inwards" buffer
+#' inwards_buffer_region <- region %>%
+#'   compute_buffer_region(direction = "in", size = size)
+#'
+#' # Compute "outwards" buffer
+#' outwards_buffer_region <- region %>%
+#'   compute_buffer_region(direction = "out", size = size)
+#'
+#' # Plot original region in black, outwards buffer in blue, inwards buffer in orange
+#' ggplot() +
+#'   geom_sf(data = outwards_buffer_region, col = "blue") +
+#'   geom_sf(data = region) +
+#'   geom_sf(data = inwards_buffer_region, col = "orange")
+compute_buffer_region <- function(region, direction = "in", size){
+  # - Q: Force user to specify region as sf instead of just tibble object?
+  # - Run tests on direction and size
+
+  if(direction == "in") {
+    size = -1 * abs(size)
+  } else if (direction == "out"){
+    size = abs(size)
+  }
+
+  buffer_region <- region %>%
+    # sf_polygon() %>%
+    st_buffer(dist = size)
+
+  return(buffer_region)
+}
+
+
+
+
 #' Identify which trees are in buffer region of bigwoods.
 #'
 #' @param bigwoods \code{\link{bigwoods}} data frame
