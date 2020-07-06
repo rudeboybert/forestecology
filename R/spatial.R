@@ -58,64 +58,58 @@ compute_buffer_region <- function(region, direction = "in", size){
 }
 
 
-
-
-
-
-
-
-
-
-#' Identify which trees are in buffer region of bigwoods.
+#' Identify trees in the buffer region
 #'
-#' @param bigwoods \code{\link{bigwoods}} data frame
+#' @param growth_df \code{\link{compute_growth}} data frame
 #' @param max_dist Maximum distance from a focal tree for another tree to be
 #'   considered a competitor tree
-#' @return The same \code{\link{bigwoods}} data frame but with a new boolean
+#' @param region User specified boundary of study region
+#' @return The same \code{\link{growth_df}} data frame but with a new boolean
 #'   variable \code{buffer} indicating if a tree is in the study region buffer
-#'   area. This uses \code{\link{bigwoods_study_region}} to define the boundary:
+#'   area. This uses \code{\link{compute_buffer_region}} to define the boundary of the buffer region.
 #' @export
 #' @import dplyr
-#' @importFrom sp point.in.polygon
-#' @importFrom concaveman concaveman
-#' @seealso \code{\link{bigwoods}}
+#' @importFrom sf st_intersects
+#' @seealso \code{\link{compute_buffer_region}}
 #'
 #' @examples
+#' library(tibble)
+#' library(sfheaders)
 #' library(ggplot2)
 #'
-#' # Create buffer variable:
-#' bigwoods <- bigwoods %>%
-#'   define_bigwoods_buffer(max_dist = 7.5)
+#' # Example square region to be buffered (as sf object)
+#' region <- tibble(
+#'   x = c(0, 0, 1, 1),
+#'   y = c(0, 1, 1, 0)
+#' ) %>%
+#'   sf_polygon()
 #'
-#' ggplot(bigwoods, aes(x = x, y = y)) +
-#'   # Mark study region boundary
-#'   geom_path(data = bigwoods_study_region, size = 1) +
-#'   # Mark buffer vs non-buffer trees:
-#'   geom_point(aes(col = buffer)) +
-#'   coord_fixed(ratio = 1) +
-#'   labs(title = "Study region boundary and buffer region")
-define_bigwoods_buffer <- function(bigwoods, max_dist){
-  bounding_points <- concaveman::concaveman(matrix(c(bigwoods$x,bigwoods$y),ncol=2))
-  bounding_points <- tibble(x= bounding_points[,1], y=bounding_points[,2])
-  centroid <- bounding_points %>%
-    summarise(x = mean(x), y= mean(y) )
-  bounding_points <- bounding_points %>%
-    mutate(x_dir = ifelse(x-centroid$x>0,-1,1),
-           y_dir = ifelse(y-centroid$y>0,-1,1),
-           x_buff = x + max_dist*x_dir,
-           y_buff = y + max_dist*y_dir)
+#' study_points <- tibble(
+#'  x = runif(50),
+#'  y = runif(50) ) %>%
+#'  sf_point()
+#'
+#' # Size of buffer
+#' size <- 0.05
+#'
+#' # Identify whether points are within size of boundary
+#' study_points <- study_points %>%
+#'   define_buffer(size = size, region = region)
+#'
+#' # Plot study points coded by whether they are within size of boundary
+#' ggplot() +
+#'   geom_sf(data = region) +
+#'   geom_sf(data = study_points, aes(col = buffer))
+#'
+define_buffer <- function(growth_df, size, region){
+  buffer_boundary <- region %>%
 
-  x_buff <- bounding_points$x_buff
-  y_buff <- bounding_points$y_buff
+    compute_buffer_region(direction = 'in', size = size)
+  buffer_index <- !st_intersects(growth_df,buffer_boundary, sparse = FALSE)
+  growth_df <- growth_df %>%
+    mutate(buffer = as.vector(buffer_index))
 
-  bigwoods <- bigwoods %>%
-    mutate(
-      inside = sp::point.in.polygon(x,y,x_buff,y_buff),
-      buffer = ifelse(inside == 0, TRUE, FALSE)
-    ) %>%
-    select(-inside)
-
-  return(bigwoods)
+  return(growth_df)
 }
 
 

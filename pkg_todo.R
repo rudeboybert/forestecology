@@ -123,22 +123,9 @@ ggplot() +
 
 
 # Dave makes attempt at this function in R/spatial.R
-# Make this a function? Make this a function that calls define_buffer?
-# Inputs:
-# - main_df
-# - size
-#
-# Internally calls compute_buffer_region() function
-# Outputs:
-# - main_df with boolean part_of_boundary?
-#
-# Example that builds on compute_buffer_region() where now we have points within square
-#
-# Why:
-# - To identify focal trees
-buffer_index <- !st_intersects(bw_growth_df, bw_buffer_region, sparse = FALSE)
+# DA: Okay I think this works!
 bw_growth_df <- bw_growth_df %>%
-  mutate(buffer = as.vector(buffer_index))
+  define_buffer(size = max_dist, region = bigwoods_study_region %>% sf_polygon())
 
 # Deliverable
 ggplot() +
