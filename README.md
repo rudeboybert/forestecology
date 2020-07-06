@@ -993,20 +993,20 @@ for(i in 1:length(species_notion_vector)){
 **Plot results**:
 
 ``` r
-load("model_comp_tbl_4_shuffles.RData")
+load("2020-06-25_model_comp_tbl_49_shuffles.RData")
 model_comp <- bind_rows(
   model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
   model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
 ) %>%
   gather(type, RMSE, -c(species_notion, run_time, CV)) %>%
-  arrange(CV, model_number) %>%
   mutate(
     species_notion = case_when(
       species_notion == "trait_group" ~ "1. Trait-based (6): lambda = 6 x 6",
       species_notion == "family" ~ "2. Phylogenetic family (20): lambda = 20 x 20",
       species_notion == "species" ~ "3. Actual species (36): lambda = 36 x 36"
     )
-  )
+  ) %>% 
+  filter(species_notion != "3. Actual species (36): lambda = 36 x 36")
 
 model_comp_observed <- model_comp %>%
   filter(type == "observed") %>%
@@ -1025,6 +1025,8 @@ ggplot() +
   scale_color_viridis(discrete = TRUE, option = "D")+
   scale_fill_viridis(discrete = TRUE)
 ```
+
+<img src="man/figures/README-unnamed-chunk-35-1.png" width="100%" />
 
 ### Visualize posterior distributions
 
