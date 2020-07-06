@@ -7,9 +7,8 @@
 ^CODE_OF_CONDUCT\.md$
 ^data-raw$
 ^README_cache$
-^etc$
-^cv_folds_sanity_check$
 ^forestecology\.Rcheck$
 ^forestecology.*\.tar\.gz$
 ^forestecology.*\.tgz$
-^.*\.RData$
+
+^pkg_todo\.R$
