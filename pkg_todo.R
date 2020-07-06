@@ -108,34 +108,19 @@ bw_growth_df <-
 
 
 # Add buffers ---------------------------------------------------------------
-#
-# Make this a function: define_buffer?
-# Inputs:
-# - boundary of region (as tibble or sf or both)
-# - direction: inwards/outwards
-# - size of buffer
-#
-# Outputs:
-# - sf object buffer_boundary
-#
-# Use cases:
-# - Here (inwards), CV (outwards), in general
 
 # This number acts as buffer, but also determining neighbors
 max_dist <- 7.5
 
 # Study region boundary polygon
-bw_boundary <- bigwoods_study_region %>%
-  sf_polygon()
-
-# Buffer polygon
-bw_buffer <- bw_boundary %>%
-  st_buffer(dist = -max_dist)
+bw_buffer_region <- bigwoods_study_region %>%
+  sf_polygon() %>%
+  compute_buffer_region(direction = "in", size = max_dist)
 
 # Deliverable
 ggplot() +
-  geom_sf(data = bw_boundary, col = "red") +
-  geom_sf(data = bw_buffer)
+  geom_sf(data = bigwoods_study_region %>% sf_polygon()) +
+  geom_sf(data = bw_buffer_region, col = "red")
 
 
 
