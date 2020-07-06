@@ -60,6 +60,12 @@ compute_buffer_region <- function(region, direction = "in", size){
 
 
 
+
+
+
+
+
+
 #' Identify which trees are in buffer region of bigwoods.
 #'
 #' @param bigwoods \code{\link{bigwoods}} data frame
