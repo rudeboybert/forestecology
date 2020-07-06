@@ -5,7 +5,6 @@
 ^README\.Rmd$
 ^README\.md$
 ^CODE_OF_CONDUCT\.md$
-^driver\.R$
 ^data-raw$
 ^README_cache$
 ^etc$
@@ -13,3 +12,4 @@
 ^forestecology\.Rcheck$
 ^forestecology.*\.tar\.gz$
 ^forestecology.*\.tgz$
+^.*\.RData$

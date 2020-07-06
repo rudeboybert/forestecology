@@ -21,6 +21,7 @@ Return information on each fold in crossvalidation grid
 \examples{
 library(ggplot2)
 library(dplyr)
+\dontrun{
 
 # Define crossvalidation folds/grid
 bigwoods <- bigwoods \%>\%
@@ -45,4 +46,5 @@ neighbors <- folds \%>\%
   group_by(fold) \%>\%
   summarize(neighbors = str_c(neighbor, collapse = ","))
 neighbors
+}
 }

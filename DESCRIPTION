@@ -29,5 +29,10 @@ Imports:
     dplyr,
     tidyr,
     proxy,
+    purrr,
     sp,
-    concaveman
+    concaveman,
+    ggridges,
+    mvnfast,
+    sf,
+    sfheaders

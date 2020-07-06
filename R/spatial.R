@@ -104,6 +104,7 @@ define_cv_grid <- function(forest, cv_fold_size){
 #' @examples
 #' library(ggplot2)
 #' library(dplyr)
+#' \dontrun{
 #'
 #' # Define crossvalidation folds/grid
 #' bigwoods <- bigwoods %>%
@@ -128,6 +129,7 @@ define_cv_grid <- function(forest, cv_fold_size){
 #'   group_by(fold) %>%
 #'   summarize(neighbors = str_c(neighbor, collapse = ","))
 #' neighbors
+#' }
 get_cv_fold_info <- function(forest, cv_fold_size){
   # Save output here
   fold_neighbors <- NULL

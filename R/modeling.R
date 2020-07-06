@@ -377,6 +377,7 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
 #'
 #' @import ggridges
 #' @importFrom mvnfast rmvt
+#' @importFrom purrr set_names
 
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
@@ -396,7 +397,7 @@ plot_beta0 <- function(posterior_param, model_specs){
       rmvt(n_sim, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
       data.frame() %>%
       as_tibble() %>%
-      purrr::set_names(colnames(posterior_param$V_star)) %>%
+      set_names(colnames(posterior_param$V_star)) %>%
       tidyr::gather(type, value)
 
     coefficient_types <- beta_lambda_posterior_df %>%
