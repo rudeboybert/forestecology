@@ -3,7 +3,7 @@ Type: Package
 Title: Methods and Data for Forest Ecology Model Selection and Assessment
 Version: 0.1.0.9000
 Authors@R: c(
-    person("Albert Y.", "Kim", email = "albert.ys.kim@gmail.com", role = c("aut", "cre")),
+    person("Albert Y.", "Kim", email = "albert.ys.kim@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-306X")),
     person("David", "Allen", email = "dallen@middlebury.edu", role = "aut"),
     person("Jonathan", "Che", email = "jche18@amherst.edu", role = "ctb")
     )
