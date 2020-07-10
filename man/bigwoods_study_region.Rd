@@ -25,6 +25,6 @@ ggplot(bigwoods, aes(x = x, y = y)) +
   coord_fixed(ratio = 1)
 }
 \seealso{
-\code{\link{families}} \code{\link{define_bigwoods_buffer}}
+\code{\link{families}} \code{\link{define_buffer}}
 }
 \keyword{datasets}

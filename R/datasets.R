@@ -40,7 +40,7 @@
 #'   \item{x}{x-coordinate (meters from reference point)}
 #'   \item{y}{y-coordinate (meters from reference point)}
 #' }
-#' @seealso \code{\link{families}} \code{\link{define_bigwoods_buffer}}
+#' @seealso \code{\link{families}} \code{\link{define_buffer}}
 #' @examples
 #' library(ggplot2)
 #' ggplot(bigwoods, aes(x = x, y = y)) +

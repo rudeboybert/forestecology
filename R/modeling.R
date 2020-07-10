@@ -53,7 +53,7 @@ get_model_specs <- function(forest, model_number, species_notion){
 #' Create main data frame for analysis
 #'
 #' @inheritParams define_cv_grid
-#' @inheritParams define_bigwoods_buffer
+#' @inheritParams define_buffer
 #' @param model_specs from \code{\link{get_model_specs}}
 #' @return \code{focal_vs_comp} data frame
 #' @export
