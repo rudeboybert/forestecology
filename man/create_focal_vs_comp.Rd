@@ -4,14 +4,7 @@
 \alias{create_focal_vs_comp}
 \title{Create main data frame for analysis}
 \usage{
-create_focal_vs_comp(
-  growth_df,
-  max_dist,
-  model_specs,
-  cv_grid,
-  id,
-  plot_folds = FALSE
-)
+create_focal_vs_comp(growth_df, max_dist, species_notion, cv_grid, id)
 }
 \arguments{
 \item{growth_df}{\code{\link{compute_growth}} data frame}
