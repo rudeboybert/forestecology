@@ -165,6 +165,13 @@ bw_growth_df <- bw_growth_df %>%
 bw_cv_grid$plots +
   geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col=factor(foldID)), size = 0.1)
 
+# Visualize grid again
+bw_cv_grid$blocks %>%
+  st_as_sf() %>%
+  ggplot() +
+  geom_sf()
+
+
 # Remove weird folds with no trees in them from viz above
 bw_growth_df <- bw_growth_df %>%
   filter(!foldID %in% c(19, 23, 21, 17, 8, 19)) %>%
@@ -177,8 +184,116 @@ ggplot() +
 
 
 
-
 # Model ------------------------------------------------------------------------
+
+# Run it once
+bw_specs <- bw_growth_df %>%
+  get_model_specs(model_number = 3, species_notion = "sp")
+
+
+tic()
+focal_vs_comp_bw <- bw_growth_df %>%
+  create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
+toc()
+
+
+tic()
+focal_vs_comp_bw_2 <- bw_growth_df %>%
+  create_focal_vs_comp_2(max_dist = max_dist, species_notion = "sp", cv_grid = bw_cv_grid, id = "treeID")
+toc()
+
+x <- focal_vs_comp_bw %>%
+  group_by(focal_ID) %>%
+  summarize(biomass = sum(comp_basal_area))
+
+y <- focal_vs_comp_bw_2 %>%
+  group_by(focal_ID) %>%
+  summarize(biomass_2 = sum(comp_basal_area))
+
+x %>%
+  left_join(y, by = "focal_ID") %>%
+  ggplot(aes(x = biomass, y = biomass_2)) +
+  geom_point()
+
+
+
+
+
+x <- focal_vs_comp_bw %>%
+  filter(focal_ID == 1147) %>%
+  pull(comp_ID)
+
+y <- focal_vs_comp_bw_2 %>%
+  filter(focal_ID == 1147) %>%
+  pull(comp_ID)
+
+new_trees <- setdiff(y, x)
+
+temp <- bw_growth_df %>%
+  filter(treeID %in% c(1147, y)) %>%
+  mutate(
+    focal = treeID == 1147,
+    new = treeID %in% new_trees
+  )
+
+ggplot() +
+  geom_sf(data = temp, aes(size = focal, col = new))
+
+
+
+plot_title <- str_c("fold ", all_folds[i], ": Small black dots = competitor, cyan dots = test set, orange dots = buffer")
+
+ggplot() +
+  #geom_sf(data = bigwoods_study_region %>% sf_polygon(), col = "black") +
+  geom_sf(data = current_fold_competitor_boundary, col = "red") +
+  geom_sf(data = current_fold_boundary, col = "black") +
+  geom_sf(data = growth_df_competitor_trees_current_fold, col = "orange", size = 3) +
+  geom_sf(data = growth_df_focal_trees_current_fold, col = "cyan", size = 0.5) +
+  geom_sf(data = temp, aes(size = focal, col = new)) +
+  labs(title = plot_title)
+
+
+
+bw_cv_grid$blocks %>%
+  st_as_sf() %>%
+  ggplot() +
+  geom_sf() +
+  geom_sf(data = temp, aes(size = focal, col = new)) +
+  coord_sf(xlim = c(75, 125), ylim = c(175, 225))
+
+
+
+
+
+
+# 1. Compute observed test statistic: RMSE with no cross-validation ----
+# Fit model (compute posterior parameters)
+bw_fit_model <- focal_vs_comp_bw %>%
+  fit_bayesian_model(model_specs = bw_specs, run_shuffle = FALSE)
+
+# Make predictions, compute and save RMSE, and reset
+predictions <- focal_vs_comp_bw %>%
+  predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model)
+
+
+
+
+
+%>%
+  right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
+
+
+
+
+
+
+
+
+
+
 
 # Number of permutation shuffles:
 num_shuffle <- 4
@@ -203,7 +318,7 @@ for(i in 1:length(species_notion_vector)){
   # Modeling and species stuff
   species_notion <- species_notion_vector[i]
   bw_specs <- bw_growth_df %>%
-    get_model_specs(model_number = 3, species_notion = species_notion)
+    get_model_specs(model_number = 3, species_notion = "sp")
 
   # Focal vs comp main dataframe for analysis
   focal_vs_comp_bw <- bw_growth_df_orig %>%
