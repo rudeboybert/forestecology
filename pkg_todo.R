@@ -62,20 +62,13 @@ bw_species <-
   ) %>%
   select(sp = spcode, genus, species, latin, family, trait_group)
 
+
+# Append additional species data
 # bw_2008 <- bw_2008 %>%
 #   left_join(bw_species,by='sp')
 
-#
-# Include in data/
-# As sf object or tibble?
-#
-# bigwoods_study_region
-
-
-#
-# Maybes?
-# - Add lat/long to all coordinates? Function? Based on Dave comments
-# - rename dbh1 & dbh2 to
+# Maybe?
+# - Add lat/long to all coordinates? Function? Based on Dave comments on Slack
 
 
 
@@ -113,19 +106,19 @@ bw_growth_df <-
 max_dist <- 7.5
 
 # Study region boundary polygon
-bw_buffer_region <- bigwoods_study_region %>% sf_polygon() %>%
+bw_buffer_region <- bigwoods_study_region %>%
   compute_buffer_region(direction = "in", size = max_dist)
 
 # Deliverable
 ggplot() +
-  geom_sf(data = bigwoods_study_region %>% sf_polygon()) +
+  geom_sf(data = bigwoods_study_region) +
   geom_sf(data = bw_buffer_region, col = "orange")
 
 
 # Dave makes attempt at this function in R/spatial.R
 # DA: Okay I think this works!
 bw_growth_df <- bw_growth_df %>%
-  define_buffer(size = max_dist, region = bigwoods_study_region %>% sf_polygon())
+  define_buffer(size = max_dist, region = bigwoods_study_region)
 
 # Deliverable
 ggplot() +
@@ -165,13 +158,6 @@ bw_growth_df <- bw_growth_df %>%
 bw_cv_grid$plots +
   geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col=factor(foldID)), size = 0.1)
 
-# Visualize grid again
-bw_cv_grid$blocks %>%
-  st_as_sf() %>%
-  ggplot() +
-  geom_sf()
-
-
 # Remove weird folds with no trees in them from viz above
 bw_growth_df <- bw_growth_df %>%
   filter(!foldID %in% c(19, 23, 21, 17, 8, 19)) %>%
@@ -180,6 +166,7 @@ bw_growth_df <- bw_growth_df %>%
 # Deliverable
 ggplot() +
   geom_sf(data = bw_growth_df, aes(col = foldID, alpha = buffer))
+
 
 
 
