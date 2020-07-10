@@ -1,8 +1,25 @@
 library(tidyverse)
 library(usethis)
-library(sp)
 library(snakecase)
+library(sf)
+library(sfheaders)
 
+
+
+# Boundary polygon of bigwoods region
+bigwoods_study_region <-
+  tibble(
+    # Study region boundary
+    x = c(-100, -100, -300, -300, -200, -200, 300, 300, 400, 400, 500, 500, -100),
+    y = c(0, 100, 100, 200, 200, 400, 400, 200, 200, 100, 100, 0, 0)
+  ) %>%
+  # Convert to sf object
+  sf_polygon()
+use_data(bigwoods_study_region, overwrite = TRUE)
+
+
+
+# Species info
 families <- "data-raw/species_list.csv" %>%
   read_csv() %>%
   # Select necessary variables
@@ -24,17 +41,7 @@ families <- "data-raw/species_list.csv" %>%
     family = to_any_case(family),
     trait_group = to_any_case(trait_group)
   )
-usethis::use_data(families, overwrite = TRUE)
-
-# Boundary polygon of bigwoods region
-bigwoods_study_region <-
-  data_frame(
-    # Study region boundary
-    x = c(-100, -100, -300, -300, -200, -200, 300, 300, 400, 400, 500, 500, -100),
-    y = c(0, 100, 100, 200, 200, 400, 400, 200, 200, 100, 100, 0, 0)
-  )
-usethis::use_data(bigwoods_study_region, overwrite = TRUE)
-
+use_data(families, overwrite = TRUE)
 
 
 
@@ -53,10 +60,10 @@ bigwoods <- "data-raw/BigWoods2015_new.csv" %>%
   ) %>%
   # Define dbh and growth variables
   mutate(
-    dbh03 = gbh03/pi,
-    dbh08 = gbh08/pi,
-    dbh14 = gbh14/pi,
-    growth = (dbh14-dbh08)/(2014-year_08)
+    dbh03 = gbh03 / pi,
+    dbh08 = gbh08 / pi,
+    dbh14 = gbh14 / pi,
+    growth = (dbh14 - dbh08) / (2014 - year_08)
   ) %>%
   # Remove those trees with year_08 = NA, i.e. were only added in 2014
   filter(!is.na(year_08)) %>%
@@ -84,6 +91,8 @@ bigwoods <- "data-raw/BigWoods2015_new.csv" %>%
   # Add ID variable
   rownames_to_column(var = "ID") %>%
   # Clean up variables
-  select(ID, species, family_phylo, trait_group, x, y, growth, dbh08, dbh14,
-         code14)
-usethis::use_data(bigwoods, overwrite = TRUE)
+  select(
+    ID, species, family_phylo, trait_group, x, y, growth, dbh08, dbh14,
+    code14
+  )
+use_data(bigwoods, overwrite = TRUE)
