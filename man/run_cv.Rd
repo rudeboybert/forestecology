@@ -6,7 +6,7 @@
 \usage{
 run_cv(
   focal_vs_comp,
-  model_specs,
+  model_formula,
   max_dist,
   cv_grid,
   run_shuffle = FALSE,
@@ -16,8 +16,6 @@ run_cv(
 }
 \arguments{
 \item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
-
-\item{model_specs}{from \code{\link{get_model_specs}}}
 
 \item{max_dist}{distance of competitive neighborhood}
 

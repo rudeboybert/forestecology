@@ -4,12 +4,10 @@
 \alias{predict_bayesian_model}
 \title{Make predictions based on bayesian model}
 \usage{
-predict_bayesian_model(focal_vs_comp, model_specs, posterior_param)
+predict_bayesian_model(focal_vs_comp, model_formula, posterior_param)
 }
 \arguments{
 \item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
-
-\item{model_specs}{from \code{\link{get_model_specs}}}
 
 \item{posterior_param}{Output of \code{\link{fit_bayesian_model}}}
 }

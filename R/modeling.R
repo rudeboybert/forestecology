@@ -195,62 +195,69 @@ create_focal_vs_comp <- function(growth_df, max_dist, species_notion, cv_grid, i
 #'
 #' @examples
 #' 1+1
-fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
+fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE,
                                prior_hyperparameters = NULL){
-
-  # Get model formula
-  model_formula <- model_specs$model_formula
+  if(FALSE){
+    focal_vs_comp <- focal_vs_comp_bw
+    model_formula <- model_formula_bw
+    run_shuffle = FALSE
+    prior_hyperparameters = NULL
+  }
 
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
-    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
+    group_by(focal_ID, comp_notion_of_species) %>%
     # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
     summarise(
-      basal_area_total = sum(comp_basal_area),
+      # basal_area_total = sum(comp_basal_area),
       comp_basal_area = sum(comp_basal_area),
-      n_comp = n()
-    ) %>%
-    arrange(focal_ID)
+      # n_comp = n()
+    )
 
   # Shuffle group label only if flag is set
   if(run_shuffle){
     focal_trees <- focal_trees %>%
-      group_by(focal_notion_of_species) %>%
+      group_by(focal_ID) %>%
       mutate(comp_notion_of_species = sample(comp_notion_of_species))
   }
 
   # Continue processing focal_trees
   focal_trees <- focal_trees %>%
-    ungroup() %>%
     # sum biomass and n_comp for competitors of same species. we need to do this
     # for the cases when we do permutation shuffle.
-    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
+    group_by(focal_ID, comp_notion_of_species) %>%
     summarise_all(list(sum)) %>%
-    ungroup() %>%
+    # ungroup() %>%
     # compute biomass for each tree type
-    pivot_wider(names_from = comp_notion_of_species, values_from = basal_area_total, values_fill = list(basal_area_total = 0)) %>%
-    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID) %>%
+    # Note we have to use spread and not pivot_wider https://github.com/tidyverse/tidyr/issues/770
+    # pivot_wider(names_from = comp_notion_of_species, values_from = comp_basal_area, values_fill = 0) %>%
+    spread(key = comp_notion_of_species, value = comp_basal_area, fill = 0, drop = FALSE) %>%
+    group_by(focal_ID) %>%
     summarise_all(list(sum)) %>%
-    ungroup() %>%
-    # sort by focal tree ID number
-    arrange(focal_ID) %>%
-    rename(!!model_specs$notion_of_focal_species := focal_notion_of_species)
+    ungroup()
 
-  # Add biomass=0 for any species for which there are no trees
-  species_levels <- model_specs$species_of_interest
-  missing_species <- species_levels[!species_levels %in% names(focal_trees)] %>%
-    as.character()
-  if(length(missing_species) > 0){
-    for(i in 1:length(missing_species)){
-      focal_trees <- focal_trees %>%
-        mutate(!!missing_species[i] := 0)
-    }
-    focal_trees <- focal_trees %>%
-      select(everything(), !!species_levels)
-  }
+
+  # Might no longer need this
+  # # Add biomass=0 for any species for which there are no trees
+  # missing_species <- species_levels[!species_levels %in% names(focal_trees)] %>%
+  #   as.character()
+  # if(length(missing_species) > 0){
+  #   for(i in 1:length(missing_species)){
+  #     focal_trees <- focal_trees %>%
+  #       mutate(!!missing_species[i] := 0)
+  #   }
+  #   focal_trees <- focal_trees %>%
+  #     select(everything(), !!species_levels)
+  # }
 
   # Matrix objects for analytic computation of all posteriors
+  focal_trees <- focal_vs_comp %>%
+    select(focal_ID, focal_notion_of_species, dbh, growth) %>%
+    distinct() %>%
+    left_join(focal_trees, by = "focal_ID") %>%
+    rename(sp = focal_notion_of_species)
+
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
     pull(growth) %>%
@@ -290,10 +297,6 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
   ) %>%
     as.vector()
 
-  # Make posterior predictions
-  # focal_trees_new <- focal_trees_new %>%
-  #   mutate(growth_hat = as.vector(X %*% mu_star))
-
   # Return posterior parameters
   posterior_hyperparameters <- list(
     a_star = a_star,
@@ -319,59 +322,70 @@ fit_bayesian_model <- function(focal_vs_comp, model_specs, run_shuffle = FALSE,
 #'
 #' @examples
 #' 1+1
-predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
+predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param){
 
-  # Get model formula
-  model_formula <- model_specs$model_formula
+  if(FALSE){
+    focal_vs_comp <- focal_vs_comp_bw
+    # focal_vs_comp <- test
+    model_formula <- model_formula_bw
+    posterior_param <- bw_fit_model
+  }
 
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
-    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
+    group_by(focal_ID, comp_notion_of_species) %>%
     # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
     summarise(
-      basal_area_total = sum(comp_basal_area),
+      # basal_area_total = sum(comp_basal_area),
       comp_basal_area = sum(comp_basal_area),
-      n_comp = n()
-    ) %>%
-    arrange(focal_ID)
+      # n_comp = n()
+    )
 
   # Continue processing focal_trees
   focal_trees <- focal_trees %>%
-    ungroup() %>%
     # sum biomass and n_comp for competitors of same species. we need to do this
     # for the cases when we do permutation shuffle.
-    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID, comp_notion_of_species) %>%
+    group_by(focal_ID, comp_notion_of_species) %>%
     summarise_all(list(sum)) %>%
-    ungroup() %>%
+    # ungroup() %>%
     # compute biomass for each tree type
-    pivot_wider(names_from = comp_notion_of_species, values_from = basal_area_total, values_fill = list(basal_area_total = 0)) %>%
-    group_by(focal_ID, focal_notion_of_species, dbh, growth, foldID) %>%
+    # Note we have to use spread and not pivot_wider https://github.com/tidyverse/tidyr/issues/770
+    # pivot_wider(names_from = comp_notion_of_species, values_from = comp_basal_area, values_fill = 0) %>%
+    spread(key = comp_notion_of_species, value = comp_basal_area, fill = 0, drop = FALSE) %>%
+    group_by(focal_ID) %>%
     summarise_all(list(sum)) %>%
-    ungroup() %>%
-    # sort by focal tree ID number
-    arrange(focal_ID) %>%
-    rename(!!model_specs$notion_of_focal_species := focal_notion_of_species)
+    ungroup()
 
-  # Add biomass=0 for any species for which there are no trees
-  species_levels <- model_specs$species_of_interest
-  missing_species <- species_levels[!species_levels %in% names(focal_trees)] %>%
-    as.character()
-  if(length(missing_species) > 0){
-    for(i in 1:length(missing_species)){
-      focal_trees <- focal_trees %>%
-        mutate(!!missing_species[i] := 0)
-    }
-    focal_trees <- focal_trees %>%
-      select(everything(), !!species_levels)
-  }
+  # # Might no longer need this
+  # # Add biomass=0 for any species for which there are no trees
+  # species_levels <- model_specs$species_of_interest
+  # missing_species <- species_levels[!species_levels %in% names(focal_trees)] %>%
+  #   as.character()
+  # if(length(missing_species) > 0){
+  #   for(i in 1:length(missing_species)){
+  #     focal_trees <- focal_trees %>%
+  #       mutate(!!missing_species[i] := 0)
+  #   }
+  #   focal_trees <- focal_trees %>%
+  #     select(everything(), !!species_levels)
+  # }
 
   # Matrix objects for analytic computation of all posteriors
+  focal_trees <- focal_vs_comp %>%
+    select(focal_ID, focal_notion_of_species, dbh, growth) %>%
+    distinct() %>%
+    left_join(focal_trees, by = "focal_ID") %>%
+    rename(sp = focal_notion_of_species)
+
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
     pull(growth) %>%
     matrix(ncol = 1)
   n <- nrow(X)
+
+
+
 
   # Make posterior predictions
   mu_star <- posterior_param$mu_star
@@ -399,24 +413,24 @@ predict_bayesian_model <- function(focal_vs_comp, model_specs, posterior_param){
 #'
 #' @examples
 #' 1+1
-run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
+run_cv <- function(focal_vs_comp, model_formula, max_dist, cv_grid,
                    run_shuffle = FALSE, prior_hyperparameters = NULL,
                    all_folds = TRUE){
 
   if(FALSE){
-    # Code to test SCBI
-    focal_vs_comp <- focal_vs_comp_scbi
-    model_specs <- scbi_specs
-    cv_grid <- scbi_cv_grid
-
-    run_shuffle = FALSE
-    prior_hyperparameters = NULL
-    all_folds = FALSE
+    # # Code to test SCBI
+    # focal_vs_comp <- focal_vs_comp_scbi
+    # model_specs <- scbi_specs
+    # cv_grid <- scbi_cv_grid
+    #
+    # run_shuffle = FALSE
+    # prior_hyperparameters = NULL
+    # all_folds = FALSE
 
 
     # Code to test BigWoods
     focal_vs_comp <- focal_vs_comp_bw
-    model_specs <- bw_specs
+    model_formula <- model_formula_bw
     cv_grid <- bw_cv_grid
 
     run_shuffle <- FALSE
@@ -435,22 +449,30 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
     folds <- c(23, 2)
   }
 
-  # Store resulting y-hat for each focal tree here
-  focal_trees <- tibble(focal_ID = NA, growth_hat  = NA)
 
-  for (i in folds){
+
+
+
+  # Store resulting y-hat for each focal tree here
+  focal_trees <- vector(mode = "list", length = length(folds))
+
+  for (i in 1:length(folds)){
     # first pull out the test set and the full train set
     train_full <- focal_vs_comp %>%
-      filter(foldID != i)
+      filter(foldID != folds[i])
     test <- focal_vs_comp %>%
-      filter(foldID == i)
+      filter(foldID == folds[i])
+
+    if(nrow(test) == 0)
+      next
+
 
     if(FALSE){
       # Visualize original folds
       cv_grid$plots
 
       # View training set (slow)
-      train %>% sample_frac(0.01) %>% st_as_sf() %>% ggplot() + geom_sf()
+      train_full %>% sample_frac(0.01) %>% st_as_sf() %>% ggplot() + geom_sf()
     }
 
     # now buffer off the test fold by max_dist
@@ -486,18 +508,28 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
 
     # now pretty easy to just call the two functions!
     fold_fit <- train %>%
-      fit_bayesian_model(model_specs, run_shuffle = run_shuffle)
-    fold_predict <- test %>%
-      predict_bayesian_model(model_specs, fold_fit)
+      fit_bayesian_model(model_formula, run_shuffle = FALSE, prior_hyperparameters = NULL)
 
-    # Append results
-    focal_trees <- focal_trees %>%
-      bind_rows(fold_predict) %>%
-      filter(!is.na(focal_ID))
+
+    focal_trees[[i]] <- test %>%
+      predict_bayesian_model(model_formula, posterior_param = fold_fit)
   }
+
+  focal_trees <- focal_trees %>%
+    bind_rows()
 
   return(focal_trees)
 }
+
+
+
+
+
+
+
+
+
+
 
 #' Plot beta_0 parameters
 #'
@@ -507,7 +539,6 @@ run_cv <- function(focal_vs_comp, model_specs, max_dist, cv_grid,
 #' @import ggridges
 #' @importFrom mvnfast rmvt
 #' @importFrom purrr set_names
-
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'

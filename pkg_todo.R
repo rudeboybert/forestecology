@@ -64,8 +64,12 @@ bw_species <-
 
 
 # Append additional species data
-# bw_2008 <- bw_2008 %>%
-#   left_join(bw_species,by='sp')
+
+
+bw_2008 <- bw_2008 %>%
+  left_join(bw_species, by='sp') %>%
+  mutate(sp = trait_group) %>%
+  select(-c(genus, species, latin, family, trait_group))
 
 # Maybe?
 # - Add lat/long to all coordinates? Function? Based on Dave comments on Slack
@@ -178,22 +182,46 @@ focal_vs_comp_bw <- bw_growth_df %>%
 toc()
 
 
-
+model_formula_bw <- focal_vs_comp_bw$focal_notion_of_species %>%
+  unique() %>%
+  sort() %>%
+  paste(., "*sp", sep = "", collapse = " + ") %>%
+  paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
+  as.formula()
 
 
 # 1. Compute observed test statistic: RMSE with no cross-validation ----
 # Fit model (compute posterior parameters)
 bw_fit_model <- focal_vs_comp_bw %>%
-  fit_bayesian_model(model_specs = bw_specs, run_shuffle = FALSE)
+  fit_bayesian_model(model_formula = model_formula_bw, run_shuffle = FALSE, prior_hyperparameters = NULL)
 
 # Make predictions, compute and save RMSE, and reset
 predictions <- focal_vs_comp_bw %>%
-  predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>%
+  predict_bayesian_model(model_formula = model_formula_bw, posterior_param = bw_fit_model) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 
 predictions %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
+
+
+
+
+# Cross-validation
+tic()
+cv_bw <- focal_vs_comp_bw %>%
+  run_cv(model_formula = model_formula_bw, max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+
+cv_bw %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+toc()
+
+
+
+
+
 
 
 

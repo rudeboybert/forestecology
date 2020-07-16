@@ -6,15 +6,13 @@
 \usage{
 fit_bayesian_model(
   focal_vs_comp,
-  model_specs,
+  model_formula,
   run_shuffle = FALSE,
   prior_hyperparameters = NULL
 )
 }
 \arguments{
 \item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
-
-\item{model_specs}{from \code{\link{get_model_specs}}}
 
 \item{run_shuffle}{boolean as to whether to run permutation test shuffle}
 
