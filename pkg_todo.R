@@ -200,7 +200,7 @@ posterior_param_bw <- focal_vs_comp_bw %>%
 species_list_bw <- focal_vs_comp_bw$focal_notion_of_species %>% levels()
 species_list_bw
 
-posterior_plots <- plot_posterior_parameters(posterior_param <- bw_fit_model, species_list = species_list_bw)
+posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)
 
 posterior_plots[["beta_0"]]
 posterior_plots[["beta_dbh"]]
