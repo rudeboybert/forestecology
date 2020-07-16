@@ -539,83 +539,278 @@ run_cv <- function(focal_vs_comp, model_formula, max_dist, cv_grid,
 #' @import ggridges
 #' @importFrom mvnfast rmvt
 #' @importFrom purrr set_names
+#' @importFrom ggridges geom_density_ridges
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'
 #' @examples
 #' 1+1
-plot_beta0 <- function(posterior_param, model_specs){
+plot_beta0 <- function(posterior_param, species_list){
+  if (FALSE){
+    posterior_param <- bw_fit_model
+    species_list <- c("evergreen", "maple", "misc", "oak", "short_tree", "shrub")
+  }
 
-  # how we did it in the paper
-  if (FALSE)
-  {
-    n_sim <- 100
-    nu_star <- 2*posterior_param$a_star
-    Sigma_star <- (posterior_param$b_star/posterior_param$a_star)*posterior_param$V_star
+  n_sim <- 1000
+  nu_star <- 2*posterior_param$a_star
+  Sigma_star <- (posterior_param$b_star/posterior_param$a_star)*posterior_param$V_star
 
-    beta_lambda_posterior_df <-
-      rmvt(n_sim, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
-      data.frame() %>%
-      as_tibble() %>%
-      set_names(colnames(posterior_param$V_star)) %>%
-      tidyr::gather(type, value)
+  beta_lambda_posterior_df <-
+    rmvt(n_sim, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
+    data.frame() %>%
+    as_tibble() %>%
+    set_names(colnames(posterior_param$V_star)) %>%
+    gather(type, value)
 
-    coefficient_types <- beta_lambda_posterior_df %>%
-      select(type) %>%
-      distinct() %>%
-      mutate(
-        coefficient_type =
-          case_when(
-            type == "(Intercept)" ~ "intercept",
-            type %in% str_c("species", model_specs$species_of_interest) ~ "intercept",
-            str_detect(type, "dbh") ~ "dbh",
-            type %in% model_specs$species_of_interest ~ "competition",
-            str_detect(type, ":") ~ "competition",
-            # Need this for everything else that aren't the two cases above:
-            TRUE ~ "NA"
-          ))
+  coefficient_types <- beta_lambda_posterior_df %>%
+    select(type) %>%
+    distinct() %>%
+    mutate(
+      coefficient_type =
+        case_when(
+          type == "(Intercept)" ~ "intercept",
+          type %in% str_c("sp", species_list) ~ "intercept",
+          str_detect(type, "dbh") ~ "dbh",
+          type %in% species_list ~ "competition",
+          str_detect(type, ":") ~ "competition",
+          # Need this for everything else that aren't the two cases above:
+          TRUE ~ "NA"
+        ))
 
-    beta_lambda_posterior_df <- beta_lambda_posterior_df %>%
-      left_join(coefficient_types, by = "type") %>%
-      select(type, coefficient_type, value) %>%
-      group_by(type, coefficient_type) %>%
-      mutate(sim_ID = 1:n()) %>%
-      select(sim_ID, everything()) %>%
-      ungroup()
+  beta_lambda_posterior_df <- beta_lambda_posterior_df %>%
+    left_join(coefficient_types, by = "type") %>%
+    select(type, coefficient_type, value) %>%
+    group_by(type, coefficient_type) %>%
+    mutate(sim_ID = 1:n()) %>%
+    select(sim_ID, everything()) %>%
+    ungroup()
 
-    baseline_species <- model_specs$species_of_interest[1] %>% as.character()
+  baseline_species <- species_list[1] %>% as.character()
 
-    posterior_sample <- beta_lambda_posterior_df %>%
-      filter(coefficient_type == "intercept")
+  posterior_sample <- beta_lambda_posterior_df %>%
+    filter(coefficient_type == "intercept")
 
-    posterior_sample_baseline <- posterior_sample %>%
-      filter(type == "(Intercept)") %>%
-      rename(offset = value) %>%
-      select(sim_ID, offset)
+  posterior_sample_baseline <- posterior_sample %>%
+    filter(type == "(Intercept)") %>%
+    rename(offset = value) %>%
+    select(sim_ID, offset)
 
-    posterior_beta_0 <- posterior_sample %>%
-      left_join(posterior_sample_baseline, by = "sim_ID") %>%
-      mutate(
-        offset = ifelse(type == "(Intercept)", 0, offset),
-        value = value + offset,
-        type = ifelse(type == "(Intercept)", baseline_species, str_sub(type, 8))
-      ) %>%
-      mutate(type = str_to_title(type)) %>%
-      select(-offset)
+  posterior_beta_0 <- posterior_sample %>%
+    left_join(posterior_sample_baseline, by = "sim_ID") %>%
+    mutate(
+      offset = ifelse(type == "(Intercept)", 0, offset),
+      value = value + offset,
+      type = ifelse(type == "(Intercept)", baseline_species, str_sub(type, nchar("sp")+1))
+    ) %>%
+    mutate(type = str_to_title(type)) %>%
+    select(-offset)
 
-    ggplot(posterior_beta_0, aes(x=value, y = fct_rev(type))) +
-      geom_density_ridges() +
-      geom_vline(xintercept = 0, linetype = "dashed") +
-      xlim(c(-0.1,0.5)) +
-      labs(
-        x = expression(paste(beta[0], " (cm ",y^{-1},')')),
-        y = model_specs$notion_of_competitor_species
-      )
+  ggplot(posterior_beta_0, aes(x=value, y = fct_rev(type))) +
+    geom_density_ridges() +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    xlim(c(-0.1,0.5)) +
+    labs(
+      x = expression(paste(beta[0], " (cm ",y^{-1},')')),
+      y = species_list
+    )
+
+}
+
+
+
+#' Plot beta_0 parameters
+#'
+#' @inheritParams fit_bayesian_model
+#' @param posterior_param Output of \code{\link{fit_bayesian_model}}
+#'
+#' @import ggridges
+#' @importFrom mvnfast rmvt
+#' @importFrom purrr set_names
+#' @importFrom ggridges geom_density_ridges
+#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
+#' @export
+#'
+#' @examples
+#' 1+1
+plot_posterior_parameters <- function(posterior_param, species_list){
+  if (FALSE){
+    posterior_param <- bw_fit_model
+    species_list <- c("evergreen", "maple", "misc", "oak", "short_tree", "shrub")
+  }
+
+  plot_list <- NULL
+
+
+  n_sim <- 1000
+  nu_star <- 2*posterior_param$a_star
+  Sigma_star <- (posterior_param$b_star/posterior_param$a_star)*posterior_param$V_star
+
+  beta_lambda_posterior_df <-
+    rmvt(n_sim, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
+    data.frame() %>%
+    as_tibble() %>%
+    set_names(colnames(posterior_param$V_star)) %>%
+    gather(type, value)
+
+  coefficient_types <- beta_lambda_posterior_df %>%
+    select(type) %>%
+    distinct() %>%
+    mutate(
+      coefficient_type =
+        case_when(
+          type == "(Intercept)" ~ "intercept",
+          type %in% str_c("sp", species_list) ~ "intercept",
+          str_detect(type, "dbh") ~ "dbh",
+          type %in% species_list ~ "competition",
+          str_detect(type, ":") ~ "competition",
+          # Need this for everything else that aren't the two cases above:
+          TRUE ~ "NA"
+        ))
+
+  beta_lambda_posterior_df <- beta_lambda_posterior_df %>%
+    left_join(coefficient_types, by = "type") %>%
+    select(type, coefficient_type, value) %>%
+    group_by(type, coefficient_type) %>%
+    mutate(sim_ID = 1:n()) %>%
+    select(sim_ID, everything()) %>%
+    ungroup()
+
+  baseline_species <- species_list[1] %>% as.character()
+
+
+
+
+  # Intercept ------------------------------
+  posterior_sample <- beta_lambda_posterior_df %>%
+    filter(coefficient_type == "intercept")
+
+  posterior_sample_baseline <- posterior_sample %>%
+    filter(type == "(Intercept)") %>%
+    rename(offset = value) %>%
+    select(sim_ID, offset)
+
+  posterior_beta_0 <- posterior_sample %>%
+    left_join(posterior_sample_baseline, by = "sim_ID") %>%
+    mutate(
+      offset = ifelse(type == "(Intercept)", 0, offset),
+      value = value + offset,
+      type = ifelse(type == "(Intercept)", baseline_species, str_sub(type, nchar("sp")+1))
+    ) %>%
+    mutate(type = str_to_title(type)) %>%
+    select(-offset)
+
+  plot_list[["beta_0"]] <- ggplot(posterior_beta_0, aes(x=value, y = fct_rev(type))) +
+    geom_density_ridges() +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    xlim(c(-0.1,0.5)) +
+    labs(
+      x = expression(paste(beta[0], " (cm ",y^{-1},')')),
+      y = species_list
+    )
+
+
+
+
+
+  # DBH ------------------------------
+  posterior_sample <- beta_lambda_posterior_df %>%
+    filter(coefficient_type == "dbh")
+
+  posterior_sample_baseline <- posterior_sample %>%
+    filter(type == "dbh") %>%
+    rename(offset = value) %>%
+    select(sim_ID, offset)
+
+  posterior_beta_dbh <- posterior_sample %>%
+    left_join(posterior_sample_baseline, by = "sim_ID") %>%
+    mutate(
+      offset = ifelse(type == "dbh", 0, offset),
+      value = value + offset,
+      type = ifelse(type == "dbh", baseline_species, str_sub(type, nchar("sp")+1, -5))
+    ) %>%
+    mutate(type = str_to_title(type)) %>%
+    select(-offset)
+
+  plot_list[["beta_dbh"]] <-
+    ggplot(posterior_beta_dbh, aes(x=value, y = fct_rev(type))) +
+    geom_density_ridges() +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    xlim(c(-0.05,0.15)) +
+    labs(
+      x = expression(paste(beta[DBH], " (",y^{-1},')')),
+      y = 'Family'
+    )
+
+
+
+
+
+  # lambda ------------------------------
+  posterior_sample <- beta_lambda_posterior_df %>%
+    filter(coefficient_type == "competition")
+
+  lambdas <- expand.grid(species_list, species_list) %>%
+    as_tibble() %>%
+    rename(competitor = Var1, focal = Var2) %>%
+    mutate(
+      lambda = str_c(competitor, focal, sep = "_on_"),
+      values = list(NULL)
+    )
+
+  # effect of evergreen on oak focal tree:
+  # evergreen + speciesoak:evergreen
+  # which in reality is speciesmisc:evergreen + speciesoak:evergreen
+  #
+  # effect of evergreen on misc focal tree (which is baseline species):
+  # evergreen
+  # which in reality is speciesmisc:evergreen
+  #
+  # effect of misc on evergreen focal tree
+  # misc + speciesevergreen:misc
+  # which in reality is speciesmisc:misc + speciesevergreen:misc
+
+  for(i in 1:nrow(lambdas)){
+    competitor <- lambdas$competitor[i]
+    focal <- lambdas$focal[i]
+
+    if(focal == baseline_species){
+      lambda_values <- posterior_sample %>%
+        filter(type == competitor) %>%
+        pull(value)
+    } else {
+      lambda_values <- posterior_sample %>%
+        filter(type == competitor | type == str_c("sp", focal, ":", competitor, sep = "")) %>%
+        select(sim_ID, type, value) %>%
+        spread(type, value) %>%
+        select(2:3) %>%
+        rowSums()
+    }
+    lambdas$values[i] <- list(lambda_values)
   }
 
 
+  lambdas <- lambdas %>%
+    unnest(cols = c(values))
+
+  # Also used in Fig S3 below
+  spp_to_include <- species_list
+
+  lambdas_subset <- lambdas %>%
+    filter(competitor %in% spp_to_include,
+           focal %in% spp_to_include) %>%
+    mutate(competitor = str_to_title(competitor),
+           focal = str_to_title(focal))
+
+  plot_list[["lambdas"]] <- ggplot(lambdas_subset, aes(x = values, y = fct_rev(competitor))) +
+    geom_density_ridges() +
+    facet_wrap(~focal, ncol =length(spp_to_include)) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    xlim(c(-0.6,0.6)) +
+    theme(panel.spacing.x = unit(0,'cm')) +
+    labs(title='Focal', y='Competitor', x = expression(lambda)) +
+    scale_x_continuous(breaks=c(-0.5,0,0.5), labels=c('-0.5','0','0.5'))
 
 
-
+  return(plot_list)
 }
 

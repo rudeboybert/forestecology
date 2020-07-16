@@ -10,6 +10,8 @@ library(blockCV)
 library(tictoc)
 library(yardstick)
 library(viridis)
+library(mvnfast)
+library(ggridges)
 
 
 
@@ -190,10 +192,19 @@ model_formula_bw <- focal_vs_comp_bw$focal_notion_of_species %>%
   as.formula()
 
 
-# 1. Compute observed test statistic: RMSE with no cross-validation ----
 # Fit model (compute posterior parameters)
-bw_fit_model <- focal_vs_comp_bw %>%
+posterior_param_bw <- focal_vs_comp_bw %>%
   fit_bayesian_model(model_formula = model_formula_bw, run_shuffle = FALSE, prior_hyperparameters = NULL)
+
+# Plot results
+species_list_bw <- focal_vs_comp_bw$focal_notion_of_species %>% levels()
+species_list_bw
+
+posterior_plots <- plot_posterior_parameters(posterior_param <- bw_fit_model, species_list = species_list_bw)
+
+posterior_plots[["beta_0"]]
+posterior_plots[["beta_dbh"]]
+posterior_plots[["lambdas"]]
 
 # Make predictions, compute and save RMSE, and reset
 predictions <- focal_vs_comp_bw %>%
@@ -203,8 +214,6 @@ predictions <- focal_vs_comp_bw %>%
 predictions %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
-
-
 
 
 # Cross-validation
