@@ -47,6 +47,7 @@ bw_censusdf1 <-
     treeID = treeid, stemID = stemtag, sp = spcode, gx, gy, dbh,
     date, codes
   )
+use_data(bw_censusdf1, overwrite = TRUE)
 
 bw_censusdf2 <-
   "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>%
@@ -56,4 +57,4 @@ bw_censusdf2 <-
     treeID = treeid, stemID = stemtag, sp = spcode, gx, gy, dbh,
     date, codes
   )
-use_data(bw_censusdf1, bw_censusdf2, overwrite = TRUE)
+use_data(bw_censusdf2, overwrite = TRUE)
