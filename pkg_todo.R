@@ -18,60 +18,9 @@ library(ggridges)
 
 
 # Load & preprocess data -------------------------------------------------------
-#
-# Include in data/
-#
-# Read in census data from 2008
-bw_2008 <-
-  "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>%
-  read_delim(delim = "\t") %>%
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, gx, gy, dbh,
-    date, codes
-  )
-
-#
-# Include in data/
-#
-# Read in census data from 2014
-bw_2014 <-
-  "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>%
-  read_delim(delim = "\t") %>%
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, gx, gy, dbh,
-    date, codes
-  )
-
-#
-# Include in data/
-#
-# Read in grouping classification data
-bw_species <-
-  "https://deepblue.lib.umich.edu/data/downloads/000000086" %>%
-  read_delim(delim = "\t") %>%
-  # convert all to snake case:
-  mutate_at(c("species", "genus", "family", "idlevel", "spcode"), to_any_case) %>%
-  # join trait group
-  left_join(families, by = c("spcode", "family")) %>%
-  mutate(
-    sp = str_sub(genus, 1, 2),
-    sp = str_c(sp, str_sub(species, 1, 2)),
-    sp = tolower(sp),
-    latin = str_c(genus, species, sep = " "),
-    latin = to_any_case(latin)
-  ) %>%
-  select(sp = spcode, genus, species, latin, family, trait_group)
-
-
 # Append additional species data
-
-
-bw_2008 <- bw_2008 %>%
-  left_join(bw_species, by='sp') %>%
-  mutate(sp = trait_group) %>%
-  select(-c(genus, species, latin, family, trait_group))
+bw_census_2008 <- bw_census_2008 %>%
+  left_join(bw_species, by = "sp")
 
 # Maybe?
 # - Add lat/long to all coordinates? Function? Based on Dave comments on Slack
@@ -79,12 +28,11 @@ bw_2008 <- bw_2008 %>%
 
 
 
-
 # Compute growth ---------------------------------------------------------------
-census_df1 <- bw_2008
+census_2008 <- bw_census_2008
 # we need to filter out the resprouts
-census_df2 <- bw_2014 %>%
-  filter(!str_detect(codes, 'R'))
+census_2014 <- bw_census_2014 %>%
+  filter(!str_detect(codes, "R"))
 
 #
 # How to designate unique identifier?
@@ -93,13 +41,11 @@ id <- "treeID"
 
 bw_growth_df <-
   # Merge both censuses and compute growth:
-  compute_growth(census_df1, census_df2, id) %>%
+  compute_growth(census_2008, census_2014, id) %>%
   mutate(sp = to_any_case(sp)) %>%
   # Convert data frame to sf object
   st_as_sf(coords = c("gx", "gy")) %>%
-  #
   # drop stemID
-  #
   select(-stemID)
 
 
@@ -112,19 +58,19 @@ bw_growth_df <-
 max_dist <- 7.5
 
 # Study region boundary polygon
-bw_buffer_region <- bigwoods_study_region %>%
+bw_buffer_region <- bw_study_region %>%
   compute_buffer_region(direction = "in", size = max_dist)
 
 # Deliverable
 ggplot() +
-  geom_sf(data = bigwoods_study_region) +
+  geom_sf(data = bw_study_region) +
   geom_sf(data = bw_buffer_region, col = "orange")
 
 
 # Dave makes attempt at this function in R/spatial.R
 # DA: Okay I think this works!
 bw_growth_df <- bw_growth_df %>%
-  define_buffer(size = max_dist, region = bigwoods_study_region)
+  define_buffer(size = max_dist, region = bw_study_region)
 
 # Deliverable
 ggplot() +
