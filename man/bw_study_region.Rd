@@ -27,6 +27,6 @@ ggplot() +
   geom_sf(data = bw_study_region, color = "red", fill = "transparent")
 }
 \seealso{
-\code{\link{bw_census_2008}}, \code{\link{bw_census_2014}}, \code{\link{define_buffer}}
+\code{\link{bw_census_2008}} and \code{\link{bw_census_2014}}
 }
 \keyword{datasets}

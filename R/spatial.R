@@ -7,11 +7,11 @@ globalVariables(c(
 #' @param region region to be buffered
 #' @param direction "in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.
 #' @param max_dist size of buffer in same units as geometry in \code{region}
-#' @return As \code{sf} object corresponding to buffer
-#' @export
+#' @return As \code{sf} polygon object corresponding to buffer
 #' @importFrom sfheaders sf_polygon
 #' @importFrom sf st_buffer
-# #' @seealso \code{\link{bigwoods}}
+#' @seealso \code{\link{add_buffer_variable}}
+#' @export
 #' @examples
 #' library(tibble)
 #' library(sfheaders)
@@ -35,11 +35,12 @@ globalVariables(c(
 #' outwards_buffer_region <- region %>%
 #'   compute_buffer_region(direction = "out", size = size)
 #'
-#' # Plot original region in black, outwards buffer in blue, inwards buffer in orange
+#' # Plot all three regions:
 #' ggplot() +
-#'   geom_sf(data = outwards_buffer_region, col = "blue") +
-#'   geom_sf(data = region) +
-#'   geom_sf(data = inwards_buffer_region, col = "orange")
+#'   geom_sf(data = outwards_buffer_region, col = "blue", fill = "transparent") +
+#'   geom_sf(data = region, fill = "transparent") +
+#'   geom_sf(data = inwards_buffer_region, col = "orange", fill = "transparent") +
+#'   labs(title = "Regions: original (black), inwards buffer (orange), and outwards buffer (blue)")
 compute_buffer_region <- function(region, direction = "in", size){
   # - Q: Force user to specify region as sf instead of just tibble object?
   # - Run tests on direction and size
@@ -61,53 +62,68 @@ compute_buffer_region <- function(region, direction = "in", size){
 #' Identify trees in the buffer region
 #'
 #' @param growth_df \code{\link{compute_growth}} data frame
-#' @param max_dist Maximum distance from a focal tree for another tree to be
-#'   considered a competitor tree
-#' @param region User specified boundary of study region
+#' @inheritParams compute_buffer_region
 #' @return The same \code{\link{growth_df}} data frame but with a new boolean
 #'   variable \code{buffer} indicating if a tree is in the study region buffer
-#'   area. This uses \code{\link{compute_buffer_region}} to define the boundary of the buffer region.
-#' @export
+#'   area. This uses \code{\link{compute_buffer_region}} to define the boundary
+#'   of the buffer region.
 #' @import dplyr
 #' @importFrom sf st_intersects
 #' @seealso \code{\link{compute_buffer_region}}
-#'
+#' @export
 #' @examples
 #' library(tibble)
 #' library(sfheaders)
 #' library(ggplot2)
 #'
-#' # Example square region to be buffered (as sf object)
+#' # Example square region to be buffered
 #' region <- tibble(
 #'   x = c(0, 0, 1, 1),
 #'   y = c(0, 1, 1, 0)
 #' ) %>%
 #'   sf_polygon()
 #'
+#' # Example points
 #' study_points <- tibble(
-#'  x = runif(50),
-#'  y = runif(50) ) %>%
-#'  sf_point()
+#'   x = runif(50),
+#'   y = runif(50)
+#' ) %>%
+#'   sf_point()
 #'
 #' # Size of buffer
 #' size <- 0.05
 #'
 #' # Identify whether points are within size of boundary
 #' study_points <- study_points %>%
-#'   define_buffer(size = size, region = region)
+#'   add_buffer_variable(direction = "in", size = size, region = region)
 #'
 #' # Plot study points coded by whether they are within size of boundary
-#' ggplot() +
-#'   geom_sf(data = region) +
+#' p <- ggplot() +
+#'   geom_sf(data = region, fill = "transparent") +
 #'   geom_sf(data = study_points, aes(col = buffer))
+#' p
 #'
-define_buffer <- function(growth_df, size, region){
+#' # Additionally, show buffer boundary in red
+#' buffer_boundary <- region %>%
+#'   compute_buffer_region(direction = "in", size = size)
+#' p +
+#'   geom_sf(data = buffer_boundary, col = "red", fill = "transparent")
+add_buffer_variable <- function(growth_df, direction, size, region){
   buffer_boundary <- region %>%
+    compute_buffer_region(direction, size = size)
 
-    compute_buffer_region(direction = 'in', size = size)
-  buffer_index <- !st_intersects(growth_df,buffer_boundary, sparse = FALSE)
+  # TODO: Address why we need to do this:
+  # https://github.com/r-spatial/lwgeom/issues/6 based on googling error message
+  # if you don't do this:
+  # "OGR: Corrupt data Error in CPL_gdal_dimension(st_geometry(x), NA_if_empty) : OGR error"
+  st_crs(growth_df) <- NA
+  st_crs(buffer_boundary) <- NA
+
+  buffer_index <- !st_intersects(growth_df, buffer_boundary, sparse = FALSE) %>%
+    as.vector()
+
   growth_df <- growth_df %>%
-    mutate(buffer = as.vector(buffer_index))
+    mutate(buffer = buffer_index)
 
   return(growth_df)
 }

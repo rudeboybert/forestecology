@@ -1,7 +1,7 @@
 #' Create main data frame for analysis
 #'
 #' @inheritParams define_cv_grid
-#' @inheritParams define_buffer
+#' @inheritParams add_buffer_variable
 #' @param model_specs from \code{\link{get_model_specs}}
 #' @return \code{focal_vs_comp} data frame
 #' @export

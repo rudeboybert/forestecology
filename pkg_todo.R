@@ -1,9 +1,9 @@
 # Load packages ----------------------------------------------------------------
-library(tidyverse)
+suppressPackageStartupMessages(library(tidyverse))
 library(forestecology)
 library(snakecase)
 library(skimr)
-library(sf)
+suppressPackageStartupMessages(library(sf))
 library(sfheaders)
 # devtools::install_github("rvalavi/blockCV")
 library(blockCV)
@@ -20,7 +20,8 @@ library(ggridges)
 # Load & preprocess data -------------------------------------------------------
 # Append additional species data
 bw_census_2008 <- bw_census_2008 %>%
-  left_join(bw_species, by = "sp")
+  left_join(bw_species, by = "sp") %>%
+  select(-c(genus, species, latin))
 
 # Maybe?
 # - Add lat/long to all coordinates? Function? Based on Dave comments on Slack
@@ -34,9 +35,7 @@ census_2008 <- bw_census_2008
 census_2014 <- bw_census_2014 %>%
   filter(!str_detect(codes, "R"))
 
-#
 # How to designate unique identifier?
-#
 id <- "treeID"
 
 bw_growth_df <-
@@ -53,26 +52,13 @@ bw_growth_df <-
 
 
 # Add buffers ---------------------------------------------------------------
-
-# This number acts as buffer, but also determining neighbors
+# This number acts as buffer size, but also determining neighbors
 max_dist <- 7.5
 
-# Study region boundary polygon
-bw_buffer_region <- bw_study_region %>%
-  compute_buffer_region(direction = "in", size = max_dist)
-
-# Deliverable
-ggplot() +
-  geom_sf(data = bw_study_region) +
-  geom_sf(data = bw_buffer_region, col = "orange")
-
-
-# Dave makes attempt at this function in R/spatial.R
-# DA: Okay I think this works!
+# Add buffer variable to data frame
 bw_growth_df <- bw_growth_df %>%
-  define_buffer(size = max_dist, region = bw_study_region)
+  add_buffer_variable(direction = "in", size = max_dist, region = bw_study_region)
 
-# Deliverable
 ggplot() +
   geom_sf(data = bw_growth_df, aes(col = buffer))
 
