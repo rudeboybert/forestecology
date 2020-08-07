@@ -16,25 +16,9 @@ library(viridis)
 
 
 # Load & preprocess data -------------------------------------------------------
-#
-# Include in data/
-#
-# Read in census data from 2008
-data("bw_censusdf1")
-
-# Read in census data from 2014
-data("bw_censusdf2")
-
-# Read in grouping classification data
-data("bw_species")
-
-# Read in big woods plot boundray
-data("bw_study_region")
-
-
 # Append additional species data
- bw_censusdf1 <- bw_censusdf1 %>%
-   left_join(bw_species,by='sp')
+bw_census_2008 <- bw_census_2008 %>%
+  left_join(bw_species, by = "sp")
 
 # Maybe?
 # - Add lat/long to all coordinates? Function? Based on Dave comments on Slack
@@ -43,10 +27,10 @@ data("bw_study_region")
 
 
 # Compute growth ---------------------------------------------------------------
-census_df1 <- bw_censusdf1
+census_2008 <- bw_census_2008
 # we need to filter out the resprouts
-census_df2 <- bw_censusdf2 %>%
-  filter(!str_detect(codes, 'R'))
+census_2014 <- bw_census_2014 %>%
+  filter(!str_detect(codes, "R"))
 
 #
 # How to designate unique identifier?
@@ -55,13 +39,11 @@ id <- "treeID"
 
 bw_growth_df <-
   # Merge both censuses and compute growth:
-  compute_growth(census_df1, census_df2, id) %>%
+  compute_growth(census_2008, census_2014, id) %>%
   mutate(sp = to_any_case(sp)) %>%
   # Convert data frame to sf object
   st_as_sf(coords = c("gx", "gy")) %>%
-  #
   # drop stemID
-  #
   select(-stemID)
 
 
