@@ -150,7 +150,7 @@
 #' Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
 #'
 #' @format A \code{sf} spatial features polygon
-#' @seealso \code{\link{bw_census_2008}}, \code{\link{bw_census_2014}}, \code{\link{define_buffer}}
+#' @seealso \code{\link{bw_census_2008}} and \code{\link{bw_census_2014}}
 #' @examples
 #' library(ggplot2)
 #' library(sf)

@@ -9,9 +9,6 @@ create_focal_vs_comp(growth_df, max_dist, species_notion, cv_grid, id)
 \arguments{
 \item{growth_df}{\code{\link{compute_growth}} data frame}
 
-\item{max_dist}{Maximum distance from a focal tree for another tree to be
-considered a competitor tree}
-
 \item{model_specs}{from \code{\link{get_model_specs}}}
 }
 \value{

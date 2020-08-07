@@ -14,7 +14,7 @@ compute_buffer_region(region, direction = "in", size)
 \item{max_dist}{size of buffer in same units as geometry in \code{region}}
 }
 \value{
-As \code{sf} object corresponding to buffer
+As \code{sf} polygon object corresponding to buffer
 }
 \description{
 Computer buffer to a region.
@@ -42,9 +42,13 @@ inwards_buffer_region <- region \%>\%
 outwards_buffer_region <- region \%>\%
   compute_buffer_region(direction = "out", size = size)
 
-# Plot original region in black, outwards buffer in blue, inwards buffer in orange
+# Plot all three regions:
 ggplot() +
-  geom_sf(data = outwards_buffer_region, col = "blue") +
-  geom_sf(data = region) +
-  geom_sf(data = inwards_buffer_region, col = "orange")
+  geom_sf(data = outwards_buffer_region, col = "blue", fill = "transparent") +
+  geom_sf(data = region, fill = "transparent") +
+  geom_sf(data = inwards_buffer_region, col = "orange", fill = "transparent") +
+  labs(title = "Regions: original (black), inwards buffer (orange), and outwards buffer (blue)")
+}
+\seealso{
+\code{\link{add_buffer_variable}}
 }
