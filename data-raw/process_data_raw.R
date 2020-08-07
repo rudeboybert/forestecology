@@ -6,7 +6,7 @@ library(sfheaders)
 
 
 
-# Boundary polygon of bigwoods region
+# Boundary polygon of bigwoods region ------------------------------------------
 bw_study_region <-
   tibble(
     # Study region boundary
@@ -18,22 +18,36 @@ bw_study_region <-
 use_data(bw_study_region, overwrite = TRUE)
 
 
-# Species info
+
+# Species info -----------------------------------------------------------------
+# Get trait_cluster variable for all bigwood species
+families <- "data-raw/species_list.csv" %>%
+  read_csv() %>%
+  mutate(
+    # Differences in spelling
+    spcode = case_when(
+      spcode == "Black/Red Oak Hybrid" ~ "Black/Red Oak hybrid",
+      spcode == "Black/Northern Pin Hybrid" ~ "Black/Northern Pin hybrid",
+      spcode == "Highbush Blueberry" ~ "highbush blueberry",
+      TRUE ~ spcode
+    ),
+    # Rename:
+    trait_group = traitclust2
+  ) %>%
+  mutate_at(c("spcode", "family", "trait_group"), to_any_case) %>%
+  select(spcode, family, trait_group)
+
 bw_species <-
   "https://deepblue.lib.umich.edu/data/downloads/000000086" %>%
   read_delim(delim = "\t") %>%
   # convert all to snake case:
   mutate_at(c("species", "genus", "family", "idlevel", "spcode"), to_any_case) %>%
-  # join trait group
-  left_join(families, by = c("spcode", "family")) %>%
   mutate(
-    sp = str_sub(genus, 1, 2),
-    sp = str_c(sp, str_sub(species, 1, 2)),
-    sp = tolower(sp),
-    latin = str_c(genus, species, sep = " "),
-    latin = to_any_case(latin)
+    sp = str_sub(genus, 1, 2) %>% str_c(str_sub(species, 1, 2)) %>% tolower(),
+    latin = str_c(genus, species, sep = " ") %>% to_any_case()
   ) %>%
-  select(sp = spcode, genus, species, latin, family, trait_group)
+  select(sp = spcode, genus, species, latin, family) %>%
+  left_join(families, by = c("sp" = "spcode", "family"))
 use_data(bw_species, overwrite = TRUE)
 
 

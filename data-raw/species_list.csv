@@ -1,0 +1,51 @@
+species,spcode,family,first_order,traitclust2
+Cornus alternifolia,Alternate-Leaf Dogwood,Cornaceae,Dogwood,Shrub
+Tilia americana,American Basswood,Tiliaceae,Misc,Maple
+Fagus grandifolia,American Beech,Fagaceae,Dogwood,Maple
+Ulmus americana,American Elm,Ulmaceae,Dogwood,Oak
+NA,Apple,Rosaceae,Regular Shrubs,Misc
+Elaeagnus umbellata,Autumn Olive,Elaeagnaceae,Regular Shrubs,Shrub
+Populus grandidentata,Big Tooth Aspen,Salicaceae,Misc,Maple
+Carya cordiformis,Bitternut Hickory,Juglandaceae,Juglandaceae,Maple
+Prunus serotina,Black Cherry,Rosaceae,Dogwood,Maple
+Robinia pseudoacacia,Black Locust,Fabaceae,NA,Misc
+Quercus velutina,Black Oak,Fagaceae,Oaks,Oak
+Juglans nigra,Black Walnut,Juglandaceae,Juglandaceae,Oak
+NA,Black/Northern Pin Hybrid,Fagaceae,Oaks,Oak
+NA,Black/Red Oak Hybrid,Fagaceae,Oaks,Oak
+Prunus virginiana,Choke Cherry,Rosaceae,Regular Shrubs,Shrub
+Sambucus canadensis,Elderberry,Adoxaceae,Weird Shrubs,Shrub
+Cornus florida,Flowering Dogwood,Cornaceae,Dogwood,Short Tree
+Cornus racemosa,Gray Dogwood,Cornaceae,Dogwood,Shrub
+Crataegus,Hawthorn,Rosaceae,Regular Shrubs,Misc
+Corylus americana,Hazelnut,Betulaceae,Regular Shrubs,Shrub
+NA,Hickory,Juglandaceae,Juglandaceae,Oak
+NA,Honeysuckle,Caprifoliaceae,Regular Shrubs,Misc
+Ostrya virginiana,Hophornbeam,Betulaceae,Misc,Short Tree
+Juniperus communis,Juniper,Cupressaceae,Evergreens,Evergreen
+Carpinus caroliniana,Musclewood,Betulaceae,Misc,Short Tree
+Juniperus virginiana,Northern Red Cedar,Cupressaceae,Evergreens,Evergreen
+Thuja occidentalis,Northern White Cedar,Cupressaceae,Evergreens,Evergreen
+NA,Pear,Rosaceae,NA,Misc
+Carya glabra,Pignut Hickory,Juglandaceae,Juglandaceae,Oak
+Ribes cynosbati,Prickly Gooseberry,Grossulariaceae,Weird Shrubs,Misc
+Zanthoxylum americanum,Prickly Ash,Rutaceae,Weird Shrubs,Shrub
+Acer rubrum,Red Maple,Sapindaceae,Dogwood,Maple
+Quercus rubra,Red Oak,Fagaceae,Oaks,Oak
+NA,Rhus,Anacardiaceae,NA,Misc
+Sassafras albidum,Sassafras,Lauraceae,Dogwood,Maple
+Amelanchier arborea,Serviceberry,Rosaceae,Dogwood,Evergreen
+Carya ovata,Shagbark Hickory,Juglandaceae,Juglandaceae,Oak
+Cornus amomum,Silky Dogwood,Cornaceae,Dogwood,Shrub
+Lindera benzoin,Spicebush,Lauraceae,Regular Shrubs,Shrub
+Acer saccharum,Sugar Maple,Sapindaceae,Dogwood,Maple
+Ailanthus altissima,Tree of Heaven,Simaroubaceae,Juglandaceae,Maple
+Vaccinium corymbosum,Highbush Blueberry,Ericaceae,Regular Shrubs,Shrub
+Fraxinus americana,White Ash,Oleaceae,Juglandaceae,Maple
+Quercus alba,White Oak,Fagaceae,Oaks,Oak
+Ilex verticillata,Winterberry,Aquifoliaceae,Regular Shrubs,Shrub
+Hamamelis virginiana,Witch Hazel,Hamamelidaceae,Regular Shrubs,Shrub
+Betula alleghaniensis,Yellow Birch,Betulaceae,Misc,Maple
+Juniperus virginiana,Eastern Red Cedar,Cupressaceae,Evergreens,Evergreen
+Quercus coccinea,Scarlet Oak,Fagaceae,Oaks,Oak
+Quercus ellipsoidalis,Northern Pin Oak,Fagaceae,Oaks,Oak
