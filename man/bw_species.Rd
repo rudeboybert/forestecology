@@ -7,7 +7,7 @@
 \format{
 A data frame with 46 rows and 6 variables:
 \describe{
-\item{sp}{The code for the species. Link with \code{sp} in \code{bw_census_2008}.}
+\item{sp}{The code for the species. Link to \code{\link{bw_census_2008}} and \code{\link{bw_census_2014}} with \code{sp} variable.}
 \item{genus}{Genus}
 \item{species}{Species epithet}
 \item{latin}{Scientific name}
@@ -18,9 +18,9 @@ height, and wood density}
 }
 }
 \source{
-For more information on trait clustering see Allen and Kim 2020. A permutation
+For more information on trait clustering see Allen and Kim 2020 "A permutation
 test and spatial cross-validation approach to assess models of interspecific competition
-between trees. \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
+between trees." \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
 }
 \usage{
 bw_species
@@ -30,11 +30,17 @@ A date frame mapping the species codes to their common names, scientific
 names, and families. This also includes a trait-based clustering of the
 species.
 }
+\examples{
+library(dplyr)
+
+# Original 2008 census data
+bw_census_2008
+
+# 2008 census data with additional species information
+bw_census_2008 \%>\%
+  left_join(bw_species, by = "sp")
+}
 \seealso{
-\code{\link{bw_census_2014}} \code{\link{bw_census_2008}}
-data("bw_census_2008","bw_species")
-library(tidyverse)
-bw_with_groupings <- bw_census_2008 \%>\%
-full_join(bw_species, by = 'sp')
+\code{\link{bw_census_2008}}, \code{\link{bw_census_2014}}
 }
 \keyword{datasets}

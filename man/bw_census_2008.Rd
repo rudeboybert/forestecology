@@ -47,14 +47,18 @@ forest research sites. For complete details on this dataset see its
 \href{https://deepblue.lib.umich.edu/data/concern/data_sets/ht24wj48w}{Deep Blue Data repository page}.
 }
 \examples{
-data("bw_census_2008")
-library(tidyverse)
-# plot all stems
-ggplot(bw_census_2008, aes(x = gx, y = gy)) +
-  geom_point(size = 0.25) +
-  coord_fixed(ratio = 1)
+library(ggplot2)
+library(sf)
+
+# Convert all 2008 plot stems to sf object
+bw_census_2008_sf <- bw_census_2008 \%>\%
+  st_as_sf(coords = c("gx", "gy"))
+
+# Plot stems with plot boundary
+ggplot() +
+  geom_sf(data = bw_census_2008_sf, size = 0.25)
 }
 \seealso{
-\code{\link{bw_species}} \code{\link{bw_census_2014}} \code{\link{compute_growth}}
+\code{\link{bw_census_2014}}, \code{\link{bw_species}}, \code{\link{compute_growth}}
 }
 \keyword{datasets}

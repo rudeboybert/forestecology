@@ -5,11 +5,7 @@
 \alias{bw_study_region}
 \title{Bigwoods forest study region boundary}
 \format{
-A \code{sf} spatial polygon.
-\describe{
-\item{x}{x-coordinate (meters from reference point)}
-\item{y}{y-coordinate (meters from reference point)}
-}
+A \code{sf} spatial features polygon
 }
 \usage{
 bw_study_region
@@ -19,21 +15,18 @@ Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
 }
 \examples{
 library(ggplot2)
-ggplot(bw_census_2008, aes(x = gx, y = gy)) +
-  # Mark study region boundary
-  geom_path(data = bw_study_region, size = 1) +
-  coord_fixed(ratio = 1)
-data("bw_census_2008","bw_study_region")
-library(tidyverse)
 library(sf)
-# plot stems with plot boundary
-bw_census_2008 \%>\%
- st_as_sf(coords = c('gx', 'gy')) \%>\%
- ggplot() +
- geom_sf(size = 0.25) +
- geom_sf(data = bw_study_region, color = 'red', fill = 'transparent')
+
+# Convert all 2008 plot stems to sf object
+bw_census_2008_sf <- bw_census_2008 \%>\%
+  st_as_sf(coords = c("gx", "gy"))
+
+# Plot stems with plot boundary
+ggplot() +
+  geom_sf(data = bw_census_2008_sf, size = 0.25) +
+  geom_sf(data = bw_study_region, color = "red", fill = "transparent")
 }
 \seealso{
-\code{\link{bw_census_2008}} \code{\link{define_buffer}}
+\code{\link{bw_census_2008}}, \code{\link{bw_census_2014}}, \code{\link{define_buffer}}
 }
 \keyword{datasets}

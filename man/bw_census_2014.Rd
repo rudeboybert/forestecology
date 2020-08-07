@@ -47,17 +47,27 @@ forest research sites. For complete details on this dataset see its
 \href{https://deepblue.lib.umich.edu/data/concern/data_sets/ht24wj48w}{Deep Blue Data repository page}.
 }
 \examples{
-data("bw_census_2008","bw_census_2014")
-library(tidyverse)
-# species-specific mortality between censuses
+library(ggplot2)
+library(sf)
+library(dplyr)
+
+# Convert all 2008 plot stems to sf object
+bw_census_2008_sf <- bw_census_2008 \%>\%
+  st_as_sf(coords = c("gx", "gy"))
+
+# Plot stems with plot boundary
+ggplot() +
+  geom_sf(data = bw_census_2008_sf, size = 0.25)
+
+# Species-specific mortality between 2008 and 2014 censuses
 bw_census_2008 \%>\%
- left_join(bw_census_2014, by = c('treeID', 'stemID'), suffix = c("_1", "_2") ) \%>\%
- mutate(mortality = ifelse(is.na(dbh_2),1,0)) \%>\%
- group_by(sp_1) \%>\%
- summarize(mortality = mean(mortality), n = n()) \%>\%
- arrange(desc(n))
+  left_join(bw_census_2014, by = c("treeID", "stemID"), suffix = c("_2008", "_2014")) \%>\%
+  mutate(mortality = ifelse(is.na(dbh_14), 1, 0)) \%>\%
+  group_by(sp_2008) \%>\%
+  summarize(mortality = mean(mortality), n = n()) \%>\%
+  arrange(desc(n))
 }
 \seealso{
-\code{\link{bw_species}} \code{\link{bw_census_2014}} \code{\link{compute_growth}}
+\code{\link{bw_census_2008}}, \code{\link{bw_species}}, \code{\link{compute_growth}}
 }
 \keyword{datasets}

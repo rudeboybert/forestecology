@@ -34,14 +34,18 @@
 #'   and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
 #' }
-#' @seealso \code{\link{bw_species}} \code{\link{bw_census_2014}} \code{\link{compute_growth}}
+#' @seealso \code{\link{bw_census_2014}}, \code{\link{bw_species}}, \code{\link{compute_growth}}
 #' @examples
-#' data("bw_census_2008")
-#' library(tidyverse)
-#' # plot all stems
-#' ggplot(bw_census_2008, aes(x = gx, y = gy)) +
-#'   geom_point(size = 0.25) +
-#'   coord_fixed(ratio = 1)
+#' library(ggplot2)
+#' library(sf)
+#'
+#' # Convert all 2008 plot stems to sf object
+#' bw_census_2008_sf <- bw_census_2008 %>%
+#'   st_as_sf(coords = c("gx", "gy"))
+#'
+#' # Plot stems with plot boundary
+#' ggplot() +
+#'   geom_sf(data = bw_census_2008_sf, size = 0.25)
 "bw_census_2008"
 
 
@@ -82,17 +86,27 @@
 #'   and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
 #' }
-#' @seealso \code{\link{bw_species}} \code{\link{bw_census_2014}} \code{\link{compute_growth}}
+#' @seealso \code{\link{bw_census_2008}}, \code{\link{bw_species}}, \code{\link{compute_growth}}
 #' @examples
-#' data("bw_census_2008","bw_census_2014")
-#' library(tidyverse)
-#' # species-specific mortality between censuses
+#' library(ggplot2)
+#' library(sf)
+#' library(dplyr)
+#'
+#' # Convert all 2008 plot stems to sf object
+#' bw_census_2008_sf <- bw_census_2008 %>%
+#'   st_as_sf(coords = c("gx", "gy"))
+#'
+#' # Plot stems with plot boundary
+#' ggplot() +
+#'   geom_sf(data = bw_census_2008_sf, size = 0.25)
+#'
+#' # Species-specific mortality between 2008 and 2014 censuses
 #' bw_census_2008 %>%
-#'  left_join(bw_census_2014, by = c('treeID', 'stemID'), suffix = c("_1", "_2") ) %>%
-#'  mutate(mortality = ifelse(is.na(dbh_2),1,0)) %>%
-#'  group_by(sp_1) %>%
-#'  summarize(mortality = mean(mortality), n = n()) %>%
-#'  arrange(desc(n))
+#'   left_join(bw_census_2014, by = c("treeID", "stemID"), suffix = c("_2008", "_2014")) %>%
+#'   mutate(mortality = ifelse(is.na(dbh_14), 1, 0)) %>%
+#'   group_by(sp_2008) %>%
+#'   summarize(mortality = mean(mortality), n = n()) %>%
+#'   arrange(desc(n))
 "bw_census_2014"
 
 
@@ -105,7 +119,7 @@
 #'
 #' @format A data frame with 46 rows and 6 variables:
 #' \describe{
-#'   \item{sp}{The code for the species. Link with \code{sp} in \code{bw_census_2008}.}
+#'   \item{sp}{The code for the species. Link to \code{\link{bw_census_2008}} and \code{\link{bw_census_2014}} with \code{sp} variable.}
 #'   \item{genus}{Genus}
 #'   \item{species}{Species epithet}
 #'   \item{latin}{Scientific name}
@@ -114,14 +128,19 @@
 #'   their evolutionary relationships. The traits are specific leaf area, maximum
 #'   height, and wood density}
 #' }
-#' @source For more information on trait clustering see Allen and Kim 2020. A permutation
+#' @source For more information on trait clustering see Allen and Kim 2020 "A permutation
 #' test and spatial cross-validation approach to assess models of interspecific competition
-#' between trees. \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
-#' @seealso \code{\link{bw_census_2014}} \code{\link{bw_census_2008}}
-#' data("bw_census_2008","bw_species")
-#' library(tidyverse)
-#' bw_with_groupings <- bw_census_2008 %>%
-#'  full_join(bw_species, by = 'sp')
+#' between trees." \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
+#' @seealso \code{\link{bw_census_2008}}, \code{\link{bw_census_2014}}
+#' @examples
+#' library(dplyr)
+#'
+#' # Original 2008 census data
+#' bw_census_2008
+#'
+#' # 2008 census data with additional species information
+#' bw_census_2008 %>%
+#'   left_join(bw_species, by = "sp")
 "bw_species"
 
 
@@ -130,26 +149,18 @@
 #'
 #' Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
 #'
-#' @format A \code{sf} spatial polygon.
-#' \describe{
-#'   \item{x}{x-coordinate (meters from reference point)}
-#'   \item{y}{y-coordinate (meters from reference point)}
-#' }
-#' @seealso \code{\link{bw_census_2008}} \code{\link{define_buffer}}
+#' @format A \code{sf} spatial features polygon
+#' @seealso \code{\link{bw_census_2008}}, \code{\link{bw_census_2014}}, \code{\link{define_buffer}}
 #' @examples
 #' library(ggplot2)
-#' ggplot(bw_census_2008, aes(x = gx, y = gy)) +
-#'   # Mark study region boundary
-#'   geom_path(data = bw_study_region, size = 1) +
-#'   coord_fixed(ratio = 1)
-#' @examples
-#' data("bw_census_2008","bw_study_region")
-#' library(tidyverse)
 #' library(sf)
-#' # plot stems with plot boundary
-#' bw_census_2008 %>%
-#'  st_as_sf(coords = c('gx', 'gy')) %>%
-#'  ggplot() +
-#'  geom_sf(size = 0.25) +
-#'  geom_sf(data = bw_study_region, color = 'red', fill = 'transparent')
+#'
+#' # Convert all 2008 plot stems to sf object
+#' bw_census_2008_sf <- bw_census_2008 %>%
+#'   st_as_sf(coords = c("gx", "gy"))
+#'
+#' # Plot stems with plot boundary
+#' ggplot() +
+#'   geom_sf(data = bw_census_2008_sf, size = 0.25) +
+#'   geom_sf(data = bw_study_region, color = "red", fill = "transparent")
 "bw_study_region"
