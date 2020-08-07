@@ -10,6 +10,8 @@ library(blockCV)
 library(tictoc)
 library(yardstick)
 library(viridis)
+library(mvnfast)
+library(ggridges)
 
 
 
@@ -122,6 +124,70 @@ ggplot() +
 
 
 # Model ------------------------------------------------------------------------
+tic()
+focal_vs_comp_bw <- bw_growth_df %>%
+  create_focal_vs_comp(max_dist = max_dist, species_notion = "sp", cv_grid = bw_cv_grid, id = "treeID")
+toc()
+
+
+model_formula_bw <- focal_vs_comp_bw$focal_notion_of_species %>%
+  unique() %>%
+  sort() %>%
+  paste(., "*sp", sep = "", collapse = " + ") %>%
+  paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
+  as.formula()
+
+
+# Fit model (compute posterior parameters)
+posterior_param_bw <- focal_vs_comp_bw %>%
+  fit_bayesian_model(model_formula = model_formula_bw, run_shuffle = FALSE, prior_hyperparameters = NULL)
+
+# Plot results
+species_list_bw <- focal_vs_comp_bw$focal_notion_of_species %>% levels()
+species_list_bw
+
+posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)
+
+posterior_plots[["beta_0"]]
+posterior_plots[["beta_dbh"]]
+posterior_plots[["lambdas"]]
+
+# Make predictions, compute and save RMSE, and reset
+predictions <- focal_vs_comp_bw %>%
+  predict_bayesian_model(model_formula = model_formula_bw, posterior_param = bw_fit_model) %>%
+  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+
+predictions %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
+
+# Cross-validation
+tic()
+cv_bw <- focal_vs_comp_bw %>%
+  run_cv(model_formula = model_formula_bw, max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+
+cv_bw %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+toc()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Number of permutation shuffles:
 num_shuffle <- 4
@@ -146,7 +212,7 @@ for(i in 1:length(species_notion_vector)){
   # Modeling and species stuff
   species_notion <- species_notion_vector[i]
   bw_specs <- bw_growth_df %>%
-    get_model_specs(model_number = 3, species_notion = species_notion)
+    get_model_specs(model_number = 3, species_notion = "sp")
 
   # Focal vs comp main dataframe for analysis
   focal_vs_comp_bw <- bw_growth_df_orig %>%
