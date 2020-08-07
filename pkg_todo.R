@@ -110,6 +110,7 @@ ggplot() +
 
 
 # Model ------------------------------------------------------------------------
+
 tic()
 focal_vs_comp_bw <- bw_growth_df %>%
   create_focal_vs_comp(max_dist = max_dist, species_notion = "sp", cv_grid = bw_cv_grid, id = "treeID")
