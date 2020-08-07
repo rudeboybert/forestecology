@@ -53,7 +53,7 @@ use_data(bw_species, overwrite = TRUE)
 
 
 # Import bigwoods data
-bw_censusdf1 <-
+bw_census_2008 <-
   "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>%
   read_delim(delim = "\t") %>%
   mutate(spcode = to_any_case(spcode)) %>%
@@ -61,9 +61,9 @@ bw_censusdf1 <-
     treeID = treeid, stemID = stemtag, sp = spcode, gx, gy, dbh,
     date, codes
   )
-use_data(bw_censusdf1, overwrite = TRUE)
+use_data(bw_census_2008, overwrite = TRUE)
 
-bw_censusdf2 <-
+bw_census_2014 <-
   "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>%
   read_delim(delim = "\t") %>%
   mutate(spcode = to_any_case(spcode)) %>%
@@ -71,4 +71,4 @@ bw_censusdf2 <-
     treeID = treeid, stemID = stemtag, sp = spcode, gx, gy, dbh,
     date, codes
   )
-use_data(bw_censusdf2, overwrite = TRUE)
+use_data(bw_census_2014, overwrite = TRUE)

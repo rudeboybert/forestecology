@@ -4,9 +4,10 @@
 \name{bw_species}
 \alias{bw_species}
 \title{Phylogenic groupings and trait based clustering of various tree species}
-\format{A data frame with 46 rows and 6 variables:
+\format{
+A data frame with 46 rows and 6 variables:
 \describe{
-\item{sp}{The code for the species. Link with sp in \code{bw_censusdf1}.}
+\item{sp}{The code for the species. Link with \code{sp} in \code{bw_census_2008}.}
 \item{genus}{Genus}
 \item{species}{Species epithet}
 \item{latin}{Scientific name}
@@ -14,11 +15,12 @@
 \item{trait_group}{Clustering of species based on three traits rather than
 their evolutionary relationships. The traits are specific leaf area, maximum
 height, and wood density}
-}}
+}
+}
 \source{
 For more information on trait clustering see Allen and Kim 2020. A permutation
 test and spatial cross-validation approach to assess models of interspecific competition
-between trees. Plos One 15: e0229930. https://doi.org/10.1371/journal.pone.0229930
+between trees. \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
 }
 \usage{
 bw_species
@@ -29,6 +31,10 @@ names, and families. This also includes a trait-based clustering of the
 species.
 }
 \seealso{
-\code{\link{bw_censusdf2}} \code{\link{bw_censusdf1}}
+\code{\link{bw_census_2014}} \code{\link{bw_census_2008}}
+data("bw_census_2008","bw_species")
+library(tidyverse)
+bw_with_groupings <- bw_census_2008 \%>\%
+full_join(bw_species, by = 'sp')
 }
 \keyword{datasets}
