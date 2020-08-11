@@ -30,8 +30,6 @@ Imports:
     tidyr,
     proxy,
     purrr,
-    sp,
-    concaveman,
     ggridges,
     mvnfast,
     sf,
