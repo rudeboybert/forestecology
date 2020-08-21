@@ -110,14 +110,10 @@ ggplot() +
 
 
 # Model ------------------------------------------------------------------------
-
-tic()
 focal_vs_comp_bw <- bw_growth_df %>%
-  create_focal_vs_comp(max_dist = max_dist, species_notion = "sp", cv_grid = bw_cv_grid, id = "treeID")
-toc()
+  create_focal_vs_comp(max_dist = max_dist, cv_grid = bw_cv_grid, id = "treeID")
 
-
-model_formula_bw <- focal_vs_comp_bw$focal_notion_of_species %>%
+model_formula_bw <- focal_vs_comp_bw$focal_sp %>%
   unique() %>%
   sort() %>%
   paste(., "*sp", sep = "", collapse = " + ") %>%
@@ -130,7 +126,7 @@ posterior_param_bw <- focal_vs_comp_bw %>%
   fit_bayesian_model(model_formula = model_formula_bw, run_shuffle = FALSE, prior_hyperparameters = NULL)
 
 # Plot results
-species_list_bw <- focal_vs_comp_bw$focal_notion_of_species %>% levels()
+species_list_bw <- focal_vs_comp_bw$focal_sp %>% levels()
 species_list_bw
 
 posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)

@@ -11,7 +11,7 @@ add_buffer_variable(growth_df, direction, size, region)
 
 \item{direction}{"in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.}
 
-\item{region}{region to be buffered}
+\item{region}{An \code{sf} polygon object of region to be buffered}
 }
 \value{
 The same \code{\link{growth_df}} data frame but with a new boolean

@@ -3,8 +3,11 @@
 \name{create_focal_vs_comp}
 \alias{create_focal_vs_comp}
 \title{Create main data frame for analysis}
+\source{
+\url{https://en.wikipedia.org/wiki/Basal_area}
+}
 \usage{
-create_focal_vs_comp(growth_df, max_dist, species_notion, cv_grid, id)
+create_focal_vs_comp(growth_df, max_dist, cv_grid, id)
 }
 \arguments{
 \item{growth_df}{\code{\link{compute_growth}} data frame}
