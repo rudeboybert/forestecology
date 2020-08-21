@@ -7,14 +7,14 @@
 compute_buffer_region(region, direction = "in", size)
 }
 \arguments{
-\item{region}{region to be buffered}
+\item{region}{An \code{sf} polygon object of region to be buffered}
 
 \item{direction}{"in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.}
 
 \item{max_dist}{size of buffer in same units as geometry in \code{region}}
 }
 \value{
-As \code{sf} polygon object corresponding to buffer
+An \code{sf} polygon object of buffer
 }
 \description{
 Computer buffer to a region.

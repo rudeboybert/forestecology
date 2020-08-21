@@ -8,155 +8,106 @@
 #' @import dplyr
 #' @importFrom proxy dist
 #' @seealso \code{\link{define_cv_grid}} and \code{\link{get_model_specs}}
+#' @source \url{https://en.wikipedia.org/wiki/Basal_area}
 #' @examples
 #' 1+1
-create_focal_vs_comp <- function(growth_df, max_dist, species_notion, cv_grid, id){
-
+create_focal_vs_comp <- function(growth_df, max_dist, cv_grid, id){
+  # TODO: Create example for this function using toy dataset
+  # TODO: Inputs checks that growth_df has sp variable, maybe id variable
+  # TODO: Delete these input sets
   if(FALSE){
     growth_df <- bw_growth_df
     max_dist <- 7.5
-    species_notion <- "sp"
     id <- "treeID"
     cv_grid <- bw_cv_grid
     i <- 1
   }
 
-  # 1. Define focal trees where notion of "species" depends on
-  # notion_of_focal_species
-  growth_df_focal_trees <- growth_df %>%
-    # Define notion of species as factor
-    mutate(focal_notion_of_species = .data[[species_notion]] %>% factor()) %>%
+  # 1. Define focal trees
+  focal_trees <- growth_df %>%
     # Only trees alive both dates, not in buffer, and not a resprout at 2nd
     # census (OK to be resprout at first census):
-    filter(dbh1 > 0, dbh2 > 0, !buffer, codes2 != 'R') %>%
+    filter(dbh1 > 0, dbh2 > 0, !buffer, codes2 != "R") %>%
+    # Define notion of species as factor
     rename(dbh = dbh1) %>%
-    # Assign species numerical code.
     # ID numbers to join focal trees with competitor trees
     mutate(focal_ID = .data[[id]]) %>%
-    select(focal_ID, foldID, geometry, growth, focal_notion_of_species, dbh)
+    select(focal_ID, foldID, geometry, growth, focal_sp = sp, dbh)
 
-  # 2. Define competitor trees where notion of "species" depends on
-  # notion_of_competitor_species
-  growth_df_comp_trees <- growth_df %>%
-    # Define notion of speices
-    mutate(comp_notion_of_species = .data[[species_notion]] %>% factor()) %>%
+
+  # 2. Define competitor trees:
+  comp_trees <- growth_df %>%
     # Only trees alive at first census:
     filter(dbh1 > 0) %>%
-    rename(dbh = dbh1) %>%
     mutate(
       comp_ID = .data[[id]],
-      # This assumes dbh is in cm, the resulting basal area will be in meters^2
-      # https://en.wikipedia.org/wiki/Basal_area
-      comp_basal_area = 0.0001 * pi * (dbh/2)^2
+      # Compute basal area based on dbh from first census. This assumes dbh is
+      # in cm, the resulting basal area will be in m^2
+      comp_basal_area = 0.0001 * pi * (dbh1/2)^2
     ) %>%
-    select(comp_ID, foldID, comp_notion_of_species, comp_basal_area)
+    select(comp_ID, foldID, comp_sp = sp, comp_basal_area)
 
 
-  # 3. Define distances of focal trees to other focal trees.
-  # Note: This will be used to determine which trees to exclude to break residual
-  # spatial auto-correlation in cross-validation algorithm. We only need distance
-  # Compute focal_vs_focal for the particular parameter setting.
-  # Note however for the exhaustive/slowest case, the code below took ~11s
-  # species_of_interest == unique(bw$species)
-
-
-  # Take a list approach instead of bind_rows(): code is 2x faster
-  # https://r4ds.had.co.nz/iteration.html#unknown-output-length
-  all_folds <- growth_df_focal_trees %>%
-    pull(foldID) %>%
-    unique() %>%
-    sort()
-
+  # 3. For each fold, compute data frame of all competitor trees for each focal
+  # tree, save in list
+  # Create list for each fold
+  all_folds <- focal_trees$foldID %>%
+    unique()
   focal_vs_comp <- vector(mode = "list", length = length(all_folds))
 
   for(i in 1:length(all_folds)){
-    # Identify focal and competitor trees in this fold
-    growth_df_focal_trees_current_fold <- growth_df_focal_trees %>%
+    # Identify focal trees in this fold
+    focal_trees_fold <- focal_trees %>%
       filter(foldID == all_folds[i])
 
-    # Narrow down focal trees to those max_dist away (towards inside) from boundary
-    current_fold_boundary <- cv_grid$blocks %>%
+    # Identify comp trees in this fold: both trees inside fold and those within
+    # max_dist of boundary
+    fold_boundary <- cv_grid$blocks %>%
       st_as_sf() %>%
       filter(folds == all_folds[i])
 
+    comp_trees_fold <- comp_trees %>%
+      add_buffer_variable(direction = "out", size = max_dist, region = fold_boundary) %>%
+      filter(!buffer)
 
-    # Clean this up:
-    current_fold_competitor_boundary <- current_fold_boundary %>%
-      compute_buffer_region(direction = "out", size = max_dist)
-    comp_tree_index <- growth_df_comp_trees %>%
-      st_intersects(current_fold_competitor_boundary, sparse = FALSE)
-    growth_df_competitor_trees_current_fold <- growth_df_comp_trees %>%
-      mutate(inside = as.vector(comp_tree_index)) %>%
-      filter(inside)
-
-
-    # Sanity check plot: for this fold, smaller black dots are competitor trees
-    # and cyan larger dots are the test set. orange ones separating test set
-    # from training set (trees in all other folds)
     if(FALSE){
-      plot_title <- str_c("fold ", all_folds[i], ": Cyan dots = focal, orange dots = competitor")
-
+      # Sanity check plot: for this fold, smaller black dots are competitor
+      # trees and cyan larger dots are the test set. orange ones separating test
+      # set from training set (trees in all other folds)
       ggplot() +
-        # geom_sf(data = bigwoods_study_region, col = "black") +
-        geom_sf(data = current_fold_competitor_boundary, col = "red") +
-        geom_sf(data = current_fold_boundary, col = "black") +
-        geom_sf(data = growth_df_competitor_trees_current_fold, col = "orange", size = 3) +
-        geom_sf(data = growth_df_focal_trees_current_fold, col = "cyan", size = 0.5) +
-        labs(title = plot_title)
+        # Focal & competitor trees:
+        geom_sf(data = comp_trees_fold, col = "orange", size = 3, ) +
+        geom_sf(data = focal_trees_fold, col = "black", size = 1, fill = "transparent") +
+        # Boundaries
+        # geom_sf(data = bw_study_region, col = "black", fill = "transparent", linetype = "dashed") +
+        geom_sf(data = fold_boundary, col = "black", fill = "transparent") +
+        labs(
+          title = str_c("Fold ", all_folds[i], ": Focal = black, competitor = orange")
+        )
     }
 
-
-
-    #
-    # Convert this to a function! ----------------------------------------------
-    #
-    # Define data frame of distances
-    distance_matrix <- growth_df_competitor_trees_current_fold %>%
-      st_distance(growth_df_focal_trees_current_fold)
-    focal_ID_current_fold <- growth_df_focal_trees_current_fold$focal_ID
-    colnames(distance_matrix) <- focal_ID_current_fold
-    comp_ID_current_fold <- growth_df_competitor_trees_current_fold$comp_ID
-    rownames(distance_matrix) <- comp_ID_current_fold
-
-    # All tidy, but difficult to understand
-    # focal_vs_comp_current_fold <- distance_matrix %>%
-    #   as_tibble(rownames = NA) %>%
-    #   rownames_to_column(var = "comp_ID") %>%
-    #   pivot_longer(cols = -comp_ID, names_to = "focal_ID", values_to = "dist") %>%
-    #   mutate(focal_ID = as.numeric(focal_ID), comp_ID = as.numeric(comp_ID)) %>%
-    #   arrange(focal_ID) %>%
-    #   select(focal_ID, comp_ID, dist)
-
-    focal_vs_comp_current_fold <-
-      # Convert distance matrix to vector along with ID's
-      tibble(
-        focal_ID = rep(focal_ID_current_fold, each = length(comp_ID_current_fold)),
-        comp_ID = rep(comp_ID_current_fold, times = length(focal_ID_current_fold)),
-        dist = distance_matrix %>% as.vector()
-      ) %>%
-      # Remove cases where focal = comp
-      filter(focal_ID != comp_ID)
-    #
-    # Convert this to a function! ----------------------------------------------
-    #
-
-
-
-    focal_vs_comp_current_fold <- focal_vs_comp_current_fold %>%
+    # Save current fold info
+    focal_vs_comp[[i]] <-
+      # Take focal trees in this fold
+      focal_trees_fold %>%
+      # Compute distances to all competitor trees in this fold
+      focal_vs_comp_distance(comp_trees_fold) %>%
       # Remove pairs more than max_dist apart
       filter(dist < max_dist) %>%
-      # Join focal tree data
-      left_join(growth_df_focal_trees_current_fold, by = "focal_ID") %>%
+      # join focal tree data
+      left_join(focal_trees_fold, by = "focal_ID") %>%
       # Join competitor tree data
-      left_join(growth_df_competitor_trees_current_fold, by = "comp_ID") %>%
+      left_join(comp_trees_fold, by = "comp_ID") %>%
       # Clean up mess from join:
       select(-c(foldID.y, geometry.y)) %>%
       rename(foldID = foldID.x, geometry = geometry.x)
-
-    # Save current fold info
-    focal_vs_comp[[i]] <- focal_vs_comp_current_fold
   }
 
+
+  # 4. Return output data frame
+  # TODO: Questions to consider
+  # 1. Should we make this a nested-list object?
+  # 2. Should we convert to sf object using st_as_sf() here?
   focal_vs_comp <- focal_vs_comp %>%
     # Convert list to tibble:
     bind_rows() %>%
@@ -164,15 +115,10 @@ create_focal_vs_comp <- function(growth_df, max_dist, species_notion, cv_grid, i
     mutate(growth_hat = NA) %>%
     select(
       # Relating to focal tree:
-      focal_ID, focal_notion_of_species, dbh, foldID, geometry, growth,
+      focal_ID, focal_sp, dbh, foldID, geometry, growth,
       # Relating to competitor tree:
-      comp_ID, dist, comp_notion_of_species, comp_basal_area
+      comp_ID, dist, comp_sp, comp_basal_area
     )
-
-  # Should we do grouping here?
-  # group_by(focal_ID, focal_notion_of_species, dbh, foldID, geometry, growth) %>%
-  # should we convert to sf object here?
-  # st_as_sf()
 
   return(focal_vs_comp)
 }
@@ -206,7 +152,7 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
 
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
-    group_by(focal_ID, comp_notion_of_species) %>%
+    group_by(focal_ID, comp_sp) %>%
     # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
     summarise(
@@ -219,20 +165,20 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
   if(run_shuffle){
     focal_trees <- focal_trees %>%
       group_by(focal_ID) %>%
-      mutate(comp_notion_of_species = sample(comp_notion_of_species))
+      mutate(comp_sp = sample(comp_sp))
   }
 
   # Continue processing focal_trees
   focal_trees <- focal_trees %>%
     # sum biomass and n_comp for competitors of same species. we need to do this
     # for the cases when we do permutation shuffle.
-    group_by(focal_ID, comp_notion_of_species) %>%
+    group_by(focal_ID, comp_sp) %>%
     summarise_all(list(sum)) %>%
     # ungroup() %>%
     # compute biomass for each tree type
     # Note we have to use spread and not pivot_wider https://github.com/tidyverse/tidyr/issues/770
-    # pivot_wider(names_from = comp_notion_of_species, values_from = comp_basal_area, values_fill = 0) %>%
-    spread(key = comp_notion_of_species, value = comp_basal_area, fill = 0, drop = FALSE) %>%
+    # pivot_wider(names_from = comp_sp, values_from = comp_basal_area, values_fill = 0) %>%
+    spread(key = comp_sp, value = comp_basal_area, fill = 0, drop = FALSE) %>%
     group_by(focal_ID) %>%
     summarise_all(list(sum)) %>%
     ungroup()
@@ -253,10 +199,10 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
 
   # Matrix objects for analytic computation of all posteriors
   focal_trees <- focal_vs_comp %>%
-    select(focal_ID, focal_notion_of_species, dbh, growth) %>%
+    select(focal_ID, focal_sp, dbh, growth) %>%
     distinct() %>%
     left_join(focal_trees, by = "focal_ID") %>%
-    rename(sp = focal_notion_of_species)
+    rename(sp = focal_sp)
 
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
@@ -333,7 +279,7 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
 
   # Prepare data for regression Generate data frame of all focal trees
   focal_trees <- focal_vs_comp %>%
-    group_by(focal_ID, comp_notion_of_species) %>%
+    group_by(focal_ID, comp_sp) %>%
     # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
     # within range.
     summarise(
@@ -346,13 +292,13 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
   focal_trees <- focal_trees %>%
     # sum biomass and n_comp for competitors of same species. we need to do this
     # for the cases when we do permutation shuffle.
-    group_by(focal_ID, comp_notion_of_species) %>%
+    group_by(focal_ID, comp_sp) %>%
     summarise_all(list(sum)) %>%
     # ungroup() %>%
     # compute biomass for each tree type
     # Note we have to use spread and not pivot_wider https://github.com/tidyverse/tidyr/issues/770
-    # pivot_wider(names_from = comp_notion_of_species, values_from = comp_basal_area, values_fill = 0) %>%
-    spread(key = comp_notion_of_species, value = comp_basal_area, fill = 0, drop = FALSE) %>%
+    # pivot_wider(names_from = comp_sp, values_from = comp_basal_area, values_fill = 0) %>%
+    spread(key = comp_sp, value = comp_basal_area, fill = 0, drop = FALSE) %>%
     group_by(focal_ID) %>%
     summarise_all(list(sum)) %>%
     ungroup()
@@ -373,10 +319,10 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
 
   # Matrix objects for analytic computation of all posteriors
   focal_trees <- focal_vs_comp %>%
-    select(focal_ID, focal_notion_of_species, dbh, growth) %>%
+    select(focal_ID, focal_sp, dbh, growth) %>%
     distinct() %>%
     left_join(focal_trees, by = "focal_ID") %>%
-    rename(sp = focal_notion_of_species)
+    rename(sp = focal_sp)
 
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
@@ -813,4 +759,3 @@ plot_posterior_parameters <- function(posterior_param, species_list){
 
   return(plot_list)
 }
-

@@ -4,10 +4,10 @@ globalVariables(c(
 
 #' Computer buffer to a region.
 #'
-#' @param region region to be buffered
+#' @param region An \code{sf} polygon object of region to be buffered
 #' @param direction "in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.
 #' @param max_dist size of buffer in same units as geometry in \code{region}
-#' @return As \code{sf} polygon object corresponding to buffer
+#' @return An \code{sf} polygon object of buffer
 #' @importFrom sfheaders sf_polygon
 #' @importFrom sf st_buffer
 #' @seealso \code{\link{add_buffer_variable}}
@@ -129,111 +129,67 @@ add_buffer_variable <- function(growth_df, direction, size, region){
 }
 
 
-#' Define spatial crossvalidation grid
+
+#' Return all pairwise distances between two data frames of trees
 #'
-#' @param forest data frame containing tree data
-#' @param cv_fold_size grid size for spatial crossvalidation fold
+#' @param focal_trees An \code{sf} polygon object of the focal trees of interest
+#' @param comp_trees An \code{sf} polygon object of the competitor trees
 #'
-#' @return The same \code{forest} data frame but with a new numerical variable
-#'   \code{fold} indicating the fold number.
+#' @return A data frame with three columns: \code{focal_ID} of focal tree,
+#'   \code{comp_dist} of competitor tree, and \code{dist} of distance between
+#'   them.
 #' @export
-#' @import dplyr
-#' @importFrom stringr str_c
+#'
 #' @examples
+#' library(tibble)
 #' library(ggplot2)
-#' library(dplyr)
+#' library(sf)
 #'
-#' # Define crossvalidation folds/grid
-#' bigwoods <- bigwoods %>%
-#'   define_cv_grid(cv_fold_size = 100) %>%
-#'   mutate(fold = factor(fold))
+#' # Create toy example focal and competitor trees
+#' focal_trees <- tibble(
+#'   focal_ID = c(1, 2, 3),
+#'   x = c(0.3, 0.6, 0.7),
+#'   y = c(0.1, 0.5, 0.7)
+#' ) %>%
+#'   st_as_sf(coords = c("x", "y"))
 #'
-#' ggplot(data = bigwoods, aes(x = x, y = y)) +
-#'   geom_point(aes(col = fold)) +
-#'   coord_fixed(ratio = 1)
-define_cv_grid <- function(forest, cv_fold_size){
-  forest <- forest %>%
-    mutate(
-      x_fold = as.character(floor(x / cv_fold_size)),
-      y_fold = as.character(floor(y / cv_fold_size)),
-      fold = str_c("x", x_fold, "y", y_fold),
-      fold = factor(fold, labels = c(1:n_distinct(fold))),
-      fold = as.numeric(fold)
+#' comp_trees <- tibble(
+#'   comp_ID = c(4, 5, 6, 7),
+#'   x = c(0, 0.2, 0.4, 0.6),
+#'   y = c(0.6, 0.7, 1, 0.2)
+#' ) %>%
+#'   st_as_sf(coords = c("x", "y"))
+#'
+#' # Plot both sets of trees
+#' ggplot() +
+#'   geom_sf_label(data = focal_trees, aes(label = focal_ID), col = "black") +
+#'   geom_sf_label(data = comp_trees, aes(label = comp_ID), col = "orange") +
+#'   labs(title = "Focal trees in black, competitor trees in orange")
+#'
+#' # Compute corresponding distances between the 3 focal trees and 4 competitor trees
+#' focal_vs_comp_distance(focal_trees, comp_trees)
+focal_vs_comp_distance <- function(focal_trees, comp_trees){
+  # Get IDs
+  focal_IDs <- focal_trees$focal_ID
+  comp_IDs <- comp_trees$comp_ID
+
+  # Compute distance matrix
+  distance_matrix <- comp_trees %>%
+    st_distance(focal_trees)
+
+  # Assign row and column names
+  colnames(distance_matrix) <- focal_IDs
+  rownames(distance_matrix) <- comp_IDs
+
+  focal_vs_comp <-
+    # Convert distance matrix to vector along with ID's
+    tibble(
+      focal_ID = rep(focal_IDs, each = length(comp_IDs)),
+      comp_ID = rep(comp_IDs, times = length(focal_IDs)),
+      dist = distance_matrix %>% as.vector()
     ) %>%
-    select(-c(x_fold, y_fold))
+    # Remove cases where focal = comp
+    filter(focal_ID != comp_ID)
 
-  return(forest)
+  return(focal_vs_comp)
 }
-
-
-#' Return information on each fold in crossvalidation grid
-#'
-#' @inheritParams define_cv_grid
-#'
-#' @return A "nested" dataframe with the fold number, its rough centroid, and
-#'   all its neighbors in a nested list.
-#' @export
-#' @import dplyr
-#' @importFrom tidyr nest
-#' @examples
-#' library(ggplot2)
-#' library(dplyr)
-#' \dontrun{
-#'
-#' # Define crossvalidation folds/grid
-#' bigwoods <- bigwoods %>%
-#'   define_cv_grid(cv_fold_size = 100) %>%
-#'   mutate(fold = factor(fold))
-#'
-#' # CV fold/grid info
-#' folds <- bigwoods %>%
-#'   get_cv_fold_info(cv_fold_size = 100)
-#'
-#' # Plot fold numbers
-#' ggplot(data = bigwoods, aes(x = x, y = y)) +
-#'   geom_point(aes(col = fold)) +
-#'   coord_fixed(ratio = 1) +
-#'   geom_text(data = folds, aes(x = x, y = y, label = fold), size = 10)
-#'
-#' # Check that neighbors are correct:
-#' library(stringr)
-#' library(tidyr)
-#' neighbors <- folds %>%
-#'   unnest() %>%
-#'   group_by(fold) %>%
-#'   summarize(neighbors = str_c(neighbor, collapse = ","))
-#' neighbors
-#' }
-get_cv_fold_info <- function(forest, cv_fold_size){
-  # Save output here
-  fold_neighbors <- NULL
-
-  for(i in 1:n_distinct(forest$foldID)){
-    center_tree <- forest %>%
-      filter(foldID == i) %>%
-      summarise(x = mean(x), y = mean(y))
-
-    fold_neighbors <- forest %>%
-      filter(
-        between(x, center_tree$x - cv_fold_size, center_tree$x + cv_fold_size),
-        between(y, center_tree$y - cv_fold_size, center_tree$y + cv_fold_size)
-      ) %>%
-      pull(foldID) %>%
-      unique() %>%
-      sort() %>%
-      data_frame(neighbor = .) %>%
-      mutate(
-        fold = i,
-        x = center_tree$x,
-        y = center_tree$y
-      ) %>%
-      select(foldID, x, y, neighbor) %>%
-      nest(data=c(neighbor)) %>%
-      bind_rows(fold_neighbors)
-  }
-
-  fold_neighbors <- fold_neighbors %>%
-    arrange(foldID)
-  return(fold_neighbors)
-}
-
