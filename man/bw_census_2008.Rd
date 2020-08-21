@@ -4,8 +4,7 @@
 \name{bw_census_2008}
 \alias{bw_census_2008}
 \title{Michigan Big Woods research plot data}
-\format{
-A data frame with 27193 rows and 8 variables:
+\format{A data frame with 27193 rows and 8 variables:
 \describe{
 \item{treeID}{Tree identification number. This identifies an individual tree and
 can be used to connect trees between the two censuses.}
@@ -21,8 +20,7 @@ of the individual tree; AL means the stem is alive but leaning or completely fal
 over; B means the stem is broken and over half the canopy is assumed to be missing;
 and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 this stands for resprout.}
-}
-}
+}}
 \usage{
 bw_census_2008
 }

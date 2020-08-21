@@ -4,8 +4,7 @@
 \name{bw_species}
 \alias{bw_species}
 \title{Phylogenic groupings and trait based clustering of various tree species}
-\format{
-A data frame with 46 rows and 6 variables:
+\format{A data frame with 46 rows and 6 variables:
 \describe{
 \item{sp}{The code for the species. Link to \code{\link{bw_census_2008}} and \code{\link{bw_census_2014}} with \code{sp} variable.}
 \item{genus}{Genus}
@@ -15,8 +14,7 @@ A data frame with 46 rows and 6 variables:
 \item{trait_group}{Clustering of species based on three traits rather than
 their evolutionary relationships. The traits are specific leaf area, maximum
 height, and wood density}
-}
-}
+}}
 \source{
 For more information on trait clustering see Allen and Kim 2020 "A permutation
 test and spatial cross-validation approach to assess models of interspecific competition

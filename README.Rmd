@@ -64,57 +64,23 @@ library(tictoc)
 library(yardstick)
 library(viridis)
 
-run_scbi <- FALSE
-run_bw <- TRUE
+run_scbi <- TRUE
+run_bw <- FALSE
 ```
 
 
 
 ### Load & preprocess data
 
-We first load and preprocess the data corresponding to the two census reflecting the time period over which we consider growth in dbh. We load them into R as "tibble" data frames thereby ensuring a standardized input/output format that can be used across all `tidyverse` packages @tidyverse. Furthermore, we ensure that the different variables have the correct names, types (`dbl`, `data`, `factor`). 
+The data for the Big Woods plor are included in the package. For SCBI, we load and preprocess the data corresponding to the two census reflecting the time period over which we consider growth in dbh. We load them into R as "tibble" data frames thereby ensuring a standardized input/output format that can be used across all `tidyverse` packages @tidyverse. Furthermore, we ensure that the different variables have the correct names, types (`dbl`, `data`, `factor`). 
 
 **Big Woods**:
 
 ```{r, eval = run_bw}
 # Big Woods
 # Read in census data from 2008 & 2014
-bw_2008 <- 
-  "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>% 
-  read_delim(delim = "\t") %>% 
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
-    date, codes
-  )
-bw_2014 <- 
-  "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>% 
-  read_delim(delim = "\t") %>% 
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
-    date, codes
-  )
+data(bw_census_2008, bw_census_2014 )
 
-# Read in grouping classification data
-bw_species <- 
-  "https://deepblue.lib.umich.edu/data/downloads/000000086" %>% 
-  read_delim(delim = "\t") %>% 
-  # convert all to snake case:
-  mutate_at(c("species", "genus", "family", "idlevel", "spcode"), to_any_case) %>% 
-  # join trait group
-  left_join(families, by = c("spcode", "family")) %>% 
-  mutate(
-    sp = str_sub(genus, 1, 2), 
-    sp = str_c(sp, str_sub(species, 1, 2)),
-    sp = tolower(sp),
-    latin = str_c(genus, species, sep = " "),
-    latin = to_any_case(latin)
-  ) %>% 
-  select(sp = spcode, genus, species, latin, family, trait_group)
-
-bw_2008 <- bw_2008 %>%
-  left_join(bw_species,by='sp')
 
 ```
 
@@ -152,23 +118,24 @@ The resulting data frames are named with some variation of `growth_df`.
 
 ```{r, eval = run_bw}
 # Big Woods
-census_df1 <- bw_2008
-# we need to filter out the resprouts
-census_df2 <- bw_2014 %>% 
-  filter(!str_detect(codes, 'R'))
 id <- "treeID"
 
-bw_growth_df <- 
+bw_growth_df <-
   # Merge both censuses and compute growth:
-  compute_growth(census_df1, census_df2, id) %>% 
-  mutate(sp = to_any_case(sp))
+  compute_growth(bw_census_2008, bw_census_2014, id) %>%
+  mutate(sp = to_any_case(sp)) %>%
+  # Convert data frame to sf object
+  st_as_sf(coords = c("gx", "gy")) %>%
+  # drop stemID
+  select(-stemID)
+
 ```
 
 **SCBI**:
 
 ```{r, eval = run_scbi}
 # SCBI
-census_df1 <- scbi_2013
+census_df1 <- scbi_2013 
 census_df2 <- scbi_2018
 id <- "stemID"
 
@@ -214,6 +181,8 @@ max_dist <- 7.5
 
 For a focal tree of interest, the `max_dist` of `r max_dist` meters acts as a radius defining a neighborhood within which all trees are considered competitors. In other words, all trees within `r max_dist` meters of the focal tree are considered competitor trees. Other studies have estimated this distance; we used `r max_dist` meters as an average of estimated values [@canham2004, @canham2006, @uriarte2004, @tatsumi2013]. Following Tobler's first law of geography that "everything is related to everything else, but near things are more related than distant things." @tobler1970firstlawofgeo, we assume that the degree of spatial autocorrelation is inversely-related to distance. However, we further assume that once trees are more than `r max_dist` meters apart, this autocorrelation is negligeable. 
 
+We use the function `add_buffer_variable` to identifiy which trees are inside of a buffer region of size `max_dist`.
+
 **Example of buffer at work**:
 
 ```{r}
@@ -237,29 +206,15 @@ ggplot() +
 
 ```{r, eval = run_bw}
 # Bigwoods
-# Study region boundary polygon
-bw_boundary <- bigwoods_study_region %>% 
-  sf_polygon()
+data(bw_study_region)
 
-# Buffer polygon
-bw_buffer <- bw_boundary %>%
-  st_buffer(dist = -max_dist)
+# Add buffer variable to data frame
+bw_growth_df <- bw_growth_df %>%
+  add_buffer_variable(direction = "in", size = max_dist, region = bw_study_region)
 
-# Convert data frame to sf object
-bw_growth_df <- bw_growth_df %>% 
-  st_as_sf(coords = c("gx", "gy"))
+ggplot() +
+  geom_sf(data = bw_growth_df, aes(col = buffer))
 
-# ID which points are in buffer and which are not
-buffer_index <- !st_intersects(bw_growth_df, bw_buffer, sparse = FALSE)
-bw_growth_df <- bw_growth_df %>% 
-  mutate(buffer = as.vector(buffer_index))
-
-# Plot
-ggplot() +  
-  geom_sf(data = bw_boundary) +
-  geom_sf(data = bw_buffer, col="red") +
-  # Only random sample of 1000 trees:
-  geom_sf(data = bw_growth_df %>% sample_n(1000), aes(col=buffer), size = 0.5)
 ```
 
 **SCBI**:
