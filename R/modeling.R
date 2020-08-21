@@ -12,7 +12,7 @@
 #' @examples
 #' 1+1
 create_focal_vs_comp <- function(growth_df, max_dist, cv_grid, id){
-  # TODO: Create example for this function
+  # TODO: Create example for this function using toy dataset
   # TODO: Inputs checks that growth_df has sp variable, maybe id variable
   # TODO: Delete these input sets
   if(FALSE){
@@ -759,4 +759,3 @@ plot_posterior_parameters <- function(posterior_param, species_list){
 
   return(plot_list)
 }
-
