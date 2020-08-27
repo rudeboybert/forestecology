@@ -9,4 +9,5 @@ README_cache/
 # creation process
 focal_vs_comp_bw.Rdata
 bw_cv_predict.Rdata
-forestecology.Rcheck/
+forestecology*.tar.gz
+forestecology*.tgz
