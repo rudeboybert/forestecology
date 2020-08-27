@@ -105,13 +105,14 @@ bw_growth_df <- bw_growth_df %>%
 ggplot() +
   geom_sf(data = bw_growth_df, aes(col = foldID, alpha = buffer))
 
-
+bw_cv_grid_sf <- bw_cv_grid$blocks %>%
+  st_as_sf()
 
 
 
 # Model ------------------------------------------------------------------------
 focal_vs_comp_bw <- bw_growth_df %>%
-  create_focal_vs_comp(max_dist = max_dist, cv_grid = bw_cv_grid, id = "treeID")
+  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
 
 model_formula_bw <- focal_vs_comp_bw$focal_sp %>%
   unique() %>%
