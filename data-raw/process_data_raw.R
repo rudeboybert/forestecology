@@ -79,7 +79,7 @@ use_data(bw_census_2014, overwrite = TRUE)
 growth_df_ex <- tibble(
   ID = 1:5,
   sp = c("tulip poplar", "red oak", "red oak", "tulip poplar", "tulip poplar"),
-  gx = c(1, 1, 2, 4, 5),
+  gx = c(1, 1, 1, 4, 4),
   gy = c(4, 3, 2, 1, 2)
 ) %>%
   mutate(
