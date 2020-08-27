@@ -63,6 +63,7 @@ library(blockCV)
 library(tictoc)
 library(yardstick)
 library(viridis)
+library(lubridate)
 
 run_scbi <- TRUE
 run_bw <- FALSE
@@ -94,7 +95,8 @@ scbi_2013 <-
   select(
     treeID, stemID, sp, quadrat, gx, gy, dbh, 
     date = ExactDate, codes, status
-  )
+  ) %>%
+  mutate(date = mdy(date))
 
 scbi_2018 <-
   "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem3.csv" %>% 
@@ -103,7 +105,8 @@ scbi_2018 <-
     treeID, stemID, sp, quadrat, gx, gy, dbh, 
     date = ExactDate, codes, status
   ) %>% 
-  mutate(dbh = as.numeric(dbh))
+  mutate(dbh = as.numeric(dbh),
+         date = mdy(date)) 
 ```
 
 
@@ -124,7 +127,7 @@ bw_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(bw_census_2008, bw_census_2014, id) %>%
   mutate(sp = to_any_case(sp)) %>%
-  # Convert data frame to sf object
+  # Convert data frame to sf object DA note: should compute_growth do this??
   st_as_sf(coords = c("gx", "gy")) %>%
   # drop stemID
   select(-stemID)
@@ -143,7 +146,9 @@ scbi_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(census_df1, census_df2, id) %>%
   # they are mesuaring in mm while we are measuring in cm!!!
-  mutate(growth = growth/10)
+  mutate(growth = growth/10) %>%
+  st_as_sf(coords = c("gx", "gy"))
+
 ```
 
 **Comparison**:
@@ -151,8 +156,8 @@ scbi_growth_df <-
 ```{r, eval = run_scbi & run_bw}
 # Both Big Woods & SCBI
 growth_df <- bind_rows(
-  bw_growth_df %>% select(growth) %>% mutate(site = "bw"),
-  scbi_growth_df %>% select(growth) %>% mutate(site = "scbi")
+  bw_growth_df %>% st_drop_geometry %>% select(growth) %>% mutate(site = "bw"),
+  scbi_growth_df %>% st_drop_geometry %>% select(growth) %>% mutate(site = "scbi")
 )
 ggplot(growth_df, aes(x = growth, y = ..density.., fill = site)) +
   geom_histogram(alpha = 0.5, position = "identity", binwidth = 0.05) +
@@ -193,13 +198,21 @@ square_boundary <- tibble(
 ) %>% 
   sf_polygon()
 
+# "Trees" in polygon
+trees_df <- tibble(
+    x = runif(100),
+    y = runif(100)
+  ) %>%
+  sf_point()
+
 # Buffer polygon
-square_buffer <- square_boundary %>% 
-  st_buffer(dist = -0.1)
+trees_df <- trees_df %>%
+  add_buffer_variable(direction = "in", size = 0.1, region = square_boundary)
 
 ggplot() +
-  geom_sf(data = square_boundary) +
-  geom_sf(data = square_buffer, col="red") 
+  geom_sf(data = trees_df, aes(col = buffer))
+
+
 ```
 
 **Big Woods**:
@@ -222,28 +235,15 @@ ggplot() +
 ```{r, eval = run_scbi}
 # SCBI
 # Study region boundary polygon
-scbi_boundary <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
+scbi_study_region <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
   sf_polygon()
 
-# Buffer polygon
-scbi_buffer <- scbi_boundary %>%
-  st_buffer(dist = -max_dist)
+# Add buffer variable to data frame
+scbi_growth_df <- scbi_growth_df %>%
+  add_buffer_variable(direction = "in", size = max_dist, region = scbi_study_region)
 
-# Convert data frame to sf object
-scbi_growth_df <- scbi_growth_df %>% 
-  st_as_sf(coords = c("gx", "gy"))
-
-# ID which points are in buffer and which are not
-buffer_index <- !st_intersects(scbi_growth_df, scbi_buffer, sparse = FALSE)
-scbi_growth_df <- scbi_growth_df %>% 
-  mutate(buffer = as.vector(buffer_index))
-
-# Plot
 ggplot() +
-  geom_sf(data = scbi_boundary) +
-  geom_sf(data = scbi_buffer, col="red") +
-  # Only random sample of 1000 trees:
-  geom_sf(data = scbi_growth_df %>% sample_n(1000), aes(col=buffer), size = 0.5)
+  geom_sf(data = scbi_growth_df, aes(col = buffer))
 ```
 
 
