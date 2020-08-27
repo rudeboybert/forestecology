@@ -2,27 +2,47 @@
 % Please edit documentation in R/modeling.R
 \name{create_focal_vs_comp}
 \alias{create_focal_vs_comp}
-\title{Create main data frame for analysis}
-\source{
-\url{https://en.wikipedia.org/wiki/Basal_area}
-}
+\title{Create focal versus competitor trees data frame}
 \usage{
 create_focal_vs_comp(growth_df, max_dist, cv_grid, id)
 }
 \arguments{
-\item{growth_df}{\code{\link{compute_growth}} data frame}
+\item{growth_df}{A \code{\link{compute_growth}} output converted to \linkS4class{sf} object}
 
-\item{model_specs}{from \code{\link{get_model_specs}}}
+\item{max_dist}{size of buffer in same units as geometry in \code{region}}
+
+\item{cv_grid}{An \code{blockCV} output}
+
+\item{id}{A character string of the variable name in \code{growth_df} uniquely identifying each tree}
 }
 \value{
-\code{focal_vs_comp} data frame
+\code{focal_vs_comp} data frame of all focal trees and for each focal
+tree all possible competitor trees. In particular, for each competitor tree
+we compute the \href{https://en.wikipedia.org/wiki/Basal_area}{basal area}
+(in meters-squared) based on the \code{dbh1} variable from the first census
+(assumed to be in cm).
 }
 \description{
-Create main data frame for analysis
+"Focal versus competitor trees" data frames are the main data
+frame used for analysis. "Focal trees" are all trees that satisfy the
+following criteria
+\tabular{l}{
+\enumerate{
+\item Were alive at both censuses \cr
+\item Were not part of the study region's buffer as computed by \code{\link{add_buffer_variable}} \cr
+\item Were not a resprout at the second census. Such trees should be coded as \code{"R"} in the \code{codes2} variable (OK if a resprout at first census)
+}
+For each focal tree, "competitor trees" are all trees that (1) were alive at the first census and (2) within \code{max_dist} distance of the focal tree.
+}
+}
+\note{
+In order to speed computation, in particular of distances between all
+focal/competitor tree pairs, we use the cross-validation \code{blockCV}
+object to divide the study region into smaller subsets.
 }
 \examples{
 1+1
 }
 \seealso{
-\code{\link{define_cv_grid}} and \code{\link{get_model_specs}}
+\code{\link{focal_vs_comp_distance}}
 }
