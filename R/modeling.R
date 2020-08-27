@@ -2,7 +2,7 @@
 #'
 #' @inheritParams compute_buffer_region
 #' @param growth_df A \code{\link{compute_growth}} output converted to \linkS4class{sf} object
-#' @param cv_grid An \code{blockCV} output
+#' @param cv_grid_sf An sf object of a \code{blockCV} block output
 #' @param id A character string of the variable name in \code{growth_df} uniquely identifying each tree
 #' @return \code{focal_vs_comp} data frame of all focal trees and for each focal
 #'   tree all possible competitor trees. In particular, for each competitor tree
@@ -25,8 +25,37 @@
 #'   object to divide the study region into smaller subsets.
 #' @seealso \code{\link{focal_vs_comp_distance}}
 #' @examples
-#' 1+1
-create_focal_vs_comp <- function(growth_df, max_dist, cv_grid, id){
+#' library(ggplot2)
+#' library(dplyr)
+#' library(sf)
+#' library(sfheaders)
+#'
+#' # Create fold information sf object. TODO: clean this
+#' cv_grid_ex <-
+#'   tibble(
+#'     # Study region boundary
+#'     x = c(0, 0, 5, 5),
+#'     y = c(0, 5, 5, 0)
+#'   ) %>%
+#'   # Convert to sf object
+#'   sf_polygon() %>%
+#'   mutate(folds = "1")
+#'
+#' # Plot example data. Observe for max_dist = 1.5, there are 6 focal vs comp pairs:
+#' # 1. focal 1 vs comp 2
+#' # 2. focal 2 vs comp 1
+#' # 3. focal 2 vs comp 3
+#' # 4. focal 3 vs comp 2
+#' # 5. focal 4 vs comp 5
+#' # 6. focal 5 vs comp 4
+#' ggplot() +
+#'   geom_sf(data = cv_grid_ex, fill = "transparent") +
+#'   geom_sf_label(data = growth_df_ex, aes(label = ID))
+#'
+#' # Return corresponding data frame
+#' growth_df_ex %>%
+#'   create_focal_vs_comp(max_dist = 1.5, cv_grid = cv_grid_ex, id = "ID")
+create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
   # TODO: Create example for this function using toy dataset
   # TODO: Inputs checks that growth_df has sp variable, maybe id variable
 
@@ -63,8 +92,7 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid, id){
 
   for(i in 1:length(all_folds)){
     # Identify this fold's boundary
-    fold_boundary <- cv_grid$blocks %>%
-      st_as_sf() %>%
+    fold_boundary <- cv_grid_sf %>%
       filter(folds == all_folds[i])
 
     # Identify focal trees in this fold
@@ -352,7 +380,7 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
 
 
 
-#' Run the bayesain model with spatial cross validation
+#' Run the bayesian model with spatial cross validation
 #'
 #' @inheritParams fit_bayesian_model
 #' @param max_dist distance of competitive neighborhood

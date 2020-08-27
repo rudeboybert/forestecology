@@ -4,14 +4,14 @@
 \alias{create_focal_vs_comp}
 \title{Create focal versus competitor trees data frame}
 \usage{
-create_focal_vs_comp(growth_df, max_dist, cv_grid, id)
+create_focal_vs_comp(growth_df, max_dist, cv_grid_sf, id)
 }
 \arguments{
 \item{growth_df}{A \code{\link{compute_growth}} output converted to \linkS4class{sf} object}
 
 \item{max_dist}{size of buffer in same units as geometry in \code{region}}
 
-\item{cv_grid}{An \code{blockCV} output}
+\item{cv_grid_sf}{An sf object of a \code{blockCV} block output}
 
 \item{id}{A character string of the variable name in \code{growth_df} uniquely identifying each tree}
 }
@@ -41,7 +41,36 @@ focal/competitor tree pairs, we use the cross-validation \code{blockCV}
 object to divide the study region into smaller subsets.
 }
 \examples{
-1+1
+library(ggplot2)
+library(dplyr)
+library(sf)
+library(sfheaders)
+
+# Create fold information sf object. TODO: clean this
+cv_grid_ex <-
+  tibble(
+    # Study region boundary
+    x = c(0, 0, 5, 5),
+    y = c(0, 5, 5, 0)
+  ) \%>\%
+  # Convert to sf object
+  sf_polygon() \%>\%
+  mutate(folds = "1")
+
+# Plot example data. Observe for max_dist = 1.5, there are 6 focal vs comp pairs:
+# 1. focal 1 vs comp 2
+# 2. focal 2 vs comp 1
+# 3. focal 2 vs comp 3
+# 4. focal 3 vs comp 2
+# 5. focal 4 vs comp 5
+# 6. focal 5 vs comp 4
+ggplot() +
+  geom_sf(data = cv_grid_ex, fill = "transparent") +
+  geom_sf_label(data = growth_df_ex, aes(label = ID))
+
+# Return corresponding data frame
+growth_df_ex \%>\%
+  create_focal_vs_comp(max_dist = 1.5, cv_grid = cv_grid_ex, id = "ID")
 }
 \seealso{
 \code{\link{focal_vs_comp_distance}}
