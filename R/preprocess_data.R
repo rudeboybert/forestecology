@@ -12,9 +12,10 @@ globalVariables(c(
 #' @param id Name of variable common to \code{census_df1} and \code{census_df2}
 #' allowing you to join/merge both data frames.
 #'
-#' @return growth_df A data frame with \code{growth}: average annual growth in dbh.
+#' @return growth_df An sf data frame with \code{growth}: average annual growth in dbh.
 #' @export
 #' @import dplyr
+#' @import sf
 #' @examples
 #' 1+1
 compute_growth <- function(census_df1, census_df2, id) {
@@ -42,7 +43,8 @@ compute_growth <- function(census_df1, census_df2, id) {
       n_years = n_days/365.25,
       growth = (dbh2 - dbh1)/n_years
     ) %>%
-    select(-c(n_days, n_years, date1, date2))
+    select(-c(n_days, n_years, date1, date2)) %>%
+    st_as_sf(coords = c("gx", "gy"))
 
   return(growth_df)
 }

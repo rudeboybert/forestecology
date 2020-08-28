@@ -72,3 +72,34 @@ bw_census_2014 <-
     date, codes
   )
 use_data(bw_census_2014, overwrite = TRUE)
+
+
+
+# Example growth_df data frame used to illustrate focal_vs_comp()
+growth_df_ex <- tibble(
+  ID = 1:5,
+  sp = c("tulip poplar", "red oak", "red oak", "tulip poplar", "tulip poplar"),
+  gx = c(1, 1, 1, 4, 4),
+  gy = c(4, 3, 2, 1, 2)
+) %>%
+  mutate(
+    dbh1 = c(40, 25, 30, 35, 20),
+    codes1 = rep("M", n()),
+    codes2 = rep("M", n()),
+    growth = c(1, 2, 1, 3, 2),
+    dbh2 = dbh1 + growth,
+    foldID = rep(1, n()) %>% as.character(),
+    buffer = rep(FALSE, n())
+  ) %>%
+  # Convert data frame to sf object
+  st_as_sf(coords = c("gx", "gy")) %>%
+  select(ID, sp, dbh1, codes1, dbh2, codes2, growth, geometry, buffer, foldID)
+use_data(growth_df_ex, overwrite = TRUE)
+
+
+
+
+
+
+
+

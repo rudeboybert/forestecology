@@ -2,7 +2,7 @@
 % Please edit documentation in R/modeling.R
 \name{run_cv}
 \alias{run_cv}
-\title{Run the bayesain model with spatial cross validation}
+\title{Run the bayesian model with spatial cross validation}
 \usage{
 run_cv(
   focal_vs_comp,
@@ -29,7 +29,7 @@ run_cv(
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 }
 \description{
-Run the bayesain model with spatial cross validation
+Run the bayesian model with spatial cross validation
 }
 \examples{
 1+1
