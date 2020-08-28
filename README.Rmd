@@ -127,8 +127,6 @@ bw_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(bw_census_2008, bw_census_2014, id) %>%
   mutate(sp = to_any_case(sp)) %>%
-  # Convert data frame to sf object DA note: should compute_growth do this??
-  st_as_sf(coords = c("gx", "gy")) %>%
   # drop stemID
   select(-stemID)
 
@@ -146,8 +144,7 @@ scbi_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(census_df1, census_df2, id) %>%
   # they are mesuaring in mm while we are measuring in cm!!!
-  mutate(growth = growth/10) %>%
-  st_as_sf(coords = c("gx", "gy"))
+  mutate(growth = growth/10)
 
 ```
 

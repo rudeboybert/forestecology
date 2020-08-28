@@ -4,9 +4,7 @@
 \name{growth_df_ex}
 \alias{growth_df_ex}
 \title{Example input data for \code{\link{create_focal_vs_comp}}}
-\format{
-A \code{sf} spatial features polygon
-}
+\format{A \code{sf} spatial features polygon}
 \usage{
 growth_df_ex
 }
