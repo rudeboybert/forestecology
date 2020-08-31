@@ -7,7 +7,9 @@
 predict_bayesian_model(focal_vs_comp, model_formula, posterior_param)
 }
 \arguments{
-\item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
+\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
+
+\item{model_formula}{model formula of type competitor}
 
 \item{posterior_param}{Output of \code{\link{fit_bayesian_model}}}
 }

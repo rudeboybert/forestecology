@@ -15,15 +15,18 @@ run_cv(
 )
 }
 \arguments{
-\item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
+\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
+
+\item{model_formula}{model formula of type competitor}
 
 \item{max_dist}{distance of competitive neighborhood}
 
 \item{cv_grid}{length of the cross validation grid}
 
-\item{run_shuffle}{boolean as to whether to run permutation test shuffle}
+\item{run_shuffle}{boolean as to whether to run permutation test shuffle of
+competitor tree species within a particular focal_ID}
 
-\item{prior_hyperparameters}{list of a0, b0, mu_0 and V_0}
+\item{prior_hyperparameters}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}

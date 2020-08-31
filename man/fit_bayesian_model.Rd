@@ -2,7 +2,10 @@
 % Please edit documentation in R/modeling.R
 \name{fit_bayesian_model}
 \alias{fit_bayesian_model}
-\title{Fit bayesian model}
+\title{Fit Bayesian competition model}
+\source{
+Closed form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+}
 \usage{
 fit_bayesian_model(
   focal_vs_comp,
@@ -12,17 +15,23 @@ fit_bayesian_model(
 )
 }
 \arguments{
-\item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
+\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
 
-\item{run_shuffle}{boolean as to whether to run permutation test shuffle}
+\item{model_formula}{model formula of type competitor}
 
-\item{prior_hyperparameters}{list of a0, b0, mu_0 and V_0}
+\item{run_shuffle}{boolean as to whether to run permutation test shuffle of
+competitor tree species within a particular focal_ID}
+
+\item{prior_hyperparameters}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
 }
 \value{
-Posterior parameter values
+A list of \verb{\{a_star, b_star, mu_star, V_star\}} posterior hyperparameters
 }
 \description{
-Fit bayesian model
+Fit a Bayesian linear regression model with interactions terms where \deqn{y = X \beta + \epsilon}
+\tabular{ll}{
+\eqn{\mu} \tab mean hyperparameter vector for \eqn{\beta} \cr
+}
 }
 \examples{
 1+1

@@ -160,18 +160,27 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 
 
 
-#' Fit bayesian model
+#' Fit Bayesian competition model
 #'
-#' @param focal_vs_comp from \code{\link{create_focal_vs_comp}}
-#' @param run_shuffle boolean as to whether to run permutation test shuffle
-#' @param prior_hyperparameters list of a0, b0, mu_0 and V_0
-#' @inheritParams create_focal_vs_comp
+#' @param focal_vs_comp data frame from \code{\link{create_focal_vs_comp}}
+#' @param model_formula model formula of type competitor
+#' @param run_shuffle boolean as to whether to run permutation test shuffle of
+#'   competitor tree species within a particular focal_ID
+#' @param prior_hyperparameters A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters
 #'
+#' @description Fit a Bayesian linear regression model with interactions terms where \deqn{y = X \beta + \epsilon}
+#' \tabular{ll}{
+#' \eqn{\mu} \tab mean hyperparameter vector for \eqn{\beta} of length \eqn{p + 1} \cr
+#' \eqn{\V} \tab covariance hyperparameter matrix for \eqn{\beta} of dimension \eqn{(p + 1) \times (p + 1)} \cr
+#' \eqn{a} \tab shape hyperparameter for \eqn{\sigma^2 > 0} \cr
+#' \eqn{b} \tab scale hyperparameter for \eqn{\sigma^2 > 0}\cr
+#' }
 #' @import dplyr
 #' @importFrom stats model.matrix
 #' @importFrom tidyr unnest
 #' @importFrom tidyr spread
-#' @return Posterior parameter values
+#' @source Closed form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+#' @return A list of `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
 #' @export
 #'
 #' @examples
@@ -181,8 +190,8 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
   if(FALSE){
     focal_vs_comp <- focal_vs_comp_bw
     model_formula <- model_formula_bw
-    run_shuffle = FALSE
-    prior_hyperparameters = NULL
+    run_shuffle <- FALSE
+    prior_hyperparameters <- NULL
   }
 
   # Prepare data for regression Generate data frame of all focal trees
@@ -211,28 +220,14 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
     summarise_all(list(sum)) %>%
     # ungroup() %>%
     # compute biomass for each tree type
-    # Note we have to use spread and not pivot_wider https://github.com/tidyverse/tidyr/issues/770
-    # pivot_wider(names_from = comp_sp, values_from = comp_basal_area, values_fill = 0) %>%
+    # Note we have to specifically use spread() and not pivot_wider()
+    # https://github.com/tidyverse/tidyr/issues/770 to use drop functionality
     spread(key = comp_sp, value = comp_basal_area, fill = 0, drop = FALSE) %>%
     group_by(focal_ID) %>%
     summarise_all(list(sum)) %>%
     ungroup()
 
-
-  # Might no longer need this
-  # # Add biomass=0 for any species for which there are no trees
-  # missing_species <- species_levels[!species_levels %in% names(focal_trees)] %>%
-  #   as.character()
-  # if(length(missing_species) > 0){
-  #   for(i in 1:length(missing_species)){
-  #     focal_trees <- focal_trees %>%
-  #       mutate(!!missing_species[i] := 0)
-  #   }
-  #   focal_trees <- focal_trees %>%
-  #     select(everything(), !!species_levels)
-  # }
-
-  # Matrix objects for analytic computation of all posteriors
+  # Matrix and vector objects for analytic computation of all posteriors
   focal_trees <- focal_vs_comp %>%
     select(focal_ID, focal_sp, dbh, growth) %>%
     distinct() %>%

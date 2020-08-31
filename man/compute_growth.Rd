@@ -15,7 +15,7 @@ compute_growth(census_df1, census_df2, id)
 allowing you to join/merge both data frames.}
 }
 \value{
-growth_df A data frame with \code{growth}: average annual growth in dbh.
+growth_df An sf data frame with \code{growth}: average annual growth in dbh.
 }
 \description{
 Based on two tree censuses compute the average annual growth in dbh for all
