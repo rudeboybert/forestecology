@@ -123,6 +123,10 @@ The resulting data frames are named with some variation of `growth_df`.
 # Big Woods
 id <- "treeID"
 
+# we need to filter out the resprouts
+bw_census_2014 <- bw_census_2014 %>% 
+  filter(!str_detect(codes, 'R'))
+
 bw_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(bw_census_2008, bw_census_2014, id) %>%
