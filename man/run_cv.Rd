@@ -17,7 +17,7 @@ run_cv(
 \arguments{
 \item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
 
-\item{model_formula}{model formula of type competitor}
+\item{model_formula}{model formula of linear regression}
 
 \item{max_dist}{distance of competitive neighborhood}
 

@@ -163,7 +163,7 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 #' Fit Bayesian competition model
 #'
 #' @param focal_vs_comp data frame from \code{\link{create_focal_vs_comp}}
-#' @param model_formula model formula of type competitor
+#' @param model_formula model formula of linear regression
 #' @param run_shuffle boolean as to whether to run permutation test shuffle of
 #'   competitor tree species within a particular focal_ID
 #' @param prior_hyperparameters A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters
@@ -171,7 +171,7 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 #' @description Fit a Bayesian linear regression model with interactions terms where \deqn{y = X \beta + \epsilon}
 #' \tabular{ll}{
 #' \eqn{\mu} \tab mean hyperparameter vector for \eqn{\beta} of length \eqn{p + 1} \cr
-#' \eqn{\V} \tab covariance hyperparameter matrix for \eqn{\beta} of dimension \eqn{(p + 1) \times (p + 1)} \cr
+#' \eqn{V} \tab covariance hyperparameter matrix for \eqn{\beta} of dimension \eqn{(p + 1) x (p + 1)} \cr
 #' \eqn{a} \tab shape hyperparameter for \eqn{\sigma^2 > 0} \cr
 #' \eqn{b} \tab scale hyperparameter for \eqn{\sigma^2 > 0}\cr
 #' }
@@ -179,8 +179,9 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 #' @importFrom stats model.matrix
 #' @importFrom tidyr unnest
 #' @importFrom tidyr spread
-#' @source Closed form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+#' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 #' @return A list of `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
+#' @seealso \code{\link{predict_bayesian_model}}
 #' @export
 #'
 #' @examples
@@ -206,6 +207,9 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
     )
 
   # Shuffle group label only if flag is set
+  # TODO: Can we do this within a pipe, therefore we can connect above chain
+  # with chain below, that way we can re-use this code for predict_bayesian_model
+  # below that doesn't use run_shuffle?
   if(run_shuffle){
     focal_trees <- focal_trees %>%
       group_by(focal_ID) %>%
@@ -241,8 +245,7 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
   n <- nrow(X)
 
 
-  # Set priors ----------------------------------------------------------------
-  # If no prior_hyperparameters specified
+  # Set priors. If no prior_hyperparameters specified:
   if(is.null(prior_hyperparameters)){
     # Prior parameters for sigma2:
     a_0 <- 250
@@ -259,7 +262,7 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
     V_0 <- prior_hyperparameters$V_0
   }
 
-  # Compute posteriors --------------------------------------------------------
+  # Compute posteriors
   # Posterior parameters for betas and lambdas:
   mu_star <- solve(solve(V_0) + t(X) %*% X) %*% (solve(V_0) %*% mu_0 + t(X) %*% y)
   V_star <- solve(solve(V_0) + t(X) %*% X)
@@ -284,22 +287,25 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
 }
 
 
-#' Make predictions based on bayesian model
+#' Make predictions based on fitted Bayesian model
 #'
+#' @description Applies fitted model from \code{\link{fit_bayesian_model}} and
+#'   returns posterior predicted values.
 #' @inheritParams fit_bayesian_model
-#' @param posterior_param Output of \code{\link{fit_bayesian_model}}
+#' @param posterior_param Output of \code{\link{fit_bayesian_model}}: A list of
+#'   `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
 #' @inheritParams create_focal_vs_comp
-#'
 #' @import dplyr
 #' @importFrom stats model.matrix
 #' @importFrom tidyr nest
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
+#' @seealso \code{\link{fit_bayesian_model}}
+#' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 #' @export
 #'
 #' @examples
 #' 1+1
 predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param){
-
   if(FALSE){
     focal_vs_comp <- focal_vs_comp_bw
     # focal_vs_comp <- test
@@ -308,6 +314,7 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
   }
 
   # Prepare data for regression Generate data frame of all focal trees
+  # TODO: This code is redundant to code in fit_bayesian_model.
   focal_trees <- focal_vs_comp %>%
     group_by(focal_ID, comp_sp) %>%
     # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
@@ -319,6 +326,7 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
     )
 
   # Continue processing focal_trees
+  # TODO: This code is redundant to code in fit_bayesian_model.
   focal_trees <- focal_trees %>%
     # sum biomass and n_comp for competitors of same species. we need to do this
     # for the cases when we do permutation shuffle.
@@ -326,28 +334,15 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
     summarise_all(list(sum)) %>%
     # ungroup() %>%
     # compute biomass for each tree type
-    # Note we have to use spread and not pivot_wider https://github.com/tidyverse/tidyr/issues/770
-    # pivot_wider(names_from = comp_sp, values_from = comp_basal_area, values_fill = 0) %>%
+    # Note we have to specifically use spread() and not pivot_wider()
+    # https://github.com/tidyverse/tidyr/issues/770 to use drop functionality
     spread(key = comp_sp, value = comp_basal_area, fill = 0, drop = FALSE) %>%
     group_by(focal_ID) %>%
     summarise_all(list(sum)) %>%
     ungroup()
 
-  # # Might no longer need this
-  # # Add biomass=0 for any species for which there are no trees
-  # species_levels <- model_specs$species_of_interest
-  # missing_species <- species_levels[!species_levels %in% names(focal_trees)] %>%
-  #   as.character()
-  # if(length(missing_species) > 0){
-  #   for(i in 1:length(missing_species)){
-  #     focal_trees <- focal_trees %>%
-  #       mutate(!!missing_species[i] := 0)
-  #   }
-  #   focal_trees <- focal_trees %>%
-  #     select(everything(), !!species_levels)
-  # }
-
-  # Matrix objects for analytic computation of all posteriors
+  # Matrix and vector objects for analytic computation of all posteriors
+  # TODO: This code is redundant to code in fit_bayesian_model.
   focal_trees <- focal_vs_comp %>%
     select(focal_ID, focal_sp, dbh, growth) %>%
     distinct() %>%
@@ -361,15 +356,14 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
   n <- nrow(X)
 
 
-
-
   # Make posterior predictions
   mu_star <- posterior_param$mu_star
   focal_trees <- focal_trees %>%
     mutate(growth_hat = as.vector(X %*% mu_star)) %>%
     select(focal_ID, growth_hat)
 
-  # why do we return focal_vs_comp?? Shouldn't we return focal_trees (one row per focal tree not per interaction)
+  # TODO: why do we return focal_vs_comp?? Shouldn't we return focal_trees (one
+  # row per focal tree not per interaction)
   return(focal_trees)
 }
 

@@ -4,7 +4,7 @@
 \alias{fit_bayesian_model}
 \title{Fit Bayesian competition model}
 \source{
-Closed form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 }
 \usage{
 fit_bayesian_model(
@@ -17,7 +17,7 @@ fit_bayesian_model(
 \arguments{
 \item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
 
-\item{model_formula}{model formula of type competitor}
+\item{model_formula}{model formula of linear regression}
 
 \item{run_shuffle}{boolean as to whether to run permutation test shuffle of
 competitor tree species within a particular focal_ID}
@@ -30,9 +30,15 @@ A list of \verb{\{a_star, b_star, mu_star, V_star\}} posterior hyperparameters
 \description{
 Fit a Bayesian linear regression model with interactions terms where \deqn{y = X \beta + \epsilon}
 \tabular{ll}{
-\eqn{\mu} \tab mean hyperparameter vector for \eqn{\beta} \cr
+\eqn{\mu} \tab mean hyperparameter vector for \eqn{\beta} of length \eqn{p + 1} \cr
+\eqn{V} \tab covariance hyperparameter matrix for \eqn{\beta} of dimension \eqn{(p + 1) x (p + 1)} \cr
+\eqn{a} \tab shape hyperparameter for \eqn{\sigma^2 > 0} \cr
+\eqn{b} \tab scale hyperparameter for \eqn{\sigma^2 > 0}\cr
 }
 }
 \examples{
 1+1
+}
+\seealso{
+\code{\link{predict_bayesian_model}}
 }
