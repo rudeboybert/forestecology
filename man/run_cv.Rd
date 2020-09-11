@@ -10,14 +10,12 @@ run_cv(
   max_dist,
   cv_grid,
   run_shuffle = FALSE,
-  prior_hyperparameters = NULL,
+  prior_param = NULL,
   all_folds = TRUE
 )
 }
 \arguments{
 \item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
-
-\item{model_formula}{model formula of linear regression}
 
 \item{max_dist}{distance of competitive neighborhood}
 
@@ -26,7 +24,7 @@ run_cv(
 \item{run_shuffle}{boolean as to whether to run permutation test shuffle of
 competitor tree species within a particular focal_ID}
 
-\item{prior_hyperparameters}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
+\item{prior_param}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}

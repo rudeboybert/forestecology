@@ -110,37 +110,34 @@ bw_cv_grid_sf <- bw_cv_grid$blocks %>%
 
 
 
-# Model ------------------------------------------------------------------------
+
+
+# Bayesian modeling ------------------------------------------------------------
 focal_vs_comp_bw <- bw_growth_df %>%
   create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
 
-model_formula_bw <- focal_vs_comp_bw$focal_sp %>%
-  unique() %>%
-  sort() %>%
-  paste(., "*sp", sep = "", collapse = " + ") %>%
-  paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
-  as.formula()
-
-# Fit model (compute posterior parameters)
+# Fit model (compute posterior parameters) with no shuffling
 posterior_param_bw <- focal_vs_comp_bw %>%
-  fit_bayesian_model(model_formula = model_formula_bw, run_shuffle = FALSE)
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 
-# Plot results
-species_list_bw <- focal_vs_comp_bw$focal_sp %>% unique()
-species_list_bw
-
-# Make predictions and compute RMSE
+# Make predictions
 predictions <- focal_vs_comp_bw %>%
-  predict_bayesian_model(model_formula = model_formula_bw, posterior_param = posterior_param_bw) %>%
+  predict_bayesian_model(posterior_param = posterior_param_bw) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 
+# Compute RMSE
 predictions %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 
 
 
-# Plot posterior parameters ------------------------------------------------------------------------
+
+
+# Plot posterior parameters ----------------------------------------------------
+species_list_bw <- focal_vs_comp_bw$focal_sp %>% unique()
+species_list_bw
+
 posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)
 posterior_plots[["beta_0"]]
 posterior_plots[["beta_dbh"]]
@@ -148,10 +145,12 @@ posterior_plots[["lambdas"]]
 
 
 
-# Cross-validation
+
+
+# Cross-validation -------------------------------------------------------------
 tic()
 cv_bw <- focal_vs_comp_bw %>%
-  run_cv(model_formula = model_formula_bw, max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+  run_cv(cv_grid = bw_cv_grid) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 
 cv_bw %>%

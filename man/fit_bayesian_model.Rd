@@ -7,22 +7,15 @@
 Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 }
 \usage{
-fit_bayesian_model(
-  focal_vs_comp,
-  model_formula,
-  run_shuffle = FALSE,
-  prior_hyperparameters = NULL
-)
+fit_bayesian_model(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE)
 }
 \arguments{
 \item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
 
-\item{model_formula}{model formula of linear regression}
+\item{prior_param}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
 
 \item{run_shuffle}{boolean as to whether to run permutation test shuffle of
 competitor tree species within a particular focal_ID}
-
-\item{prior_hyperparameters}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
 }
 \value{
 A list of \verb{\{a_star, b_star, mu_star, V_star\}} posterior hyperparameters

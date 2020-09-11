@@ -164,10 +164,9 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 #' Fit Bayesian competition model
 #'
 #' @param focal_vs_comp data frame from \code{\link{create_focal_vs_comp}}
-#' @param model_formula model formula of linear regression
 #' @param run_shuffle boolean as to whether to run permutation test shuffle of
 #'   competitor tree species within a particular focal_ID
-#' @param prior_hyperparameters A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters
+#' @param prior_param A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters
 #'
 #' @description Fit a Bayesian linear regression model with interactions terms where \deqn{y = X \beta + \epsilon}
 #' \tabular{ll}{
@@ -187,26 +186,33 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 #'
 #' @examples
 #' 1+1
-fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE,
-                               prior_hyperparameters = NULL){
+fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE){
   if(FALSE){
     focal_vs_comp <- focal_vs_comp_bw
     model_formula <- model_formula_bw
     run_shuffle <- FALSE
-    prior_hyperparameters <- NULL
+    prior_param <- NULL
   }
 
+  # Create linear regression model formula object
+  model_formula <- focal_vs_comp$focal_sp %>%
+    unique() %>%
+    sort() %>%
+    paste(., "*sp", sep = "", collapse = " + ") %>%
+    paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
+    as.formula()
+
   # Create matrices & vectors for Bayesian regression
-  X <- focal_vs_comp %>%
-    create_bayesian_model_data(run_shuffle) %>%
-    model.matrix(model_formula, data = .)
+  focal_trees <- focal_vs_comp %>%
+    create_bayesian_model_data()
+  X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
     pull(growth) %>%
     matrix(ncol = 1)
   n <- nrow(X)
 
-  # Set priors. If no prior_hyperparameters specified:
-  if(is.null(prior_hyperparameters)){
+  # Set priors. If no prior_param specified:
+  if(is.null(prior_param)){
     # Prior parameters for sigma2:
     a_0 <- 250
     b_0 <- 25
@@ -215,10 +221,10 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
       matrix(ncol = 1)
     V_0 <- ncol(X) %>% diag()
   } else {
-    a_0 <- prior_hyperparameters$a_0
-    b_0 <- prior_hyperparameters$b_0
-    mu_0 <- prior_hyperparameters$mu_0
-    V_0 <- prior_hyperparameters$V_0
+    a_0 <- prior_param$a_0
+    b_0 <- prior_param$b_0
+    mu_0 <- prior_param$mu_0
+    V_0 <- prior_param$V_0
   }
 
   # Compute posteriors
@@ -264,18 +270,25 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
 #'
 #' @examples
 #' 1+1
-predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param){
+predict_bayesian_model <- function(focal_vs_comp, posterior_param){
   if(FALSE){
     focal_vs_comp <- focal_vs_comp_bw
-    # focal_vs_comp <- test
     model_formula <- model_formula_bw
     posterior_param <- bw_fit_model
   }
 
+  # Create linear regression model formula object
+  model_formula <- focal_vs_comp$focal_sp %>%
+    unique() %>%
+    sort() %>%
+    paste(., " * sp", sep = "", collapse = " + ") %>%
+    paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
+    as.formula()
+
   # Create matrices & vectors for Bayesian regression
-  X <- focal_vs_comp %>%
-    create_bayesian_model_data() %>%
-    model.matrix(model_formula, data = .)
+  focal_trees <- focal_vs_comp %>%
+    create_bayesian_model_data()
+  X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
     pull(growth) %>%
     matrix(ncol = 1)
@@ -352,8 +365,9 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE){
 #' Run the bayesian model with spatial cross validation
 #'
 #' @inheritParams fit_bayesian_model
-#' @param max_dist distance of competitive neighborhood
-#' @param cv_grid length of the cross validation grid
+#' @inheritParams create_focal_vs_comp
+#' @param all_folds Boolean as to whether to run on all folds
+#' @description Run cross-validation
 #'
 #' @import dplyr
 #' @import sf
@@ -363,47 +377,26 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE){
 #'
 #' @examples
 #' 1+1
-run_cv <- function(focal_vs_comp, model_formula, max_dist, cv_grid,
-                   run_shuffle = FALSE, prior_hyperparameters = NULL,
-                   all_folds = TRUE){
-
+run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE, all_folds = TRUE){
   if(FALSE){
-    # # Code to test SCBI
-    # focal_vs_comp <- focal_vs_comp_scbi
-    # model_specs <- scbi_specs
-    # cv_grid <- scbi_cv_grid
-    #
-    # run_shuffle = FALSE
-    # prior_hyperparameters = NULL
-    # all_folds = FALSE
-
-
     # Code to test BigWoods
     focal_vs_comp <- focal_vs_comp_bw
-    model_formula <- model_formula_bw
+    max_dist
     cv_grid <- bw_cv_grid
-
     run_shuffle <- FALSE
-    prior_hyperparameters <- NULL
+    prior_param <- NULL
     all_folds <- TRUE
   }
 
-
+  # TODO: remove this later
   # if subset is true just two folds
   if (all_folds) {
-    folds <- focal_vs_comp %>%
-      pull(foldID) %>%
-      unique() %>%
-      sort()
+    folds <- focal_vs_comp %>% pull(foldID) %>% unique() %>% sort()
   } else {
     folds <- c(23, 2)
   }
 
-
-
-
-
-  # Store resulting y-hat for each focal tree here
+  # For each fold, store resulting y-hat for each focal tree in list
   focal_trees <- vector(mode = "list", length = length(folds))
 
   for (i in 1:length(folds)){
@@ -413,61 +406,55 @@ run_cv <- function(focal_vs_comp, model_formula, max_dist, cv_grid,
     test <- focal_vs_comp %>%
       filter(foldID == folds[i])
 
+    # If no trees in test skip, skip to next iteration in for loop
     if(nrow(test) == 0)
       next
 
-
-    if(FALSE){
-      # Visualize original folds
-      cv_grid$plots
-
-      # View training set (slow)
-      train_full %>% sample_frac(0.01) %>% st_as_sf() %>% ggplot() + geom_sf()
-    }
-
-    # now buffer off the test fold by max_dist
-    test_fold <- cv_grid$blocks %>%
-      subset(folds == i)
-
-    test_fold_boundary <- test_fold %>%
+    # Define bounday of test fold
+    test_fold_boundary <- cv_grid$blocks %>%
+      subset(folds == i) %>%
       st_bbox() %>%
       st_as_sfc()
 
-    # Buffer extends out from test set boundary
+    # Define a buffer that extends out from test set boundary
     test_fold_boundary_buffer <- test_fold_boundary %>%
-      st_buffer(dist = max_dist)
+      compute_buffer_region(direction = "out", size = max_dist)
 
+
+    # Method 1:
     train_fold_boolean <- train_full %>%
       st_as_sf() %>%
       st_intersects(test_fold_boundary_buffer, sparse = FALSE)
-
     train <- train_full %>%
       filter(!train_fold_boolean)
 
-    if(FALSE){
-      # Visualize original folds
-      cv_grid$plots
+    # Method 2:
+    train <- train_full %>%
+      st_as_sf() %>%
+      add_buffer_variable(direction = "out", size = max_dist, region = test_fold_boundary) %>%
+      filter(buffer)
 
+    if(FALSE){
       # Visualize test set trees + boundary
       ggplot() +
-        geom_sf(data = test_fold_boundary_buffer, col = "red") +
-        geom_sf(data = test_fold_boundary, col = "black") +
-        geom_sf(data = train %>% sample_frac(0.01) %>% st_as_sf(), col = "blue", alpha = 0.1) +
-        geom_sf(data = test %>% st_as_sf(), col = "red")
+        geom_sf(data = train %>% sample_frac(0.01) %>% st_as_sf(), col = "black", alpha = 0.1) +
+        geom_sf(data = test_fold_boundary, col = "orange", fill = "transparent") +
+        geom_sf(data = test_fold_boundary_buffer, col = "black", fill = "transparent") +
+        geom_sf(data = test %>% st_as_sf(), col = "orange") +
+        geom_sf(data = bw_study_region, fill = "transparent")
     }
 
-    # now pretty easy to just call the two functions!
-    fold_fit <- train %>%
-      fit_bayesian_model(model_formula, run_shuffle = FALSE, prior_hyperparameters = NULL)
-
+    # Fit model on training data, predict on test
+    posterior_param_fold <- train %>%
+      fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle)
 
     focal_trees[[i]] <- test %>%
-      predict_bayesian_model(model_formula, posterior_param = fold_fit)
+      predict_bayesian_model(posterior_param = posterior_param_fold)
   }
 
+  # Convert list to data frame and return
   focal_trees <- focal_trees %>%
     bind_rows()
-
   return(focal_trees)
 }
 

@@ -7,12 +7,10 @@
 Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 }
 \usage{
-predict_bayesian_model(focal_vs_comp, model_formula, posterior_param)
+predict_bayesian_model(focal_vs_comp, posterior_param)
 }
 \arguments{
 \item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
-
-\item{model_formula}{model formula of linear regression}
 
 \item{posterior_param}{Output of \code{\link{fit_bayesian_model}}: A list of
 \verb{\{a_star, b_star, mu_star, V_star\}} posterior hyperparameters}
