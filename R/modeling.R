@@ -400,35 +400,24 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
   focal_trees <- vector(mode = "list", length = length(folds))
 
   for (i in 1:length(folds)){
-    # first pull out the test set and the full train set
-    train_full <- focal_vs_comp %>%
-      filter(foldID != folds[i])
+    # Define test set and "full" training set (we will remove buffer region below)
     test <- focal_vs_comp %>%
       filter(foldID == folds[i])
+    train_full <- focal_vs_comp %>%
+      filter(foldID != folds[i])
 
     # If no trees in test skip, skip to next iteration in for loop
-    if(nrow(test) == 0)
+    if(nrow(test) == 0){
       next
+    }
 
-    # Define bounday of test fold
+    # Define sf object of boundary of test fold
     test_fold_boundary <- cv_grid$blocks %>%
       subset(folds == i) %>%
       st_bbox() %>%
       st_as_sfc()
 
-    # Define a buffer that extends out from test set boundary
-    test_fold_boundary_buffer <- test_fold_boundary %>%
-      compute_buffer_region(direction = "out", size = max_dist)
-
-
-    # Method 1:
-    train_fold_boolean <- train_full %>%
-      st_as_sf() %>%
-      st_intersects(test_fold_boundary_buffer, sparse = FALSE)
-    train <- train_full %>%
-      filter(!train_fold_boolean)
-
-    # Method 2:
+    # Remove trees in training set that are part of test set and buffer region to test set
     train <- train_full %>%
       st_as_sf() %>%
       add_buffer_variable(direction = "out", size = max_dist, region = test_fold_boundary) %>%
@@ -439,17 +428,13 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
       ggplot() +
         geom_sf(data = train %>% sample_frac(0.01) %>% st_as_sf(), col = "black", alpha = 0.1) +
         geom_sf(data = test_fold_boundary, col = "orange", fill = "transparent") +
-        geom_sf(data = test_fold_boundary_buffer, col = "black", fill = "transparent") +
-        geom_sf(data = test %>% st_as_sf(), col = "orange") +
-        geom_sf(data = bw_study_region, fill = "transparent")
+        geom_sf(data = test %>% st_as_sf(), col = "orange")
     }
 
-    # Fit model on training data, predict on test
-    posterior_param_fold <- train %>%
-      fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle)
-
-    focal_trees[[i]] <- test %>%
-      predict_bayesian_model(posterior_param = posterior_param_fold)
+    # Fit model on training data and predict on test
+    focal_trees[[i]] <- train %>%
+      fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle) %>%
+      predict_bayesian_model(posterior_param = .)
   }
 
   # Convert list to data frame and return
