@@ -30,9 +30,11 @@ following criteria
 \enumerate{
 \item Were alive at both censuses \cr
 \item Were not part of the study region's buffer as computed by \code{\link{add_buffer_variable}} \cr
-\item Were not a resprout at the second census. Such trees should be coded as \code{"R"} in the \code{codes2} variable (OK if a resprout at first census)
+\item Were not a resprout at the second census. Such trees should be coded as
+\code{"R"} in the \code{codes2} variable (OK if a resprout at first census)
 }
-For each focal tree, "competitor trees" are all trees that (1) were alive at the first census and (2) within \code{max_dist} distance of the focal tree.
+For each focal tree, "competitor trees" are all trees that (1) were alive at
+the first census and (2) within \code{max_dist} distance of the focal tree.
 }
 }
 \note{

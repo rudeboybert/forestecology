@@ -121,29 +121,31 @@ model_formula_bw <- focal_vs_comp_bw$focal_sp %>%
   paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
   as.formula()
 
-
 # Fit model (compute posterior parameters)
 posterior_param_bw <- focal_vs_comp_bw %>%
-  fit_bayesian_model(model_formula = model_formula_bw, run_shuffle = FALSE, prior_hyperparameters = NULL)
+  fit_bayesian_model(model_formula = model_formula_bw, run_shuffle = FALSE)
 
 # Plot results
-species_list_bw <- focal_vs_comp_bw$focal_sp %>% levels()
+species_list_bw <- focal_vs_comp_bw$focal_sp %>% unique()
 species_list_bw
 
-posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)
-
-posterior_plots[["beta_0"]]
-posterior_plots[["beta_dbh"]]
-posterior_plots[["lambdas"]]
-
-# Make predictions, compute and save RMSE, and reset
+# Make predictions and compute RMSE
 predictions <- focal_vs_comp_bw %>%
-  predict_bayesian_model(model_formula = model_formula_bw, posterior_param = bw_fit_model) %>%
+  predict_bayesian_model(model_formula = model_formula_bw, posterior_param = posterior_param_bw) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 
 predictions %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
+
+
+
+# Plot posterior parameters ------------------------------------------------------------------------
+posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)
+posterior_plots[["beta_0"]]
+posterior_plots[["beta_dbh"]]
+posterior_plots[["lambdas"]]
+
 
 
 # Cross-validation
@@ -156,6 +158,11 @@ cv_bw %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 toc()
+
+
+
+
+
 
 
 

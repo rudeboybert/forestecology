@@ -17,9 +17,11 @@
 #' \tabular{l}{
 #'   1. Were alive at both censuses \cr
 #'   2. Were not part of the study region's buffer as computed by \code{\link{add_buffer_variable}} \cr
-#'   3. Were not a resprout at the second census. Such trees should be coded as `"R"` in the `codes2` variable (OK if a resprout at first census)
+#'   3. Were not a resprout at the second census. Such trees should be coded as
+#'   `"R"` in the `codes2` variable (OK if a resprout at first census)
 #' }
-#' For each focal tree, "competitor trees" are all trees that (1) were alive at the first census and (2) within \code{max_dist} distance of the focal tree.
+#' For each focal tree, "competitor trees" are all trees that (1) were alive at
+#' the first census and (2) within \code{max_dist} distance of the focal tree.
 #' @note In order to speed computation, in particular of distances between all
 #'   focal/competitor tree pairs, we use the cross-validation \code{blockCV}
 #'   object to divide the study region into smaller subsets.
@@ -159,7 +161,6 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 }
 
 
-
 #' Fit Bayesian competition model
 #'
 #' @param focal_vs_comp data frame from \code{\link{create_focal_vs_comp}}
@@ -195,62 +196,20 @@ fit_bayesian_model <- function(focal_vs_comp, model_formula, run_shuffle = FALSE
     prior_hyperparameters <- NULL
   }
 
-  # Prepare data for regression Generate data frame of all focal trees
-  focal_trees <- focal_vs_comp %>%
-    group_by(focal_ID, comp_sp) %>%
-    # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
-    # within range.
-    summarise(
-      # basal_area_total = sum(comp_basal_area),
-      comp_basal_area = sum(comp_basal_area),
-      # n_comp = n()
-    )
-
-  # Shuffle group label only if flag is set
-  # TODO: Can we do this within a pipe, therefore we can connect above chain
-  # with chain below, that way we can re-use this code for predict_bayesian_model
-  # below that doesn't use run_shuffle?
-  if(run_shuffle){
-    focal_trees <- focal_trees %>%
-      group_by(focal_ID) %>%
-      mutate(comp_sp = sample(comp_sp))
-  }
-
-  # Continue processing focal_trees
-  focal_trees <- focal_trees %>%
-    # sum biomass and n_comp for competitors of same species. we need to do this
-    # for the cases when we do permutation shuffle.
-    group_by(focal_ID, comp_sp) %>%
-    summarise_all(list(sum)) %>%
-    # ungroup() %>%
-    # compute biomass for each tree type
-    # Note we have to specifically use spread() and not pivot_wider()
-    # https://github.com/tidyverse/tidyr/issues/770 to use drop functionality
-    spread(key = comp_sp, value = comp_basal_area, fill = 0, drop = FALSE) %>%
-    group_by(focal_ID) %>%
-    summarise_all(list(sum)) %>%
-    ungroup()
-
-  # Matrix and vector objects for analytic computation of all posteriors
-  focal_trees <- focal_vs_comp %>%
-    select(focal_ID, focal_sp, dbh, growth) %>%
-    distinct() %>%
-    left_join(focal_trees, by = "focal_ID") %>%
-    rename(sp = focal_sp)
-
-  X <- model.matrix(model_formula, data = focal_trees)
+  # Create matrices & vectors for Bayesian regression
+  X <- focal_vs_comp %>%
+    create_bayesian_model_data(run_shuffle) %>%
+    model.matrix(model_formula, data = .)
   y <- focal_trees %>%
     pull(growth) %>%
     matrix(ncol = 1)
   n <- nrow(X)
-
 
   # Set priors. If no prior_hyperparameters specified:
   if(is.null(prior_hyperparameters)){
     # Prior parameters for sigma2:
     a_0 <- 250
     b_0 <- 25
-
     # Prior parameters for betas and lambdas:
     mu_0 <- rep(0, ncol(X)) %>%
       matrix(ncol = 1)
@@ -313,20 +272,56 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
     posterior_param <- bw_fit_model
   }
 
-  # Prepare data for regression Generate data frame of all focal trees
-  # TODO: This code is redundant to code in fit_bayesian_model.
+  # Create matrices & vectors for Bayesian regression
+  X <- focal_vs_comp %>%
+    create_bayesian_model_data() %>%
+    model.matrix(model_formula, data = .)
+  y <- focal_trees %>%
+    pull(growth) %>%
+    matrix(ncol = 1)
+  n <- nrow(X)
+
+  # Make posterior predictions
+  mu_star <- posterior_param$mu_star
+  focal_trees <- focal_trees %>%
+    mutate(growth_hat = as.vector(X %*% mu_star)) %>%
+    select(focal_ID, growth_hat)
+
+  # TODO: why do we return focal_vs_comp?? Shouldn't we return focal_trees (one
+  # row per focal tree not per interaction)
+  return(focal_trees)
+}
+
+
+
+#' Create input data frame for Bayesian regression
+#'
+#' @inheritParams fit_bayesian_model
+#'
+#' @return Data frame that can be used for lm()
+#' @description This function is used both by \code{\link{fit_bayesian_model}} and \code{\link{predict_bayesian_model}}
+#' @export
+#' @examples
+#' 1+1
+create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE){
+  # Prepare data for regression
   focal_trees <- focal_vs_comp %>%
     group_by(focal_ID, comp_sp) %>%
-    # Sum basal area & count of all neighbors; set to 0 for cases of no neighbors
+    # Sum basal area of all neighbors; set to 0 for cases of no neighbors
     # within range.
-    summarise(
-      # basal_area_total = sum(comp_basal_area),
-      comp_basal_area = sum(comp_basal_area),
-      # n_comp = n()
-    )
+    summarise(comp_basal_area = sum(comp_basal_area))
+
+  # Shuffle group label only if flag is set
+  # TODO: Can we do this within a pipe, therefore we can connect above chain
+  # with chain below, that way we can re-use this code for predict_bayesian_model
+  # below that doesn't use run_shuffle?
+  if(run_shuffle){
+    focal_trees <- focal_trees %>%
+      group_by(focal_ID) %>%
+      mutate(comp_sp = sample(comp_sp))
+  }
 
   # Continue processing focal_trees
-  # TODO: This code is redundant to code in fit_bayesian_model.
   focal_trees <- focal_trees %>%
     # sum biomass and n_comp for competitors of same species. we need to do this
     # for the cases when we do permutation shuffle.
@@ -342,30 +337,15 @@ predict_bayesian_model <- function(focal_vs_comp, model_formula, posterior_param
     ungroup()
 
   # Matrix and vector objects for analytic computation of all posteriors
-  # TODO: This code is redundant to code in fit_bayesian_model.
   focal_trees <- focal_vs_comp %>%
     select(focal_ID, focal_sp, dbh, growth) %>%
     distinct() %>%
     left_join(focal_trees, by = "focal_ID") %>%
     rename(sp = focal_sp)
 
-  X <- model.matrix(model_formula, data = focal_trees)
-  y <- focal_trees %>%
-    pull(growth) %>%
-    matrix(ncol = 1)
-  n <- nrow(X)
-
-
-  # Make posterior predictions
-  mu_star <- posterior_param$mu_star
-  focal_trees <- focal_trees %>%
-    mutate(growth_hat = as.vector(X %*% mu_star)) %>%
-    select(focal_ID, growth_hat)
-
-  # TODO: why do we return focal_vs_comp?? Shouldn't we return focal_trees (one
-  # row per focal tree not per interaction)
   return(focal_trees)
 }
+
 
 
 
