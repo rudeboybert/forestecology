@@ -2,21 +2,29 @@
 % Please edit documentation in R/modeling.R
 \name{predict_bayesian_model}
 \alias{predict_bayesian_model}
-\title{Make predictions based on bayesian model}
+\title{Make predictions based on fitted Bayesian model}
+\source{
+Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+}
 \usage{
-predict_bayesian_model(focal_vs_comp, model_formula, posterior_param)
+predict_bayesian_model(focal_vs_comp, posterior_param)
 }
 \arguments{
-\item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
+\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
 
-\item{posterior_param}{Output of \code{\link{fit_bayesian_model}}}
+\item{posterior_param}{Output of \code{\link{fit_bayesian_model}}: A list of
+\verb{\{a_star, b_star, mu_star, V_star\}} posterior hyperparameters}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 }
 \description{
-Make predictions based on bayesian model
+Applies fitted model from \code{\link{fit_bayesian_model}} and
+returns posterior predicted values.
 }
 \examples{
 1+1
+}
+\seealso{
+\code{\link{fit_bayesian_model}}
 }
