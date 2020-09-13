@@ -6,30 +6,30 @@
 \usage{
 run_cv(
   focal_vs_comp,
-  model_formula,
   max_dist,
   cv_grid,
+  prior_param = NULL,
   run_shuffle = FALSE,
-  prior_hyperparameters = NULL,
   all_folds = TRUE
 )
 }
 \arguments{
-\item{focal_vs_comp}{from \code{\link{create_focal_vs_comp}}}
+\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
 
-\item{max_dist}{distance of competitive neighborhood}
+\item{max_dist}{size of buffer in same units as geometry in \code{region}}
 
-\item{cv_grid}{length of the cross validation grid}
+\item{prior_param}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
 
-\item{run_shuffle}{boolean as to whether to run permutation test shuffle}
+\item{run_shuffle}{boolean as to whether to run permutation test shuffle of
+competitor tree species within a particular focal_ID}
 
-\item{prior_hyperparameters}{list of a0, b0, mu_0 and V_0}
+\item{all_folds}{Boolean as to whether to run on all folds}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 }
 \description{
-Run the bayesian model with spatial cross validation
+Run cross-validation
 }
 \examples{
 1+1
