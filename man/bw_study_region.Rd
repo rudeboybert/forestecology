@@ -4,7 +4,9 @@
 \name{bw_study_region}
 \alias{bw_study_region}
 \title{Bigwoods forest study region boundary}
-\format{A \code{sf} spatial features polygon}
+\format{
+A \code{sf} spatial features polygon
+}
 \usage{
 bw_study_region
 }
