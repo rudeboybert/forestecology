@@ -302,6 +302,9 @@ scbi_growth_df <- scbi_growth_df %>%
 # Visualize grid
 scbi_cv_grid$plots +
   geom_sf(data = scbi_growth_df, aes(col=factor(foldID)), size = 0.1)
+
+scbi_cv_grid_sf <- scbi_cv_grid$blocks %>%
+  st_as_sf()
 ```
 
 
@@ -338,7 +341,7 @@ glimpse(focal_vs_comp_bw)
 # SCBI
 tic()
 focal_vs_comp_scbi <- scbi_growth_df %>% 
-  create_focal_vs_comp(max_dist, model_specs = scbi_specs, cv_grid = scbi_cv_grid, id = "stemID")
+  create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid_sf, id = "stemID")
 toc()
 ```
 
@@ -399,8 +402,8 @@ predictions_shuffle %>%
 ```{r, eval = run_scbi}
 # SCBI
 tic()
-scbi_fit_model <- focal_vs_comp_scbi %>% 
-  fit_bayesian_model(model_specs = scbi_specs)
+posterior_param_scbi <- focal_vs_comp_scbi %>% 
+  fit_bayesian_model(prior_param = NULL, run_shuffle = TRUE)
 toc()
 ```
 
