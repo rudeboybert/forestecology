@@ -333,12 +333,6 @@ glimpse(focal_vs_comp_bw)
 
 **SCBI**:
 
-```{r, eval = run_scbi}
-# SCBI
-scbi_specs <- scbi_growth_df %>% 
-  get_model_specs(model_number = 3, species_notion = 'sp')
-scbi_specs
-```
 
 ```{r, eval = run_scbi}
 # SCBI
