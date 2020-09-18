@@ -410,11 +410,8 @@ toc()
 ```{r, eval = run_scbi}
 # SCBI
 scbi_growth_df <- focal_vs_comp_scbi %>% 
-  predict_bayesian_model(model_specs = scbi_specs, posterior_param = scbi_fit_model) %>% 
+  predict_bayesian_model(posterior_param = posterior_param_scbi) %>% 
   right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
-
-scbi_growth_df <- scbi_growth_df %>% 
-  st_as_sf()
 
 # Observed vs predicted growth  
 ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
@@ -429,6 +426,7 @@ ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
 
 reslab <- expression(paste('Residual (cm ',y^{-1},')'))
 scbi_growth_df %>% 
+  st_as_sf() %>%
   # Need to investigate missingness
   filter(!is.na(growth_hat)) %>% 
   mutate(
