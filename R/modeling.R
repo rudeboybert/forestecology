@@ -189,14 +189,13 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE){
   if(FALSE){
     focal_vs_comp <- focal_vs_comp_bw
-    model_formula <- model_formula_bw
     run_shuffle <- FALSE
     prior_param <- NULL
   }
 
   # Create linear regression model formula object
   model_formula <- focal_vs_comp$focal_sp %>%
-    unique() %>%
+    levels() %>%
     sort() %>%
     paste(., "*sp", sep = "", collapse = " + ") %>%
     paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
@@ -204,7 +203,7 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
 
   # Create matrices & vectors for Bayesian regression
   focal_trees <- focal_vs_comp %>%
-    create_bayesian_model_data()
+    create_bayesian_model_data(run_shuffle = run_shuffle)
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
     pull(growth) %>%
@@ -273,13 +272,12 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
 predict_bayesian_model <- function(focal_vs_comp, posterior_param){
   if(FALSE){
     focal_vs_comp <- focal_vs_comp_bw
-    model_formula <- model_formula_bw
     posterior_param <- bw_fit_model
   }
 
   # Create linear regression model formula object
   model_formula <- focal_vs_comp$focal_sp %>%
-    unique() %>%
+    levels() %>%
     sort() %>%
     paste(., " * sp", sep = "", collapse = " + ") %>%
     paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
@@ -381,7 +379,6 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
   if(FALSE){
     # Code to test BigWoods
     focal_vs_comp <- focal_vs_comp_bw
-    max_dist
     cv_grid <- bw_cv_grid
     run_shuffle <- FALSE
     prior_param <- NULL
@@ -421,7 +418,8 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
     train <- train_full %>%
       st_as_sf() %>%
       add_buffer_variable(direction = "out", size = max_dist, region = test_fold_boundary) %>%
-      filter(buffer)
+      filter(buffer) %>%
+      as_tibble()
 
     if(FALSE){
       # Visualize test set trees + boundary
@@ -432,9 +430,11 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
     }
 
     # Fit model on training data and predict on test
-    focal_trees[[i]] <- train %>%
-      fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle) %>%
-      predict_bayesian_model(posterior_param = .)
+    posterior_param_fold <- train %>%
+      fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle)
+
+    focal_trees[[i]] <- test %>%
+      predict_bayesian_model(posterior_param = posterior_param_fold)
   }
 
   # Convert list to data frame and return

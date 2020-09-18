@@ -42,6 +42,10 @@ bw_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(census_2008, census_2014, id) %>%
   mutate(sp = to_any_case(sp)) %>%
+  #
+  # Do we need this? sp has to be a factor?
+  #
+  mutate(sp = as.factor(sp)) %>%
   # Convert data frame to sf object
   st_as_sf(coords = c("gx", "gy")) %>%
   # drop stemID
@@ -128,18 +132,19 @@ predictions %>%
   pull(.estimate)
 
 
-# b) Fit model (compute posterior parameters) with permutation shuffling
-posterior_param_bw <- focal_vs_comp_bw %>%
-  fit_bayesian_model(prior_param = NULL, run_shuffle = TRUE)
+if(FALSE){
+  # b) Fit model (compute posterior parameters) with permutation shuffling
+  posterior_param_bw <- focal_vs_comp_bw %>%
+    fit_bayesian_model(prior_param = NULL, run_shuffle = TRUE)
 
-# b) Make predictions and compute RMSE
-predictions <- focal_vs_comp_bw %>%
-  predict_bayesian_model(posterior_param = posterior_param_bw) %>%
-  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
-predictions %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
-  pull(.estimate)
-
+  # b) Make predictions and compute RMSE
+  predictions <- focal_vs_comp_bw %>%
+    predict_bayesian_model(posterior_param = posterior_param_bw) %>%
+    right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+  predictions %>%
+    rmse(truth = growth, estimate = growth_hat) %>%
+    pull(.estimate)
+}
 
 
 
@@ -147,7 +152,7 @@ predictions %>%
 # Cross-validation -------------------------------------------------------------
 tic()
 cv_bw <- focal_vs_comp_bw %>%
-  run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+  run_cv(max_dist = max_dist, cv_grid = bw_cv_grid, run_shuffle = TRUE) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 toc()
 
