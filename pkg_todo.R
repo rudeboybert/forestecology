@@ -41,11 +41,16 @@ id <- "treeID"
 bw_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(census_2008, census_2014, id) %>%
-  mutate(sp = to_any_case(sp)) %>%
-  #
-  # Do we need this? sp has to be a factor?
-  #
-  mutate(sp = as.factor(sp)) %>%
+  mutate(
+    sp = to_any_case(sp),
+    #
+    # sp has to be a factor so that no errors occur in cross-validation
+    #
+    sp = as.factor(sp),
+    species = sp,
+    family = as.factor(family),
+    trait_group = as.factor(trait_group)
+  ) %>%
   # Convert data frame to sf object
   st_as_sf(coords = c("gx", "gy")) %>%
   # drop stemID
@@ -152,7 +157,7 @@ if(FALSE){
 # Cross-validation -------------------------------------------------------------
 tic()
 cv_bw <- focal_vs_comp_bw %>%
-  run_cv(max_dist = max_dist, cv_grid = bw_cv_grid, run_shuffle = TRUE) %>%
+  run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 toc()
 
@@ -190,18 +195,8 @@ posterior_plots[["lambdas"]]
 
 
 
-
-
-
-
-
-
 # Number of permutation shuffles:
 num_shuffle <- 4
-
-# Compute observed RMSE for all models, but only do permutation shuffling for
-# models 3,6,9
-model_numbers <- c(3)
 species_notion_vector <- c("trait_group", "family", "species")
 
 # Save results here
@@ -210,57 +205,52 @@ observed_RMSE <- rep(0, length(species_notion_vector))
 observed_RMSE_CV <- rep(0, length(species_notion_vector))
 shuffle_RMSE <- vector("list", length(species_notion_vector))
 shuffle_RMSE_CV <- vector("list", length(species_notion_vector))
-filename <- str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles.RData")
+filename <- str_c("results/", format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles.RData")
 
 for(i in 1:length(species_notion_vector)){
   # Start clock
   tic()
 
-  # Modeling and species stuff
-  species_notion <- species_notion_vector[i]
-  bw_specs <- bw_growth_df %>%
-    get_model_specs(model_number = 3, species_notion = "sp")
-
   # Focal vs comp main dataframe for analysis
-  focal_vs_comp_bw <- bw_growth_df_orig %>%
-    create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
+  focal_vs_comp_bw <- bw_growth_df %>%
+    mutate(sp = .data[[species_notion_vector[i]]]) %>%
+    create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
 
 
   # 1. Compute observed test statistic: RMSE with no cross-validation ----
   # Fit model (compute posterior parameters)
-  bw_fit_model <- focal_vs_comp_bw %>%
-    fit_bayesian_model(model_specs = bw_specs)
+  posterior_param_bw <- focal_vs_comp_bw %>%
+    fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 
-  # Make predictions, compute and save RMSE, and reset
+  # Make predictions, compute and save RMSE
   observed_RMSE[i] <- focal_vs_comp_bw %>%
-    predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>%
-    right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
+    predict_bayesian_model(posterior_param = posterior_param_bw) %>%
+    right_join(bw_growth_df, by = c("focal_ID" = "treeID")) %>%
     rmse(truth = growth, estimate = growth_hat) %>%
     pull(.estimate)
 
 
   # 2. Compute observed test statistic: RMSE with cross-validation ----
   observed_RMSE_CV[i] <- focal_vs_comp_bw %>%
-    run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid) %>%
-    right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
+    run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+    right_join(bw_growth_df, by = c("focal_ID" = "treeID")) %>%
     rmse(truth = growth, estimate = growth_hat) %>%
     pull(.estimate)
 
 
   # 3. Permutation distribution: RMSE with no cross-validation ----
-  # Only do permutation shuffling for models 3, 6, 9
   # Compute num_shuffle permutation test statistics
   shuffle_RMSE[[i]] <- numeric(length = num_shuffle)
 
   for(j in 1:num_shuffle){
     # Fit model (compute posterior parameters) with shuffling
-    bw_fit_model_shuffle <- focal_vs_comp_bw %>%
-      fit_bayesian_model(model_specs = bw_specs, run_shuffle = TRUE)
+    posterior_param_bw <- focal_vs_comp_bw %>%
+      fit_bayesian_model(prior_param = NULL, run_shuffle = TRUE)
 
     # Make predictions, compute and save RMSE, and reset
-    shuffle_RMSE[[i]][j] <- focal_vs_comp_bw %>%
-      predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model_shuffle) %>%
-      right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
+    shuffle_RMSE[[i]][j] <-  focal_vs_comp_bw %>%
+      predict_bayesian_model(posterior_param = posterior_param_bw) %>%
+      right_join(bw_growth_df, by = c("focal_ID" = "treeID")) %>%
       rmse(truth = growth, estimate = growth_hat) %>%
       pull(.estimate)
   }
@@ -274,8 +264,8 @@ for(i in 1:length(species_notion_vector)){
   for(j in 1:num_shuffle){
     # Compute and save RMSE, and reset
     shuffle_RMSE_CV[[i]][j] <- focal_vs_comp_bw %>%
-      run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid, run_shuffle = TRUE) %>%
-      right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
+      run_cv(max_dist = max_dist, cv_grid = bw_cv_grid, run_shuffle = TRUE) %>%
+      right_join(bw_growth_df, by = c("focal_ID" = "treeID")) %>%
       rmse(truth = growth, estimate = growth_hat) %>%
       pull(.estimate)
 
@@ -308,7 +298,7 @@ for(i in 1:length(species_notion_vector)){
 
 
 
-load("2020-06-25_model_comp_tbl_49_shuffles.RData")
+load("results/2020-06-25_model_comp_tbl_49_shuffles.RData")
 model_comp <- bind_rows(
   model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
   model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
