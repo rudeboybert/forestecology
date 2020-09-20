@@ -80,8 +80,12 @@ The data for the Big Woods plor are included in the package. For SCBI, we load a
 ```{r, eval = run_bw}
 # Big Woods
 # Read in census data from 2008 & 2014
-data(bw_census_2008, bw_census_2014 )
+data(bw_census_2008, bw_census_2014, bw_species)
 
+# Append additional species data
+bw_census_2008 <- bw_census_2008 %>%
+  left_join(bw_species, by = "sp") %>%
+  select(-c(genus, species, latin))
 
 ```
 
@@ -130,7 +134,12 @@ bw_census_2014 <- bw_census_2014 %>%
 bw_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(bw_census_2008, bw_census_2014, id) %>%
-  mutate(sp = to_any_case(sp)) %>%
+  mutate(
+    sp = to_any_case(sp),
+    sp = as.factor(sp),
+    species = sp,
+    family = as.factor(family),
+    trait_group = as.factor(trait_group)) %>%
   # drop stemID
   select(-stemID)
 
