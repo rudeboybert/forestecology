@@ -187,6 +187,10 @@ posterior_plots[["lambdas"]]
 
 
 # Recreate Fig2 from Allen (2020): Full cross-validation simualation -----------
+
+# Number of permutation shuffles:
+num_shuffle <- 9
+
 # For all three possible notions of species
 species_notion_vector <- c("trait_group", "family", "species")
 
@@ -197,9 +201,6 @@ observed_RMSE_CV <- rep(0, length(species_notion_vector))
 shuffle_RMSE <- vector("list", length(species_notion_vector))
 shuffle_RMSE_CV <- vector("list", length(species_notion_vector))
 filename <- str_c("results/", format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles")
-
-# Number of permutation shuffles:
-num_shuffle <- 4
 
 # Run all simulations
 for(i in 1:length(species_notion_vector)){
@@ -324,6 +325,3 @@ cv_plot
 filename %>%
   str_sub(start = 1, end = -7) %>% str_c(".png") %>%
   ggsave(plot = cv_plot)
-
-
-
