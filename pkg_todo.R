@@ -323,5 +323,5 @@ cv_plot <- ggplot() +
 cv_plot
 
 filename %>%
-  str_sub(start = 1, end = -7) %>% str_c(".png") %>%
+  str_c(".png") %>%
   ggsave(plot = cv_plot)
