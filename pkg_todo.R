@@ -154,6 +154,7 @@ if(FALSE){
 
 
 
+
 # Cross-validation -------------------------------------------------------------
 tic()
 cv_bw <- focal_vs_comp_bw %>%
@@ -185,18 +186,12 @@ posterior_plots[["lambdas"]]
 
 
 
-
-
-
-
-
-
-
-
-
+# Recreate Fig2 from Allen (2020): Full cross-validation simualation -----------
 
 # Number of permutation shuffles:
-num_shuffle <- 4
+num_shuffle <- 9
+
+# For all three possible notions of species
 species_notion_vector <- c("trait_group", "family", "species")
 
 # Save results here
@@ -205,9 +200,11 @@ observed_RMSE <- rep(0, length(species_notion_vector))
 observed_RMSE_CV <- rep(0, length(species_notion_vector))
 shuffle_RMSE <- vector("list", length(species_notion_vector))
 shuffle_RMSE_CV <- vector("list", length(species_notion_vector))
-filename <- str_c("results/", format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles.RData")
+filename <- str_c("results/", format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles")
 
+# Run all simulations
 for(i in 1:length(species_notion_vector)){
+  # 0. Setup simulation for this species type ----
   # Start clock
   tic()
 
@@ -274,12 +271,10 @@ for(i in 1:length(species_notion_vector)){
   }
 
 
-  # 5. Stop clock
+  # 5. Save results ----
   clock <- toc(quiet = TRUE)
   run_time[i] <- clock$toc - clock$tic
 
-
-  # 6. Save
   model_comp_tbl <- tibble(
     species_notion = species_notion_vector,
     run_time = run_time,
@@ -288,17 +283,13 @@ for(i in 1:length(species_notion_vector)){
     shuffle_RMSE = shuffle_RMSE,
     shuffle_RMSE_CV = shuffle_RMSE_CV,
   )
-  save(model_comp_tbl, file = filename)
+  save(model_comp_tbl, file = filename %>% str_c(".RData"))
 }
 
 
+# Load results and plot
+str_c(filename, ".RData") %>% load()
 
-
-
-
-
-
-load("results/2020-06-25_model_comp_tbl_49_shuffles.RData")
 model_comp <- bind_rows(
   model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
   model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
@@ -310,8 +301,7 @@ model_comp <- bind_rows(
       species_notion == "family" ~ "2. Phylogenetic family (20): lambda = 20 x 20",
       species_notion == "species" ~ "3. Actual species (36): lambda = 36 x 36"
     )
-  ) %>%
-  filter(species_notion != "3. Actual species (36): lambda = 36 x 36")
+  )
 
 model_comp_observed <- model_comp %>%
   filter(type == "observed") %>%
@@ -320,12 +310,18 @@ model_comp_shuffle <- model_comp %>%
   filter(type == "shuffle") %>%
   unnest(cols = c(RMSE))
 
-xlab <- expression(paste('RMSE (cm ',y^{-1},')'))
-
-ggplot() +
+cv_plot <- ggplot() +
   geom_vline(data = model_comp_observed, aes(xintercept = RMSE, col = CV), linetype = "dashed", show.legend = F) +
   geom_histogram(data = model_comp_shuffle, aes(x = RMSE, fill = CV), bins = 200) +
-  labs(fill = "Cross-validated?", x = xlab) +
+  labs(
+    fill = "Cross-validated?",
+    x = expression(paste("RMSE (cm ", y^{-1}, ")"))
+  ) +
   facet_wrap(~species_notion, ncol = 1) +
   scale_color_viridis(discrete = TRUE, option = "D")+
   scale_fill_viridis(discrete = TRUE)
+cv_plot
+
+filename %>%
+  str_c(".png") %>%
+  ggsave(plot = cv_plot)
