@@ -65,8 +65,8 @@ library(yardstick)
 library(viridis)
 library(lubridate)
 
-run_scbi <- TRUE
-run_bw <- FALSE
+run_scbi <- FALSE
+run_bw <- TRUE
 ```
 
 
@@ -457,400 +457,36 @@ scbi_growth_df %>%
 
 ### Run spatial cross-validation
 
-**SCBI**
 
-For the above results we fit the model to the entire data set, and then make predictions across the entire data set from that fit. This could lead to overfitting because we are using the training data to also test the model. If model error is spatially correlated this could be a large issue (cite important sources here!). We can use the spatial block structure we defined above to deal with with. The function `run_cv` goes through each fold in the `cv_grid` and fits the model on all the other folds. Then applies that fit to the focal fold. It is a wrapper for `fit_bayesain_model` and `predict_bayesain_model` but fits a seperate model for each fold.
+For the above results we fit the model to the entire data set, and then make predictions across the entire data set from that fit. This could lead to overfitting because we are using the training data to also test the model. If model error is spatially correlated this could be a large issue (cite important sources here!). We can use the spatial block structure we defined above to deal with with. The function `run_cv` goes through each fold in the `cv_grid` and fits the model on all the other folds. Then applies that fit to the focal fold. It is a wrapper for `fit_bayesain_model` and `predict_bayesain_model` but fits a separate model for each fold.
 
-This will fit the model for each fold. On each fold it fits the data for all trees outside of that fold. If you have N folds then `run_cv` will take N-times longer than `fit_bayesain_model`. Here I cheated `run_cv` to fit for just `test = fold 23` and `test = fold 2`. It still fits to all other folds for those two, but only does it twice (rather than 28 times for the SCBI data set). Do this with the arguement `all_folds = FALSE`.
+
+```{r, eval = run_bw}
+# big woods
+tic()
+cv_bw <- focal_vs_comp_bw %>%
+  run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+toc()
+
+cv_bw %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+```
+
 
 ```{r, eval = run_scbi}
 # SCBI
 tic()
-scbi_cv_predict <- focal_vs_comp_scbi %>%
-  run_cv(model_specs = scbi_specs, max_dist = max_dist, cv_grid = scbi_cv_grid, all_folds = FALSE)
+cv_scbi <- focal_vs_comp_scbi %>%
+  run_cv(max_dist = max_dist, cv_grid = scbi_cv_grid) %>%
+  right_join(scbi_growth_df, by = c("focal_ID" = "treeID"))
 toc()
+
+cv_scbi %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
 ```
-
-Running just two folds took 2119 seconds. There are 28 folds. So running everything should take 2119 * 14 / 60 / 60 = 8 hours. 
-
-Then we can compare the results to show that the RMSE for the cross-validated fit is larger than for the none CV fit above. 
-
-```{r, eval = run_scbi}
-# SCBI
-scbi_cv_predict %>%
-  inner_join(scbi_growth_df, by = 'focal_ID', suffix = c('_cv','')) %>%
-  summarise(
-    rmse_cv = sqrt(mean((growth - growth_hat_cv)^2)),
-    rmse = sqrt(mean((growth - growth_hat)^2)), 
-    n = n() 
-  )
-```
-
-
-**Big Woods**
-
-Big woods is faster because it has fewer trees, but also because we are fitting the model for trait groups (6 groups) rather than species for SCBI (40 species). The lambda matrix is much smaller (6 x 6 versus 40 x 40). Means it fits much faster. 
-
-```{r, eval = run_bw}
-# Big Woods
-if (!file.exists("bw_cv_predict.Rdata")) {
-tic()
-bw_cv_predict <- focal_vs_comp_bw %>%
-  run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid)
-toc()
-  save(bw_cv_predict, file = "bw_cv_predict.Rdata")
-} else {
-  load("bw_cv_predict.Rdata")
-}
-```
-
-Big Woods must faster because it is a smaller plot? Mabye also because we are fitting the trait group version (6 spp versus 40 for SCBI).
-
-
-```{r, eval = run_bw}
-# Big Woods
-bw_growth_df <- bw_growth_df %>% 
-  left_join(bw_cv_predict, by = "focal_ID", suffix = c('', '_cv')) %>% 
-  mutate(has_cv = !is.na(growth_hat))
-
-ggplot(bw_growth_df) +
-  geom_sf(size = 0.1, aes(col = has_cv))
-```
-
-It appears not all trees have a CV predicted value of `growth_hat`. This is because either:
-
-* The tree is part of the buffer
-* The tree was dropped in the `create_focal_vs_comp()` phase
-
-```{r, eval = run_bw}
-# This code is a hideous sanity check of the two facts above. To delete.
-trees_dropped_during_create_focal_vs_comp <- 
-  setdiff(unique(bw_growth_df$focal_ID), unique(focal_vs_comp_bw$focal_ID)) %>% 
-  sort()
-trees_with_no_cv <- bw_growth_df %>% 
-  filter(!has_cv) %>% 
-  pull(focal_ID) %>% 
-  sort()
-mean(trees_dropped_during_create_focal_vs_comp == trees_with_no_cv)
-```
-
-Let's remove these trees that have no 
-
-```{r, eval = run_bw}
-bw_growth_df <- bw_growth_df %>% 
-  filter(!is.na(growth_hat))
-```
-
-Let's compute summary statistics of our cross-validated errors:
-
-```{r, eval = run_bw}
-# Big Woods
-bw_growth_df %>% 
-  as_tibble() %>% 
-  summarise(
-    rmse_cv = sqrt(mean((growth - growth_hat)^2)),
-    rmse = sqrt(mean((growth - growth_hat)^2)), 
-    n = n() 
-  )
-```
-
-Let's visualize the spatial distribution of our cross-validated errors:
-
-```{r, eval = run_bw}
-# Big Woods
-bw_growth_df <- bw_growth_df %>%
-  mutate(
-    error = growth - growth_hat,
-    error_bin = cut_number(error, n = 5),
-    error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
-  )
-
-ggplot(bw_growth_df) +
-  geom_sf(aes(col = error_compress), size = 0.4) +
-  scale_color_gradient2(
-    low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
-    name = expression(paste("Residual (cm ", y^{-1}, ")")),
-    breaks = seq(from = -0.75, to = 0.75, by = 0.25),
-    labels = c("< -0.75", "-0.5", "0.25", "0", "0.25", "0.5", "> 0.75")
-  ) +
-  labs(x = "Meter", y = "Meter")
-```
-
-
-
-
-### Run permutations
-
-Hey Dave! Start here!
-
-**Repeat earlier code**:
-
-```{r, eval = FALSE}
-# Load packages ----------------------------------------------------------------
-library(tidyverse)
-library(forestecology)
-library(snakecase)
-library(skimr)
-library(sf)
-library(sfheaders)
-# devtools::install_github("rvalavi/blockCV")
-library(blockCV)
-library(tictoc)
-library(yardstick)
-library(viridis)
-
-
-# Load & preprocess data -------------------------------------------------------
-# Read in census data from 2008 & 2014
-bw_2008 <- 
-  "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>% 
-  read_delim(delim = "\t") %>% 
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
-    date, codes
-  )
-bw_2014 <- 
-  "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>% 
-  read_delim(delim = "\t") %>% 
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
-    date, codes
-  )
-
-# Read in grouping classification data
-bw_species <- 
-  "https://deepblue.lib.umich.edu/data/downloads/000000086" %>% 
-  read_delim(delim = "\t") %>% 
-  # convert all to snake case:
-  mutate_at(c("species", "genus", "family", "idlevel", "spcode"), to_any_case) %>% 
-  # join trait group
-  left_join(families, by = c("spcode", "family")) %>% 
-  mutate(
-    sp = str_sub(genus, 1, 2), 
-    sp = str_c(sp, str_sub(species, 1, 2)),
-    sp = tolower(sp),
-    latin = str_c(genus, species, sep = " "),
-    latin = to_any_case(latin)
-  ) %>% 
-  select(sp = spcode, genus, species, latin, family, trait_group)
-
-bw_2008 <- bw_2008 %>%
-  left_join(bw_species,by='sp')
-
-
-# Compute growth ---------------------------------------------------------------
-census_df1 <- bw_2008
-# we need to filter out the resprouts
-census_df2 <- bw_2014 %>% 
-  filter(!str_detect(codes, 'R'))
-id <- "treeID"
-
-bw_growth_df <- 
-  # Merge both censuses and compute growth:
-  compute_growth(census_df1, census_df2, id) %>% 
-  mutate(sp = to_any_case(sp))
-
-
-
-# Define buffers ---------------------------------------------------------------
-cv_fold_size <- 100
-max_dist <- 7.5
-
-# Study region boundary polygon
-bw_boundary <- bigwoods_study_region %>% 
-  sf_polygon()
-
-# Buffer polygon
-bw_buffer <- bw_boundary %>%
-  st_buffer(dist = -max_dist)
-
-# Convert data frame to sf object
-bw_growth_df <- bw_growth_df %>% 
-  st_as_sf(coords = c("gx", "gy"))
-
-# ID which points are in buffer and which are not
-buffer_index <- !st_intersects(bw_growth_df, bw_buffer, sparse = FALSE)
-bw_growth_df <- bw_growth_df %>% 
-  mutate(buffer = as.vector(buffer_index))
-
-
-# Define spatial CV folds ------------------------------------------------------
-set.seed(76)
-bw_cv_grid <- spatialBlock(
-  speciesData = bw_growth_df, theRange = 100, verbose = FALSE,
-  # Some guess work in figuring this out:
-  k = 28, xOffset = 0.5, yOffset = 0
-)
-
-# Add foldID to data
-bw_growth_df <- bw_growth_df %>% 
-  mutate(
-    foldID = bw_cv_grid$foldID
-  ) 
-
-# Visualize grid. Why does fold 19 repeat?
-bw_cv_grid$plots +
-  geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col=factor(foldID)), size = 0.1)
-
-# Remove weird folds with no trees in them from viz above
-bw_growth_df <- bw_growth_df %>%
-  filter(!foldID %in% c(19, 23, 21, 17, 8, 19))
-
-# Save original
-bw_growth_df_orig <- bw_growth_df
-```
-
-
-**Loop through 4 scenarios of model fitting**:
-
-```{r, eval = FALSE}
-# Number of permutation shuffles:
-num_shuffle <- 4
-
-# Compute observed RMSE for all models, but only do permutation shuffling for
-# models 3,6,9
-model_numbers <- c(3)
-species_notion_vector <- c("trait_group", "family", "species")
-
-# Save results here
-run_time <- rep(0, length(species_notion_vector))
-observed_RMSE <- rep(0, length(species_notion_vector))
-observed_RMSE_CV <- rep(0, length(species_notion_vector))
-shuffle_RMSE <- vector("list", length(species_notion_vector))
-shuffle_RMSE_CV <- vector("list", length(species_notion_vector))
-filename <- str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles.RData")
-
-for(i in 1:length(species_notion_vector)){
-  # Start clock
-  tic()
-
-  # Modeling and species stuff
-  species_notion <- species_notion_vector[i]
-  bw_specs <- bw_growth_df %>% 
-    get_model_specs(model_number = 3, species_notion = species_notion)
-
-  # Focal vs comp main dataframe for analysis
-  focal_vs_comp_bw <- bw_growth_df_orig %>% 
-    create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
- 
-  
-  # 1. Compute observed test statistic: RMSE with no cross-validation ----
-  # Fit model (compute posterior parameters)
-  bw_fit_model <- focal_vs_comp_bw %>% 
-    fit_bayesian_model(model_specs = bw_specs)
-  
-  # Make predictions, compute and save RMSE, and reset
-  observed_RMSE[i] <- focal_vs_comp_bw %>% 
-    predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>% 
-    right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
-    rmse(truth = growth, estimate = growth_hat) %>%
-    pull(.estimate)
-
-  
-  # 2. Compute observed test statistic: RMSE with cross-validation ----
-  observed_RMSE_CV[i] <- focal_vs_comp_bw %>%
-    run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid) %>% 
-    right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
-    rmse(truth = growth, estimate = growth_hat) %>%
-    pull(.estimate)
-
-
-  # 3. Permutation distribution: RMSE with no cross-validation ----
-  # Only do permutation shuffling for models 3, 6, 9
-  # Compute num_shuffle permutation test statistics
-  shuffle_RMSE[[i]] <- numeric(length = num_shuffle)
-  
-  for(j in 1:num_shuffle){
-    # Fit model (compute posterior parameters) with shuffling
-    bw_fit_model_shuffle <- focal_vs_comp_bw %>% 
-      fit_bayesian_model(model_specs = bw_specs, run_shuffle = TRUE)
-    
-    # Make predictions, compute and save RMSE, and reset
-    shuffle_RMSE[[i]][j] <- focal_vs_comp_bw %>% 
-      predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model_shuffle) %>% 
-      right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
-      rmse(truth = growth, estimate = growth_hat) %>%
-      pull(.estimate)
-  }
-
-  
-  # 4. Permutation distribution: RMSE with cross-validation ----
-  # Compute num_shuffle permutation test statistics
-  shuffle_RMSE_CV[[i]] <- numeric(length = num_shuffle)
-  
-  # Compute num_shuffle permutation test statistics
-  for(j in 1:num_shuffle){
-    # Compute and save RMSE, and reset
-    shuffle_RMSE_CV[[i]][j] <- focal_vs_comp_bw %>%
-      run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid, run_shuffle = TRUE) %>% 
-      right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
-      rmse(truth = growth, estimate = growth_hat) %>%
-      pull(.estimate)
-    
-    # Status update
-    str_c("notion of species: ", species_notion_vector[i], ", shuffle with permutation ", j) %>% print()
-  }
-  
-  
-  # 5. Stop clock
-  clock <- toc(quiet = TRUE)
-  run_time[i] <- clock$toc - clock$tic
-  
-  
-  # 6. Save
-  model_comp_tbl <- tibble(
-    species_notion = species_notion_vector,
-    run_time = run_time,
-    observed_RMSE = observed_RMSE,
-    observed_RMSE_CV = observed_RMSE_CV,
-    shuffle_RMSE = shuffle_RMSE,
-    shuffle_RMSE_CV = shuffle_RMSE_CV,
-  )
-  save(model_comp_tbl, file = filename)
-}
-```
-
-**Plot results**:
-
-```{r, eval=TRUE}
-load("2020-06-25_model_comp_tbl_49_shuffles.RData")
-model_comp <- bind_rows(
-  model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
-  model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
-) %>%
-  gather(type, RMSE, -c(species_notion, run_time, CV)) %>%
-  mutate(
-    species_notion = case_when(
-      species_notion == "trait_group" ~ "1. Trait-based (6): lambda = 6 x 6",
-      species_notion == "family" ~ "2. Phylogenetic family (20): lambda = 20 x 20",
-      species_notion == "species" ~ "3. Actual species (36): lambda = 36 x 36"
-    )
-  ) %>% 
-  filter(species_notion != "3. Actual species (36): lambda = 36 x 36")
-
-model_comp_observed <- model_comp %>%
-  filter(type == "observed") %>%
-  unnest(cols = c(RMSE))
-model_comp_shuffle <- model_comp %>%
-  filter(type == "shuffle") %>%
-  unnest(cols = c(RMSE))
-
-xlab <- expression(paste('RMSE (cm ',y^{-1},')'))
-
-ggplot() +
-  geom_vline(data = model_comp_observed, aes(xintercept = RMSE, col = CV), linetype = "dashed", show.legend = F) +
-  geom_histogram(data = model_comp_shuffle, aes(x = RMSE, fill = CV), bins = 200) +
-  labs(fill = "Cross-validated?", x = xlab) +
-  facet_wrap(~species_notion, ncol = 1) +
-  scale_color_viridis(discrete = TRUE, option = "D")+
-  scale_fill_viridis(discrete = TRUE)
-```
-
-
-
-
 
 
 ### Visualize posterior distributions
