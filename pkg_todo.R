@@ -156,12 +156,21 @@ if(FALSE){
 
 
 # Plot posterior parameters ----------------------------------------------------
-species_list_bw <- focal_vs_comp_bw$focal_sp %>% unique()
+focal_vs_comp_bw <- bw_growth_df %>%
+  mutate(sp = trait_group) %>%
+  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
 
+# a) Fit model (compute posterior parameters) with no permutation shuffling
+posterior_param_bw <- focal_vs_comp_bw %>%
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+
+# b) Plot
+species_list_bw <- focal_vs_comp_bw$focal_sp %>% unique()
 posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)
+
 posterior_plots[["beta_0"]]
 posterior_plots[["beta_dbh"]]
-posterior_plots[["lambdas"]]
+posterior_plots[["lambda"]]
 
 
 
