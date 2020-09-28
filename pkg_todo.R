@@ -155,6 +155,18 @@ if(FALSE){
 
 
 
+# Plot posterior parameters ----------------------------------------------------
+species_list_bw <- focal_vs_comp_bw$focal_sp %>% unique()
+
+posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)
+posterior_plots[["beta_0"]]
+posterior_plots[["beta_dbh"]]
+posterior_plots[["lambdas"]]
+
+
+
+
+
 # Cross-validation -------------------------------------------------------------
 tic()
 cv_bw <- focal_vs_comp_bw %>%
@@ -165,22 +177,6 @@ toc()
 cv_bw %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
-
-
-
-
-
-# Plot posterior parameters ----------------------------------------------------
-posterior_param_bw <- focal_vs_comp_bw %>%
-  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
-
-species_list_bw <- focal_vs_comp_bw$focal_sp %>% unique()
-species_list_bw
-
-posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)
-posterior_plots[["beta_0"]]
-posterior_plots[["beta_dbh"]]
-posterior_plots[["lambdas"]]
 
 
 

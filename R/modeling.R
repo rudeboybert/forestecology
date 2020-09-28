@@ -556,12 +556,11 @@ plot_beta0 <- function(posterior_param, species_list){
 #' 1+1
 plot_posterior_parameters <- function(posterior_param, species_list){
   if (FALSE){
-    posterior_param <- bw_fit_model
-    species_list <- c("evergreen", "maple", "misc", "oak", "short_tree", "shrub")
+    posterior_param <- posterior_param_bw
+    species_list <- species_list_bw
   }
 
   plot_list <- NULL
-
 
   n_sim <- 1000
   nu_star <- 2*posterior_param$a_star
