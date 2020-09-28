@@ -194,9 +194,10 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
   }
 
   # Create linear regression model formula object
-  model_formula <- focal_vs_comp$focal_sp %>%
+  sp_list <- focal_vs_comp$focal_sp %>%
     levels() %>%
-    sort() %>%
+    sort()
+  model_formula <- sp_list %>%
     paste(., "*sp", sep = "", collapse = " + ") %>%
     paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
     as.formula()
@@ -204,6 +205,7 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
   # Create matrices & vectors for Bayesian regression
   focal_trees <- focal_vs_comp %>%
     create_bayesian_model_data(run_shuffle = run_shuffle)
+
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
     pull(growth) %>%
@@ -245,7 +247,8 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
     a_star = a_star,
     b_star = b_star,
     mu_star = mu_star,
-    V_star = V_star
+    V_star = V_star,
+    sp_list = sp_list
   )
   return(posterior_hyperparameters)
 }
@@ -276,10 +279,11 @@ predict_bayesian_model <- function(focal_vs_comp, posterior_param){
   }
 
   # Create linear regression model formula object
-  model_formula <- focal_vs_comp$focal_sp %>%
+  sp_list <- focal_vs_comp$focal_sp %>%
     levels() %>%
-    sort() %>%
-    paste(., " * sp", sep = "", collapse = " + ") %>%
+    sort()
+  model_formula <- sp_list %>%
+    paste(., "*sp", sep = "", collapse = " + ") %>%
     paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
     as.formula()
 
@@ -356,6 +360,221 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE){
 
   return(focal_trees)
 }
+
+
+
+#' Plot beta_0 parameters
+#'
+#' @param posterior_param Output of \code{\link{fit_bayesian_model}}
+#' @param sp_to_plot Vector of subset of species to plot
+#'
+#' @import ggridges
+#' @importFrom mvnfast rmvt
+#' @importFrom purrr set_names
+#' @importFrom ggridges geom_density_ridges
+#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
+#' @export
+#'
+#' @examples
+#' 1+1
+plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
+  if (FALSE) {
+    posterior_param <- posterior_param_bw
+  }
+
+  # Identify all species and baseline category of species used for regression
+  sp_list <- posterior_param$sp_list
+  baseline_species <- sp_list %>%
+    sort() %>%
+    .[1]
+
+  # 1. Simulate observations from posterior ------------------------------------
+  n_sim <- 1000
+  nu_star <- 2 * posterior_param$a_star
+  Sigma_star <- (posterior_param$b_star / posterior_param$a_star) * posterior_param$V_star
+
+  beta_lambda_posterior_df <-
+    rmvt(n_sim, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
+    data.frame() %>%
+    as_tibble() %>%
+    set_names(colnames(posterior_param$V_star)) %>%
+    gather(key = type, value = value)
+
+  # Coefficient names in beta_lambda_posterior_df are a little hard to work with,
+  # so clean them up and join to beta_lambda_posterior_df
+  coefficient_types <- beta_lambda_posterior_df %>%
+    select(type) %>%
+    distinct() %>%
+    mutate(
+      coefficient_type =
+        case_when(
+          # intercepts:
+          type == "(Intercept)" ~ "intercept",
+          type %in% str_c("sp", sp_list) ~ "intercept",
+          # slopes for dbh
+          str_detect(type, "dbh") ~ "dbh",
+          # competition
+          type %in% sp_list ~ "competition",
+          str_detect(type, ":") ~ "competition",
+          # Need this for everything else that aren't the two cases above:
+          TRUE ~ "NA"
+        )
+    )
+
+  beta_lambda_posterior_df <- beta_lambda_posterior_df %>%
+    left_join(coefficient_types, by = "type") %>%
+    select(type, coefficient_type, value) %>%
+    group_by(type, coefficient_type) %>%
+    mutate(sim_ID = 1:n()) %>%
+    select(sim_ID, everything()) %>%
+    ungroup()
+
+  # Save plots here
+  plot_list <- vector(mode = "list", length = 3)
+
+
+
+  # 2. Plot intercept coefficients ------------------------------
+  posterior_sample <- beta_lambda_posterior_df %>%
+    filter(coefficient_type == "intercept")
+
+  posterior_sample_baseline <- posterior_sample %>%
+    filter(type == "(Intercept)") %>%
+    rename(offset = value) %>%
+    select(sim_ID, offset)
+
+  posterior_beta_0 <- posterior_sample %>%
+    left_join(posterior_sample_baseline, by = "sim_ID") %>%
+    mutate(
+      offset = ifelse(type == "(Intercept)", 0, offset),
+      value = value + offset,
+      type = ifelse(type == "(Intercept)", baseline_species, str_sub(type, nchar("sp") + 1))
+    ) %>%
+    # mutate(type = str_to_title(type)) %>%
+    select(-offset)
+
+  plot_list[["beta_0"]] <-
+    ggplot(posterior_beta_0, aes(x = value, y = fct_rev(type))) +
+    geom_density_ridges() +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    labs(
+      x = expression(paste(beta[0], " (cm ", y^{-1}, ")")),
+      y = "species"
+    )
+
+
+
+  # 3. Plot dbh coefficients ------------------------------
+  posterior_sample <- beta_lambda_posterior_df %>%
+    filter(coefficient_type == "dbh")
+
+  posterior_sample_baseline <- posterior_sample %>%
+    filter(type == "dbh") %>%
+    rename(offset = value) %>%
+    select(sim_ID, offset)
+
+  posterior_beta_dbh <- posterior_sample %>%
+    left_join(posterior_sample_baseline, by = "sim_ID") %>%
+    mutate(
+      offset = ifelse(type == "dbh", 0, offset),
+      value = value + offset,
+      type = ifelse(type == "dbh", baseline_species, str_sub(type, nchar("sp") + 1, -5))
+    ) %>%
+    # mutate(type = str_to_title(type)) %>%
+    select(-offset)
+
+  plot_list[["beta_dbh"]] <-
+    ggplot(posterior_beta_dbh, aes(x = value, y = fct_rev(type))) +
+    geom_density_ridges() +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    labs(
+      x = expression(paste(beta[DBH], " (", y^{-1}, ")")),
+      y = "species"
+    )
+
+
+
+  # 4. Plot lambda coefficients ------------------------------
+  posterior_sample <- beta_lambda_posterior_df %>%
+    filter(coefficient_type == "competition")
+
+  posterior_lambda <- expand.grid(sp_list, sp_list) %>%
+    as_tibble() %>%
+    rename(competitor = Var1, focal = Var2) %>%
+    mutate(
+      lambda = str_c(competitor, focal, sep = "_on_"),
+      values = list(NULL)
+    )
+
+  # We need to add baseline offset to all categories.
+  # effect of evergreen on oak focal tree:
+  # evergreen + speciesoak:evergreen
+  # which in reality is speciesmisc:evergreen + speciesoak:evergreen
+  #
+  # effect of evergreen on misc focal tree (which is baseline species):
+  # evergreen
+  # which in reality is speciesmisc:evergreen
+  #
+  # effect of misc on evergreen focal tree
+  # misc + speciesevergreen:misc
+  # which in reality is speciesmisc:misc + speciesevergreen:misc
+
+  for (i in 1:nrow(posterior_lambda)) {
+    competitor <- posterior_lambda$competitor[i]
+    focal <- posterior_lambda$focal[i]
+
+    if (focal == baseline_species) {
+      lambda_values <- posterior_sample %>%
+        filter(type == competitor) %>%
+        pull(value)
+    } else {
+      lambda_values <- posterior_sample %>%
+        filter(type == competitor | type == str_c("sp", focal, ":", competitor, sep = "")) %>%
+        select(sim_ID, type, value) %>%
+        spread(type, value) %>%
+        select(2:3) %>%
+        rowSums()
+    }
+    posterior_lambda$values[i] <- list(lambda_values)
+  }
+
+  posterior_lambda <- posterior_lambda %>%
+    unnest(cols = c(values))
+  # mutate(
+  #   competitor = str_to_title(competitor),
+  #   focal = str_to_title(focal)
+  # )
+
+  # When we only want to plot a subset of species:
+  if(!is.null(sp_to_plot)){
+    posterior_lambda <- posterior_lambda %>%
+      filter(
+        competitor %in% sp_to_plot,
+        focal %in% sp_to_plot
+      )
+  }
+
+  n_sp_to_plot <- posterior_lambda %>%
+    pull(competitor) %>%
+    unique() %>%
+    length()
+
+  plot_list[["lambda"]] <-
+    ggplot(posterior_lambda, aes(x = values, y = fct_rev(competitor))) +
+    geom_density_ridges() +
+    facet_wrap(~focal, ncol = n_sp_to_plot) +
+    geom_vline(xintercept = 0, linetype = "dashed") +
+    # theme(panel.spacing.x = unit(0, "cm")) +
+    labs(
+      x = expression(lambda),
+      y = "Species",
+      title = "Competitor species in rows, focal species in columns",
+      subtitle = str_c("Ex: Top row, second column = competitive effect of", sp_list[1], "on", sp_list[2], sep = " ")
+    )
+
+  return(plot_list)
+}
+
 
 
 
@@ -441,302 +660,4 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
   focal_trees <- focal_trees %>%
     bind_rows()
   return(focal_trees)
-}
-
-
-
-
-
-
-
-
-
-
-
-#' Plot beta_0 parameters
-#'
-#' @inheritParams fit_bayesian_model
-#' @param posterior_param Output of \code{\link{fit_bayesian_model}}
-#'
-#' @import ggridges
-#' @importFrom mvnfast rmvt
-#' @importFrom purrr set_names
-#' @importFrom ggridges geom_density_ridges
-#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
-#' @export
-#'
-#' @examples
-#' 1+1
-plot_beta0 <- function(posterior_param, species_list){
-  if (FALSE){
-    posterior_param <- bw_fit_model
-    species_list <- c("evergreen", "maple", "misc", "oak", "short_tree", "shrub")
-  }
-
-  n_sim <- 1000
-  nu_star <- 2*posterior_param$a_star
-  Sigma_star <- (posterior_param$b_star/posterior_param$a_star)*posterior_param$V_star
-
-  beta_lambda_posterior_df <-
-    rmvt(n_sim, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
-    data.frame() %>%
-    as_tibble() %>%
-    set_names(colnames(posterior_param$V_star)) %>%
-    gather(type, value)
-
-  coefficient_types <- beta_lambda_posterior_df %>%
-    select(type) %>%
-    distinct() %>%
-    mutate(
-      coefficient_type =
-        case_when(
-          type == "(Intercept)" ~ "intercept",
-          type %in% str_c("sp", species_list) ~ "intercept",
-          str_detect(type, "dbh") ~ "dbh",
-          type %in% species_list ~ "competition",
-          str_detect(type, ":") ~ "competition",
-          # Need this for everything else that aren't the two cases above:
-          TRUE ~ "NA"
-        ))
-
-  beta_lambda_posterior_df <- beta_lambda_posterior_df %>%
-    left_join(coefficient_types, by = "type") %>%
-    select(type, coefficient_type, value) %>%
-    group_by(type, coefficient_type) %>%
-    mutate(sim_ID = 1:n()) %>%
-    select(sim_ID, everything()) %>%
-    ungroup()
-
-  baseline_species <- species_list[1] %>% as.character()
-
-  posterior_sample <- beta_lambda_posterior_df %>%
-    filter(coefficient_type == "intercept")
-
-  posterior_sample_baseline <- posterior_sample %>%
-    filter(type == "(Intercept)") %>%
-    rename(offset = value) %>%
-    select(sim_ID, offset)
-
-  posterior_beta_0 <- posterior_sample %>%
-    left_join(posterior_sample_baseline, by = "sim_ID") %>%
-    mutate(
-      offset = ifelse(type == "(Intercept)", 0, offset),
-      value = value + offset,
-      type = ifelse(type == "(Intercept)", baseline_species, str_sub(type, nchar("sp")+1))
-    ) %>%
-    # mutate(type = str_to_title(type)) %>%
-    select(-offset)
-
-  ggplot(posterior_beta_0, aes(x=value, y = fct_rev(type))) +
-    geom_density_ridges() +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    xlim(c(-0.1,0.5)) +
-    labs(
-      x = expression(paste(beta[0], " (cm ",y^{-1},')')),
-      y = species_list
-    )
-
-}
-
-
-
-#' Plot beta_0 parameters
-#'
-#' @inheritParams fit_bayesian_model
-#' @param posterior_param Output of \code{\link{fit_bayesian_model}}
-#'
-#' @import ggridges
-#' @importFrom mvnfast rmvt
-#' @importFrom purrr set_names
-#' @importFrom ggridges geom_density_ridges
-#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
-#' @export
-#'
-#' @examples
-#' 1+1
-plot_posterior_parameters <- function(posterior_param, species_list) {
-  if (FALSE) {
-    posterior_param <- posterior_param_bw
-    species_list <- species_list_bw
-  }
-
-  # 1. Simulate observations from posterior ------------------------------------
-  n_sim <- 1000
-  nu_star <- 2 * posterior_param$a_star
-  Sigma_star <- (posterior_param$b_star / posterior_param$a_star) * posterior_param$V_star
-
-  beta_lambda_posterior_df <-
-    rmvt(n_sim, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
-    data.frame() %>%
-    as_tibble() %>%
-    set_names(colnames(posterior_param$V_star)) %>%
-    gather(key = type, value = value)
-
-  # Coefficient names in beta_lambda_posterior_df are a little hard to work with,
-  # so clean them up and join to beta_lambda_posterior_df
-  coefficient_types <- beta_lambda_posterior_df %>%
-    select(type) %>%
-    distinct() %>%
-    mutate(
-      coefficient_type =
-        case_when(
-          # intercepts:
-          type == "(Intercept)" ~ "intercept",
-          type %in% str_c("sp", species_list) ~ "intercept",
-          # slopes for dbh
-          str_detect(type, "dbh") ~ "dbh",
-          # competition
-          type %in% species_list ~ "competition",
-          str_detect(type, ":") ~ "competition",
-          # Need this for everything else that aren't the two cases above:
-          TRUE ~ "NA"
-        )
-    )
-
-  beta_lambda_posterior_df <- beta_lambda_posterior_df %>%
-    left_join(coefficient_types, by = "type") %>%
-    select(type, coefficient_type, value) %>%
-    group_by(type, coefficient_type) %>%
-    mutate(sim_ID = 1:n()) %>%
-    select(sim_ID, everything()) %>%
-    ungroup()
-
-  # Identify baseline category of species used for regression
-  baseline_species <- species_list %>%
-    sort() %>%
-    .[1] %>%
-    as.character()
-
-  # Save plots here
-  plot_list <- vector(mode = "list", length = 3)
-
-
-
-  # 2. Plot intercept coefficients ------------------------------
-  posterior_sample <- beta_lambda_posterior_df %>%
-    filter(coefficient_type == "intercept")
-
-  posterior_sample_baseline <- posterior_sample %>%
-    filter(type == "(Intercept)") %>%
-    rename(offset = value) %>%
-    select(sim_ID, offset)
-
-  posterior_beta_0 <- posterior_sample %>%
-    left_join(posterior_sample_baseline, by = "sim_ID") %>%
-    mutate(
-      offset = ifelse(type == "(Intercept)", 0, offset),
-      value = value + offset,
-      type = ifelse(type == "(Intercept)", baseline_species, str_sub(type, nchar("sp") + 1))
-    ) %>%
-    # mutate(type = str_to_title(type)) %>%
-    select(-offset)
-
-  plot_list[["beta_0"]] <-
-    ggplot(posterior_beta_0, aes(x = value, y = fct_rev(type))) +
-    geom_density_ridges() +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    labs(
-      x = expression(paste(beta[0], " (cm ", y^{-1}, ")")),
-      y = "species"
-    )
-
-
-
-  # 3. Plot dbh coefficients ------------------------------
-  posterior_sample <- beta_lambda_posterior_df %>%
-    filter(coefficient_type == "dbh")
-
-  posterior_sample_baseline <- posterior_sample %>%
-    filter(type == "dbh") %>%
-    rename(offset = value) %>%
-    select(sim_ID, offset)
-
-  posterior_beta_dbh <- posterior_sample %>%
-    left_join(posterior_sample_baseline, by = "sim_ID") %>%
-    mutate(
-      offset = ifelse(type == "dbh", 0, offset),
-      value = value + offset,
-      type = ifelse(type == "dbh", baseline_species, str_sub(type, nchar("sp") + 1, -5))
-    ) %>%
-    # mutate(type = str_to_title(type)) %>%
-    select(-offset)
-
-  plot_list[["beta_dbh"]] <-
-    ggplot(posterior_beta_dbh, aes(x = value, y = fct_rev(type))) +
-    geom_density_ridges() +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    labs(
-      x = expression(paste(beta[DBH], " (", y^{-1}, ")")),
-      y = "species"
-    )
-
-
-
-  # 4. Plot lambda coefficients ------------------------------
-  posterior_sample <- beta_lambda_posterior_df %>%
-    filter(coefficient_type == "competition")
-
-  posterior_lambda <- expand.grid(species_list, species_list) %>%
-    as_tibble() %>%
-    rename(competitor = Var1, focal = Var2) %>%
-    mutate(
-      lambda = str_c(competitor, focal, sep = "_on_"),
-      values = list(NULL)
-    )
-
-  # We need to add baseline offset to all categories.
-  # effect of evergreen on oak focal tree:
-  # evergreen + speciesoak:evergreen
-  # which in reality is speciesmisc:evergreen + speciesoak:evergreen
-  #
-  # effect of evergreen on misc focal tree (which is baseline species):
-  # evergreen
-  # which in reality is speciesmisc:evergreen
-  #
-  # effect of misc on evergreen focal tree
-  # misc + speciesevergreen:misc
-  # which in reality is speciesmisc:misc + speciesevergreen:misc
-
-  for (i in 1:nrow(posterior_lambda)) {
-    competitor <- posterior_lambda$competitor[i]
-    focal <- posterior_lambda$focal[i]
-
-    if (focal == baseline_species) {
-      lambda_values <- posterior_sample %>%
-        filter(type == competitor) %>%
-        pull(value)
-    } else {
-      lambda_values <- posterior_sample %>%
-        filter(type == competitor | type == str_c("sp", focal, ":", competitor, sep = "")) %>%
-        select(sim_ID, type, value) %>%
-        spread(type, value) %>%
-        select(2:3) %>%
-        rowSums()
-    }
-    posterior_lambda$values[i] <- list(lambda_values)
-  }
-
-  posterior_lambda <- posterior_lambda %>%
-    unnest(cols = c(values))
-    # mutate(
-    #   competitor = str_to_title(competitor),
-    #   focal = str_to_title(focal)
-    # )
-
-  plot_list[["lambda"]] <-
-    ggplot(posterior_lambda, aes(x = values, y = fct_rev(competitor))) +
-    geom_density_ridges() +
-    facet_wrap(~focal, ncol = length(species_list)) +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    # theme(panel.spacing.x = unit(0, "cm")) +
-    labs(
-      x = expression(lambda),
-      y = "Species",
-      title = "Focal species in columns, competitor species in rows",
-      subtitle = "Ex: Bottom row, second from left = competitive effect of shrubs on maples"
-    )
-
-
-
-  return(plot_list)
 }
