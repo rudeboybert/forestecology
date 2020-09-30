@@ -65,7 +65,7 @@ library(yardstick)
 library(viridis)
 library(lubridate)
 
-run_scbi <- FALSE
+run_scbi <- TRUE
 run_bw <- TRUE
 ```
 
@@ -404,7 +404,7 @@ predictions_shuffle %>%
   pull(.estimate)
 ```
 
-
+The RMSE is lower for the non-shuffled version. This gives support for the idea that competitor identiy does matter for competitive interactions. 
 
 **SCBI**:
 
@@ -473,6 +473,8 @@ cv_bw %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
+
+As expected this RMSE is higher than that when the model is fit without cross validation. See Allen and Kim (2020) for more discussion of this. 
 
 
 ```{r, eval = run_scbi}
