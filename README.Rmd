@@ -91,6 +91,8 @@ bw_census_2008 <- bw_census_2008 %>%
 
 **SCBI**:
 
+For SCBI we will just look at a 16 ha plot to speed calculations.
+
 ```{r, eval = run_scbi}
 # SCBI
 scbi_2013 <- 
@@ -100,7 +102,8 @@ scbi_2013 <-
     treeID, stemID, sp, quadrat, gx, gy, dbh, 
     date = ExactDate, codes, status
   ) %>%
-  mutate(date = mdy(date))
+  mutate(date = mdy(date)) %>%
+  filter(gy <= 400)
 
 scbi_2018 <-
   "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem3.csv" %>% 
@@ -110,7 +113,8 @@ scbi_2018 <-
     date = ExactDate, codes, status
   ) %>% 
   mutate(dbh = as.numeric(dbh),
-         date = mdy(date)) 
+         date = mdy(date)) %>%
+  filter(gy <= 400)
 ```
 
 
@@ -157,7 +161,8 @@ scbi_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(census_df1, census_df2, id) %>%
   # they are mesuaring in mm while we are measuring in cm!!!
-  mutate(growth = growth/10)
+  mutate(growth = growth/10,
+             sp = as.factor(sp))
 
 ```
 
@@ -245,7 +250,9 @@ ggplot() +
 ```{r, eval = run_scbi}
 # SCBI
 # Study region boundary polygon
-scbi_study_region <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
+scbi_study_region <- 
+ #tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
+  tibble(x = c(0,400,400,0,0), y = c(0,0,400,400,0)) %>% 
   sf_polygon()
 
 # Add buffer variable to data frame
@@ -299,7 +306,7 @@ bw_cv_grid_sf <- bw_cv_grid$blocks %>%
 ```{r, eval = run_scbi}
 # SCBI
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.9999, verbose = FALSE
+  speciesData = scbi_growth_df, theRange = 100, k = 20, yOffset = 0.9999, verbose = FALSE
 )
 
 # Add foldID to data
@@ -412,7 +419,7 @@ The RMSE is lower for the non-shuffled version. This gives support for the idea 
 # SCBI
 tic()
 posterior_param_scbi <- focal_vs_comp_scbi %>% 
-  fit_bayesian_model(prior_param = NULL, run_shuffle = TRUE)
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
 ```
 
@@ -477,7 +484,7 @@ cv_bw %>%
 As expected this RMSE is higher than that when the model is fit without cross validation. See Allen and Kim (2020) for more discussion of this. 
 
 
-```{r, eval = run_scbi}
+```{r, eval = FALSE}
 # SCBI
 tic()
 cv_scbi <- focal_vs_comp_scbi %>%
@@ -543,4 +550,16 @@ posterior_plots[["lambda"]]
 ```
 
 
+** SCBI 
+
+```{r, eval = run_bw}
+posterior_plots_scbi <- plot_posterior_parameters(
+  posterior_param = posterior_param_scbi,
+  sp_to_plot = c("libe", "caca", "astr", "litu", "havi", "cagl", "cato")
+)
+```
+
+```{r, eval = run_bw}
+posterior_plots_scbi[["lambda"]]
+```
 
