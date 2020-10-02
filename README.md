@@ -52,7 +52,7 @@ library(yardstick)
 library(viridis)
 library(lubridate)
 
-run_scbi <- FALSE
+run_scbi <- TRUE
 run_bw <- TRUE
 ```
 
@@ -81,6 +81,8 @@ bw_census_2008 <- bw_census_2008 %>%
 
 **SCBI**:
 
+For SCBI we will just look at a 16 ha plot to speed calculations.
+
 ``` r
 # SCBI
 scbi_2013 <- 
@@ -90,7 +92,8 @@ scbi_2013 <-
     treeID, stemID, sp, quadrat, gx, gy, dbh, 
     date = ExactDate, codes, status
   ) %>%
-  mutate(date = mdy(date))
+  mutate(date = mdy(date)) %>%
+  filter(gy <= 400)
 
 scbi_2018 <-
   "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem3.csv" %>% 
@@ -100,7 +103,8 @@ scbi_2018 <-
     date = ExactDate, codes, status
   ) %>% 
   mutate(dbh = as.numeric(dbh),
-         date = mdy(date)) 
+         date = mdy(date)) %>%
+  filter(gy <= 400)
 ```
 
 ### Compute growth
@@ -150,7 +154,8 @@ scbi_growth_df <-
   # Merge both censuses and compute growth:
   compute_growth(census_df1, census_df2, id) %>%
   # they are mesuaring in mm while we are measuring in cm!!!
-  mutate(growth = growth/10)
+  mutate(growth = growth/10,
+             sp = as.factor(sp))
 ```
 
 **Comparison**:
@@ -166,6 +171,8 @@ ggplot(growth_df, aes(x = growth, y = ..density.., fill = site)) +
   labs(x = "Average annual growth in dbh (cm per yr)") +
   coord_cartesian(xlim = c(-0.5, 1))
 ```
+
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 ### Add spatial information
 
@@ -263,7 +270,9 @@ ggplot() +
 ``` r
 # SCBI
 # Study region boundary polygon
-scbi_study_region <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
+scbi_study_region <- 
+ #tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
+  tibble(x = c(0,400,400,0,0), y = c(0,0,400,400,0)) %>% 
   sf_polygon()
 
 # Add buffer variable to data frame
@@ -273,6 +282,8 @@ scbi_growth_df <- scbi_growth_df %>%
 ggplot() +
   geom_sf(data = scbi_growth_df, aes(col = buffer))
 ```
+
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
 
 #### Defining spatial cross-validation folds
 
@@ -334,8 +345,13 @@ bw_cv_grid_sf <- bw_cv_grid$blocks %>%
 ``` r
 # SCBI
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.9999, verbose = FALSE
+  speciesData = scbi_growth_df, theRange = 100, k = 20, yOffset = 0.9999, verbose = FALSE
 )
+```
+
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+
+``` r
 
 # Add foldID to data
 scbi_growth_df <- scbi_growth_df %>% 
@@ -346,6 +362,11 @@ scbi_growth_df <- scbi_growth_df %>%
 # Visualize grid
 scbi_cv_grid$plots +
   geom_sf(data = scbi_growth_df, aes(col=factor(foldID)), size = 0.1)
+```
+
+<img src="man/figures/README-unnamed-chunk-14-2.png" width="100%" />
+
+``` r
 
 scbi_cv_grid_sf <- scbi_cv_grid$blocks %>%
   st_as_sf()
@@ -401,11 +422,24 @@ tic()
 focal_vs_comp_scbi <- scbi_growth_df %>% 
   create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid_sf, id = "stemID")
 toc()
+#> 172.237 sec elapsed
 ```
 
 ``` r
 # SCBI
 glimpse(focal_vs_comp_scbi)
+#> Rows: 2,160,651
+#> Columns: 10
+#> $ focal_ID        <dbl> 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,…
+#> $ focal_sp        <fct> libe, libe, libe, libe, libe, libe, libe, libe, libe,…
+#> $ dbh             <dbl> 21.7, 21.7, 21.7, 21.7, 21.7, 21.7, 21.7, 21.7, 21.7,…
+#> $ foldID          <int> 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,…
+#> $ geometry        <POINT> POINT (17.3 58.9), POINT (17.3 58.9), POINT (17.3 5…
+#> $ growth          <dbl> -0.01293247, -0.01293247, -0.01293247, -0.01293247, -…
+#> $ comp_ID         <dbl> 31, 1137, 1139, 1140, 1141, 1142, 1143, 1145, 1150, 1…
+#> $ dist            <dbl> 6.5192024, 2.5495098, 4.4911023, 4.6270941, 0.6708204…
+#> $ comp_sp         <fct> saca, litu, acru, frni, ilve, ilve, ilve, ilve, libe,…
+#> $ comp_basal_area <dbl> 0.042638481, 32.019289040, 15.406402575, 1.635394540,…
 ```
 
 ### Model fit and prediction
@@ -475,8 +509,9 @@ interactions.
 # SCBI
 tic()
 posterior_param_scbi <- focal_vs_comp_scbi %>% 
-  fit_bayesian_model(prior_param = NULL, run_shuffle = TRUE)
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
+#> 708.812 sec elapsed
 ```
 
 ``` r
@@ -495,6 +530,11 @@ ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
     x = "Observed growth in dbh", y = "Predicted growth in dbh", 
     title = "Predicted vs Observed Growth"
   )
+```
+
+<img src="man/figures/README-unnamed-chunk-23-1.png" width="100%" />
+
+``` r
 
 reslab <- expression(paste('Residual (cm ',y^{-1},')'))
 scbi_growth_df %>% 
@@ -516,6 +556,8 @@ scbi_growth_df %>%
     labels = c('< -0.75', '-0.5', '0.25', '0', '0.25', '0.5', '> 0.75')) +
   labs(x = "Meter", y = "Meter")
 ```
+
+<img src="man/figures/README-unnamed-chunk-23-2.png" width="100%" />
 
 ### Run spatial cross-validation
 
@@ -634,3 +676,18 @@ posterior_plots[["lambda"]]
 ```
 
 <img src="man/figures/README-unnamed-chunk-30-1.png" width="100%" />
+
+\*\* SCBI
+
+``` r
+posterior_plots_scbi <- plot_posterior_parameters(
+  posterior_param = posterior_param_scbi,
+  sp_to_plot = c("libe", "caca", "astr", "litu", "havi", "cagl", "cato")
+)
+```
+
+``` r
+posterior_plots_scbi[["lambda"]]
+```
+
+<img src="man/figures/README-unnamed-chunk-32-1.png" width="100%" />

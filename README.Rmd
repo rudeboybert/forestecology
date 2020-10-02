@@ -65,7 +65,7 @@ library(yardstick)
 library(viridis)
 library(lubridate)
 
-run_scbi <- FALSE
+run_scbi <- TRUE
 run_bw <- TRUE
 ```
 
