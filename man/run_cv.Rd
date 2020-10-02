@@ -16,7 +16,9 @@ run_cv(
 \arguments{
 \item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
 
-\item{max_dist}{size of buffer in same units as geometry in \code{region}}
+\item{max_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
+
+\item{cv_grid}{\code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}}
 
 \item{prior_param}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
 

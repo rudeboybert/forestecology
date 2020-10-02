@@ -34,4 +34,5 @@ Imports:
     ggridges,
     mvnfast,
     sf,
-    sfheaders
+    sfheaders,
+    tibble

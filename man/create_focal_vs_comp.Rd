@@ -7,9 +7,9 @@
 create_focal_vs_comp(growth_df, max_dist, cv_grid_sf, id)
 }
 \arguments{
-\item{growth_df}{A \code{\link{compute_growth}} output converted to \linkS4class{sf} object}
+\item{growth_df}{A \code{\link{compute_growth}} output converted to \code{sf} object}
 
-\item{max_dist}{size of buffer in same units as geometry in \code{region}}
+\item{max_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
 
 \item{cv_grid_sf}{An sf object of a \code{blockCV} block output}
 
@@ -47,6 +47,7 @@ library(ggplot2)
 library(dplyr)
 library(sf)
 library(sfheaders)
+library(tibble)
 
 # Create fold information sf object. TODO: clean this
 cv_grid_ex <-

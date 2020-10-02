@@ -12,6 +12,7 @@ can be used to connect trees between the two censuses.}
 \item{stemID}{Stem number for a multi-stemmed individual. For all trees this starts
 at 1 and continues up from there. To uniquely identify a stem across the plot this
 value must be combined with \code{treeID}.}
+\item{dbh}{Diameter at breast}
 \item{sp}{Code for the species. See \code{bw_species} for scientific name.}
 \item{gx}{x-coordinate meters from reference point}
 \item{gy}{y-coordinate meters from reference point}

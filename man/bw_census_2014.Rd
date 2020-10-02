@@ -13,6 +13,7 @@ can be used to connect trees between the two censuses.}
 at 1 and continues up from there. To uniquely identify a stem across the plot this
 value must be combined with \code{treeID}.}
 \item{sp}{Code for the species. See \code{\link{bw_species}} for scientific name.}
+\item{dbh}{Diameter at breast}
 \item{gx}{x-coordinate meters from reference point}
 \item{gy}{y-coordinate meters from reference point}
 \item{date}{Approximate date the stem was measured}
@@ -62,7 +63,7 @@ ggplot() +
 # Species-specific mortality between 2008 and 2014 censuses
 bw_census_2008 \%>\%
   left_join(bw_census_2014, by = c("treeID", "stemID"), suffix = c("_2008", "_2014")) \%>\%
-  mutate(mortality = ifelse(is.na(dbh_14), 1, 0)) \%>\%
+  mutate(mortality = ifelse(is.na(dbh_2014), 1, 0)) \%>\%
   group_by(sp_2008) \%>\%
   summarize(mortality = mean(mortality), n = n()) \%>\%
   arrange(desc(n))
