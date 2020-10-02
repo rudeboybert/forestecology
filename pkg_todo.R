@@ -155,6 +155,31 @@ if(FALSE){
 
 
 
+# Plot posterior parameters ----------------------------------------------------
+focal_vs_comp_bw <- bw_growth_df %>%
+  # mutate(sp = trait_group) %>%
+  mutate(sp = family) %>%
+  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
+
+# a) Fit model (compute posterior parameters) with no permutation shuffling
+posterior_param_bw <- focal_vs_comp_bw %>%
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+
+# b) Recreate Fig5 from Allen (2020): Posterior distributions of selected lambdas
+posterior_plots <- plot_posterior_parameters(
+  posterior_param = posterior_param_bw,
+  sp_to_plot = c("cornaceae", "fagaceae", "hamamelidaceae", "juglandaceae", "lauraceae", "rosaceae", "sapindaceae", "ulmaceae")
+)
+
+posterior_plots[["beta_0"]]
+posterior_plots[["beta_dbh"]]
+posterior_plots[["lambda"]]
+
+str_c("results/", format(Sys.time(), "%Y-%m-%d"), "_posterior_lambda_family.png") %>%
+  ggsave(plot = posterior_plots[["lambda"]])
+
+
+
 # Cross-validation -------------------------------------------------------------
 tic()
 cv_bw <- focal_vs_comp_bw %>%
@@ -170,23 +195,7 @@ cv_bw %>%
 
 
 
-# Plot posterior parameters ----------------------------------------------------
-posterior_param_bw <- focal_vs_comp_bw %>%
-  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
-
-species_list_bw <- focal_vs_comp_bw$focal_sp %>% unique()
-species_list_bw
-
-posterior_plots <- plot_posterior_parameters(posterior_param = posterior_param_bw, species_list = species_list_bw)
-posterior_plots[["beta_0"]]
-posterior_plots[["beta_dbh"]]
-posterior_plots[["lambdas"]]
-
-
-
-
-
-# Recreate Fig2 from Allen (2020): Full cross-validation simualation -----------
+# Recreate Fig2 from Allen (2020): Full cross-validation simulation -----------
 
 # Number of permutation shuffles:
 num_shuffle <- 9

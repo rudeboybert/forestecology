@@ -4,10 +4,12 @@
 \alias{plot_posterior_parameters}
 \title{Plot beta_0 parameters}
 \usage{
-plot_posterior_parameters(posterior_param, species_list)
+plot_posterior_parameters(posterior_param, sp_to_plot = NULL)
 }
 \arguments{
 \item{posterior_param}{Output of \code{\link{fit_bayesian_model}}}
+
+\item{sp_to_plot}{Vector of subset of species to plot}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}
