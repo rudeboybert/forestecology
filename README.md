@@ -465,6 +465,10 @@ predictions_shuffle %>%
 #> [1] 0.1505954
 ```
 
+The RMSE is lower for the non-shuffled version. This gives support for
+the idea that competitor identiy does matter for competitive
+interactions.
+
 **SCBI**:
 
 ``` r
@@ -541,6 +545,9 @@ cv_bw %>%
 #> [1] 0.1533511
 ```
 
+As expected this RMSE is higher than that when the model is fit without
+cross validation. See Allen and Kim (2020) for more discussion of this.
+
 ``` r
 # SCBI
 tic()
@@ -561,18 +568,69 @@ cv_scbi %>%
 We might be interested in the posterior distributions of parameters. The
 betas tell us about how fast each species grows and how this depends on
 DBH. The lambdas, which are often of more interest, are the
-species-specific competition coefficents. The full lambda matrix gives
+species-specific competition coefficents The full lambda matrix gives
 competition strength between species. There is a rich literature how
-this matrxi (cite).
+this matrix (cite).
 
-Because of the strucutre of the `bw_fit_model` object we cannot simply
+Because of the structure of the `bw_fit_model` object we cannot simply
 draw these curves based on the posterior distribution. `bw_fit_model`
 gives the parameteres *compared* to a baseline. This is often not of
 interest. So to display these parameters as we care about them we have
 to sample from the baseline distrubiton and from the comparison one to
 get the posterior distribution of interest.
 
+Here we re-run the Big Woods model but using the family as the group for
+comparison. This makes the posterior distributions easier to follow.
+Also, surprisingly, grouping by family performed just as well as
+grouping by species (see Allen and Kim 2020). First we re-run
+`create_focal_vs_comp` and `fit_bayesian_model` with the grouping
+variable as family.
+
 ``` r
 
-# plot_beta0(bw_fit_model)
+focal_vs_comp_bw <- bw_growth_df %>%
+  # mutate(sp = trait_group) %>%
+  mutate(sp = family) %>%
+  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
+
+# a) Fit model (compute posterior parameters) with no permutation shuffling
+posterior_param_bw <- focal_vs_comp_bw %>%
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 ```
+
+Now the output of `fit_bayesian_model` is passed to
+`plot_posterior_parameters`.
+
+``` r
+# b) Recreate Fig5 from Allen (2020): Posterior distributions of selected lambdas
+posterior_plots <- plot_posterior_parameters(
+  posterior_param = posterior_param_bw,
+  sp_to_plot = c("cornaceae", "fagaceae", "hamamelidaceae", "juglandaceae", "lauraceae", "rosaceae", "sapindaceae", "ulmaceae")
+)
+```
+
+The output is a list with three plots stored. The element `beta_0` gives
+the growth intercept, i.e., how fast an individual of each group grows
+independent of DBH).
+
+``` r
+posterior_plots[["beta_0"]]
+```
+
+<img src="man/figures/README-unnamed-chunk-28-1.png" width="100%" />
+
+Next `beta_dbh` gives the DBH-growth slope for each group.
+
+``` r
+posterior_plots[["beta_dbh"]]
+```
+
+<img src="man/figures/README-unnamed-chunk-29-1.png" width="100%" />
+
+Finally `lambda` gives the competition coeffiencts.
+
+``` r
+posterior_plots[["lambda"]]
+```
+
+<img src="man/figures/README-unnamed-chunk-30-1.png" width="100%" />
