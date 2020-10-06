@@ -555,11 +555,12 @@ posterior_plots[["lambda"]]
 ```{r, eval = run_scbi}
 posterior_plots_scbi <- plot_posterior_parameters(
   posterior_param = posterior_param_scbi,
-  sp_to_plot = c("caca", "litu", "cagl", "cato")
+  sp_to_plot = c("quru", "litu", "cagl", "cato")
 )
 ```
 
 ```{r, eval = run_scbi}
 posterior_plots_scbi[["lambda"]]
+#comment to change
 ```
 

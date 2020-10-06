@@ -682,7 +682,7 @@ posterior_plots[["lambda"]]
 ``` r
 posterior_plots_scbi <- plot_posterior_parameters(
   posterior_param = posterior_param_scbi,
-  sp_to_plot = c("caca", "litu", "cagl", "cato")
+  sp_to_plot = c("quru", "litu", "cagl", "cato")
 )
 ```
 
@@ -691,3 +691,7 @@ posterior_plots_scbi[["lambda"]]
 ```
 
 <img src="man/figures/README-unnamed-chunk-32-1.png" width="100%" />
+
+``` r
+#comment to change
+```
