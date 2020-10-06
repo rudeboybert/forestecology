@@ -500,11 +500,11 @@ cv_scbi %>%
 
 ### Visualize posterior distributions
 
-* Plot posterior distributions of all parameters
+**Big Woods**
 
 We might be interested in the posterior distributions of parameters. The betas tell us about how fast each species grows and how this depends on DBH. The lambdas, which are often of more interest, are the species-specific competition coefficents The full lambda matrix gives competition strength between species. There is a rich literature how this matrix (cite). 
 
-Because of the structure of the `bw_fit_model` object we cannot simply draw these curves based on the posterior distribution. `bw_fit_model` gives the parameteres *compared* to a baseline. This is often not of interest. So to display these parameters as we care about them we have to sample from the baseline distrubiton and from the comparison one to get the posterior distribution of interest. 
+Because of the structure of the `bw_fit_model` object we cannot simply draw these curves based on the posterior distribution. `bw_fit_model` gives the parameteres *compared* to a baseline. This is often not of interest. So to display these parameters as we care about them we have to sample from the baseline distribution and from the comparison one to get the posterior distribution of interest. 
 
 Here we re-run the Big Woods model but using the family as the group for comparison. This makes the posterior distributions easier to follow. Also, surprisingly, grouping by family performed just as well as grouping by species (see Allen and Kim 2020). First we re-run `create_focal_vs_comp` and `fit_bayesian_model` with the grouping variable as family.
 
@@ -550,12 +550,12 @@ posterior_plots[["lambda"]]
 ```
 
 
-** SCBI 
+**SCBI** 
 
 ```{r, eval = run_scbi}
 posterior_plots_scbi <- plot_posterior_parameters(
   posterior_param = posterior_param_scbi,
-  sp_to_plot = c("libe", "caca", "astr", "litu", "havi", "cagl", "cato")
+  sp_to_plot = c("caca", "litu", "cagl", "cato")
 )
 ```
 

@@ -605,7 +605,7 @@ cv_scbi %>%
 
 ### Visualize posterior distributions
 
-  - Plot posterior distributions of all parameters
+**Big Woods**
 
 We might be interested in the posterior distributions of parameters. The
 betas tell us about how fast each species grows and how this depends on
@@ -618,7 +618,7 @@ Because of the structure of the `bw_fit_model` object we cannot simply
 draw these curves based on the posterior distribution. `bw_fit_model`
 gives the parameteres *compared* to a baseline. This is often not of
 interest. So to display these parameters as we care about them we have
-to sample from the baseline distrubiton and from the comparison one to
+to sample from the baseline distribution and from the comparison one to
 get the posterior distribution of interest.
 
 Here we re-run the Big Woods model but using the family as the group for
@@ -677,12 +677,12 @@ posterior_plots[["lambda"]]
 
 <img src="man/figures/README-unnamed-chunk-30-1.png" width="100%" />
 
-\*\* SCBI
+**SCBI**
 
 ``` r
 posterior_plots_scbi <- plot_posterior_parameters(
   posterior_param = posterior_param_scbi,
-  sp_to_plot = c("libe", "caca", "astr", "litu", "havi", "cagl", "cato")
+  sp_to_plot = c("caca", "litu", "cagl", "cato")
 )
 ```
 
