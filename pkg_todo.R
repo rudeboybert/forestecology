@@ -168,7 +168,7 @@ posterior_param_bw <- focal_vs_comp_bw %>%
 # b) Recreate Fig5 from Allen (2020): Posterior distributions of selected lambdas
 posterior_plots <- plot_posterior_parameters(
   posterior_param = posterior_param_bw,
-  sp_to_plot = c("cornaceae", "fagaceae", "hamamelidaceae", "juglandaceae", "lauraceae", "rosaceae", "sapindaceae", "ulmaceae")
+  sp_to_plot = c("black_northern_pin_hybrid", "northern_white_cedar", "white_oak")
 )
 
 posterior_plots[["beta_0"]]

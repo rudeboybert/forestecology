@@ -569,7 +569,7 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
       x = expression(lambda),
       y = "Species",
       title = "Competitor species in rows, focal species in columns",
-      subtitle = str_c("Ex: Top row, second column = competitive effect of", sp_list[1], "on", sp_list[2], sep = " ")
+      subtitle = str_c("Ex: Top row, second column = competitive effect of", sp_to_plot[1], "on", sp_to_plot[2], sep = " ")
     )
 
   return(plot_list)
