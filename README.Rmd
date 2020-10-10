@@ -91,7 +91,7 @@ bw_census_2008 <- bw_census_2008 %>%
 
 **SCBI**:
 
-For SCBI we will just look at a 16 ha plot to speed calculations.
+For SCBI we will just look at a 9 ha plot to speed calculations.
 
 ```{r, eval = run_scbi}
 # SCBI
@@ -103,7 +103,7 @@ scbi_2013 <-
     date = ExactDate, codes, status
   ) %>%
   mutate(date = mdy(date)) %>%
-  filter(gy <= 400)
+  filter(gx < 300, gy > 300, gy < 600)
 
 scbi_2018 <-
   "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem3.csv" %>% 
@@ -113,8 +113,8 @@ scbi_2018 <-
     date = ExactDate, codes, status
   ) %>% 
   mutate(dbh = as.numeric(dbh),
-         date = mdy(date)) %>%
-  filter(gy <= 400)
+         date = mdy(date))  %>%
+  filter(gx < 300, gy > 300, gy < 600)
 ```
 
 
@@ -252,7 +252,7 @@ ggplot() +
 # Study region boundary polygon
 scbi_study_region <- 
  #tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
-  tibble(x = c(0,400,400,0,0), y = c(0,0,400,400,0)) %>% 
+  tibble(x = c(0,300,300,0,0), y = c(300,300,600,600,3)) %>% 
   sf_polygon()
 
 # Add buffer variable to data frame
@@ -306,7 +306,7 @@ bw_cv_grid_sf <- bw_cv_grid$blocks %>%
 ```{r, eval = run_scbi}
 # SCBI
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = 100, k = 20, yOffset = 0.9999, verbose = FALSE
+  speciesData = scbi_growth_df, theRange = 100, yOffset = 0.9999, k = 9, verbose = FALSE
 )
 
 # Add foldID to data
@@ -425,12 +425,12 @@ toc()
 
 ```{r, eval = run_scbi}
 # SCBI
-scbi_growth_df <- focal_vs_comp_scbi %>% 
+scbi_growth_df_noCV <- focal_vs_comp_scbi %>% 
   predict_bayesian_model(posterior_param = posterior_param_scbi) %>% 
   right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
 
 # Observed vs predicted growth  
-ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
+ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
   geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = 'lm') +
   geom_abline(slope = 1, intercept = 0) +
@@ -441,7 +441,7 @@ ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
   )
 
 reslab <- expression(paste('Residual (cm ',y^{-1},')'))
-scbi_growth_df %>% 
+scbi_growth_df_noCV %>% 
   st_as_sf() %>%
   # Need to investigate missingness
   filter(!is.na(growth_hat)) %>% 
@@ -451,7 +451,7 @@ scbi_growth_df %>%
     error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
   ) %>% 
   ggplot() + 
-  geom_sf(aes(col = error_compress), size = 0.4) + 
+  geom_sf(aes(col = error_compress), size = 1) + 
   theme_bw() + 
   scale_color_gradient2(
     low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
@@ -484,7 +484,7 @@ cv_bw %>%
 As expected this RMSE is higher than that when the model is fit without cross validation. See Allen and Kim (2020) for more discussion of this. 
 
 
-```{r, eval = FALSE}
+```{r, eval = run_scbi}
 # SCBI
 tic()
 cv_scbi <- focal_vs_comp_scbi %>%
@@ -561,6 +561,5 @@ posterior_plots_scbi <- plot_posterior_parameters(
 
 ```{r, eval = run_scbi}
 posterior_plots_scbi[["lambda"]]
-#comment to change
 ```
 

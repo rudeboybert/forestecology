@@ -81,7 +81,7 @@ bw_census_2008 <- bw_census_2008 %>%
 
 **SCBI**:
 
-For SCBI we will just look at a 16 ha plot to speed calculations.
+For SCBI we will just look at a 9 ha plot to speed calculations.
 
 ``` r
 # SCBI
@@ -93,7 +93,7 @@ scbi_2013 <-
     date = ExactDate, codes, status
   ) %>%
   mutate(date = mdy(date)) %>%
-  filter(gy <= 400)
+  filter(gx < 300, gy > 300, gy < 600)
 
 scbi_2018 <-
   "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem3.csv" %>% 
@@ -103,8 +103,8 @@ scbi_2018 <-
     date = ExactDate, codes, status
   ) %>% 
   mutate(dbh = as.numeric(dbh),
-         date = mdy(date)) %>%
-  filter(gy <= 400)
+         date = mdy(date))  %>%
+  filter(gx < 300, gy > 300, gy < 600)
 ```
 
 ### Compute growth
@@ -272,7 +272,7 @@ ggplot() +
 # Study region boundary polygon
 scbi_study_region <- 
  #tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
-  tibble(x = c(0,400,400,0,0), y = c(0,0,400,400,0)) %>% 
+  tibble(x = c(0,300,300,0,0), y = c(300,300,600,600,3)) %>% 
   sf_polygon()
 
 # Add buffer variable to data frame
@@ -345,7 +345,7 @@ bw_cv_grid_sf <- bw_cv_grid$blocks %>%
 ``` r
 # SCBI
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = 100, k = 20, yOffset = 0.9999, verbose = FALSE
+  speciesData = scbi_growth_df, theRange = 100, yOffset = 0.9999, k = 9, verbose = FALSE
 )
 ```
 
@@ -422,24 +422,24 @@ tic()
 focal_vs_comp_scbi <- scbi_growth_df %>% 
   create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid_sf, id = "stemID")
 toc()
-#> 172.237 sec elapsed
+#> 13.416 sec elapsed
 ```
 
 ``` r
 # SCBI
 glimpse(focal_vs_comp_scbi)
-#> Rows: 2,160,651
+#> Rows: 147,125
 #> Columns: 10
-#> $ focal_ID        <dbl> 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,…
-#> $ focal_sp        <fct> libe, libe, libe, libe, libe, libe, libe, libe, libe,…
-#> $ dbh             <dbl> 21.7, 21.7, 21.7, 21.7, 21.7, 21.7, 21.7, 21.7, 21.7,…
-#> $ foldID          <int> 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,…
-#> $ geometry        <POINT> POINT (17.3 58.9), POINT (17.3 58.9), POINT (17.3 5…
-#> $ growth          <dbl> -0.01293247, -0.01293247, -0.01293247, -0.01293247, -…
-#> $ comp_ID         <dbl> 31, 1137, 1139, 1140, 1141, 1142, 1143, 1145, 1150, 1…
-#> $ dist            <dbl> 6.5192024, 2.5495098, 4.4911023, 4.6270941, 0.6708204…
-#> $ comp_sp         <fct> saca, litu, acru, frni, ilve, ilve, ilve, ilve, libe,…
-#> $ comp_basal_area <dbl> 0.042638481, 32.019289040, 15.406402575, 1.635394540,…
+#> $ focal_ID        <dbl> 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,…
+#> $ focal_sp        <fct> nysy, nysy, nysy, nysy, nysy, nysy, nysy, nysy, nysy,…
+#> $ dbh             <dbl> 136.5, 136.5, 136.5, 136.5, 136.5, 136.5, 136.5, 136.…
+#> $ foldID          <int> 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,…
+#> $ geometry        <POINT> POINT (14.2 428.5), POINT (14.2 428.5), POINT (14.2…
+#> $ growth          <dbl> 0.1029664, 0.1029664, 0.1029664, 0.1029664, 0.1029664…
+#> $ comp_ID         <dbl> 1836, 1847, 1848, 1849, 1850, 1851, 1853, 1854, 1855,…
+#> $ dist            <dbl> 7.479310, 2.807134, 1.615553, 2.624878, 2.983280, 5.6…
+#> $ comp_sp         <fct> tiam, nysy, nysy, nysy, havi, tiam, frni, caca, litu,…
+#> $ comp_basal_area <dbl> 1.7553845, 0.3318307, 0.3959192, 0.5345616, 0.4717298…
 ```
 
 ### Model fit and prediction
@@ -457,7 +457,7 @@ tic()
 posterior_param_bw <- focal_vs_comp_bw %>% 
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
-#> 211.59 sec elapsed
+#> 59.919 sec elapsed
 ```
 
 This output has the posterior parameters for the specified competition
@@ -496,7 +496,7 @@ predictions_shuffle <- focal_vs_comp_bw %>%
 predictions_shuffle %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
-#> [1] 0.1505954
+#> [1] 0.1502176
 ```
 
 The RMSE is lower for the non-shuffled version. This gives support for
@@ -511,17 +511,17 @@ tic()
 posterior_param_scbi <- focal_vs_comp_scbi %>% 
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
-#> 708.812 sec elapsed
+#> 89.203 sec elapsed
 ```
 
 ``` r
 # SCBI
-scbi_growth_df <- focal_vs_comp_scbi %>% 
+scbi_growth_df_noCV <- focal_vs_comp_scbi %>% 
   predict_bayesian_model(posterior_param = posterior_param_scbi) %>% 
   right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
 
 # Observed vs predicted growth  
-ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
+ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
   geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = 'lm') +
   geom_abline(slope = 1, intercept = 0) +
@@ -537,7 +537,7 @@ ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
 ``` r
 
 reslab <- expression(paste('Residual (cm ',y^{-1},')'))
-scbi_growth_df %>% 
+scbi_growth_df_noCV %>% 
   st_as_sf() %>%
   # Need to investigate missingness
   filter(!is.na(growth_hat)) %>% 
@@ -547,7 +547,7 @@ scbi_growth_df %>%
     error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
   ) %>% 
   ggplot() + 
-  geom_sf(aes(col = error_compress), size = 0.4) + 
+  geom_sf(aes(col = error_compress), size = 1) + 
   theme_bw() + 
   scale_color_gradient2(
     low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
@@ -579,7 +579,7 @@ cv_bw <- focal_vs_comp_bw %>%
   run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 toc()
-#> 1663.303 sec elapsed
+#> 1391.868 sec elapsed
 
 cv_bw %>%
   rmse(truth = growth, estimate = growth_hat) %>%
@@ -597,10 +597,12 @@ cv_scbi <- focal_vs_comp_scbi %>%
   run_cv(max_dist = max_dist, cv_grid = scbi_cv_grid) %>%
   right_join(scbi_growth_df, by = c("focal_ID" = "treeID"))
 toc()
+#> 731.788 sec elapsed
 
 cv_scbi %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
+#> [1] 0.2077376
 ```
 
 ### Visualize posterior distributions
