@@ -422,7 +422,7 @@ tic()
 focal_vs_comp_scbi <- scbi_growth_df %>% 
   create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid_sf, id = "stemID")
 toc()
-#> 13.416 sec elapsed
+#> 12.631 sec elapsed
 ```
 
 ``` r
@@ -457,7 +457,7 @@ tic()
 posterior_param_bw <- focal_vs_comp_bw %>% 
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
-#> 59.919 sec elapsed
+#> 191.157 sec elapsed
 ```
 
 This output has the posterior parameters for the specified competition
@@ -511,7 +511,7 @@ tic()
 posterior_param_scbi <- focal_vs_comp_scbi %>% 
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
-#> 89.203 sec elapsed
+#> 82.667 sec elapsed
 ```
 
 ``` r
@@ -519,6 +519,11 @@ toc()
 scbi_growth_df_noCV <- focal_vs_comp_scbi %>% 
   predict_bayesian_model(posterior_param = posterior_param_scbi) %>% 
   right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
+
+scbi_growth_df_noCV %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+#> [1] 0.1168431
 
 # Observed vs predicted growth  
 ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
@@ -579,7 +584,7 @@ cv_bw <- focal_vs_comp_bw %>%
   run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 toc()
-#> 1391.868 sec elapsed
+#> 1521.185 sec elapsed
 
 cv_bw %>%
   rmse(truth = growth, estimate = growth_hat) %>%
@@ -597,7 +602,7 @@ cv_scbi <- focal_vs_comp_scbi %>%
   run_cv(max_dist = max_dist, cv_grid = scbi_cv_grid) %>%
   right_join(scbi_growth_df, by = c("focal_ID" = "treeID"))
 toc()
-#> 731.788 sec elapsed
+#> 763.035 sec elapsed
 
 cv_scbi %>%
   rmse(truth = growth, estimate = growth_hat) %>%
@@ -693,7 +698,3 @@ posterior_plots_scbi[["lambda"]]
 ```
 
 <img src="man/figures/README-unnamed-chunk-32-1.png" width="100%" />
-
-``` r
-#comment to change
-```

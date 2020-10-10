@@ -429,6 +429,10 @@ scbi_growth_df_noCV <- focal_vs_comp_scbi %>%
   predict_bayesian_model(posterior_param = posterior_param_scbi) %>% 
   right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
 
+scbi_growth_df_noCV %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
 # Observed vs predicted growth  
 ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
   geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
