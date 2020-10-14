@@ -547,6 +547,8 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
 
   # When we only want to plot a subset of species:
   if(!is.null(sp_to_plot)){
+    sp_to_plot <- sort(sp_to_plot)
+
     posterior_lambda <- posterior_lambda %>%
       filter(
         competitor %in% sp_to_plot,
