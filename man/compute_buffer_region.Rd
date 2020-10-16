@@ -11,7 +11,7 @@ compute_buffer_region(region, direction = "in", size)
 
 \item{direction}{"in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.}
 
-\item{max_dist}{size of buffer in same units as geometry in \code{region}}
+\item{size}{Distance to determine which neighboring trees to a focal tree are competitors.}
 }
 \value{
 An \code{sf} polygon object of buffer

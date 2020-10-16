@@ -1,8 +1,8 @@
 #' Create focal versus competitor trees data frame
 #'
-#' @inheritParams compute_buffer_region
-#' @param growth_df A \code{\link{compute_growth}} output converted to \linkS4class{sf} object
+#' @param growth_df A \code{\link{compute_growth}} output converted to \code{sf} object
 #' @param cv_grid_sf An sf object of a \code{blockCV} block output
+#' @param max_dist Distance to determine which neighboring trees to a focal tree are competitors.
 #' @param id A character string of the variable name in \code{growth_df} uniquely identifying each tree
 #' @return \code{focal_vs_comp} data frame of all focal trees and for each focal
 #'   tree all possible competitor trees. In particular, for each competitor tree
@@ -31,6 +31,7 @@
 #' library(dplyr)
 #' library(sf)
 #' library(sfheaders)
+#' library(tibble)
 #'
 #' # Create fold information sf object. TODO: clean this
 #' cv_grid_ex <-
@@ -372,6 +373,7 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE){
 #' @importFrom mvnfast rmvt
 #' @importFrom purrr set_names
 #' @importFrom ggridges geom_density_ridges
+#' @importFrom stats as.formula
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'
@@ -586,6 +588,7 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
 #' @inheritParams fit_bayesian_model
 #' @inheritParams create_focal_vs_comp
 #' @param all_folds Boolean as to whether to run on all folds
+#' @param cv_grid \code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}
 #' @description Run cross-validation
 #'
 #' @import dplyr

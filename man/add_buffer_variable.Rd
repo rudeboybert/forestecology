@@ -7,14 +7,16 @@
 add_buffer_variable(growth_df, direction, size, region)
 }
 \arguments{
-\item{growth_df}{\code{\link{compute_growth}} data frame}
+\item{growth_df}{\code{sf} data frame}
 
 \item{direction}{"in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.}
+
+\item{size}{Distance to determine which neighboring trees to a focal tree are competitors.}
 
 \item{region}{An \code{sf} polygon object of region to be buffered}
 }
 \value{
-The same \code{\link{growth_df}} data frame but with a new boolean
+The same \code{growth_df} data frame but with a new boolean
 variable \code{buffer} indicating if a tree is in the study region buffer
 area. This uses \code{\link{compute_buffer_region}} to define the boundary
 of the buffer region.

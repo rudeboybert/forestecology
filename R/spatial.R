@@ -3,10 +3,9 @@ globalVariables(c(
 ))
 
 #' Computer buffer to a region.
-#'
+#' @inheritParams add_buffer_variable
 #' @param region An \code{sf} polygon object of region to be buffered
 #' @param direction "in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.
-#' @param max_dist size of buffer in same units as geometry in \code{region}
 #' @return An \code{sf} polygon object of buffer
 #' @importFrom sfheaders sf_polygon
 #' @importFrom sf st_buffer
@@ -61,9 +60,10 @@ compute_buffer_region <- function(region, direction = "in", size){
 
 #' Identify trees in the buffer region
 #'
-#' @param growth_df \code{\link{compute_growth}} data frame
+#' @param growth_df \code{sf} data frame
+#' @param size Distance to determine which neighboring trees to a focal tree are competitors.
 #' @inheritParams compute_buffer_region
-#' @return The same \code{\link{growth_df}} data frame but with a new boolean
+#' @return The same \code{growth_df} data frame but with a new boolean
 #'   variable \code{buffer} indicating if a tree is in the study region buffer
 #'   area. This uses \code{\link{compute_buffer_region}} to define the boundary
 #'   of the buffer region.
@@ -134,7 +134,6 @@ add_buffer_variable <- function(growth_df, direction, size, region){
 #'
 #' @param focal_trees An \code{sf} polygon object of the focal trees of interest
 #' @param comp_trees An \code{sf} polygon object of the competitor trees
-#'
 #' @return A data frame with three columns: \code{focal_ID} of focal tree,
 #'   \code{comp_dist} of competitor tree, and \code{dist} of distance between
 #'   them.
