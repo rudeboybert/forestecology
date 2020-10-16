@@ -1,0 +1,14 @@
+citHeader("To cite forestecology in publications, please use:")
+
+citEntry(
+    entry = "Article",
+    author = personList(as.person("David Allen"), as.person("Albert Y. Kim")),
+    title = "A permutation test and spatial cross-validation approach to assess models of interspecific competition between trees",
+    journal = "PLOS One",
+    year = 2020,
+    volume = 15,
+    issue = 3,
+    url = "https://doi.org/10.1371/journal.pone.0229930",
+    textVersion = paste("Allen, D. and Kim, A.Y. (2020)",
+        "A permutation test and spatial cross-validation approach to assess models of interspecific competition between trees",
+        "PLOS One. 15(3)"))
