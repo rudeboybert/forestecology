@@ -28,7 +28,7 @@ compute_growth <- function(census_df1, census_df2, id) {
 
   # Limit second census data to only those variables that can change
   census_df2 <- census_df2 %>%
-    select(id, dbh, date, codes)
+    select(all_of(id), dbh, date, codes)
 
   growth_df <- census_df1 %>%
     filter(dbh > 0) %>%

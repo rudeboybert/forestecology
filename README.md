@@ -28,13 +28,16 @@ And the development version from [GitHub](https://github.com/) with:
 
 ## Example analysis
 
-We present an example analysis using:
+We present an example analysis using data from two
+[ForestGEO](https://forestgeo.si.edu/) plots:
 
   - [Michigan Big Woods](https://doi.org/10.7302/wx55-kt18) research
-    plot data
+    plot data. For more information see
+    [here](http://hdl.handle.net/2027.42/156251).
   - [Smithsonian Conservation Biology Institute (SCBI)
     ForestGEO](https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/tree/master/tree_main_census)
-    research plot data
+    research plot data. For more information see
+    [here](https://doi.org/10.1890/13-0010.1).
 
 <!-- end list -->
 
@@ -50,14 +53,16 @@ library(blockCV)
 library(tictoc)
 library(yardstick)
 library(viridis)
+library(lubridate)
 
-run_scbi <- FALSE
+run_scbi <- TRUE
 run_bw <- TRUE
 ```
 
 ### Load & preprocess data
 
-We first load and preprocess the data corresponding to the two census
+The data for the Big Woods plot are included in the package. For SCBI,
+we load and preprocess the data corresponding to the two census
 reflecting the time period over which we consider growth in dbh. We load
 them into R as “tibble” data frames thereby ensuring a standardized
 input/output format that can be used across all `tidyverse` packages
@@ -69,45 +74,18 @@ correct names, types (`dbl`, `data`, `factor`).
 ``` r
 # Big Woods
 # Read in census data from 2008 & 2014
-bw_2008 <- 
-  "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>% 
-  read_delim(delim = "\t") %>% 
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
-    date, codes
-  )
-bw_2014 <- 
-  "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>% 
-  read_delim(delim = "\t") %>% 
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
-    date, codes
-  )
+data(bw_census_2008, bw_census_2014, bw_species)
 
-# Read in grouping classification data
-bw_species <- 
-  "https://deepblue.lib.umich.edu/data/downloads/000000086" %>% 
-  read_delim(delim = "\t") %>% 
-  # convert all to snake case:
-  mutate_at(c("species", "genus", "family", "idlevel", "spcode"), to_any_case) %>% 
-  # join trait group
-  left_join(families, by = c("spcode", "family")) %>% 
-  mutate(
-    sp = str_sub(genus, 1, 2), 
-    sp = str_c(sp, str_sub(species, 1, 2)),
-    sp = tolower(sp),
-    latin = str_c(genus, species, sep = " "),
-    latin = to_any_case(latin)
-  ) %>% 
-  select(sp = spcode, genus, species, latin, family, trait_group)
-
-bw_2008 <- bw_2008 %>%
-  left_join(bw_species,by='sp')
+# Append additional species data
+bw_census_2008 <- bw_census_2008 %>%
+  left_join(bw_species, by = "sp") %>%
+  select(-c(genus, species, latin))
 ```
 
 **SCBI**:
+
+For SCBI we will look at just a 9 ha section of the plot to speed
+calculations.
 
 ``` r
 # SCBI
@@ -117,7 +95,9 @@ scbi_2013 <-
   select(
     treeID, stemID, sp, quadrat, gx, gy, dbh, 
     date = ExactDate, codes, status
-  )
+  ) %>%
+  mutate(date = mdy(date)) %>%
+  filter(gx < 300, gy > 300, gy < 600)
 
 scbi_2018 <-
   "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem3.csv" %>% 
@@ -126,18 +106,20 @@ scbi_2018 <-
     treeID, stemID, sp, quadrat, gx, gy, dbh, 
     date = ExactDate, codes, status
   ) %>% 
-  mutate(dbh = as.numeric(dbh))
+  mutate(dbh = as.numeric(dbh),
+         date = mdy(date))  %>%
+  filter(gx < 300, gy > 300, gy < 600)
 ```
 
 ### Compute growth
 
-We then combine the two census data frames into a single data frame that
-now includes a numerical variable `growth` reflecting the average annual
-growth of dbh in cm. Furthermore, variables that (in theory) remain
-unchanged between censuses appear only once, such as `gx`, `gy`,
-species-related variables. Variables that should change between censuses
-are tagged with `1/2` indicating earlier/later, such as `dbh1/dbh2`,
-`codes1/codes2`.
+For each plot we combine the two census data frames into a single data
+frame that now includes a numerical variable `growth` reflecting the
+average annual growth of dbh in cm. Furthermore, variables that (in
+theory) remain unchanged between censuses appear only once, such as
+`gx`, `gy`, species-related variables. Variables that should change
+between censuses are tagged with `1/2` indicating earlier/later, such as
+`dbh1/dbh2`, `codes1/codes2`.
 
 The resulting data frames are named with some variation of `growth_df`.
 
@@ -145,31 +127,39 @@ The resulting data frames are named with some variation of `growth_df`.
 
 ``` r
 # Big Woods
-census_df1 <- bw_2008
-# we need to filter out the resprouts
-census_df2 <- bw_2014 %>% 
-  filter(!str_detect(codes, 'R'))
 id <- "treeID"
 
-bw_growth_df <- 
+# we need to filter out the re-sprouts
+bw_census_2014 <- bw_census_2014 %>% 
+  filter(!str_detect(codes, 'R'))
+
+bw_growth_df <-
   # Merge both censuses and compute growth:
-  compute_growth(census_df1, census_df2, id) %>% 
-  mutate(sp = to_any_case(sp))
+  compute_growth(bw_census_2008, bw_census_2014, id) %>%
+  mutate(
+    sp = to_any_case(sp),
+    sp = as.factor(sp),
+    species = sp,
+    family = as.factor(family),
+    trait_group = as.factor(trait_group)) %>%
+  # drop stemID
+  select(-stemID)
 ```
 
 **SCBI**:
 
 ``` r
 # SCBI
-census_df1 <- scbi_2013
+census_df1 <- scbi_2013 
 census_df2 <- scbi_2018
 id <- "stemID"
 
 scbi_growth_df <- 
   # Merge both censuses and compute growth:
   compute_growth(census_df1, census_df2, id) %>%
-  # they are mesuaring in mm while we are measuring in cm!!!
-  mutate(growth = growth/10)
+  # Convert growth from cm to mm to make result comperable
+  mutate(growth = growth/10,
+             sp = as.factor(sp))
 ```
 
 **Comparison**:
@@ -177,14 +167,16 @@ scbi_growth_df <-
 ``` r
 # Both Big Woods & SCBI
 growth_df <- bind_rows(
-  bw_growth_df %>% select(growth) %>% mutate(site = "bw"),
-  scbi_growth_df %>% select(growth) %>% mutate(site = "scbi")
+  bw_growth_df %>% st_drop_geometry %>% select(growth) %>% mutate(site = "bw"),
+  scbi_growth_df %>% st_drop_geometry %>% select(growth) %>% mutate(site = "scbi")
 )
 ggplot(growth_df, aes(x = growth, y = ..density.., fill = site)) +
   geom_histogram(alpha = 0.5, position = "identity", binwidth = 0.05) +
   labs(x = "Average annual growth in dbh (cm per yr)") +
   coord_cartesian(xlim = c(-0.5, 1))
 ```
+
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 ### Add spatial information
 
@@ -193,11 +185,12 @@ Specifically:
 
 1.  In order to control for study region “edge effects” (cite Waller?),
     we need a function that adds “buffers” of trees. In our case, since
-    our model of interspecies competition relies on a spatial definition
-    of who is a “neighboring competitor” and certain explanatory
-    varibles such as biomass are cummulative, we need to ensure that all
-    trees being modeled are not biased to have different neighbor
-    structure, in particular the trees at the boundary of study regions.
+    our model of interspecific competition relies on a spatial
+    definition of who is a “neighboring competitor” and certain
+    explanatory variables such as biomass are cumulative, we need to
+    ensure that all trees being modeled are not biased to have different
+    neighbor structure, in particular the trees at the boundary of study
+    regions.
 2.  Assign each tree to a “fold” for cross-validation purposes.
     Conventional cross-validation schemes assign observations to folds
     by resampling individual observations at random. However, underlying
@@ -208,27 +201,34 @@ Specifically:
     have implemented spatial cross-validation include @valavi2019
 
 Thus, before we can incorporate the above information to `growth_df`, we
-need to define two constants:
+need to define two constants.
 
 ``` r
 cv_fold_size <- 100
 max_dist <- 7.5
 ```
 
+The first, `cv_fold_size` is the length of the folds, each fold is a
+square. The next, `max_dist` is the maximum distance for a tree’s
+competitive neighborhood. Trees within this distance of each other are
+assumed to compete while those farther than this distance apart do not.
+Both these values are in the same units as `gx` and `gz`, most often
+this will be meters.
+
+<!--
+DA comment: I am not sure about the below so I took it out. We don't assume that competitive interactions are inversely related to distance. We assume that competitive interactions are equivalent between distance 0 and 7.5, but than zero after that. Canham has the inversely related structure but we don't.
+
+Following Tobler's first law of geography that "everything is related to everything else, but near things are more related than distant things." @tobler1970firstlawofgeo, we assume that the degree of spatial autocorrelation is inversely-related to distance. However, we further assume that once trees are more than 7.5 meters apart, this autocorrelation is negligeable. -->
+
+Other studies have estimated the value of `max_dist`; we use an average
+of estimated values \[@canham2004, @canham2006, @uriarte2004,
+@tatsumi2013\].
+
 #### Defining buffers
 
-For a focal tree of interest, the `max_dist` of 7.5 meters acts as a
-radius defining a neighborhood within which all trees are considered
-competitors. In other words, all trees within 7.5 meters of the focal
-tree are considered competitor trees. Other studies have estimated this
-distance; we used 7.5 meters as an average of estimated values
-\[@canham2004, @canham2006, @uriarte2004, @tatsumi2013\]. Following
-Tobler’s first law of geography that “everything is related to
-everything else, but near things are more related than distant things.”
-@tobler1970firstlawofgeo, we assume that the degree of spatial
-autocorrelation is inversely-related to distance. However, we further
-assume that once trees are more than 7.5 meters apart, this
-autocorrelation is negligeable.
+We use the function `add_buffer_variable` to identify which trees are
+inside of a buffer region of size `max_dist`. The user will need to
+specify a study region and convert to a `sf_polygon`.
 
 **Example of buffer at work**:
 
@@ -240,13 +240,19 @@ square_boundary <- tibble(
 ) %>% 
   sf_polygon()
 
+# "Trees" in polygon
+trees_df <- tibble(
+    x = runif(100),
+    y = runif(100)
+  ) %>%
+  sf_point()
+
 # Buffer polygon
-square_buffer <- square_boundary %>% 
-  st_buffer(dist = -0.1)
+trees_df <- trees_df %>%
+  add_buffer_variable(direction = "in", size = 0.1, region = square_boundary)
 
 ggplot() +
-  geom_sf(data = square_boundary) +
-  geom_sf(data = square_buffer, col="red") 
+  geom_sf(data = trees_df, aes(col = buffer))
 ```
 
 <img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
@@ -255,29 +261,14 @@ ggplot() +
 
 ``` r
 # Bigwoods
-# Study region boundary polygon
-bw_boundary <- bigwoods_study_region %>% 
-  sf_polygon()
+data(bw_study_region)
 
-# Buffer polygon
-bw_buffer <- bw_boundary %>%
-  st_buffer(dist = -max_dist)
+# Add buffer variable to data frame
+bw_growth_df <- bw_growth_df %>%
+  add_buffer_variable(direction = "in", size = max_dist, region = bw_study_region)
 
-# Convert data frame to sf object
-bw_growth_df <- bw_growth_df %>% 
-  st_as_sf(coords = c("gx", "gy"))
-
-# ID which points are in buffer and which are not
-buffer_index <- !st_intersects(bw_growth_df, bw_buffer, sparse = FALSE)
-bw_growth_df <- bw_growth_df %>% 
-  mutate(buffer = as.vector(buffer_index))
-
-# Plot
-ggplot() +  
-  geom_sf(data = bw_boundary) +
-  geom_sf(data = bw_buffer, col="red") +
-  # Only random sample of 1000 trees:
-  geom_sf(data = bw_growth_df %>% sample_n(1000), aes(col=buffer), size = 0.5)
+ggplot() +
+  geom_sf(data = bw_growth_df, aes(col = buffer))
 ```
 
 <img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
@@ -287,36 +278,30 @@ ggplot() +
 ``` r
 # SCBI
 # Study region boundary polygon
-scbi_boundary <- tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
+scbi_study_region <- 
+ #tibble(x = c(0,400,400,0,0), y = c(0,0,640,640,0)) %>% 
+  tibble(x = c(0,300,300,0,0), y = c(300,300,600,600,3)) %>% 
   sf_polygon()
 
-# Buffer polygon
-scbi_buffer <- scbi_boundary %>%
-  st_buffer(dist = -max_dist)
+# Add buffer variable to data frame
+scbi_growth_df <- scbi_growth_df %>%
+  add_buffer_variable(direction = "in", size = max_dist, region = scbi_study_region)
 
-# Convert data frame to sf object
-scbi_growth_df <- scbi_growth_df %>% 
-  st_as_sf(coords = c("gx", "gy"))
-
-# ID which points are in buffer and which are not
-buffer_index <- !st_intersects(scbi_growth_df, scbi_buffer, sparse = FALSE)
-scbi_growth_df <- scbi_growth_df %>% 
-  mutate(buffer = as.vector(buffer_index))
-
-# Plot
 ggplot() +
-  geom_sf(data = scbi_boundary) +
-  geom_sf(data = scbi_buffer, col="red") +
-  # Only random sample of 1000 trees:
-  geom_sf(data = scbi_growth_df %>% sample_n(1000), aes(col=buffer), size = 0.5)
+  geom_sf(data = scbi_growth_df, aes(col = buffer))
 ```
+
+<img src="man/figures/README-unnamed-chunk-12-1.png" width="100%" />
 
 #### Defining spatial cross-validation folds
 
 We use the [`blockCV`](https://github.com/rvalavi/blockCV) package to
 define the spatial grid, whose elements will act as the folds in our
-leave-one-out (by “one” we meen “one grid block”) cross-validation
-scheme.
+leave-one-out (by “one” we mean “one grid block”) cross-validation
+scheme. The upshot here is we add `foldID` to `growth_df` which
+identifies which fold each individual is in, and the creation of a
+`cv_grid_sf` object which gives the geometry of the cross validation
+grid.
 
 **Big Woods**:
 
@@ -349,12 +334,21 @@ bw_cv_grid$plots +
 
 ``` r
 
-# Remove weird folds with no trees in them from viz above
 bw_growth_df <- bw_growth_df %>%
-  filter(!foldID %in% c(19, 23, 21, 17, 8, 19))
+  filter(!foldID %in% c(19, 23, 21, 17, 8, 19)) %>%
+  mutate(foldID = as.character(foldID))
 
-# Save original
-bw_growth_df_orig <- bw_growth_df
+# Deliverable
+ggplot() +
+  geom_sf(data = bw_growth_df, aes(col = foldID, alpha = buffer))
+```
+
+<img src="man/figures/README-unnamed-chunk-13-3.png" width="100%" />
+
+``` r
+
+bw_cv_grid_sf <- bw_cv_grid$blocks %>%
+  st_as_sf()
 ```
 
 **SCBI**:
@@ -362,8 +356,13 @@ bw_growth_df_orig <- bw_growth_df
 ``` r
 # SCBI
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = 100, k = 28, yOffset = 0.9999, verbose = FALSE
+  speciesData = scbi_growth_df, theRange = 100, yOffset = 0.9999, k = 9, verbose = FALSE
 )
+```
+
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+
+``` r
 
 # Add foldID to data
 scbi_growth_df <- scbi_growth_df %>% 
@@ -376,45 +375,15 @@ scbi_cv_grid$plots +
   geom_sf(data = scbi_growth_df, aes(col=factor(foldID)), size = 0.1)
 ```
 
-### Model specification
-
-Next we specify the growth model we want. We will model growth as a
-function of tree identity, size (in dbh), and the identity and size (in
-dbh) of its neighbors. The model can be run on different grouping of
-individuals (e.g., based on species or trait groupings). It can also be
-run with different notions of competition:
-
-  - `model_number = 1`: No competition growth only depends on focal tree
-    `dbh` and grouping.
-  - `model_number = 2`: Competition but identity of competitor does not
-    matter, just sum of competitior basal area.
-  - `model_number = 3`: Full model with competition including competitor
-    identity.
-
-**Big Woods**:
+<img src="man/figures/README-unnamed-chunk-14-2.png" width="100%" />
 
 ``` r
-# Big Woods
-bw_specs <- bw_growth_df_orig %>% 
-  get_model_specs(model_number = 3, species_notion = 'trait_group')
-bw_specs
-#> $model_formula
-#> growth ~ trait_group + dbh + dbh * trait_group + comp_basal_area + 
-#>     comp_basal_area * trait_group + evergreen * trait_group + 
-#>     maple * trait_group + misc * trait_group + oak * trait_group + 
-#>     short_tree * trait_group + shrub * trait_group
-#> <environment: 0x7fc410c68ba8>
-#> 
-#> $notion_of_focal_species
-#> [1] "trait_group"
-#> 
-#> $notion_of_competitor_species
-#> [1] "trait_group"
-#> 
-#> $species_of_interest
-#> [1] "oak"        "evergreen"  "maple"      "shrub"      "short_tree"
-#> [6] "misc"
+
+scbi_cv_grid_sf <- scbi_cv_grid$blocks %>%
+  st_as_sf()
 ```
+
+### Focal versus competitor trees
 
 Next we create the `focal_vs_comp` data frame which connects each tree
 in `growth_df` to the trees in its competitive neighborhood range (as
@@ -422,16 +391,16 @@ defined by `max_dist`). So for example, if `growth_df` consisted of two
 focal trees with two and three neighbors respectively, `focal_vs_comp`
 would consist of 5 rows.
 
-This requires the `growth_df` data frame, `max_dist` scalar defining
-competitive range, `cv_fold_size` defining the size of the spatial
-cross-validation blocks, and `model_specs` as inputs.
+This requires the `growth_df` data frame; `max_dist`, the scalar
+defining competitive range; `cv_grid_sf`, giving the cross validation
+grid; and the `id` variable as inputs.
 
 ``` r
 # Big Woods
 if (!file.exists("focal_vs_comp_bw.Rdata")) {
   tic()
-  focal_vs_comp_bw <- bw_growth_df_orig %>% 
-    create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
+  focal_vs_comp_bw <- bw_growth_df %>% 
+    create_focal_vs_comp(max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
   toc()
   save(focal_vs_comp_bw, file = "focal_vs_comp_bw.Rdata")
 } else {
@@ -442,140 +411,138 @@ if (!file.exists("focal_vs_comp_bw.Rdata")) {
 ``` r
 # Big Woods
 glimpse(focal_vs_comp_bw)
-#> Rows: 431,244
+#> Rows: 454,718
 #> Columns: 10
-#> $ focal_ID                <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, …
-#> $ focal_notion_of_species <fct> oak, oak, oak, oak, oak, oak, oak, oak, oak, …
-#> $ dbh                     <dbl> 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.…
-#> $ foldID                  <int> 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 1…
-#> $ geometry                <POINT> POINT (8.7 107.5), POINT (8.7 107.5), POINT…
-#> $ growth                  <dbl> 0.40377706, 0.40377706, 0.40377706, 0.4037770…
-#> $ comp_ID                 <dbl> 2, 3, 4, 5, 6, 7, 8, 81, 82, 83, 84, 85, 86, …
-#> $ dist                    <dbl> 2.370654, 3.413210, 3.905125, 4.162932, 4.601…
-#> $ comp_notion_of_species  <fct> evergreen, maple, maple, maple, maple, maple,…
-#> $ comp_basal_area         <dbl> 0.0027339710, 0.1604599864, 0.0013202543, 0.0…
+#> $ focal_ID        <dbl> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,…
+#> $ focal_sp        <fct> white_oak, white_oak, white_oak, white_oak, white_oak…
+#> $ dbh             <dbl> 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.2, 41.2,…
+#> $ foldID          <chr> "12", "12", "12", "12", "12", "12", "12", "12", "12",…
+#> $ geometry        <POINT> POINT (8.7 107.5), POINT (8.7 107.5), POINT (8.7 10…
+#> $ growth          <dbl> 0.40377706, 0.40377706, 0.40377706, 0.40377706, 0.403…
+#> $ comp_ID         <dbl> 2, 3, 4, 5, 6, 7, 8, 81, 82, 83, 84, 85, 86, 87, 213,…
+#> $ dist            <dbl> 2.370654, 3.413210, 3.905125, 4.162932, 4.601087, 6.3…
+#> $ comp_sp         <fct> serviceberry, black_cherry, red_maple, red_maple, red…
+#> $ comp_basal_area <dbl> 0.0027339710, 0.1604599864, 0.0013202543, 0.001661902…
 ```
 
 **SCBI**:
 
 ``` r
 # SCBI
-scbi_specs <- scbi_growth_df %>% 
-  get_model_specs(model_number = 3, species_notion = 'sp')
-scbi_specs
-```
-
-``` r
-# SCBI
 tic()
 focal_vs_comp_scbi <- scbi_growth_df %>% 
-  create_focal_vs_comp(max_dist, model_specs = scbi_specs, cv_grid = scbi_cv_grid, id = "stemID")
+  create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid_sf, id = "stemID")
 toc()
+#> 14.351 sec elapsed
 ```
 
 ``` r
 # SCBI
 glimpse(focal_vs_comp_scbi)
+#> Rows: 147,125
+#> Columns: 10
+#> $ focal_ID        <dbl> 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,…
+#> $ focal_sp        <fct> nysy, nysy, nysy, nysy, nysy, nysy, nysy, nysy, nysy,…
+#> $ dbh             <dbl> 136.5, 136.5, 136.5, 136.5, 136.5, 136.5, 136.5, 136.…
+#> $ foldID          <int> 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,…
+#> $ geometry        <POINT> POINT (14.2 428.5), POINT (14.2 428.5), POINT (14.2…
+#> $ growth          <dbl> 0.1029664, 0.1029664, 0.1029664, 0.1029664, 0.1029664…
+#> $ comp_ID         <dbl> 1836, 1847, 1848, 1849, 1850, 1851, 1853, 1854, 1855,…
+#> $ dist            <dbl> 7.479310, 2.807134, 1.615553, 2.624878, 2.983280, 5.6…
+#> $ comp_sp         <fct> tiam, nysy, nysy, nysy, havi, tiam, frni, caca, litu,…
+#> $ comp_basal_area <dbl> 1.7553845, 0.3318307, 0.3959192, 0.5345616, 0.4717298…
 ```
 
 ### Model fit and prediction
 
 **Big Woods**:
 
-Now we are ready to fit the competition model with `fit_bayesian_model`
-this takes two inputs: `focal_vs_comp` the data frame with focal trees
-connected to their competitors and `model_specs` which specifies the
-notion of competition.
+Now we are ready to fit the competition model with `fit_bayesian_model`.
+This function needs only the `focal_vs_comp` as an input. Other options
+allow the user to specify prior parameters and run a competitor-species
+identity shuffle (see below).
 
 ``` r
 # Big Woods
 tic()
-bw_fit_model <- focal_vs_comp_bw %>% 
-  fit_bayesian_model(model_specs = bw_specs)
+posterior_param_bw <- focal_vs_comp_bw %>% 
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
-#> 2.043 sec elapsed
+#> 210.843 sec elapsed
 ```
 
 This output has the posterior parameters for the specified competition
-model. If `model_number = 1` this includes just the beta values for how
-focal tree DBH and identity affect growth. If `model_number = 2` it also
-includes a vector of lambdas for how total competitor basal area affect
-individuals of each group. If `model_number = 3` then lambda is a matrix
-which gives how individuals of each focal group respond to the
-competition of each competitor group. This `posterior_param` output can
-be used to get predicted growths for each individual (with
-`predict_bayesain_model`) to test how well the model performs. Or this
-`posterior_param` output can be plots (either the betas or lambdas) to
-understand what controls individual growth.
+model. This `posterior_param` output can be used to get predicted
+growths for each individual (with `predict_bayesain_model`) to test how
+well the model performs. Or this `posterior_param` output can be plotted
+(either the betas or lambdas with `plot_posterior_params`) to understand
+what controls growth and the nature of the competitive ineractions.
+
+Here we calculate the RMSE
 
 ``` r
 # Big Woods
-bw_growth_df <- focal_vs_comp_bw %>% 
-  predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>% 
-  right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID"))
-  
-bw_growth_df <- bw_growth_df %>% 
-  st_as_sf()
-
-# Observed vs predicted growth  
-ggplot(bw_growth_df, aes(x = growth, y = growth_hat)) +
-  geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
-  stat_smooth(method = 'lm') +
-  geom_abline(slope = 1, intercept = 0) +
-  coord_fixed() + 
-  labs(
-    x = "Observed growth in dbh", y = "Predicted growth in dbh", 
-    title = "Predicted vs Observed Growth"
-  )
+predictions <- focal_vs_comp_bw %>%
+  predict_bayesian_model(posterior_param = posterior_param_bw) %>%
+  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+predictions %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+#> [1] 0.148145
 ```
 
-<img src="man/figures/README-unnamed-chunk-22-1.png" width="100%" />
+Now we test whether the identity of the competitor matters. We do this
+by shuffling the identity of competitors (but not of focal trees or
+spatial locations or sizes) and fitting the model again. We then compare
+RMSEs to see whether competitor identity matters to competitive
+interactions.
 
 ``` r
+posterior_param_bw_shuffle <- focal_vs_comp_bw %>%
+  fit_bayesian_model(prior_param = NULL, run_shuffle = TRUE)
 
-reslab <- expression(paste('Residual (cm ',y^{-1},')'))
-bw_growth_df %>% 
-  # Need to investigate missingness
-  filter(!is.na(growth_hat)) %>% 
-  mutate(
-    error = growth - growth_hat,
-    error_bin = cut_number(error, n = 5), 
-    error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
-  ) %>% 
-  ggplot() + 
-  geom_sf(aes(col = error_compress), size = 0.4) + 
-  theme_bw() + 
-  scale_color_gradient2(
-    low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
-    name = reslab,
-    breaks = seq(from = -0.75, to = 0.75, by = 0.25),
-    labels = c('< -0.75', '-0.5', '0.25', '0', '0.25', '0.5', '> 0.75')) +
-  labs(x = "Meter", y = "Meter")
+# b) Make predictions and compute RMSE
+predictions_shuffle <- focal_vs_comp_bw %>%
+  predict_bayesian_model(posterior_param = posterior_param_bw_shuffle) %>%
+  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+predictions_shuffle %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+#> [1] 0.1502176
 ```
 
-<img src="man/figures/README-unnamed-chunk-22-2.png" width="100%" />
+The RMSE is lower for the non-shuffled version. This gives support for
+the idea that competitor identity does matter for competitive
+interactions.
 
 **SCBI**:
 
 ``` r
 # SCBI
 tic()
-scbi_fit_model <- focal_vs_comp_scbi %>% 
-  fit_bayesian_model(model_specs = scbi_specs)
+posterior_param_scbi <- focal_vs_comp_scbi %>% 
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
+#> 113.409 sec elapsed
 ```
+
+Here we provide examples of seeing how well the model fits and then a
+spatial plot of the residuals to see whether there are any consistent
+spatial patterns to them.
 
 ``` r
 # SCBI
-scbi_growth_df <- focal_vs_comp_scbi %>% 
-  predict_bayesian_model(model_specs = scbi_specs, posterior_param = scbi_fit_model) %>% 
+scbi_growth_df_noCV <- focal_vs_comp_scbi %>% 
+  predict_bayesian_model(posterior_param = posterior_param_scbi) %>% 
   right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
 
-scbi_growth_df <- scbi_growth_df %>% 
-  st_as_sf()
+scbi_growth_df_noCV %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+#> [1] 0.1168431
 
 # Observed vs predicted growth  
-ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
+ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
   geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = 'lm') +
   geom_abline(slope = 1, intercept = 0) +
@@ -584,9 +551,15 @@ ggplot(scbi_growth_df, aes(x = growth, y = growth_hat)) +
     x = "Observed growth in dbh", y = "Predicted growth in dbh", 
     title = "Predicted vs Observed Growth"
   )
+```
+
+<img src="man/figures/README-unnamed-chunk-23-1.png" width="100%" />
+
+``` r
 
 reslab <- expression(paste('Residual (cm ',y^{-1},')'))
-scbi_growth_df %>% 
+scbi_growth_df_noCV %>% 
+  st_as_sf() %>%
   # Need to investigate missingness
   filter(!is.na(growth_hat)) %>% 
   mutate(
@@ -595,7 +568,7 @@ scbi_growth_df %>%
     error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
   ) %>% 
   ggplot() + 
-  geom_sf(aes(col = error_compress), size = 0.4) + 
+  geom_sf(aes(col = error_compress), size = 1) + 
   theme_bw() + 
   scale_color_gradient2(
     low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
@@ -605,9 +578,9 @@ scbi_growth_df %>%
   labs(x = "Meter", y = "Meter")
 ```
 
-### Run spatial cross-validation
+<img src="man/figures/README-unnamed-chunk-23-2.png" width="100%" />
 
-**SCBI**
+### Run spatial cross-validation
 
 For the above results we fit the model to the entire data set, and then
 make predictions across the entire data set from that fit. This could
@@ -615,438 +588,132 @@ lead to overfitting because we are using the training data to also test
 the model. If model error is spatially correlated this could be a large
 issue (cite important sources here\!). We can use the spatial block
 structure we defined above to deal with with. The function `run_cv` goes
-through each fold in the `cv_grid` and fits the model on all the other
-folds. Then applies that fit to the focal fold. It is a wrapper for
-`fit_bayesain_model` and `predict_bayesain_model` but fits a seperate
-model for each fold.
+through each fold in the `cv_grid_sf` and fits the model on all the
+other folds. Then applies that fit to the focal fold. It is a wrapper
+for `fit_bayesain_model` and `predict_bayesain_model` but fits a
+separate model for each fold.
 
-This will fit the model for each fold. On each fold it fits the data for
-all trees outside of that fold. If you have N folds then `run_cv` will
-take N-times longer than `fit_bayesain_model`. Here I cheated `run_cv`
-to fit for just `test = fold 23` and `test = fold 2`. It still fits to
-all other folds for those two, but only does it twice (rather than 28
-times for the SCBI data set). Do this with the arguement `all_folds =
-FALSE`.
+``` r
+# big woods
+tic()
+cv_bw <- focal_vs_comp_bw %>%
+  run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+  right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+toc()
+#> 1479.618 sec elapsed
+
+cv_bw %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+#> [1] 0.1533511
+```
+
+As expected this RMSE is higher than that when the model is fit without
+cross validation. See Allen and Kim (2020) for more discussion of this.
 
 ``` r
 # SCBI
 tic()
-scbi_cv_predict <- focal_vs_comp_scbi %>%
-  run_cv(model_specs = scbi_specs, max_dist = max_dist, cv_grid = scbi_cv_grid, all_folds = FALSE)
+cv_scbi <- focal_vs_comp_scbi %>%
+  run_cv(max_dist = max_dist, cv_grid = scbi_cv_grid) %>%
+  right_join(scbi_growth_df, by = c("focal_ID" = "treeID"))
 toc()
+#> 775.417 sec elapsed
+
+cv_scbi %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+#> [1] 0.2077376
 ```
 
-Running just two folds took 2119 seconds. There are 28 folds. So running
-everything should take 2119 \* 14 / 60 / 60 = 8 hours.
+Here also this RMSE is much higher than that for the above SCBI model
+fit without cross validation.
 
-Then we can compare the results to show that the RMSE for the
-cross-validated fit is larger than for the none CV fit above.
-
-``` r
-# SCBI
-scbi_cv_predict %>%
-  inner_join(scbi_growth_df, by = 'focal_ID', suffix = c('_cv','')) %>%
-  summarise(
-    rmse_cv = sqrt(mean((growth - growth_hat_cv)^2)),
-    rmse = sqrt(mean((growth - growth_hat)^2)), 
-    n = n() 
-  )
-```
+### Visualize posterior distributions
 
 **Big Woods**
 
-Big woods is faster because it has fewer trees, but also because we are
-fitting the model for trait groups (6 groups) rather than species for
-SCBI (40 species). The lambda matrix is much smaller (6 x 6 versus 40 x
-40). Means it fits much faster.
+We might be interested in the posterior distributions of parameters. The
+betas tell us about how fast each species grows and how this depends on
+DBH. The lambdas, often of more interest, are the species-specific
+competition coefficients. The full lambda matrix gives competition
+strength between species. There is a rich literature on this matrix
+(cite).
+
+Because of the structure of the `bw_fit_model` object we cannot simply
+draw these curves based on the posterior distribution. `bw_fit_model`
+gives the parameters *compared* to a baseline. This is not of direct
+interest. So to display these parameters, as we care about them, we have
+to sample from the baseline distribution and from the comparison one to
+get the posterior distribution of interest.
+
+Here we re-run the Big Woods model but using the family as the group for
+comparison. This makes the posterior distributions easier to follow.
+Also, surprisingly, grouping by family performed just as well as
+grouping by species (see Allen and Kim 2020). First we re-run
+`create_focal_vs_comp` and `fit_bayesian_model` with the grouping
+variable as family.
 
 ``` r
-# Big Woods
-if (!file.exists("bw_cv_predict.Rdata")) {
-tic()
-bw_cv_predict <- focal_vs_comp_bw %>%
-  run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid)
-toc()
-  save(bw_cv_predict, file = "bw_cv_predict.Rdata")
-} else {
-  load("bw_cv_predict.Rdata")
-}
+
+focal_vs_comp_bw <- bw_growth_df %>%
+  # mutate(sp = trait_group) %>%
+  mutate(sp = family) %>%
+  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
+
+# a) Fit model (compute posterior parameters) with no permutation shuffling
+posterior_param_bw <- focal_vs_comp_bw %>%
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 ```
 
-Big Woods must faster because it is a smaller plot? Mabye also because
-we are fitting the trait group version (6 spp versus 40 for SCBI).
+Now the output of `fit_bayesian_model` is passed to
+`plot_posterior_parameters`.
 
 ``` r
-# Big Woods
-bw_growth_df <- bw_growth_df %>% 
-  left_join(bw_cv_predict, by = "focal_ID", suffix = c('', '_cv')) %>% 
-  mutate(has_cv = !is.na(growth_hat))
+# b) Recreate Fig5 from Allen (2020): Posterior distributions of selected lambdas
+posterior_plots <- plot_posterior_parameters(
+  posterior_param = posterior_param_bw,
+  sp_to_plot = c("cornaceae", "fagaceae", "hamamelidaceae", "juglandaceae", "lauraceae", "rosaceae", "sapindaceae", "ulmaceae")
+)
+```
 
-ggplot(bw_growth_df) +
-  geom_sf(size = 0.1, aes(col = has_cv))
+The output is a list with three plots stored. The element `beta_0` gives
+the growth intercept, i.e., how fast an individual of each group grows
+independent of DBH).
+
+``` r
+posterior_plots[["beta_0"]]
 ```
 
 <img src="man/figures/README-unnamed-chunk-28-1.png" width="100%" />
 
-It appears not all trees have a CV predicted value of `growth_hat`. This
-is because either:
-
-  - The tree is part of the buffer
-  - The tree was dropped in the `create_focal_vs_comp()` phase
-
-<!-- end list -->
+Next `beta_dbh` gives the DBH-growth slope for each group.
 
 ``` r
-# This code is a hideous sanity check of the two facts above. To delete.
-trees_dropped_during_create_focal_vs_comp <- 
-  setdiff(unique(bw_growth_df$focal_ID), unique(focal_vs_comp_bw$focal_ID)) %>% 
-  sort()
-trees_with_no_cv <- bw_growth_df %>% 
-  filter(!has_cv) %>% 
-  pull(focal_ID) %>% 
-  sort()
-mean(trees_dropped_during_create_focal_vs_comp == trees_with_no_cv)
-#> [1] 1
+posterior_plots[["beta_dbh"]]
 ```
 
-Let’s remove these trees that have no
+<img src="man/figures/README-unnamed-chunk-29-1.png" width="100%" />
+
+Finally `lambda` gives the competition coeffiencts.
 
 ``` r
-bw_growth_df <- bw_growth_df %>% 
-  filter(!is.na(growth_hat))
+posterior_plots[["lambda"]]
 ```
 
-Let’s compute summary statistics of our cross-validated errors:
+<img src="man/figures/README-unnamed-chunk-30-1.png" width="100%" />
+
+**SCBI**
 
 ``` r
-# Big Woods
-bw_growth_df %>% 
-  as_tibble() %>% 
-  summarise(
-    rmse_cv = sqrt(mean((growth - growth_hat)^2)),
-    rmse = sqrt(mean((growth - growth_hat)^2)), 
-    n = n() 
-  )
-#> # A tibble: 1 x 3
-#>   rmse_cv  rmse     n
-#>     <dbl> <dbl> <int>
-#> 1   0.161 0.161 20390
+posterior_plots_scbi <- plot_posterior_parameters(
+  posterior_param = posterior_param_scbi,
+  sp_to_plot = c("quru", "litu", "cagl", "cato")
+)
 ```
 
-Let’s visualize the spatial distribution of our cross-validated errors:
-
 ``` r
-# Big Woods
-bw_growth_df <- bw_growth_df %>%
-  mutate(
-    error = growth - growth_hat,
-    error_bin = cut_number(error, n = 5),
-    error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
-  )
-
-ggplot(bw_growth_df) +
-  geom_sf(aes(col = error_compress), size = 0.4) +
-  scale_color_gradient2(
-    low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf", 
-    name = expression(paste("Residual (cm ", y^{-1}, ")")),
-    breaks = seq(from = -0.75, to = 0.75, by = 0.25),
-    labels = c("< -0.75", "-0.5", "0.25", "0", "0.25", "0.5", "> 0.75")
-  ) +
-  labs(x = "Meter", y = "Meter")
+posterior_plots_scbi[["lambda"]]
 ```
 
 <img src="man/figures/README-unnamed-chunk-32-1.png" width="100%" />
-
-### Run permutations
-
-Hey Dave\! Start here\!
-
-**Repeat earlier
-code**:
-
-``` r
-# Load packages ----------------------------------------------------------------
-library(tidyverse)
-library(forestecology)
-library(snakecase)
-library(skimr)
-library(sf)
-library(sfheaders)
-# devtools::install_github("rvalavi/blockCV")
-library(blockCV)
-library(tictoc)
-library(yardstick)
-library(viridis)
-
-
-# Load & preprocess data -------------------------------------------------------
-# Read in census data from 2008 & 2014
-bw_2008 <- 
-  "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>% 
-  read_delim(delim = "\t") %>% 
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
-    date, codes
-  )
-bw_2014 <- 
-  "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>% 
-  read_delim(delim = "\t") %>% 
-  mutate(spcode = to_any_case(spcode)) %>%
-  select(
-    treeID = treeid, stemID = stemtag, sp = spcode, quadrat, gx, gy, dbh, 
-    date, codes
-  )
-
-# Read in grouping classification data
-bw_species <- 
-  "https://deepblue.lib.umich.edu/data/downloads/000000086" %>% 
-  read_delim(delim = "\t") %>% 
-  # convert all to snake case:
-  mutate_at(c("species", "genus", "family", "idlevel", "spcode"), to_any_case) %>% 
-  # join trait group
-  left_join(families, by = c("spcode", "family")) %>% 
-  mutate(
-    sp = str_sub(genus, 1, 2), 
-    sp = str_c(sp, str_sub(species, 1, 2)),
-    sp = tolower(sp),
-    latin = str_c(genus, species, sep = " "),
-    latin = to_any_case(latin)
-  ) %>% 
-  select(sp = spcode, genus, species, latin, family, trait_group)
-
-bw_2008 <- bw_2008 %>%
-  left_join(bw_species,by='sp')
-
-
-# Compute growth ---------------------------------------------------------------
-census_df1 <- bw_2008
-# we need to filter out the resprouts
-census_df2 <- bw_2014 %>% 
-  filter(!str_detect(codes, 'R'))
-id <- "treeID"
-
-bw_growth_df <- 
-  # Merge both censuses and compute growth:
-  compute_growth(census_df1, census_df2, id) %>% 
-  mutate(sp = to_any_case(sp))
-
-
-
-# Define buffers ---------------------------------------------------------------
-cv_fold_size <- 100
-max_dist <- 7.5
-
-# Study region boundary polygon
-bw_boundary <- bigwoods_study_region %>% 
-  sf_polygon()
-
-# Buffer polygon
-bw_buffer <- bw_boundary %>%
-  st_buffer(dist = -max_dist)
-
-# Convert data frame to sf object
-bw_growth_df <- bw_growth_df %>% 
-  st_as_sf(coords = c("gx", "gy"))
-
-# ID which points are in buffer and which are not
-buffer_index <- !st_intersects(bw_growth_df, bw_buffer, sparse = FALSE)
-bw_growth_df <- bw_growth_df %>% 
-  mutate(buffer = as.vector(buffer_index))
-
-
-# Define spatial CV folds ------------------------------------------------------
-set.seed(76)
-bw_cv_grid <- spatialBlock(
-  speciesData = bw_growth_df, theRange = 100, verbose = FALSE,
-  # Some guess work in figuring this out:
-  k = 28, xOffset = 0.5, yOffset = 0
-)
-
-# Add foldID to data
-bw_growth_df <- bw_growth_df %>% 
-  mutate(
-    foldID = bw_cv_grid$foldID
-  ) 
-
-# Visualize grid. Why does fold 19 repeat?
-bw_cv_grid$plots +
-  geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col=factor(foldID)), size = 0.1)
-
-# Remove weird folds with no trees in them from viz above
-bw_growth_df <- bw_growth_df %>%
-  filter(!foldID %in% c(19, 23, 21, 17, 8, 19))
-
-# Save original
-bw_growth_df_orig <- bw_growth_df
-```
-
-**Loop through 4 scenarios of model fitting**:
-
-``` r
-# Number of permutation shuffles:
-num_shuffle <- 4
-
-# Compute observed RMSE for all models, but only do permutation shuffling for
-# models 3,6,9
-model_numbers <- c(3)
-species_notion_vector <- c("trait_group", "family", "species")
-
-# Save results here
-run_time <- rep(0, length(species_notion_vector))
-observed_RMSE <- rep(0, length(species_notion_vector))
-observed_RMSE_CV <- rep(0, length(species_notion_vector))
-shuffle_RMSE <- vector("list", length(species_notion_vector))
-shuffle_RMSE_CV <- vector("list", length(species_notion_vector))
-filename <- str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles.RData")
-
-for(i in 1:length(species_notion_vector)){
-  # Start clock
-  tic()
-
-  # Modeling and species stuff
-  species_notion <- species_notion_vector[i]
-  bw_specs <- bw_growth_df %>% 
-    get_model_specs(model_number = 3, species_notion = species_notion)
-
-  # Focal vs comp main dataframe for analysis
-  focal_vs_comp_bw <- bw_growth_df_orig %>% 
-    create_focal_vs_comp(max_dist, model_specs = bw_specs, cv_grid = bw_cv_grid, id = "treeID")
- 
-  
-  # 1. Compute observed test statistic: RMSE with no cross-validation ----
-  # Fit model (compute posterior parameters)
-  bw_fit_model <- focal_vs_comp_bw %>% 
-    fit_bayesian_model(model_specs = bw_specs)
-  
-  # Make predictions, compute and save RMSE, and reset
-  observed_RMSE[i] <- focal_vs_comp_bw %>% 
-    predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model) %>% 
-    right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
-    rmse(truth = growth, estimate = growth_hat) %>%
-    pull(.estimate)
-
-  
-  # 2. Compute observed test statistic: RMSE with cross-validation ----
-  observed_RMSE_CV[i] <- focal_vs_comp_bw %>%
-    run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid) %>% 
-    right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
-    rmse(truth = growth, estimate = growth_hat) %>%
-    pull(.estimate)
-
-
-  # 3. Permutation distribution: RMSE with no cross-validation ----
-  # Only do permutation shuffling for models 3, 6, 9
-  # Compute num_shuffle permutation test statistics
-  shuffle_RMSE[[i]] <- numeric(length = num_shuffle)
-  
-  for(j in 1:num_shuffle){
-    # Fit model (compute posterior parameters) with shuffling
-    bw_fit_model_shuffle <- focal_vs_comp_bw %>% 
-      fit_bayesian_model(model_specs = bw_specs, run_shuffle = TRUE)
-    
-    # Make predictions, compute and save RMSE, and reset
-    shuffle_RMSE[[i]][j] <- focal_vs_comp_bw %>% 
-      predict_bayesian_model(model_specs = bw_specs, posterior_param = bw_fit_model_shuffle) %>% 
-      right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
-      rmse(truth = growth, estimate = growth_hat) %>%
-      pull(.estimate)
-  }
-
-  
-  # 4. Permutation distribution: RMSE with cross-validation ----
-  # Compute num_shuffle permutation test statistics
-  shuffle_RMSE_CV[[i]] <- numeric(length = num_shuffle)
-  
-  # Compute num_shuffle permutation test statistics
-  for(j in 1:num_shuffle){
-    # Compute and save RMSE, and reset
-    shuffle_RMSE_CV[[i]][j] <- focal_vs_comp_bw %>%
-      run_cv(model_specs = bw_specs, max_dist = max_dist, cv_grid = bw_cv_grid, run_shuffle = TRUE) %>% 
-      right_join(bw_growth_df_orig, by = c("focal_ID" = "treeID")) %>%
-      rmse(truth = growth, estimate = growth_hat) %>%
-      pull(.estimate)
-    
-    # Status update
-    str_c("notion of species: ", species_notion_vector[i], ", shuffle with permutation ", j) %>% print()
-  }
-  
-  
-  # 5. Stop clock
-  clock <- toc(quiet = TRUE)
-  run_time[i] <- clock$toc - clock$tic
-  
-  
-  # 6. Save
-  model_comp_tbl <- tibble(
-    species_notion = species_notion_vector,
-    run_time = run_time,
-    observed_RMSE = observed_RMSE,
-    observed_RMSE_CV = observed_RMSE_CV,
-    shuffle_RMSE = shuffle_RMSE,
-    shuffle_RMSE_CV = shuffle_RMSE_CV,
-  )
-  save(model_comp_tbl, file = filename)
-}
-```
-
-**Plot results**:
-
-``` r
-load("2020-06-25_model_comp_tbl_49_shuffles.RData")
-model_comp <- bind_rows(
-  model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
-  model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
-) %>%
-  gather(type, RMSE, -c(species_notion, run_time, CV)) %>%
-  mutate(
-    species_notion = case_when(
-      species_notion == "trait_group" ~ "1. Trait-based (6): lambda = 6 x 6",
-      species_notion == "family" ~ "2. Phylogenetic family (20): lambda = 20 x 20",
-      species_notion == "species" ~ "3. Actual species (36): lambda = 36 x 36"
-    )
-  ) %>% 
-  filter(species_notion != "3. Actual species (36): lambda = 36 x 36")
-
-model_comp_observed <- model_comp %>%
-  filter(type == "observed") %>%
-  unnest(cols = c(RMSE))
-model_comp_shuffle <- model_comp %>%
-  filter(type == "shuffle") %>%
-  unnest(cols = c(RMSE))
-
-xlab <- expression(paste('RMSE (cm ',y^{-1},')'))
-
-ggplot() +
-  geom_vline(data = model_comp_observed, aes(xintercept = RMSE, col = CV), linetype = "dashed", show.legend = F) +
-  geom_histogram(data = model_comp_shuffle, aes(x = RMSE, fill = CV), bins = 200) +
-  labs(fill = "Cross-validated?", x = xlab) +
-  facet_wrap(~species_notion, ncol = 1) +
-  scale_color_viridis(discrete = TRUE, option = "D")+
-  scale_fill_viridis(discrete = TRUE)
-```
-
-<img src="man/figures/README-unnamed-chunk-35-1.png" width="100%" />
-
-### Visualize posterior distributions
-
-  - Plot posterior distributions of all parameters
-
-We might be interested in the posterior distributions of parameters. The
-betas tell us about how fast each species grows and how this depends on
-DBH. The lambdas, which are often of more interest, are the
-species-specific competition coefficents. The full lambda matrix gives
-competition strength between species. There is a rich literature how
-this matrxi (cite).
-
-Because of the strucutre of the `bw_fit_model` object we cannot simply
-draw these curves based on the posterior distribution. `bw_fit_model`
-gives the parameteres *compared* to a baseline. This is often not of
-interest. So to display these parameters as we care about them we have
-to sample from the baseline distrubiton and from the comparison one to
-get the posterior distribution of interest.
-
-``` r
-
-# plot_beta0(bw_fit_model)
-```
