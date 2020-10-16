@@ -1,6 +1,6 @@
 Package: forestecology
 Type: Package
-Title: Methods and Data for Forest Ecology Model Selection and Assessment
+Title: Methods and Data for Forest Ecology Model Assessment and Selection
 Version: 0.1.0.9000
 Authors@R: c(
     person("Albert Y.", "Kim", email = "albert.ys.kim@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-306X")),
@@ -8,13 +8,15 @@ Authors@R: c(
     person("Jonathan", "Che", email = "jche18@amherst.edu", role = "ctb")
     )
 Maintainer: Albert Y. Kim <albert.ys.kim@gmail.com>
-Description: Hello world
-    Use four spaces when indenting paragraphs within the Description.
+Description: Code for assessing and selecting models for predicting the growth 
+    of trees. In particular spatial cross-validation for estimation of 
+    out-of-sample prediction error, permutation methods for testing the 
+    signficance of competitor species, and Bayesian linear regression.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 6.1.1
+RoxygenNote: 7.1.1
 URL: https://github.com/rudeboybert/forestecology
 BugReports: https://github.com/rudeboybert/forestecology/issues
 Depends:
@@ -23,9 +25,14 @@ Suggests:
     testthat
 Imports: 
     magrittr,
-    dplyr,
-    proxy,
-    sp,
     ggplot2,
     stringr,
-    tidyr
+    dplyr,
+    tidyr,
+    proxy,
+    purrr,
+    ggridges,
+    mvnfast,
+    sf,
+    sfheaders,
+    tibble

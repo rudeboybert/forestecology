@@ -1,138 +1,105 @@
 library(tidyverse)
 library(usethis)
-library(sp)
 library(snakecase)
+library(sf)
+library(sfheaders)
 
+
+
+# Boundary polygon of bigwoods region ------------------------------------------
+bw_study_region <-
+  tibble(
+    # Study region boundary
+    x = c(-100, -100, -300, -300, -200, -200, 300, 300, 400, 400, 500, 500, -100),
+    y = c(0, 100, 100, 200, 200, 400, 400, 200, 200, 100, 100, 0, 0)
+  ) %>%
+  # Convert to sf object
+  sf_polygon()
+use_data(bw_study_region, overwrite = TRUE)
+
+
+
+# Species info -----------------------------------------------------------------
+# Get trait_cluster variable for all bigwood species
 families <- "data-raw/species_list.csv" %>%
   read_csv() %>%
-  # Select necessary variables
-  select(spcode, family, traitclust2) %>%
-  # Differences in spelling
   mutate(
+    # Differences in spelling
     spcode = case_when(
       spcode == "Black/Red Oak Hybrid" ~ "Black/Red Oak hybrid",
       spcode == "Black/Northern Pin Hybrid" ~ "Black/Northern Pin hybrid",
       spcode == "Highbush Blueberry" ~ "highbush blueberry",
       TRUE ~ spcode
     ),
-    family_phylo = family,
+    # Rename:
     trait_group = traitclust2
   ) %>%
-  select(-c(family, traitclust2)) %>%
-  # Convert all to snake_case
+  mutate_at(c("spcode", "family", "trait_group"), to_any_case) %>%
+  select(spcode, family, trait_group)
+
+bw_species <-
+  "https://deepblue.lib.umich.edu/data/downloads/000000086" %>%
+  read_delim(delim = "\t") %>%
+  # convert all to snake case:
+  mutate_at(c("species", "genus", "family", "idlevel", "spcode"), to_any_case) %>%
   mutate(
-    spcode = snakecase::to_any_case(spcode),
-    family_phylo = snakecase::to_any_case(family_phylo),
-    trait_group = snakecase::to_any_case(trait_group)
-  )
-usethis::use_data(families, overwrite = TRUE)
-
-# Boundary polygon of bigwoods region
-bigwoods_study_region <-
-  data_frame(
-    # Study region boundary
-    x = c(-100, -100, -300, -300, -200, -200, 300, 300, 400, 400, 500, 500, -100),
-    y = c(0, 100, 100, 200, 200, 400, 400, 200, 200, 100, 100, 0, 0)
-  )
-usethis::use_data(bigwoods_study_region, overwrite = TRUE)
+    sp = str_sub(genus, 1, 2) %>% str_c(str_sub(species, 1, 2)) %>% tolower(),
+    latin = str_c(genus, species, sep = " ") %>% to_any_case()
+  ) %>%
+  select(sp = spcode, genus, species, latin, family) %>%
+  left_join(families, by = c("sp" = "spcode", "family"))
+use_data(bw_species, overwrite = TRUE)
 
 
-# Import tree data and merge with species data
-bigwoods <- "data-raw/BigWoods2015.csv" %>%
-  read_csv() %>%
-  # Remove initially non-necessary variables
+
+# Import bigwoods data
+bw_census_2008 <-
+  "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>%
+  read_delim(delim = "\t") %>%
+  mutate(spcode = to_any_case(spcode)) %>%
   select(
-    -starts_with("not new"), -starts_with("notes"),
-    -c(quad, row, xsample, side, ysample, tag, stem, year)
-  ) %>%
-  # Note readr package reads blanks as NA's. Convert these to blank to ""
-  mutate(
-    code08 = ifelse(is.na(code08), "", code08),
-    code14 = ifelse(is.na(code14), "", code14)
-  ) %>%
-  # Define dbh and growth variables
-  mutate(
-    dbh03 = gbh03/pi,
-    dbh08 = gbh08/pi,
-    dbh14 = gbh14/pi,
-    growth = (dbh14-dbh08)/(2014-2008)
-  ) %>%
-  # Convert species to snake_case
-  mutate(species = snakecase::to_any_case(species)) %>%
-  # Join with families data. If no matched family_philo or trait_groud found,
-  # assign to "Misc"
-  left_join(families, by = c("species" = "spcode")) %>%
-  mutate(
-    family_phylo = ifelse(is.na(family_phylo), "Misc", family_phylo),
-    trait_group = ifelse(is.na(trait_group), "Misc", trait_group),
-  ) %>%
-  # Convert all species info to factors b/c of issue of rare levels not being
-  # included in training set, but then appearing in test set.
-  mutate(
-    species = factor(species),
-    family_phylo = factor(family_phylo),
-    trait_group = factor(trait_group)
-  ) %>%
-  # Remove 32 + 113 = 145 of 50178 that aren't strictly in interior of study
-  # region boundary polygon b/c of issues with forming crossvalidation grid
-  # later
-  mutate(inside_blocks = point.in.polygon(x, y, bigwoods_study_region$x, bigwoods_study_region$y)) %>%
-  filter(inside_blocks == 1) %>%
-  # Add ID variable
-  tibble::rownames_to_column(var = "ID") %>%
-  # Clean up variables
-  select(ID, species, family_phylo, trait_group, x, y, growth, dbh08, dbh14,
-         code14)
-usethis::use_data(bigwoods, overwrite = TRUE)
+    treeID = treeid, stemID = stemtag, sp = spcode, gx, gy, dbh,
+    date, codes
+  )
+use_data(bw_census_2008, overwrite = TRUE)
 
-
-
-# Import NEW data
-bigwoods_new <- "data-raw/BigWoods2015_new.csv" %>%
-  read_csv() %>%
-  # Remove initially non-necessary variables
+bw_census_2014 <-
+  "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>%
+  read_delim(delim = "\t") %>%
+  mutate(spcode = to_any_case(spcode)) %>%
   select(
-    -starts_with("not new"), -starts_with("notes"),
-    -c(quad, row, xsample, side, ysample, tag, stem)
-  ) %>%
-  # Note readr package reads blanks as NA's. Convert these to blank to ""
+    treeID = treeid, stemID = stemtag, sp = spcode, gx, gy, dbh,
+    date, codes
+  )
+use_data(bw_census_2014, overwrite = TRUE)
+
+
+
+# Example growth_df data frame used to illustrate focal_vs_comp()
+growth_df_ex <- tibble(
+  ID = 1:5,
+  sp = c("tulip poplar", "red oak", "red oak", "tulip poplar", "tulip poplar"),
+  gx = c(1, 1, 1, 4, 4),
+  gy = c(4, 3, 2, 1, 2)
+) %>%
   mutate(
-    code08 = ifelse(is.na(code08), "", code08),
-    code14 = ifelse(is.na(code14), "", code14)
+    dbh1 = c(40, 25, 30, 35, 20),
+    codes1 = rep("M", n()),
+    codes2 = rep("M", n()),
+    growth = c(1, 2, 1, 3, 2),
+    dbh2 = dbh1 + growth,
+    foldID = rep(1, n()) %>% as.character(),
+    buffer = rep(FALSE, n())
   ) %>%
-  # Define dbh and growth variables
-  mutate(
-    dbh03 = gbh03/pi,
-    dbh08 = gbh08/pi,
-    dbh14 = gbh14/pi,
-    growth = (dbh14-dbh08)/(2014-year_08)
-  ) %>%
-  # Remove those trees with year_08 = NA, i.e. were only added in 2014
-  filter(!is.na(year_08)) %>%
-  # Convert species to snake_case
-  mutate(species = snakecase::to_any_case(species)) %>%
-  # Join with families data. If no matched family_philo or trait_groud found,
-  # assign to "Misc"
-  left_join(families, by = c("species" = "spcode")) %>%
-  mutate(
-    family_phylo = ifelse(is.na(family_phylo), "Misc", family_phylo),
-    trait_group = ifelse(is.na(trait_group), "Misc", trait_group),
-  ) %>%
-  # Convert all species info to factors b/c of issue of rare levels not being
-  # included in training set, but then appearing in test set.
-  mutate(
-    species = factor(species),
-    family_phylo = factor(family_phylo),
-    trait_group = factor(trait_group)
-  ) %>%
-  # Remove 32 + 113 = 145 of 50178 that aren't strictly in interior of study
-  # region boundary polygon b/c of issues with forming crossvalidation grid
-  # later
-  mutate(inside_blocks = point.in.polygon(x, y, bigwoods_study_region$x, bigwoods_study_region$y)) %>%
-  filter(inside_blocks == 1) %>%
-  # Add ID variable
-  tibble::rownames_to_column(var = "ID") %>%
-  # Clean up variables
-  select(ID, species, family_phylo, trait_group, x, y, growth, dbh08, dbh14,
-         code14)
-usethis::use_data(bigwoods_new, overwrite = TRUE)
+  # Convert data frame to sf object
+  st_as_sf(coords = c("gx", "gy")) %>%
+  select(ID, sp, dbh1, codes1, dbh2, codes2, growth, geometry, buffer, foldID)
+use_data(growth_df_ex, overwrite = TRUE)
+
+
+
+
+
+
+
+

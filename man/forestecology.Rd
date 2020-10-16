@@ -3,7 +3,6 @@
 \docType{package}
 \name{forestecology}
 \alias{forestecology}
-\alias{forestecology-package}
 \title{\code{forestecology} package}
 \description{
 Methods and data for forest ecology model selection and assessment
