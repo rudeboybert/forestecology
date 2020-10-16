@@ -28,13 +28,16 @@ And the development version from [GitHub](https://github.com/) with:
 
 ## Example analysis
 
-We present an example analysis using:
+We present an example analysis using data from two
+[ForestGEO](https://forestgeo.si.edu/) plots:
 
   - [Michigan Big Woods](https://doi.org/10.7302/wx55-kt18) research
-    plot data
+    plot data. For more information see
+    [here](http://hdl.handle.net/2027.42/156251).
   - [Smithsonian Conservation Biology Institute (SCBI)
     ForestGEO](https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/tree/master/tree_main_census)
-    research plot data
+    research plot data. For more information see
+    [here](https://doi.org/10.1890/13-0010.1).
 
 <!-- end list -->
 
@@ -58,7 +61,7 @@ run_bw <- TRUE
 
 ### Load & preprocess data
 
-The data for the Big Woods plor are included in the package. For SCBI,
+The data for the Big Woods plot are included in the package. For SCBI,
 we load and preprocess the data corresponding to the two census
 reflecting the time period over which we consider growth in dbh. We load
 them into R as “tibble” data frames thereby ensuring a standardized
@@ -81,7 +84,8 @@ bw_census_2008 <- bw_census_2008 %>%
 
 **SCBI**:
 
-For SCBI we will just look at a 9 ha plot to speed calculations.
+For SCBI we will look at just a 9 ha section of the plot to speed
+calculations.
 
 ``` r
 # SCBI
@@ -109,13 +113,13 @@ scbi_2018 <-
 
 ### Compute growth
 
-We then combine the two census data frames into a single data frame that
-now includes a numerical variable `growth` reflecting the average annual
-growth of dbh in cm. Furthermore, variables that (in theory) remain
-unchanged between censuses appear only once, such as `gx`, `gy`,
-species-related variables. Variables that should change between censuses
-are tagged with `1/2` indicating earlier/later, such as `dbh1/dbh2`,
-`codes1/codes2`.
+For each plot we combine the two census data frames into a single data
+frame that now includes a numerical variable `growth` reflecting the
+average annual growth of dbh in cm. Furthermore, variables that (in
+theory) remain unchanged between censuses appear only once, such as
+`gx`, `gy`, species-related variables. Variables that should change
+between censuses are tagged with `1/2` indicating earlier/later, such as
+`dbh1/dbh2`, `codes1/codes2`.
 
 The resulting data frames are named with some variation of `growth_df`.
 
@@ -125,7 +129,7 @@ The resulting data frames are named with some variation of `growth_df`.
 # Big Woods
 id <- "treeID"
 
-# we need to filter out the resprouts
+# we need to filter out the re-sprouts
 bw_census_2014 <- bw_census_2014 %>% 
   filter(!str_detect(codes, 'R'))
 
@@ -153,7 +157,7 @@ id <- "stemID"
 scbi_growth_df <- 
   # Merge both censuses and compute growth:
   compute_growth(census_df1, census_df2, id) %>%
-  # they are mesuaring in mm while we are measuring in cm!!!
+  # Convert growth from cm to mm to make result comperable
   mutate(growth = growth/10,
              sp = as.factor(sp))
 ```
@@ -181,11 +185,12 @@ Specifically:
 
 1.  In order to control for study region “edge effects” (cite Waller?),
     we need a function that adds “buffers” of trees. In our case, since
-    our model of interspecies competition relies on a spatial definition
-    of who is a “neighboring competitor” and certain explanatory
-    varibles such as biomass are cummulative, we need to ensure that all
-    trees being modeled are not biased to have different neighbor
-    structure, in particular the trees at the boundary of study regions.
+    our model of interspecific competition relies on a spatial
+    definition of who is a “neighboring competitor” and certain
+    explanatory variables such as biomass are cumulative, we need to
+    ensure that all trees being modeled are not biased to have different
+    neighbor structure, in particular the trees at the boundary of study
+    regions.
 2.  Assign each tree to a “fold” for cross-validation purposes.
     Conventional cross-validation schemes assign observations to folds
     by resampling individual observations at random. However, underlying
@@ -196,29 +201,32 @@ Specifically:
     have implemented spatial cross-validation include @valavi2019
 
 Thus, before we can incorporate the above information to `growth_df`, we
-need to define two constants:
+need to define two constants.
 
 ``` r
 cv_fold_size <- 100
 max_dist <- 7.5
 ```
 
+The first, `cv_fold_size` is the length of the folds, each fold is a
+square. The next, `max_dist` is the maximum distance for a tree’s
+competitive neighborhood. Trees within this distance of each other are
+assumed to compete while those farther than this distance apart do not.
+Both these values are in the same units as `gx` and `gz`, most often
+this will be meters.
+
+<!--
+DA comment: I am not sure about the below so I took it out. We don't assume that competitive interactions are inversely related to distance. We assume that competitive interactions are equivalent between distance 0 and 7.5, but than zero after that. Canham has the inversely related structure but we don't.
+
+Following Tobler's first law of geography that "everything is related to everything else, but near things are more related than distant things." @tobler1970firstlawofgeo, we assume that the degree of spatial autocorrelation is inversely-related to distance. However, we further assume that once trees are more than 7.5 meters apart, this autocorrelation is negligeable. -->
+
+Other studies have estimated the value of `max_dist`; we use an average
+of estimated values \[@canham2004, @canham2006, @uriarte2004,
+@tatsumi2013\].
+
 #### Defining buffers
 
-For a focal tree of interest, the `max_dist` of 7.5 meters acts as a
-radius defining a neighborhood within which all trees are considered
-competitors. In other words, all trees within 7.5 meters of the focal
-tree are considered competitor trees. Other studies have estimated this
-distance; we used 7.5 meters as an average of estimated values
-\[@canham2004, @canham2006, @uriarte2004, @tatsumi2013\]. Following
-Tobler’s first law of geography that “everything is related to
-everything else, but near things are more related than distant things.”
-@tobler1970firstlawofgeo, we assume that the degree of spatial
-autocorrelation is inversely-related to distance. However, we further
-assume that once trees are more than 7.5 meters apart, this
-autocorrelation is negligeable.
-
-We use the function `add_buffer_variable` to identifiy which trees are
+We use the function `add_buffer_variable` to identify which trees are
 inside of a buffer region of size `max_dist`. The user will need to
 specify a study region and convert to a `sf_polygon`.
 
@@ -289,8 +297,11 @@ ggplot() +
 
 We use the [`blockCV`](https://github.com/rvalavi/blockCV) package to
 define the spatial grid, whose elements will act as the folds in our
-leave-one-out (by “one” we meen “one grid block”) cross-validation
-scheme.
+leave-one-out (by “one” we mean “one grid block”) cross-validation
+scheme. The upshot here is we add `foldID` to `growth_df` which
+identifies which fold each individual is in, and the creation of a
+`cv_grid_sf` object which gives the geometry of the cross validation
+grid.
 
 **Big Woods**:
 
@@ -381,8 +392,8 @@ focal trees with two and three neighbors respectively, `focal_vs_comp`
 would consist of 5 rows.
 
 This requires the `growth_df` data frame; `max_dist`, the scalar
-defining competitive range; `cv_fold_size`, defining the size of the
-spatial cross-validation blocks; and the `id` variable as inputs.
+defining competitive range; `cv_grid_sf`, giving the cross validation
+grid; and the `id` variable as inputs.
 
 ``` r
 # Big Woods
@@ -422,7 +433,7 @@ tic()
 focal_vs_comp_scbi <- scbi_growth_df %>% 
   create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid_sf, id = "stemID")
 toc()
-#> 12.631 sec elapsed
+#> 14.351 sec elapsed
 ```
 
 ``` r
@@ -448,8 +459,8 @@ glimpse(focal_vs_comp_scbi)
 
 Now we are ready to fit the competition model with `fit_bayesian_model`.
 This function needs only the `focal_vs_comp` as an input. Other options
-allow the user to specify prior parameters and run a species identity
-shuffle (see below).
+allow the user to specify prior parameters and run a competitor-species
+identity shuffle (see below).
 
 ``` r
 # Big Woods
@@ -457,15 +468,15 @@ tic()
 posterior_param_bw <- focal_vs_comp_bw %>% 
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
-#> 191.157 sec elapsed
+#> 210.843 sec elapsed
 ```
 
 This output has the posterior parameters for the specified competition
 model. This `posterior_param` output can be used to get predicted
 growths for each individual (with `predict_bayesain_model`) to test how
-well the model performs. Or this `posterior_param` output can be plots
-(either the betas or lambdas) to understand what controls individual
-growth.
+well the model performs. Or this `posterior_param` output can be plotted
+(either the betas or lambdas with `plot_posterior_params`) to understand
+what controls growth and the nature of the competitive ineractions.
 
 Here we calculate the RMSE
 
@@ -483,7 +494,8 @@ predictions %>%
 Now we test whether the identity of the competitor matters. We do this
 by shuffling the identity of competitors (but not of focal trees or
 spatial locations or sizes) and fitting the model again. We then compare
-RMSEs to see whether competitor identity matters to competitive effects
+RMSEs to see whether competitor identity matters to competitive
+interactions.
 
 ``` r
 posterior_param_bw_shuffle <- focal_vs_comp_bw %>%
@@ -500,7 +512,7 @@ predictions_shuffle %>%
 ```
 
 The RMSE is lower for the non-shuffled version. This gives support for
-the idea that competitor identiy does matter for competitive
+the idea that competitor identity does matter for competitive
 interactions.
 
 **SCBI**:
@@ -511,8 +523,12 @@ tic()
 posterior_param_scbi <- focal_vs_comp_scbi %>% 
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 toc()
-#> 82.667 sec elapsed
+#> 113.409 sec elapsed
 ```
+
+Here we provide examples of seeing how well the model fits and then a
+spatial plot of the residuals to see whether there are any consistent
+spatial patterns to them.
 
 ``` r
 # SCBI
@@ -572,10 +588,10 @@ lead to overfitting because we are using the training data to also test
 the model. If model error is spatially correlated this could be a large
 issue (cite important sources here\!). We can use the spatial block
 structure we defined above to deal with with. The function `run_cv` goes
-through each fold in the `cv_grid` and fits the model on all the other
-folds. Then applies that fit to the focal fold. It is a wrapper for
-`fit_bayesain_model` and `predict_bayesain_model` but fits a separate
-model for each fold.
+through each fold in the `cv_grid_sf` and fits the model on all the
+other folds. Then applies that fit to the focal fold. It is a wrapper
+for `fit_bayesain_model` and `predict_bayesain_model` but fits a
+separate model for each fold.
 
 ``` r
 # big woods
@@ -584,7 +600,7 @@ cv_bw <- focal_vs_comp_bw %>%
   run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 toc()
-#> 1521.185 sec elapsed
+#> 1479.618 sec elapsed
 
 cv_bw %>%
   rmse(truth = growth, estimate = growth_hat) %>%
@@ -602,7 +618,7 @@ cv_scbi <- focal_vs_comp_scbi %>%
   run_cv(max_dist = max_dist, cv_grid = scbi_cv_grid) %>%
   right_join(scbi_growth_df, by = c("focal_ID" = "treeID"))
 toc()
-#> 763.035 sec elapsed
+#> 775.417 sec elapsed
 
 cv_scbi %>%
   rmse(truth = growth, estimate = growth_hat) %>%
@@ -610,21 +626,24 @@ cv_scbi %>%
 #> [1] 0.2077376
 ```
 
+Here also this RMSE is much higher than that for the above SCBI model
+fit without cross validation.
+
 ### Visualize posterior distributions
 
 **Big Woods**
 
 We might be interested in the posterior distributions of parameters. The
 betas tell us about how fast each species grows and how this depends on
-DBH. The lambdas, which are often of more interest, are the
-species-specific competition coefficents The full lambda matrix gives
-competition strength between species. There is a rich literature how
-this matrix (cite).
+DBH. The lambdas, often of more interest, are the species-specific
+competition coefficients. The full lambda matrix gives competition
+strength between species. There is a rich literature on this matrix
+(cite).
 
 Because of the structure of the `bw_fit_model` object we cannot simply
 draw these curves based on the posterior distribution. `bw_fit_model`
-gives the parameteres *compared* to a baseline. This is often not of
-interest. So to display these parameters as we care about them we have
+gives the parameters *compared* to a baseline. This is not of direct
+interest. So to display these parameters, as we care about them, we have
 to sample from the baseline distribution and from the comparison one to
 get the posterior distribution of interest.
 
