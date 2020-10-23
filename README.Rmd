@@ -66,8 +66,9 @@ library(yardstick)
 library(viridis)
 library(lubridate)
 
-run_scbi <- TRUE
-run_bw <- TRUE
+run_scbi <- FALSE
+run_bw <- FALSE
+small_example <- TRUE
 ```
 
 
@@ -281,7 +282,7 @@ We use the [`blockCV`](https://github.com/rvalavi/blockCV) package to define the
 # Big Woods
 set.seed(76)
 bw_cv_grid <- spatialBlock(
-  speciesData = bw_growth_df, theRange = 100, verbose = FALSE,
+  speciesData = bw_growth_df, theRange = cv_fold_size, verbose = FALSE,
   # Some guess work in figuring this out:
   k = 28, xOffset = 0.5, yOffset = 0
 )
@@ -313,7 +314,7 @@ bw_cv_grid_sf <- bw_cv_grid$blocks %>%
 ```{r, eval = run_scbi}
 # SCBI
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = 100, yOffset = 0.9999, k = 9, verbose = FALSE
+  speciesData = scbi_growth_df, theRange = cv_fold_size, yOffset = 0.9999, k = 9, verbose = FALSE
 )
 
 # Add foldID to data
@@ -575,4 +576,80 @@ posterior_plots_scbi <- plot_posterior_parameters(
 ```{r, eval = run_scbi}
 posterior_plots_scbi[["lambda"]]
 ```
+
+
+### Using small example
+
+
+```{r, eval = small_example}
+# Read in census files
+data(census_df1_ex, census_df2_ex)
+
+# Filter out resprouts
+census_df2_ex_no_r <- census_df2_ex %>%
+  filter(!str_detect(codes, 'R'))
+
+id <- 'ID'
+
+ex_growth_df <-
+  # Merge both censuses and compute growth:
+  compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
+  mutate(
+    sp = to_any_case(sp),
+    sp = as.factor(sp)) %>%
+  # drop stemID
+  select(-ID)
+
+data("ex_study_region")
+
+# set max dist
+max_dist <- 1
+
+# add buffer
+ex_growth_df <- ex_growth_df %>%
+  add_buffer_variable(direction = "in", size = max_dist, region = ex_study_region)
+
+ggplot() +
+  geom_sf(data = ex_growth_df, aes(col = buffer), size = 2)
+
+
+
+set.seed(76)
+ex_cv_grid <- spatialBlock(
+  speciesData = ex_growth_df, theRange = 5, verbose = FALSE, k = 2
+)
+
+```
+
+
+
+bw_cv_grid <- spatialBlock(
+  speciesData = bw_growth_df, theRange = cv_fold_size, verbose = FALSE,
+  # Some guess work in figuring this out:
+  k = 28, xOffset = 0.5, yOffset = 0
+)
+
+
+
+# Add foldID to data
+bw_growth_df <- bw_growth_df %>% 
+  mutate(
+    foldID = bw_cv_grid$foldID
+  ) 
+
+# Visualize grid. Why does fold 19 repeat?
+bw_cv_grid$plots +
+  geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col=factor(foldID)), size = 0.1)
+
+bw_growth_df <- bw_growth_df %>%
+  filter(!foldID %in% c(19, 23, 21, 17, 8, 19)) %>%
+  mutate(foldID = as.character(foldID))
+
+# Deliverable
+ggplot() +
+  geom_sf(data = bw_growth_df, aes(col = foldID, alpha = buffer))
+
+bw_cv_grid_sf <- bw_cv_grid$blocks %>%
+  st_as_sf()
+
 

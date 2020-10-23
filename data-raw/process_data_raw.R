@@ -73,7 +73,39 @@ bw_census_2014 <-
   )
 use_data(bw_census_2014, overwrite = TRUE)
 
+# Small example for whole workflow
+census_df1_ex <- tibble(
+  ID = 1:10,
+  sp = rep(c('sugar maple', 'American beech'),5),
+  gx = c(0.75, 1.5, 1.75, 3, 3.25, 5.5, 8, 8.5, 8.75, 8.75),
+  gy = c(2.5, 2.5, 2.25, 1.5, 1.75, 4.5, 1.5, 0.75, 1.5, 1.75),
+  date = ymd('20150601'),
+  codes = 'M',
+  dbh = c(5, 20, 15, 12, 35, 6, 22, 14, 42, 4)
+)
+use_data(census_df1_ex, overwrite = TRUE)
 
+
+census_df2_ex <- tibble(
+  ID = c(1:9,11,12),
+  sp = c(rep(c('sugar maple', 'American beech'),4),'sugar maple','sugar maple','sugar maple'),
+  gx = c(0.75, 1.5, 1.75, 3, 3.25, 5.5, 8, 8.5, 8.75, 6.5, 2.5),
+  gy = c(2.5, 2.5, 2.25, 1.5, 1.75, 4.5, 1.5, 0.75, 1.5, 3, 4.5),
+  date = ymd('20200601'),
+  codes = c(rep('M',5),'R',rep('M',5)),
+  dbh = c(6, 24, 20, 14, 42, 2, 25, 19, 49, 2, 2)
+)
+use_data(census_df2_ex, overwrite = TRUE)
+
+ex_study_region <-
+  tibble(
+    # Study region boundary
+    x = c(0,10,10,0,0),
+    y = c(0,0,5,5,0)
+  ) %>%
+  # Convert to sf object
+  sf_polygon()
+use_data(ex_study_region, overwrite = TRUE)
 
 # Example growth_df data frame used to illustrate focal_vs_comp()
 growth_df_ex <- tibble(
