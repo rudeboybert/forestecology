@@ -36,6 +36,7 @@ install.packages("forestecology")
 
 And the development version from [GitHub](https://github.com/) with:
 
+
 ```{r, eval = FALSE}
 # install.packages("remotes")
 # remotes::install_github("rudeboybert/forestecology")
