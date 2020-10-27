@@ -615,41 +615,29 @@ ggplot() +
 
 
 set.seed(76)
-ex_cv_grid <- spatialBlock(
-  speciesData = ex_growth_df, theRange = 5, verbose = FALSE, k = 2
-)
-
-```
-
-
-
-bw_cv_grid <- spatialBlock(
-  speciesData = bw_growth_df, theRange = cv_fold_size, verbose = FALSE,
-  # Some guess work in figuring this out:
-  k = 28, xOffset = 0.5, yOffset = 0
-)
-
+#ex_cv_grid <- spatialBlock(
+#  speciesData = ex_growth_df, theRange = 5, verbose = FALSE, k = 2
+#)
 
 
 # Add foldID to data
-bw_growth_df <- bw_growth_df %>% 
+ex_growth_df <- ex_growth_df %>% 
   mutate(
-    foldID = bw_cv_grid$foldID
+    foldID = ex_cv_grid$foldID
   ) 
 
+
+
 # Visualize grid. Why does fold 19 repeat?
-bw_cv_grid$plots +
-  geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col=factor(foldID)), size = 0.1)
+ex_cv_grid$plots +
+  geom_sf(data = ex_growth_df, aes(col=factor(foldID)), size = 1)
 
-bw_growth_df <- bw_growth_df %>%
-  filter(!foldID %in% c(19, 23, 21, 17, 8, 19)) %>%
-  mutate(foldID = as.character(foldID))
 
-# Deliverable
-ggplot() +
-  geom_sf(data = bw_growth_df, aes(col = foldID, alpha = buffer))
-
-bw_cv_grid_sf <- bw_cv_grid$blocks %>%
+ex_cv_grid <- ex_cv_grid$blocks %>%
   st_as_sf()
+
+
+```
+
 
 
