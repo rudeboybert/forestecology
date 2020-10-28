@@ -168,6 +168,94 @@
 "bw_study_region"
 
 
+#' Example input census data for package use
+#'
+#' This is example forest census data to be analyzed with this package.
+#'
+#' @format A \code{tibble}
+#'\describe{
+#'   \item{ID}{Tree identification number. This identifies an individual tree and
+#'   can be used to connect trees between the two censuses.}
+#'   \item{sp}{Speices of the individual}
+#'   \item{gx}{x-coordinate meters from reference point}
+#'   \item{gy}{y-coordinate meters from reference point}
+#'   \item{date}{Date the stem was measured}
+#'   \item{codes}{Code for additional information on the stem: M means the main stem
+#'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
+#'   this stands for resprout.}
+#'   \item{dbh}{Diameter at breast hieght of the tree in cm}
+#' }
+#' @seealso \code{\link{census_df2_ex}}
+#' @examples
+#' data(census_df1_ex,census_df2_ex)
+#' require(dplyr)
+#' # Filter out resprouts
+#' census_df2_ex_no_r <- census_df2_ex %>%
+#'  filter(!str_detect(codes, 'R'))
+#' id <- 'ID'
+#' ex_growth_df <-
+#'  # Merge both censuses and compute growth:
+#'  compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
+#'  mutate(
+#'    sp = to_any_case(sp),
+#'    sp = as.factor(sp))
+"census_df1_ex"
+
+
+#' Example input census data for package use
+#'
+#' This is an example second census to be analyzed with the package.
+#'
+#' @format A \code{tibble}
+#'\describe{
+#'   \item{ID}{Tree identification number. This identifies an individual tree and
+#'   can be used to connect trees between the two censuses.}
+#'   \item{sp}{Speices of the individual}
+#'   \item{gx}{x-coordinate meters from reference point}
+#'   \item{gy}{y-coordinate meters from reference point}
+#'   \item{date}{Date the stem was measured}
+#'   \item{codes}{Code for additional information on the stem: M means the main stem
+#'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
+#'   this stands for resprout.}
+#'   \item{dbh}{Diameter at breast hieght of the tree in cm}
+#' }
+#' @seealso \code{\link{census_df1_ex}}
+#' @examples
+#' data(census_df1_ex,census_df2_ex)
+#' require(dplyr)
+#' # Filter out resprouts
+#' census_df2_ex_no_r <- census_df2_ex %>%
+#'  filter(!str_detect(codes, 'R'))
+#' id <- 'ID'
+#' ex_growth_df <-
+#'  # Merge both censuses and compute growth:
+#'  compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
+#'  mutate(
+#'    sp = to_any_case(sp),
+#'    sp = as.factor(sp))
+"census_df2_ex"
+
+
+#' Study region for example data
+#'
+#' Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
+#'
+#' @format A \code{sf} spatial features polygon
+#' @seealso \code{\link{census_df1_ex}}
+#' @examples
+#' library(ggplot2)
+#' library(sf)
+#'
+#' # Convert stems to sf object
+#' census_df1_ex_sf <- census_df1_ex %>%
+#'   st_as_sf(coords = c("gx", "gy"))
+#'
+#' # Plot stems with plot boundary
+#' ggplot() +
+#'   geom_sf(data = ex_study_region) +
+#'   geom_sf(data = bw_study_region, color = "red", fill = "transparent")
+"ex_study_region"
+
 
 #' Example input data for \code{\link{create_focal_vs_comp}}
 #'

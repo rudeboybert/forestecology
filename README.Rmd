@@ -580,6 +580,7 @@ posterior_plots_scbi[["lambda"]]
 
 ### Using small example
 
+Need to write this up for the readme.
 
 ```{r, eval = small_example}
 # Read in census files
@@ -596,9 +597,7 @@ ex_growth_df <-
   compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
   mutate(
     sp = to_any_case(sp),
-    sp = as.factor(sp)) %>%
-  # drop stemID
-  select(-ID)
+    sp = as.factor(sp)) 
 
 data("ex_study_region")
 
@@ -613,29 +612,76 @@ ggplot() +
   geom_sf(data = ex_growth_df, aes(col = buffer), size = 2)
 
 
+# Bert's solution: Manually create a blocks sf object
+fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
+fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
+blocks <- bind_rows(
+  sf_polygon(fold1),
+  sf_polygon(fold2) ) %>%
+  mutate(foldID = c(1, 2))
 
-set.seed(76)
-#ex_cv_grid <- spatialBlock(
-#  speciesData = ex_growth_df, theRange = 5, verbose = FALSE, k = 2
-#)
 
+# Plot
+ggplot() +
+  geom_sf(data = ex_growth_df, aes(col = buffer), size = 2) +
+  geom_sf(data = blocks, fill = "transparent")
+
+# fit spatialBlock()
+ex_cv_grid <- spatialBlock(
+  speciesData = ex_growth_df,
+  verbose = FALSE,
+  k = 2,
+  # Note new arguments
+  selection = "systematic",
+  blocks = blocks#,
+ # foldsCol = "foldID"
+)
 
 # Add foldID to data
-ex_growth_df <- ex_growth_df %>% 
-  mutate(
-    foldID = ex_cv_grid$foldID
-  ) 
+ex_growth_df <- ex_growth_df %>%
+  mutate(foldID = ex_cv_grid$foldID %>% as.factor())
 
-
-
-# Visualize grid. Why does fold 19 repeat?
+# Visualize grid
 ex_cv_grid$plots +
-  geom_sf(data = ex_growth_df, aes(col=factor(foldID)), size = 1)
+  geom_sf(data = ex_growth_df, aes(col = foldID), size = 2)
+
+# Deliverable
+ggplot() +
+  geom_sf(data = ex_growth_df, aes(col = foldID, shape = buffer))
 
 
-ex_cv_grid <- ex_cv_grid$blocks %>%
+ex_cv_grid_sf <- ex_cv_grid$blocks %>%
   st_as_sf()
 
+# focal v comp
+focal_vs_comp_ex <- ex_growth_df %>% 
+  create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
+
+
+# fit the model
+posterior_param_ex <- focal_vs_comp_ex %>% 
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+
+# get predictions
+predictions <- focal_vs_comp_ex %>%
+  predict_bayesian_model(posterior_param = posterior_param_ex) %>%
+  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+predictions %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
+# plot posteriors
+posterior_param_ex %>%
+  plot_posterior_parameters()
+
+# run model with CV
+ex_bw <- focal_vs_comp_ex %>% 
+  run_cv(max_dist = max_dist, cv_grid = ex_cv_grid) %>%
+  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+
+ex_bw %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
 
 ```
 
