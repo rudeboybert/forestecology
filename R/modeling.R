@@ -29,6 +29,7 @@
 #' @examples
 #' library(ggplot2)
 #' library(dplyr)
+#' library(stringr)
 #' library(sf)
 #' library(sfheaders)
 #' library(tibble)
@@ -57,7 +58,37 @@
 #'
 #' # Return corresponding data frame
 #' growth_df_ex %>%
-#'   create_focal_vs_comp(max_dist = 1.5, cv_grid = cv_grid_ex, id = "ID")
+#'   create_focal_vs_comp(max_dist = 1.5, cv_grid_sf = cv_grid_ex, id = "ID")
+#'
+#' # Load in data from two forest censuses
+#' data(census_df1_ex, census_df2_ex)
+#' # Filter out resprouts in second census
+#' census_df2_ex_no_r <- census_df2_ex %>%
+#'  filter(!str_detect(codes, 'R'))
+#' id <- 'ID'
+#' ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
+#'
+#' # Bert's solution: Manually create a blocks sf object
+#' fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
+#' fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
+#' blocks <- bind_rows(
+#'  sf_polygon(fold1),
+#'  sf_polygon(fold2) ) %>%
+#'  mutate(foldID = c(1, 2))
+#'
+#' ex_cv_grid <- spatialBlock(
+#'  speciesData = ex_growth_df,
+#'  verbose = FALSE,
+#'  k = 2,
+#'  selection = "systematic",
+#'  blocks = blocks )
+#'
+#' ex_growth_df <- ex_growth_df %>%
+#'   mutate(foldID = ex_cv_grid$foldID %>% as.factor())
+#' ex_cv_grid_sf <- ex_cv_grid$blocks %>% st_as_sf()
+#'
+#' focal_vs_comp_ex <- ex_growth_df %>%
+#'  create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
 create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
   # TODO: Create example for this function using toy dataset
   # TODO: Inputs checks that growth_df has sp variable, maybe id variable
@@ -186,7 +217,43 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 #' @export
 #'
 #' @examples
-#' 1+1
+#' library(dplyr)
+#' library(stringr)
+#' library(sf)
+#' library(sfheaders)
+#' library(tibble)
+#' # Load in data from two forest censuses
+#' data(census_df1_ex, census_df2_ex)
+#' # Filter out resprouts in second census
+#' census_df2_ex_no_r <- census_df2_ex %>%
+#'  filter(!str_detect(codes, 'R'))
+#' id <- 'ID'
+#' ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
+#'
+#' # Bert's solution: Manually create a blocks sf object
+#' fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
+#' fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
+#' blocks <- bind_rows(
+#'  sf_polygon(fold1),
+#'  sf_polygon(fold2) ) %>%
+#'  mutate(foldID = c(1, 2))
+#'
+#' ex_cv_grid <- spatialBlock(
+#'  speciesData = ex_growth_df,
+#'  verbose = FALSE,
+#'  k = 2,
+#'  selection = "systematic",
+#'  blocks = blocks )
+#'
+#' ex_growth_df <- ex_growth_df %>%
+#'   mutate(foldID = ex_cv_grid$foldID %>% as.factor())
+#' ex_cv_grid_sf <- ex_cv_grid$blocks %>% st_as_sf()
+#'
+#' focal_vs_comp_ex <- ex_growth_df %>%
+#'  create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
+#'
+#' posterior_param_ex <- focal_vs_comp_ex %>%
+#'  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE){
   if(FALSE){
     focal_vs_comp <- focal_vs_comp_bw
@@ -272,7 +339,50 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
 #' @export
 #'
 #' @examples
-#' 1+1
+#' library(dplyr)
+#' library(stringr)
+#' library(sf)
+#' library(sfheaders)
+#' library(tibble)
+#' # Load in data from two forest censuses
+#' data(census_df1_ex, census_df2_ex)
+#' # Filter out resprouts in second census
+#' census_df2_ex_no_r <- census_df2_ex %>%
+#'  filter(!str_detect(codes, 'R'))
+#' id <- 'ID'
+#' ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
+#'
+#' # Bert's solution: Manually create a blocks sf object
+#' fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
+#' fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
+#' blocks <- bind_rows(
+#'  sf_polygon(fold1),
+#'  sf_polygon(fold2) ) %>%
+#'  mutate(foldID = c(1, 2))
+#'
+#' ex_cv_grid <- spatialBlock(
+#'  speciesData = ex_growth_df,
+#'  verbose = FALSE,
+#'  k = 2,
+#'  selection = "systematic",
+#'  blocks = blocks )
+#'
+#' ex_growth_df <- ex_growth_df %>%
+#'   mutate(foldID = ex_cv_grid$foldID %>% as.factor())
+#' ex_cv_grid_sf <- ex_cv_grid$blocks %>% st_as_sf()
+#'
+#' focal_vs_comp_ex <- ex_growth_df %>%
+#'  create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
+#'
+#' posterior_param_ex <- focal_vs_comp_ex %>%
+#'  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+#' predictions <- focal_vs_comp_ex %>%
+#'  predict_bayesian_model(posterior_param = posterior_param_ex) %>%
+#'  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#' predictions %>%
+#'  ggplot(aes(growth, growth_hat)) +
+#'  geom_point() +
+#'  geom_abline(slope = 1, intercept = 0)
 predict_bayesian_model <- function(focal_vs_comp, posterior_param){
   if(FALSE){
     focal_vs_comp <- focal_vs_comp_bw

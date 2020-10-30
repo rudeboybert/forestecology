@@ -17,7 +17,15 @@ globalVariables(c(
 #' @import dplyr
 #' @import sf
 #' @examples
-#' 1+1
+#' require(dplyr)
+#' require(stringr)
+#' # Load in data from two forst censuses
+#' data(census_df1_ex, census_df2_ex)
+#' # Filter out resprouts in second census
+#' census_df2_ex_no_r <- census_df2_ex %>%
+#'  filter(!str_detect(codes, 'R'))
+#' id <- 'ID'
+#' ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
 compute_growth <- function(census_df1, census_df2, id) {
 
   # TODO: Write following checks
