@@ -238,7 +238,7 @@
 
 #' Study region for example data
 #'
-#' Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
+#' Boundary region for small example data set defined in terms of (x,y) vertices of a polygon.
 #'
 #' @format A \code{sf} spatial features polygon
 #' @seealso \code{\link{census_df1_ex}}
@@ -256,6 +256,44 @@
 #'   geom_sf(data = bw_study_region, color = "red", fill = "transparent")
 "ex_study_region"
 
+
+
+#' Example growth data frame for small example
+#'
+#' This is an example growth data frame formed from two census data frames. In this case it is
+#' made by combining \code{\link{census_df1_ex}} and \code{\link{census_df2_ex}}. The
+#' individuals alive in both censuses were linked by their tree ID. T
+#'
+#' @format A \code{sf} spatial tibble
+#'\describe{
+#'   \item{ID}{Tree identification number. This identifies an individual tree and
+#'   can be used to connect trees between the two censuses.}
+#'   \item{sp}{Speices of the individual}
+#'   \item{codes1}{Code for additional information on the stem during the first census: M means the main stem
+#'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
+#'   this stands for resprout.}
+#'   \item{dbh1}{Diameter at breast hieght of the tree in cm at the first census}
+#'   \item{dbh2}{Diameter at breast hieght of the tree in cm at the second census}
+#'   \item{growth}{Average annual growth between the two censuses in cm per year}
+#'   \item{codes2}{Codes at the second census}
+#'   \item{geometry}{Point location of the individual}
+#' }
+#' @seealso \code{\link{census_df1_ex}}, \code{\link{census_df2_ex}}, and \code{\link{compute_growth}}
+#' @examples
+#' library(ggplot2)
+#' library(dplyr)
+#' library(sf)
+#'
+#' ex_growth_df %>%
+#'  ggplot() %>%
+#'  geom_sf()
+#'
+#' ex_growth_df %>%
+#'  group_by(sf) %>%
+#'  summarize(mean(growth))
+"ex_growth_df"
+
+##### NEED TO DO ex_growth_df_spatial, posterior_param_ex, focal_vs_comp_ex, ex_cv_grid_sf
 
 #' Example input data for \code{\link{create_focal_vs_comp}}
 #'
