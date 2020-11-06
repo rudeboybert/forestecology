@@ -21,7 +21,9 @@ BugReports: https://github.com/rudeboybert/forestecology/issues
 Depends:
     R (>= 3.2.4)
 Suggests: 
-    testthat
+    testthat,
+    knitr,
+    rmarkdown
 Imports: 
     magrittr,
     ggplot2,
@@ -35,3 +37,4 @@ Imports:
     sf,
     sfheaders,
     tibble
+VignetteBuilder: knitr
