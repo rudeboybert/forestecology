@@ -12,3 +12,8 @@ bw_cv_predict.Rdata
 forestecology*.tar.gz
 forestecology*.tgz
 inst/doc
+
+# LaTeX files
+*.log
+*.aux
+*.blg
