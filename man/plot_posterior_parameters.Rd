@@ -18,5 +18,18 @@ plot_posterior_parameters(posterior_param, sp_to_plot = NULL)
 Plot beta_0 parameters
 }
 \examples{
-1+1
+library(ggplot2)
+library(ggridges)
+# Load in posterior parameter example
+ data(posterior_param_ex)
+ plots <- plot_posterior_parameters(posterior_param_ex)
+
+ # Plot beta_0, growth intercepts
+ plots[[1]]
+
+ # Plot beta_dbh, growth-dbh slopt
+ plots[[2]]
+
+ # Plot lambdas, competition coefficents
+ plots[[3]]
 }

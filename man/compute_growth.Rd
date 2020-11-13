@@ -22,5 +22,13 @@ Based on two tree censuses compute the average annual growth in dbh for all
 trees that were alive at (TODO: fill this in).
 }
 \examples{
-1+1
+require(dplyr)
+require(stringr)
+# Load in data from two forst censuses
+data(census_df1_ex, census_df2_ex)
+# Filter out resprouts in second census
+census_df2_ex_no_r <- census_df2_ex \%>\%
+ filter(!str_detect(codes, 'R'))
+id <- 'ID'
+ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
 }

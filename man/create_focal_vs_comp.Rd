@@ -45,6 +45,7 @@ object to divide the study region into smaller subsets.
 \examples{
 library(ggplot2)
 library(dplyr)
+library(stringr)
 library(sf)
 library(sfheaders)
 library(tibble)
@@ -73,7 +74,16 @@ ggplot() +
 
 # Return corresponding data frame
 growth_df_ex \%>\%
-  create_focal_vs_comp(max_dist = 1.5, cv_grid = cv_grid_ex, id = "ID")
+  create_focal_vs_comp(max_dist = 1.5, cv_grid_sf = cv_grid_ex, id = "ID")
+
+# Load in growth_df with spatial data
+# See ?ex_growth_df for attaching spatial data to growth_df
+data(ex_growth_df_spatial)
+# Load in cv_grid
+data(ex_cv_grid_sf)
+
+focal_vs_comp_ex <- ex_growth_df_spatial \%>\%
+ create_focal_vs_comp(max_dist = 1, cv_grid_sf = ex_cv_grid_sf, id = "ID")
 }
 \seealso{
 \code{\link{focal_vs_comp_distance}}

@@ -30,7 +30,13 @@ Fit a Bayesian linear regression model with interactions terms where \deqn{y = X
 }
 }
 \examples{
-1+1
+library(dplyr)
+
+# Load in focal versus comp
+data(focal_vs_comp_ex)
+
+posterior_param_ex <- focal_vs_comp_ex \%>\%
+ fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 }
 \seealso{
 \code{\link{predict_bayesian_model}}
