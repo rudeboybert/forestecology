@@ -97,7 +97,7 @@ Implementation of the method in @allen_permutation_2020
 
 # Example
 
-We demonstrate the `forestecology` package's features on two data sets, SCBI @bourg_initial_2013 and Big Woods Michigan CITE, both part of ForestGEO @andersonteixeira_ctfs-forestgeo_2015.
+We demonstrate the `forestecology` package's features on two data sets, SCBI @bourg_initial_2013 and Big Woods Michigan @allen_michigan_2020, both part of ForestGEO @andersonteixeira_ctfs-forestgeo_2015.
 
 
 We present an example analysis using data from two [ForestGEO](https://forestgeo.si.edu/) plots:
