@@ -23,7 +23,21 @@ Applies fitted model from \code{\link{fit_bayesian_model}} and
 returns posterior predicted values.
 }
 \examples{
-1+1
+library(dplyr)
+library(sf)
+library(ggplot2)
+
+# Load in posterior parameter example
+# and growth data to compare to
+data(posterior_param_ex, ex_growth_df)
+
+predictions <- focal_vs_comp_ex \%>\%
+  predict_bayesian_model(posterior_param = posterior_param_ex) \%>\%
+  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+predictions \%>\%
+  ggplot(aes(growth, growth_hat)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0)
 }
 \seealso{
 \code{\link{fit_bayesian_model}}

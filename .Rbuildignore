@@ -2,14 +2,18 @@
 ^\.Rproj\.user$
 ^\.travis\.yml$
 ^LICENSE\.md$
+^CODE_OF_CONDUCT\.md$
+
 ^README\.Rmd$
 ^README\.md$
-^CODE_OF_CONDUCT\.md$
-^data-raw$
 ^README_cache$
+
 ^forestecology\.Rcheck$
 ^forestecology.*\.tar\.gz$
 ^forestecology.*\.tgz$
 
-^pkg_todo\.R$
-^results$
+^data-raw$
+^README_cache$
+^etc$
+
+vignettes/forestecology_cache/

@@ -36,5 +36,9 @@ Imports:
     mvnfast,
     sf,
     sfheaders,
-    tibble
+    snakecase,
+    tibble,
+    yardstick,
+    blockCV,
+    forcats
 VignetteBuilder: knitr

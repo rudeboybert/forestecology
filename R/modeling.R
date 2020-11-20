@@ -60,36 +60,15 @@
 #' growth_df_ex %>%
 #'   create_focal_vs_comp(max_dist = 1.5, cv_grid_sf = cv_grid_ex, id = "ID")
 #'
-#' # Load in data from two forest censuses
-#' data(census_df1_ex, census_df2_ex)
-#' # Filter out resprouts in second census
-#' census_df2_ex_no_r <- census_df2_ex %>%
-#'  filter(!str_detect(codes, 'R'))
-#' id <- 'ID'
-#' ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
+#' # Load in growth_df with spatial data
+#' # See ?ex_growth_df for attaching spatial data to growth_df
+#' data(ex_growth_df_spatial)
+#' # Load in cv_grid
+#' data(ex_cv_grid_sf)
 #'
-#' # Bert's solution: Manually create a blocks sf object
-#' fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
-#' fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
-#' blocks <- bind_rows(
-#'  sf_polygon(fold1),
-#'  sf_polygon(fold2) ) %>%
-#'  mutate(foldID = c(1, 2))
-#'
-#' ex_cv_grid <- spatialBlock(
-#'  speciesData = ex_growth_df,
-#'  verbose = FALSE,
-#'  k = 2,
-#'  selection = "systematic",
-#'  blocks = blocks )
-#'
-#' ex_growth_df <- ex_growth_df %>%
-#'   mutate(foldID = ex_cv_grid$foldID %>% as.factor())
-#' ex_cv_grid_sf <- ex_cv_grid$blocks %>% st_as_sf()
-#'
-#' focal_vs_comp_ex <- ex_growth_df %>%
-#'  create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
-create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
+#' focal_vs_comp_ex <- ex_growth_df_spatial %>%
+#'   create_focal_vs_comp(max_dist = 1, cv_grid_sf = ex_cv_grid_sf, id = "ID")
+create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
   # TODO: Create example for this function using toy dataset
   # TODO: Inputs checks that growth_df has sp variable, maybe id variable
 
@@ -111,7 +90,7 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
     mutate(
       comp_ID = .data[[id]],
       # Compute basal area using dbh1 from first census
-      comp_basal_area = 0.0001 * pi * (dbh1/2)^2
+      comp_basal_area = 0.0001 * pi * (dbh1 / 2)^2
     ) %>%
     select(comp_ID, foldID, comp_sp = sp, comp_basal_area)
 
@@ -124,7 +103,7 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
     unique()
   focal_vs_comp <- vector(mode = "list", length = length(all_folds))
 
-  for(i in 1:length(all_folds)){
+  for (i in 1:length(all_folds)) {
     # Identify this fold's boundary
     fold_boundary <- cv_grid_sf %>%
       filter(folds == all_folds[i])
@@ -139,7 +118,7 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
       add_buffer_variable(direction = "out", size = max_dist, region = fold_boundary) %>%
       filter(!buffer)
 
-    if(FALSE){
+    if (FALSE) {
       # Sanity check plot: for the ith fold, smaller black dots are competitor
       # trees and cyan larger dots are the test set. orange ones separating test
       # set from training set (trees in all other folds)
@@ -218,44 +197,14 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id){
 #'
 #' @examples
 #' library(dplyr)
-#' library(stringr)
-#' library(sf)
-#' library(sfheaders)
-#' library(tibble)
-#' # Load in data from two forest censuses
-#' data(census_df1_ex, census_df2_ex)
-#' # Filter out resprouts in second census
-#' census_df2_ex_no_r <- census_df2_ex %>%
-#'  filter(!str_detect(codes, 'R'))
-#' id <- 'ID'
-#' ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
 #'
-#' # Bert's solution: Manually create a blocks sf object
-#' fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
-#' fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
-#' blocks <- bind_rows(
-#'  sf_polygon(fold1),
-#'  sf_polygon(fold2) ) %>%
-#'  mutate(foldID = c(1, 2))
-#'
-#' ex_cv_grid <- spatialBlock(
-#'  speciesData = ex_growth_df,
-#'  verbose = FALSE,
-#'  k = 2,
-#'  selection = "systematic",
-#'  blocks = blocks )
-#'
-#' ex_growth_df <- ex_growth_df %>%
-#'   mutate(foldID = ex_cv_grid$foldID %>% as.factor())
-#' ex_cv_grid_sf <- ex_cv_grid$blocks %>% st_as_sf()
-#'
-#' focal_vs_comp_ex <- ex_growth_df %>%
-#'  create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
+#' # Load in focal versus comp
+#' data(focal_vs_comp_ex)
 #'
 #' posterior_param_ex <- focal_vs_comp_ex %>%
-#'  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
-fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE){
-  if(FALSE){
+#'   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) {
+  if (FALSE) {
     focal_vs_comp <- focal_vs_comp_bw
     run_shuffle <- FALSE
     prior_param <- NULL
@@ -267,7 +216,7 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
     sort()
   model_formula <- sp_list %>%
     paste(., "*sp", sep = "", collapse = " + ") %>%
-    paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
+    paste("growth ~ sp + dbh + dbh*sp + ", .) %>%
     as.formula()
 
   # Create matrices & vectors for Bayesian regression
@@ -281,7 +230,7 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
   n <- nrow(X)
 
   # Set priors. If no prior_param specified:
-  if(is.null(prior_param)){
+  if (is.null(prior_param)) {
     # Prior parameters for sigma2:
     a_0 <- 250
     b_0 <- 25
@@ -302,7 +251,7 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
   V_star <- solve(solve(V_0) + t(X) %*% X)
 
   # Posterior parameters for sigma2
-  a_star <- a_0 + n/2
+  a_star <- a_0 + n / 2
   b_star <- b_0 + 0.5 * (
     t(mu_0) %*% solve(V_0) %*% mu_0 +
       t(y) %*% y -
@@ -340,51 +289,22 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
 #'
 #' @examples
 #' library(dplyr)
-#' library(stringr)
 #' library(sf)
-#' library(sfheaders)
-#' library(tibble)
-#' # Load in data from two forest censuses
-#' data(census_df1_ex, census_df2_ex)
-#' # Filter out resprouts in second census
-#' census_df2_ex_no_r <- census_df2_ex %>%
-#'  filter(!str_detect(codes, 'R'))
-#' id <- 'ID'
-#' ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
+#' library(ggplot2)
 #'
-#' # Bert's solution: Manually create a blocks sf object
-#' fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
-#' fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
-#' blocks <- bind_rows(
-#'  sf_polygon(fold1),
-#'  sf_polygon(fold2) ) %>%
-#'  mutate(foldID = c(1, 2))
+#' # Load in posterior parameter example
+#' # and growth data to compare to
+#' data(posterior_param_ex, ex_growth_df)
 #'
-#' ex_cv_grid <- spatialBlock(
-#'  speciesData = ex_growth_df,
-#'  verbose = FALSE,
-#'  k = 2,
-#'  selection = "systematic",
-#'  blocks = blocks )
-#'
-#' ex_growth_df <- ex_growth_df %>%
-#'   mutate(foldID = ex_cv_grid$foldID %>% as.factor())
-#' ex_cv_grid_sf <- ex_cv_grid$blocks %>% st_as_sf()
-#'
-#' focal_vs_comp_ex <- ex_growth_df %>%
-#'  create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
-#'
-#' posterior_param_ex <- focal_vs_comp_ex %>%
-#'  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 #' predictions <- focal_vs_comp_ex %>%
-#'  predict_bayesian_model(posterior_param = posterior_param_ex) %>%
-#'  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#'   predict_bayesian_model(posterior_param = posterior_param_ex) %>%
+#'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 #' predictions %>%
-#'  ggplot(aes(growth, growth_hat)) +
-#'  geom_point() +
-#'  geom_abline(slope = 1, intercept = 0)
-predict_bayesian_model <- function(focal_vs_comp, posterior_param){
-  if(FALSE){
+#'   ggplot(aes(growth, growth_hat)) +
+#'   geom_point() +
+#'   geom_abline(slope = 1, intercept = 0)
+predict_bayesian_model <- function(focal_vs_comp, posterior_param) {
+  if (FALSE) {
     focal_vs_comp <- focal_vs_comp_bw
     posterior_param <- bw_fit_model
   }
@@ -395,7 +315,7 @@ predict_bayesian_model <- function(focal_vs_comp, posterior_param){
     sort()
   model_formula <- sp_list %>%
     paste(., "*sp", sep = "", collapse = " + ") %>%
-    paste("growth ~ sp + dbh + dbh*sp + ", .)  %>%
+    paste("growth ~ sp + dbh + dbh*sp + ", .) %>%
     as.formula()
 
   # Create matrices & vectors for Bayesian regression
@@ -428,8 +348,8 @@ predict_bayesian_model <- function(focal_vs_comp, posterior_param){
 #' @description This function is used both by \code{\link{fit_bayesian_model}} and \code{\link{predict_bayesian_model}}
 #' @export
 #' @examples
-#' 1+1
-create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE){
+#' 1 + 1
+create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
   # Prepare data for regression
   focal_trees <- focal_vs_comp %>%
     group_by(focal_ID, comp_sp) %>%
@@ -441,7 +361,7 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE){
   # TODO: Can we do this within a pipe, therefore we can connect above chain
   # with chain below, that way we can re-use this code for predict_bayesian_model
   # below that doesn't use run_shuffle?
-  if(run_shuffle){
+  if (run_shuffle) {
     focal_trees <- focal_trees %>%
       group_by(focal_ID) %>%
       mutate(comp_sp = sample(comp_sp))
@@ -482,13 +402,28 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE){
 #' @import ggridges
 #' @importFrom mvnfast rmvt
 #' @importFrom purrr set_names
+#' @importFrom tidyr gather
 #' @importFrom ggridges geom_density_ridges
 #' @importFrom stats as.formula
+#' @import stringr
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'
 #' @examples
-#' 1+1
+#' library(ggplot2)
+#' library(ggridges)
+#' # Load in posterior parameter example
+#' data(posterior_param_ex)
+#' plots <- plot_posterior_parameters(posterior_param_ex)
+#'
+#' # Plot beta_0, growth intercepts
+#' plots[[1]]
+#'
+#' # Plot beta_dbh, growth-dbh slopt
+#' plots[[2]]
+#'
+#' # Plot lambdas, competition coefficents
+#' plots[[3]]
 plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
   if (FALSE) {
     posterior_param <- posterior_param_bw
@@ -570,7 +505,9 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
     geom_density_ridges() +
     geom_vline(xintercept = 0, linetype = "dashed") +
     labs(
-      x = expression(paste(beta[0], " (cm ", y^{-1}, ")")),
+      x = expression(paste(beta[0], " (cm ", y^{
+        -1
+      }, ")")),
       y = "species"
     )
 
@@ -600,7 +537,9 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
     geom_density_ridges() +
     geom_vline(xintercept = 0, linetype = "dashed") +
     labs(
-      x = expression(paste(beta[DBH], " (", y^{-1}, ")")),
+      x = expression(paste(beta[DBH], " (", y^{
+        -1
+      }, ")")),
       y = "species"
     )
 
@@ -658,7 +597,7 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
   # )
 
   # When we only want to plot a subset of species:
-  if(!is.null(sp_to_plot)){
+  if (!is.null(sp_to_plot)) {
     sp_to_plot <- sort(sp_to_plot)
 
     posterior_lambda <- posterior_lambda %>%
@@ -708,9 +647,9 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
 #' @export
 #'
 #' @examples
-#' 1+1
-run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE, all_folds = TRUE){
-  if(FALSE){
+#' 1 + 1
+run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE, all_folds = TRUE) {
+  if (FALSE) {
     # Code to test BigWoods
     focal_vs_comp <- focal_vs_comp_bw
     cv_grid <- bw_cv_grid
@@ -722,7 +661,10 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
   # TODO: remove this later
   # if subset is true just two folds
   if (all_folds) {
-    folds <- focal_vs_comp %>% pull(foldID) %>% unique() %>% sort()
+    folds <- focal_vs_comp %>%
+      pull(foldID) %>%
+      unique() %>%
+      sort()
   } else {
     folds <- c(23, 2)
   }
@@ -730,7 +672,7 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
   # For each fold, store resulting y-hat for each focal tree in list
   focal_trees <- vector(mode = "list", length = length(folds))
 
-  for (i in 1:length(folds)){
+  for (i in 1:length(folds)) {
     # Define test set and "full" training set (we will remove buffer region below)
     test <- focal_vs_comp %>%
       filter(foldID == folds[i])
@@ -738,7 +680,7 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
       filter(foldID != folds[i])
 
     # If no trees in test skip, skip to next iteration in for loop
-    if(nrow(test) == 0){
+    if (nrow(test) == 0) {
       next
     }
 
@@ -755,7 +697,7 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
       filter(buffer) %>%
       as_tibble()
 
-    if(FALSE){
+    if (FALSE) {
       # Visualize test set trees + boundary
       ggplot() +
         geom_sf(data = train %>% sample_frac(0.01) %>% st_as_sf(), col = "black", alpha = 0.1) +

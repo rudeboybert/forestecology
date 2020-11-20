@@ -3,7 +3,7 @@
 .RData
 .Ruserdata
 .DS_Store
-README_cache/
+*_cache/
 
 # Remove these later. We create this file so that we don't have to repeat the slow
 # creation process

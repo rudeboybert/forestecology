@@ -173,7 +173,7 @@
 #' This is example forest census data to be analyzed with this package.
 #'
 #' @format A \code{tibble}
-#'\describe{
+#' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
 #'   \item{sp}{Speices of the individual}
@@ -187,18 +187,21 @@
 #' }
 #' @seealso \code{\link{census_df2_ex}}
 #' @examples
-#' data(census_df1_ex,census_df2_ex)
-#' require(dplyr)
+#' data(census_df1_ex, census_df2_ex)
+#' library(dplyr)
+#' library(stringr)
+#' library(snakecase)
 #' # Filter out resprouts
 #' census_df2_ex_no_r <- census_df2_ex %>%
-#'  filter(!str_detect(codes, 'R'))
-#' id <- 'ID'
+#'   filter(!str_detect(codes, "R"))
+#' id <- "ID"
 #' ex_growth_df <-
-#'  # Merge both censuses and compute growth:
-#'  compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
-#'  mutate(
-#'    sp = to_any_case(sp),
-#'    sp = as.factor(sp))
+#'   # Merge both censuses and compute growth:
+#'   compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
+#'   mutate(
+#'     sp = to_any_case(sp),
+#'     sp = as.factor(sp)
+#'   )
 "census_df1_ex"
 
 
@@ -207,7 +210,7 @@
 #' This is an example second census to be analyzed with the package.
 #'
 #' @format A \code{tibble}
-#'\describe{
+#' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
 #'   \item{sp}{Speices of the individual}
@@ -221,18 +224,21 @@
 #' }
 #' @seealso \code{\link{census_df1_ex}}
 #' @examples
-#' data(census_df1_ex,census_df2_ex)
-#' require(dplyr)
+#' data(census_df1_ex, census_df2_ex)
+#' library(dplyr)
+#' library(stringr)
+#' library(snakecase)
 #' # Filter out resprouts
 #' census_df2_ex_no_r <- census_df2_ex %>%
-#'  filter(!str_detect(codes, 'R'))
-#' id <- 'ID'
+#'   filter(!str_detect(codes, "R"))
+#' id <- "ID"
 #' ex_growth_df <-
-#'  # Merge both censuses and compute growth:
-#'  compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
-#'  mutate(
-#'    sp = to_any_case(sp),
-#'    sp = as.factor(sp))
+#'   # Merge both censuses and compute growth:
+#'   compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
+#'   mutate(
+#'     sp = to_any_case(sp),
+#'     sp = as.factor(sp)
+#'   )
 "census_df2_ex"
 
 
@@ -263,7 +269,7 @@
 #' individuals alive in both censuses were linked by their tree ID.
 #'
 #' @format A \code{sf} spatial tibble
-#'\describe{
+#' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
 #'   \item{sp}{Speices of the individual}
@@ -281,26 +287,28 @@
 #' library(ggplot2)
 #' library(dplyr)
 #' library(sf)
+#' library(sfheaders)
+#' library(blockCV)
 #'
 #' ex_growth_df %>%
-#'  ggplot() %>%
-#'  geom_sf()
+#'   ggplot() +
+#'   geom_sf()
 #'
 #' ex_growth_df %>%
-#'  group_by(sf) %>%
-#'  summarize(mean(growth))
+#'   group_by(sp) %>%
+#'   summarize(mean(growth))
 #'
-#'  # Add buffer
-#' ex_growth_df_spatial  <- ex_growth_df %>%
-#'  add_buffer_variable(direction = "in", size = 1, region = ex_study_region)
+#' # Add buffer
+#' ex_growth_df_spatial <- ex_growth_df %>%
+#'   add_buffer_variable(direction = "in", size = 1, region = ex_study_region)
 #'
 #' # Add cross-validation folds
-#' library(blockCV)
 #' fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
 #' fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
 #' blocks <- bind_rows(
 #'   sf_polygon(fold1),
-#'   sf_polygon(fold2) ) %>%
+#'   sf_polygon(fold2)
+#' ) %>%
 #'   mutate(foldID = c(1, 2))
 #'
 #' ex_cv_grid <- spatialBlock(
@@ -308,9 +316,10 @@
 #'   verbose = FALSE,
 #'   k = 2,
 #'   selection = "systematic",
-#'   blocks = blocks)
+#'   blocks = blocks
+#' )
 #'
-# Add foldID to data
+#' # Add foldID to data
 #' ex_growth_df_spatial <- ex_growth_df_spatial %>%
 #'   mutate(foldID = ex_cv_grid$foldID %>% as.factor())
 "ex_growth_df"
@@ -321,7 +330,7 @@
 #' has been updated with spatial data. It starts from \code{\link{ex_growth_df}}.
 #'
 #' @format A \code{sf} spatial tibble
-#'\describe{
+#' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
 #'   \item{sp}{Speices of the individual}
@@ -342,13 +351,15 @@
 #' library(dplyr)
 #' library(sf)
 #'
-#' ggplot() +
-#'  geom_sf(data = ex_growth_df_spatial, aes(col = buffer), size = 2)
+#' max_dist <- 1
 #'
 #' ggplot() +
-#'  geom_sf(data = ex_growth_df_spatial, aes(col = foldID), size = 2)
+#'   geom_sf(data = ex_growth_df_spatial, aes(col = buffer), size = 2)
 #'
-#' #Create the focal versus comp data frame
+#' ggplot() +
+#'   geom_sf(data = ex_growth_df_spatial, aes(col = foldID), size = 2)
+#'
+#' # Create the focal versus comp data frame
 #' focal_vs_comp_ex <- ex_growth_df_spatial %>%
 #'   create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
 "ex_growth_df_spatial"
@@ -360,19 +371,21 @@
 #' comp data frame and run cross-validated models
 #'
 #' @format A \code{sf} polygons
-#'\describe{
+#' \describe{
 #'   \item{foldID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
 #'   \item{geometry}{Point location of the individual}
 #' }
 #' @seealso \code{\link{ex_growth_df_spatial}}
-#'  @examples
+#' @examples
 #' library(ggplot2)
 #' library(sf)
 #'
+#' max_dist <- 1
+#'
 #' ggplot(ex_cv_grid_sf) +
-#'  geom_sf() +
-#'  geom_sf(data = ex_growth_df_spatial)
+#'   geom_sf() +
+#'   geom_sf(data = ex_growth_df_spatial)
 #'
 #' focal_vs_comp_ex <- ex_growth_df_spatial %>%
 #'   create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
@@ -386,7 +399,7 @@
 #' versus comp for \code{\link{ex_growth_df_spatial}}.
 #'
 #' @format A tibble
-#'\describe{
+#' \describe{
 #'   \item{focal_ID}{Tree identification number for the focal tree}
 #'   \item{focal_sp}{Species of the focal tree}
 #'   \item{dbh}{Diameter at breast height of the focal tree at the first census}
@@ -399,11 +412,12 @@
 #'   \item{comp_basal_area}{Basal area of the comp tree}
 #' }
 #' @seealso \code{\link{ex_growth_df_spatial}}
+#' @importFrom forcats fct_rev
 #' @examples
 #' library(dplyr)
 #'
 #' posterior_param_ex <- focal_vs_comp_ex %>%
-#'  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+#'   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 "focal_vs_comp_ex"
 
 #' Example fit model
@@ -411,9 +425,11 @@
 #' This has posterior parameters for the fit growth model.
 #'
 #' @format ??
-#'\describe{
+#' \describe{
 #'   \item{??}{Something}
 #' }
+#' @importFrom forcats fct_rev
+#' @import ggplot2
 #' @seealso \code{\link{focal_vs_comp_ex}}
 #' @examples
 #' library(dplyr)
@@ -421,15 +437,15 @@
 #'
 #' # Compare model predictions to observation
 #' predictions <- focal_vs_comp_ex %>%
-#'  predict_bayesian_model(posterior_param = posterior_param_ex) %>%
-#'  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#'   predict_bayesian_model(posterior_param = posterior_param_ex) %>%
+#'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 #' predictions %>%
-#'  rmse(truth = growth, estimate = growth_hat) %>%
-#'  pull(.estimate)
+#'   rmse(truth = growth, estimate = growth_hat) %>%
+#'   pull(.estimate)
 #'
-#'  # Plot posterior parameters
+#' # Plot posterior parameters
 #' posterior_param_ex %>%
-#'  plot_posterior_parameters()
+#'   plot_posterior_parameters()
 "posterior_param_ex"
 
 #' Example input data for \code{\link{create_focal_vs_comp}}
@@ -438,5 +454,5 @@
 #'
 #' @format A \code{sf} spatial features polygon
 #' @examples
-#' 1+1
+#' 1 + 1
 "growth_df_ex"
