@@ -290,6 +290,7 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
 #' @examples
 #' library(dplyr)
 #' library(sf)
+#' library(ggplot2)
 #'
 #'  # Load in posterior parameter example
 #'  # and growth data to compare to
@@ -401,8 +402,10 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE){
 #' @import ggridges
 #' @importFrom mvnfast rmvt
 #' @importFrom purrr set_names
+#' @importFrom tidyr gather
 #' @importFrom ggridges geom_density_ridges
 #' @importFrom stats as.formula
+#' @import stringr
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'

@@ -25,6 +25,7 @@ returns posterior predicted values.
 \examples{
 library(dplyr)
 library(sf)
+library(ggplot2)
 
  # Load in posterior parameter example
  # and growth data to compare to

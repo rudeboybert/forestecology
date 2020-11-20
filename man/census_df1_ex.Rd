@@ -27,7 +27,9 @@ This is example forest census data to be analyzed with this package.
 }
 \examples{
 data(census_df1_ex,census_df2_ex)
-require(dplyr)
+library(dplyr)
+library(stringr)
+library(snakecase)
 # Filter out resprouts
 census_df2_ex_no_r <- census_df2_ex \%>\%
  filter(!str_detect(codes, 'R'))

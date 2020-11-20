@@ -17,8 +17,8 @@ globalVariables(c(
 #' @import dplyr
 #' @import sf
 #' @examples
-#' require(dplyr)
-#' require(stringr)
+#' library(dplyr)
+#' library(stringr)
 #' # Load in data from two forst censuses
 #' data(census_df1_ex, census_df2_ex)
 #' # Filter out resprouts in second census

@@ -188,7 +188,9 @@
 #' @seealso \code{\link{census_df2_ex}}
 #' @examples
 #' data(census_df1_ex,census_df2_ex)
-#' require(dplyr)
+#' library(dplyr)
+#' library(stringr)
+#' library(snakecase)
 #' # Filter out resprouts
 #' census_df2_ex_no_r <- census_df2_ex %>%
 #'  filter(!str_detect(codes, 'R'))
@@ -222,7 +224,9 @@
 #' @seealso \code{\link{census_df1_ex}}
 #' @examples
 #' data(census_df1_ex,census_df2_ex)
-#' require(dplyr)
+#' library(dplyr)
+#' library(stringr)
+#' library(snakecase)
 #' # Filter out resprouts
 #' census_df2_ex_no_r <- census_df2_ex %>%
 #'  filter(!str_detect(codes, 'R'))
@@ -281,13 +285,15 @@
 #' library(ggplot2)
 #' library(dplyr)
 #' library(sf)
+#' library(sfheaders)
+#' library(blockCV)
 #'
 #' ex_growth_df %>%
-#'  ggplot() %>%
+#'  ggplot() +
 #'  geom_sf()
 #'
 #' ex_growth_df %>%
-#'  group_by(sf) %>%
+#'  group_by(sp) %>%
 #'  summarize(mean(growth))
 #'
 #'  # Add buffer
@@ -295,7 +301,6 @@
 #'  add_buffer_variable(direction = "in", size = 1, region = ex_study_region)
 #'
 #' # Add cross-validation folds
-#' library(blockCV)
 #' fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
 #' fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
 #' blocks <- bind_rows(
@@ -341,6 +346,8 @@
 #' library(ggplot2)
 #' library(dplyr)
 #' library(sf)
+#'
+#' max_dist <- 1
 #'
 #' ggplot() +
 #'  geom_sf(data = ex_growth_df_spatial, aes(col = buffer), size = 2)
@@ -399,6 +406,7 @@
 #'   \item{comp_basal_area}{Basal area of the comp tree}
 #' }
 #' @seealso \code{\link{ex_growth_df_spatial}}
+#' @importFrom forcats fct_rev
 #' @examples
 #' library(dplyr)
 #'
@@ -414,6 +422,8 @@
 #'\describe{
 #'   \item{??}{Something}
 #' }
+#' @importFrom forcats fct_rev
+#' @import ggplot2
 #' @seealso \code{\link{focal_vs_comp_ex}}
 #' @examples
 #' library(dplyr)

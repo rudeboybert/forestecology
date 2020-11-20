@@ -34,6 +34,8 @@ library(ggplot2)
 library(dplyr)
 library(sf)
 
+max_dist <- 1
+
 ggplot() +
  geom_sf(data = ex_growth_df_spatial, aes(col = buffer), size = 2)
 

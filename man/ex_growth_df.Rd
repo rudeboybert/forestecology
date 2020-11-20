@@ -32,13 +32,15 @@ individuals alive in both censuses were linked by their tree ID.
 library(ggplot2)
 library(dplyr)
 library(sf)
+library(sfheaders)
+library(blockCV)
 
 ex_growth_df \%>\%
- ggplot() \%>\%
+ ggplot() +
  geom_sf()
 
 ex_growth_df \%>\%
- group_by(sf) \%>\%
+ group_by(sp) \%>\%
  summarize(mean(growth))
 
  # Add buffer
@@ -46,7 +48,6 @@ ex_growth_df_spatial  <- ex_growth_df \%>\%
  add_buffer_variable(direction = "in", size = 1, region = ex_study_region)
 
 # Add cross-validation folds
-library(blockCV)
 fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
 fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
 blocks <- bind_rows(
