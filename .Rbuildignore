@@ -12,4 +12,4 @@
 ^forestecology.*\.tgz$
 
 ^pkg_todo\.R$
-^results$
+^etc$
