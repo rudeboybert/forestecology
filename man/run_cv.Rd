@@ -34,5 +34,5 @@ competitor tree species within a particular focal_ID}
 Run cross-validation
 }
 \examples{
-1+1
+1 + 1
 }

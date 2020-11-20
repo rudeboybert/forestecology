@@ -3,6 +3,9 @@ library(usethis)
 library(snakecase)
 library(sf)
 library(sfheaders)
+library(forestecology)
+library(lubridate)
+library(blockCV)
 
 
 
@@ -73,6 +76,89 @@ bw_census_2014 <-
   )
 use_data(bw_census_2014, overwrite = TRUE)
 
+# Small example for whole workflow
+census_df1_ex <- tibble(
+  ID = 1:10,
+  sp = rep(c("sugar maple", "American beech"), 5),
+  gx = c(0.75, 1.5, 1.75, 3, 3.25, 5.5, 8, 8.5, 8.75, 8.75),
+  gy = c(2.5, 2.5, 2.25, 1.5, 1.75, 4.5, 1.5, 0.75, 1.5, 1.75),
+  date = ymd("20150601"),
+  codes = "M",
+  dbh = c(5, 20, 15, 12, 35, 6, 22, 14, 42, 4)
+)
+use_data(census_df1_ex, overwrite = TRUE)
+
+
+census_df2_ex <- tibble(
+  ID = c(1:9, 11, 12),
+  sp = c(rep(c("sugar maple", "American beech"), 4), "sugar maple", "sugar maple", "sugar maple"),
+  gx = c(0.75, 1.5, 1.75, 3, 3.25, 5.5, 8, 8.5, 8.75, 6.5, 2.5),
+  gy = c(2.5, 2.5, 2.25, 1.5, 1.75, 4.5, 1.5, 0.75, 1.5, 3, 4.5),
+  date = ymd("20200601"),
+  codes = c(rep("M", 5), "R", rep("M", 5)),
+  dbh = c(6, 24, 20, 14, 42, 2, 25, 19, 49, 2, 2)
+)
+use_data(census_df2_ex, overwrite = TRUE)
+
+ex_study_region <-
+  tibble(
+    # Study region boundary
+    x = c(0, 10, 10, 0, 0),
+    y = c(0, 0, 5, 5, 0)
+  ) %>%
+  # Convert to sf object
+  sf_polygon()
+use_data(ex_study_region, overwrite = TRUE)
+
+# Make all intermediate steps of small example for clearer examples
+ex_growth_df <-
+  compute_growth(census_df1_ex, census_df2_ex %>% filter(!str_detect(codes, "R")), "ID") %>%
+  mutate(
+    sp = to_any_case(sp),
+    sp = as.factor(sp)
+  )
+use_data(ex_growth_df, overwrite = TRUE)
+
+ex_growth_df_spatial <- ex_growth_df %>%
+  add_buffer_variable(direction = "in", size = 1, region = ex_study_region)
+
+fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
+fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
+blocks <- bind_rows(
+  sf_polygon(fold1),
+  sf_polygon(fold2)
+) %>%
+  mutate(foldID = c(1, 2))
+
+ex_cv_grid <- spatialBlock(
+  speciesData = ex_growth_df,
+  verbose = FALSE,
+  k = 2,
+  selection = "systematic",
+  blocks = blocks
+)
+
+# Add foldID to data
+ex_growth_df_spatial <- ex_growth_df_spatial %>%
+  mutate(foldID = ex_cv_grid$foldID %>% as.factor())
+use_data(ex_growth_df_spatial, overwrite = TRUE)
+
+ex_cv_grid_sf <- ex_cv_grid$blocks %>%
+  st_as_sf()
+use_data(ex_cv_grid_sf, overwrite = TRUE)
+
+focal_vs_comp_ex <- ex_growth_df_spatial %>%
+  create_focal_vs_comp(1, cv_grid_sf = ex_cv_grid_sf, id = "ID")
+use_data(focal_vs_comp_ex, overwrite = TRUE)
+
+
+# fit the model
+posterior_param_ex <- focal_vs_comp_ex %>%
+  fit_bayesian_model()
+use_data(posterior_param_ex, overwrite = TRUE)
+
+
+
 
 
 # Example growth_df data frame used to illustrate focal_vs_comp()
@@ -95,11 +181,3 @@ growth_df_ex <- tibble(
   st_as_sf(coords = c("gx", "gy")) %>%
   select(ID, sp, dbh1, codes1, dbh2, codes2, growth, geometry, buffer, foldID)
 use_data(growth_df_ex, overwrite = TRUE)
-
-
-
-
-
-
-
-

@@ -10,9 +10,10 @@
 NULL
 
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines
-if(getRversion() >= "2.15.1")
+if (getRversion() >= "2.15.1") {
   utils::globalVariables(
-    c("dbh08", "dbh14", "family_phylo", "trait_group", "buffer", "code14",
+    c(
+      "dbh08", "dbh14", "family_phylo", "trait_group", "buffer", "code14",
       "species", "focal_ID", "ID", "spCode", "fold", "basal_area", "dbh",
       "focal_ID_neighbor", "focal_bw_ID", "comp_species", "comp_biomass",
       "inside", "growth", "biomass_total", "model_formula", "growth_hat",
@@ -26,4 +27,6 @@ if(getRversion() >= "2.15.1")
       "comp_sp", "dist", "facet_wrap", "fct_rev", "focal_sp", "foldID", "foldID.x", "foldID.y",
       "folds", "gather", "geom_vline", "geometry", "geometry.x", "geometry.y", "ggplot", "labs",
       "offset", "sim_ID", "str_c", "str_sub", "type", "value", "values"
-      ))
+    )
+  )
+}

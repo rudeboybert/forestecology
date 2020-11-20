@@ -3,11 +3,4 @@
 .RData
 .Ruserdata
 .DS_Store
-README_cache/
-
-# Remove these later. We create this file so that we don't have to repeat the slow
-# creation process
-focal_vs_comp_bw.Rdata
-bw_cv_predict.Rdata
-forestecology*.tar.gz
-forestecology*.tgz
+*_cache/
