@@ -19,5 +19,5 @@ Data frame that can be used for lm()
 This function is used both by \code{\link{fit_bayesian_model}} and \code{\link{predict_bayesian_model}}
 }
 \examples{
-1+1
+1 + 1
 }

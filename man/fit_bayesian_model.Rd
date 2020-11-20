@@ -36,7 +36,7 @@ library(dplyr)
 data(focal_vs_comp_ex)
 
 posterior_param_ex <- focal_vs_comp_ex \%>\%
- fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 }
 \seealso{
 \code{\link{predict_bayesian_model}}

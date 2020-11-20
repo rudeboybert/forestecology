@@ -23,8 +23,8 @@ globalVariables(c(
 #' data(census_df1_ex, census_df2_ex)
 #' # Filter out resprouts in second census
 #' census_df2_ex_no_r <- census_df2_ex %>%
-#'  filter(!str_detect(codes, 'R'))
-#' id <- 'ID'
+#'   filter(!str_detect(codes, "R"))
+#' id <- "ID"
 #' ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
 compute_growth <- function(census_df1, census_df2, id) {
 
@@ -48,8 +48,8 @@ compute_growth <- function(census_df1, census_df2, id) {
     mutate(
       n_days = difftime(date2, date1),
       n_days = as.numeric(n_days),
-      n_years = n_days/365.25,
-      growth = (dbh2 - dbh1)/n_years
+      n_years = n_days / 365.25,
+      growth = (dbh2 - dbh1) / n_years
     ) %>%
     select(-c(n_days, n_years, date1, date2)) %>%
     st_as_sf(coords = c("gx", "gy"))

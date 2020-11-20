@@ -22,15 +22,15 @@ library(yardstick)
 
 # Compare model predictions to observation
 predictions <- focal_vs_comp_ex \%>\%
- predict_bayesian_model(posterior_param = posterior_param_ex) \%>\%
- right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+  predict_bayesian_model(posterior_param = posterior_param_ex) \%>\%
+  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 predictions \%>\%
- rmse(truth = growth, estimate = growth_hat) \%>\%
- pull(.estimate)
+  rmse(truth = growth, estimate = growth_hat) \%>\%
+  pull(.estimate)
 
- # Plot posterior parameters
+# Plot posterior parameters
 posterior_param_ex \%>\%
- plot_posterior_parameters()
+  plot_posterior_parameters()
 }
 \seealso{
 \code{\link{focal_vs_comp_ex}}

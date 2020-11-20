@@ -40,14 +40,14 @@ globalVariables(c(
 #'   geom_sf(data = region, fill = "transparent") +
 #'   geom_sf(data = inwards_buffer_region, col = "orange", fill = "transparent") +
 #'   labs(title = "Regions: original (black), inwards buffer (orange), and outwards buffer (blue)")
-compute_buffer_region <- function(region, direction = "in", size){
+compute_buffer_region <- function(region, direction = "in", size) {
   # - Q: Force user to specify region as sf instead of just tibble object?
   # - Run tests on direction and size
 
-  if(direction == "in") {
-    size = -1 * abs(size)
-  } else if (direction == "out"){
-    size = abs(size)
+  if (direction == "in") {
+    size <- -1 * abs(size)
+  } else if (direction == "out") {
+    size <- abs(size)
   }
 
   buffer_region <- region %>%
@@ -108,7 +108,7 @@ compute_buffer_region <- function(region, direction = "in", size){
 #'   compute_buffer_region(direction = "in", size = size)
 #' p +
 #'   geom_sf(data = buffer_boundary, col = "red", fill = "transparent")
-add_buffer_variable <- function(growth_df, direction, size, region){
+add_buffer_variable <- function(growth_df, direction, size, region) {
   buffer_boundary <- region %>%
     compute_buffer_region(direction, size = size)
 
@@ -167,7 +167,7 @@ add_buffer_variable <- function(growth_df, direction, size, region){
 #'
 #' # Compute corresponding distances between the 3 focal trees and 4 competitor trees
 #' focal_vs_comp_distance(focal_trees, comp_trees)
-focal_vs_comp_distance <- function(focal_trees, comp_trees){
+focal_vs_comp_distance <- function(focal_trees, comp_trees) {
   # Get IDs
   focal_IDs <- focal_trees$focal_ID
   comp_IDs <- comp_trees$comp_ID

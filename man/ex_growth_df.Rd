@@ -36,23 +36,24 @@ library(sfheaders)
 library(blockCV)
 
 ex_growth_df \%>\%
- ggplot() +
- geom_sf()
+  ggplot() +
+  geom_sf()
 
 ex_growth_df \%>\%
- group_by(sp) \%>\%
- summarize(mean(growth))
+  group_by(sp) \%>\%
+  summarize(mean(growth))
 
- # Add buffer
-ex_growth_df_spatial  <- ex_growth_df \%>\%
- add_buffer_variable(direction = "in", size = 1, region = ex_study_region)
+# Add buffer
+ex_growth_df_spatial <- ex_growth_df \%>\%
+  add_buffer_variable(direction = "in", size = 1, region = ex_study_region)
 
 # Add cross-validation folds
 fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
 fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
 blocks <- bind_rows(
   sf_polygon(fold1),
-  sf_polygon(fold2) ) \%>\%
+  sf_polygon(fold2)
+) \%>\%
   mutate(foldID = c(1, 2))
 
 ex_cv_grid <- spatialBlock(
@@ -60,8 +61,10 @@ ex_cv_grid <- spatialBlock(
   verbose = FALSE,
   k = 2,
   selection = "systematic",
-  blocks = blocks)
+  blocks = blocks
+)
 
+# Add foldID to data
 ex_growth_df_spatial <- ex_growth_df_spatial \%>\%
   mutate(foldID = ex_cv_grid$foldID \%>\% as.factor())
 }

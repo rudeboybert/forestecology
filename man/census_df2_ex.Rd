@@ -26,20 +26,21 @@ census_df2_ex
 This is an example second census to be analyzed with the package.
 }
 \examples{
-data(census_df1_ex,census_df2_ex)
+data(census_df1_ex, census_df2_ex)
 library(dplyr)
 library(stringr)
 library(snakecase)
 # Filter out resprouts
 census_df2_ex_no_r <- census_df2_ex \%>\%
- filter(!str_detect(codes, 'R'))
-id <- 'ID'
+  filter(!str_detect(codes, "R"))
+id <- "ID"
 ex_growth_df <-
- # Merge both censuses and compute growth:
- compute_growth(census_df1_ex, census_df2_ex_no_r, id) \%>\%
- mutate(
-   sp = to_any_case(sp),
-   sp = as.factor(sp))
+  # Merge both censuses and compute growth:
+  compute_growth(census_df1_ex, census_df2_ex_no_r, id) \%>\%
+  mutate(
+    sp = to_any_case(sp),
+    sp = as.factor(sp)
+  )
 }
 \seealso{
 \code{\link{census_df1_ex}}

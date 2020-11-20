@@ -37,12 +37,12 @@ library(sf)
 max_dist <- 1
 
 ggplot() +
- geom_sf(data = ex_growth_df_spatial, aes(col = buffer), size = 2)
+  geom_sf(data = ex_growth_df_spatial, aes(col = buffer), size = 2)
 
 ggplot() +
- geom_sf(data = ex_growth_df_spatial, aes(col = foldID), size = 2)
+  geom_sf(data = ex_growth_df_spatial, aes(col = foldID), size = 2)
 
-#Create the focal versus comp data frame
+# Create the focal versus comp data frame
 focal_vs_comp_ex <- ex_growth_df_spatial \%>\%
   create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
 }
