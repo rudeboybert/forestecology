@@ -210,10 +210,9 @@ bind_rows(
 
 ## Add spatial information
 
-We now add spatial information to the `growth_df` data frame. Specifically:
+We now encode spatial information to the `growth_df` data frames. First, in order to control for study region edge effects, we add "buffers" to the periphery of the study region (cite Waller?). Our model of interspecific competition relies on a spatial definition of who the competitor trees are for focal trees of interest. Since certain explanatory variables such as biomass are cumulative, we must ensure that all trees being modeled are not biased to have different neighbor structures. This is a particular concern for trees at the boundary of study regions, which will not have the same number of neighbors as trees in the internal part of the study region. 
 
-1. In order to control for study region "edge effects" (cite Waller?), we need a function that adds "buffers" of trees. In our case, since our model of interspecific competition relies on a spatial definition of who is a "neighboring competitor" and certain explanatory variables such as biomass are cumulative, we need to ensure that all trees being modeled are not biased to have different neighbor structure, in particular the trees at the boundary of study regions.
-1. Assign each tree to a "fold" for cross-validation purposes. Conventional cross-validation schemes assign observations to folds by resampling individual observations at random. However, underlying this scheme is an assumption that the observations are independent. In the case of forest census data, observations exhibit spatial autocorrelation, and thus this dependence must be incorporated in our resampling scheme @roberts2017 @pohjankukka2017. Packages that have implemented spatial cross-validation include @valavi2019
+Second,  Assign each tree to a "fold" for cross-validation purposes. Conventional cross-validation schemes assign observations to folds by resampling individual observations at random. However, underlying this scheme is an assumption that the observations are independent. In the case of forest census data, observations exhibit spatial autocorrelation, and thus this dependence must be incorporated in our resampling scheme @roberts2017 @pohjankukka2017. Packages that have implemented spatial cross-validation include @valavi2019
 
 Thus, before we can incorporate the above information to `growth_df`, we need to define two constants. 
 
