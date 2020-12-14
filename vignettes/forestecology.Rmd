@@ -88,7 +88,7 @@ Second, the Smithsonian Conservation Biology Institute (SCBI) large forest dynam
 
 
 
-## Load packages & preprocess census data
+## Load packages & preprocess census data 
 
 ```{r load-packages}
 library(forestecology)
@@ -128,7 +128,7 @@ bw_census_2008 <- bw_census_2008 %>%
 
 ### SCBI 
 
-We load census data from 2008 and 2014 from .csv files saved from GitHub on November 20, 2020. Furthermore, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site. 
+We load census data from 2008 and 2014 from `.csv` files saved from GitHub on November 20, 2020. Furthermore, we perform two additional pre-processing steps. First, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site. Second, in order to standardize comparisons between Big Woods and SCBI, we convert the units of dbh from mm to cm. ^[A rule of thumb to ascertain if dbh is in mm or cm is to verify if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then cm. If the later, then mm. This is because ForestGEO protocols state that only trees with dbh greater or equal to 1cm should be included in censuses. ]
 
 ```{r scbi-load-data}
 scbi_2013 <- read_csv("scbi.stem2.csv") %>%
@@ -138,7 +138,8 @@ scbi_2013 <- read_csv("scbi.stem2.csv") %>%
     dbh = as.numeric(dbh),
     date = mdy(date)
   ) %>%
-  filter(gx < 300, gy > 300, gy < 600)
+  filter(gx < 300, gy > 300, gy < 600) %>% 
+  mutate(dbh = dbh / 10)
 
 scbi_2018 <- read_csv("scbi.stem3.csv") %>%
   select(treeID, stemID, sp, ExactDate, gx, gy, dbh, codes, status) %>%
@@ -147,69 +148,59 @@ scbi_2018 <- read_csv("scbi.stem3.csv") %>%
     dbh = as.numeric(dbh),
     date = mdy(date)
   ) %>%
-  filter(gx < 300, gy > 300, gy < 600)
+  filter(gx < 300, gy > 300, gy < 600) %>% 
+  mutate(dbh = dbh / 10)
 ```
 
 
 
 ## Compute growth
 
-For each plot we combine the two census data frames into a single data frame  that now includes a numerical variable `growth` reflecting the average annual growth of dbh in cm. Furthermore, variables that (in theory) remain unchanged between censuses appear only once, such as `gx`, `gy`, species-related variables. Variables that should change between censuses are tagged with `1/2` indicating earlier/later, such as `dbh1/dbh2`, `codes1/codes2`.
+For each plot we then compute average annual growth between the two censuses using the `compute_growth()` function. This function takes the two census data frames as well as a character indicating which variable in both data frames uniquely identifies each stem. This function returns a single data frame that includes a numerical variable `growth` reflecting the average annual dbh growth (in cm) of all trees alive at both time points. Furthermore, variables that (in theory) remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. Here the resulting data frames are named with some variation of `growth_df`.
 
-The resulting data frames are named with some variation of `growth_df`.
+After computing the average annual growth for each tree, we ensure to convert all variables denote species from type character to factors; this is to ensure that issues of rare species being accounted for in both training and test sets in our upcoming cross-validation step (see Section REF)
 
 ### Big Woods
 
-```{r bw-compute-growth}
-id <- "treeID"
+In the case of Big Woods data, we first remove all trees that were re-sprouts in the later (2014) census. Additionally, we have included three classification of tree species: `species`, `family`, and `trait_group`. DESCRIBE THESE
 
-# we need to filter out the re-sprouts
+```{r bw-compute-growth}
 bw_census_2014 <- bw_census_2014 %>%
   filter(!str_detect(codes, "R"))
 
 bw_growth_df <-
-  # Merge both censuses and compute growth:
-  compute_growth(bw_census_2008, bw_census_2014, id) %>%
+  compute_growth(bw_census_2008, bw_census_2014, id = "treeID") %>%
+  # Convert all variables denoting species to factors
   mutate(
-    sp = to_any_case(sp),
-    sp = as.factor(sp),
+    sp = sp %>% to_any_case() %>% as.factor(),
     species = sp,
     family = as.factor(family),
     trait_group = as.factor(trait_group)
   ) %>%
-  # drop stemID
+  # Drop unnecessary variables
   select(-stemID)
 ```
 
 ### SCBI
 
 ```{r scbi-compute-growth}
-id <- "stemID"
-
-census_df1 <- scbi_2013
-census_df2 <- scbi_2018
-
 scbi_growth_df <-
-  # Merge both censuses and compute growth:
-  compute_growth(census_df1, census_df2, id) %>%
-  # Convert growth from cm to mm to make result comperable
-  mutate(
-    growth = growth / 10,
-    sp = as.factor(sp)
-  )
+  compute_growth(scbi_2013, scbi_2018, "stemID") %>%
+  # Convert all variables denoting species to factors
+  mutate(sp = as.factor(sp))
 ```
 
 ### Comparison
 
-Figure \ref{fig:growth-histogram}
+Figure \ref{fig:growth-histogram} displays histograms comparing the distribution of average annual growth at both sites. Observe that average annual growth appears higher at the Big Woods site. 
 
 ```{r growth-histogram, out.width="100%", fig.cap="Distribution of average annual growth in DBH for both sites."}
 # Both Big Woods & SCBI
-growth_df <- bind_rows(
-  bw_growth_df %>% st_drop_geometry() %>% select(growth) %>% mutate(site = "bw"),
-  scbi_growth_df %>% st_drop_geometry() %>% select(growth) %>% mutate(site = "scbi")
-)
-ggplot(growth_df, aes(x = growth, y = ..density.., fill = site)) +
+bind_rows(
+  bw_growth_df %>% st_drop_geometry() %>% select(growth) %>% mutate(Site = "Big Woods"),
+  scbi_growth_df %>% st_drop_geometry() %>% select(growth) %>% mutate(Site = "SCBI")
+) %>% 
+  ggplot(aes(x = growth, y = ..density.., fill = Site)) +
   geom_histogram(alpha = 0.5, position = "identity", binwidth = 0.05) +
   labs(x = "Average annual growth in dbh (cm per yr)") +
   coord_cartesian(xlim = c(-0.5, 1))
