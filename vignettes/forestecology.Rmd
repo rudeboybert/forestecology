@@ -71,11 +71,7 @@ options(width = 70)
 
 # Introduction
 
-Implementation of the method in @allen_permutation_2020
-
-1. Neighborhood competition model
-1. Spatial cross-validation @roberts_cross-validation_2017
-1. ANOVA to assess interspecies effect
+Repeat-censused forest plots offer excellent data to test neighborhood models of tree competition @allen_permutation_2020 @canham_neighborhood_2006 @uriarte_spatially_2004. Here we describe an R package, `forestecology`, to do that. This package implements the methods in @allen_permutation_2020. It provides: a convenient way specify and fit models of tree growth based on neighborhood competition; a spatial cross validation method to test and compare model fits @roberts_cross-validation_2017; and an ANOVA-like method to assess whether the competitor identity matters in these models. The model is written to work with ForestGEO plot data @andersonteixeira_ctfs-forestgeo_2015, but we envision that it could easily be modified to work with data from other forest plots, e.g. the US Forest Service Forest Inventory and Analysis plots @smith_forest_2002.
 
 
 # Example
