@@ -126,9 +126,9 @@ bw_census_2008 <- bw_census_2008 %>%
   select(-c(genus, species, latin))
 ```
 
-### SCBI 
+### SCBI {#scbi-data}
 
-We load census data from 2008 and 2014 from `.csv` files saved from GitHub on November 20, 2020. Furthermore, we perform two additional pre-processing steps. First, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site. Second, in order to standardize comparisons between Big Woods and SCBI, we convert the units of dbh from mm to cm. ^[A rule of thumb to ascertain if dbh is in mm or cm is to verify if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then cm. If the later, then mm. This is because ForestGEO protocols state that only trees with dbh greater or equal to 1cm should be included in censuses. ]
+We load census data from 2008 and 2014 from `.csv` files saved from GitHub on November 20, 2020. Furthermore, we perform two additional pre-processing steps. First, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from  300--600 instead of 0--640. Second, in order to standardize comparisons between Big Woods and SCBI, we convert the units of dbh from mm to cm. ^[A rule of thumb to ascertain if dbh is in mm or cm is to verify if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then cm. If the later, then mm. This is because ForestGEO protocols state that only trees with dbh greater or equal to 1cm should be included in censuses. ]
 
 ```{r scbi-load-data}
 scbi_2013 <- read_csv("scbi.stem2.csv") %>%
@@ -138,7 +138,7 @@ scbi_2013 <- read_csv("scbi.stem2.csv") %>%
     dbh = as.numeric(dbh),
     date = mdy(date)
   ) %>%
-  filter(gx < 300, gy > 300, gy < 600) %>% 
+  filter(gx < 300, between(gy, 300, 600)) %>% 
   mutate(dbh = dbh / 10)
 
 scbi_2018 <- read_csv("scbi.stem3.csv") %>%
@@ -148,7 +148,7 @@ scbi_2018 <- read_csv("scbi.stem3.csv") %>%
     dbh = as.numeric(dbh),
     date = mdy(date)
   ) %>%
-  filter(gx < 300, gy > 300, gy < 600) %>% 
+  filter(gx < 300, between(gy, 300, 600)) %>% 
   mutate(dbh = dbh / 10)
 ```
 
@@ -227,17 +227,14 @@ Furthermore, `max_dist` will define the size of all buffers considered, which wi
 
 The second constant is `cv_fold_size` which defines the length and width of the spatial folds (note that for now the spatial folds are restricted be squares). We will then use this constant to associate each observed tree to one of $k$ folds in the respective study region. In the Big Woods example below we will use the `blockCV` R package that has implemented spatial cross-validation while for the SCBI we will do this manually @valavi2019.
 
-HEY BERT PICK IT UP HERE
-
 
 ### Big Woods
 
-Figure \ref{fig:bw-define-buffer}
+First, we indicate which trees are part of the buffer. This necessitates information about the study region boundary. In this case, we use a `sf_polygon` object `bw_study_region` which comes pre-loaded in the `forestecology` packages. After loading `bw_study_region`, we illustrate the results of the `add_buffer_variable()` function in Figure \ref{fig:bw-define-buffer}. Trees on the periphery denote with lighter colors are part of the buffer and will not be considered as "focal" trees of interest going forward; they will only be considered as competitor trees. 
 
 ```{r bw-define-buffer, out.width="100%", fig.cap="Buffer region for Big Woods study region."}
 data(bw_study_region)
 
-# Add buffer variable to data frame
 bw_growth_df <- bw_growth_df %>%
   add_buffer_variable(direction = "in", size = max_dist, region = bw_study_region)
 
@@ -245,21 +242,23 @@ ggplot() +
   geom_sf(data = bw_growth_df, aes(col = buffer), size = 0.5)
 ```
 
-We use the `blockCV` package to define the spatial grid @valavi_blockcv_2019, whose elements will act as the folds in our leave-one-out (by "one" we mean "one grid block") cross-validation scheme. The upshot here is we add `foldID` to `growth_df` which identifies which fold each individual is in, and the creation of a `cv_grid_sf` object which gives the geometry of the cross validation grid.
+Second, we associate each tree to spatial cross validation folds. In this case, we use the `spatialBlock()` function from the `blockCV` package to define the spatial grid which 
+
+THIS IS A MESS. We use the  @valavi_blockcv_2019, whose elements will act as the folds in our leave-one-out (by "one" we mean "one grid block") cross-validation scheme. The upshot here is we add `foldID` to `growth_df` which identifies which fold each individual is in, and the creation of a `cv_grid_sf` object which gives the geometry of the cross validation grid.
 
 ```{r bw-define-cv-folds}
 set.seed(76)
 bw_cv_grid <- spatialBlock(
   speciesData = bw_growth_df, theRange = cv_fold_size, verbose = FALSE,
-  # Some guess work in figuring this out:
   k = 28, xOffset = 0.5, yOffset = 0
 )
 
-# Add foldID to data
+bw_cv_grid_sf <- bw_cv_grid$blocks %>%
+  st_as_sf()
+
+# Add foldID to each tree
 bw_growth_df <- bw_growth_df %>%
-  mutate(
-    foldID = bw_cv_grid$foldID
-  )
+  mutate(foldID = bw_cv_grid$foldID)
 
 # Visualize grid. Why does fold 19 repeat?
 bw_cv_grid$plots +
@@ -268,29 +267,19 @@ bw_cv_grid$plots +
 bw_growth_df <- bw_growth_df %>%
   filter(!foldID %in% c(19, 23, 21, 17, 8, 19)) %>%
   mutate(foldID = as.character(foldID))
-
-# Deliverable
-ggplot() +
-  geom_sf(data = bw_growth_df, aes(col = foldID, alpha = buffer))
-
-bw_cv_grid_sf <- bw_cv_grid$blocks %>%
-  st_as_sf()
 ```
 
 ### SCBI
 
-Figure \ref{fig:scbi-define-buffer}
+First, we indicate which trees are part of the buffer. In this case however we manually define the study region boundary based on the subregion we defined in Section \ref{scbi-data} and create an `sf_polygon` object using the `sf_polygon()` function from the `sfheaders` package. Figure \ref{fig:scbi-define-buffer} displays the resulting buffer trees. 
 
 ```{r scbi-define-buffer, out.width="100%", fig.cap="Buffer region for SCBI study region."}
 scbi_study_region <- tibble(
-  # x = c(0,400,400,0,0),
-  # y = c(0,0,640,640,0),
   x = c(0, 300, 300, 0, 0),
-  y = c(300, 300, 600, 600, 3)
+  y = c(300, 300, 600, 600, 300)
 ) %>%
   sf_polygon()
 
-# Add buffer variable to data frame
 scbi_growth_df <- scbi_growth_df %>%
   add_buffer_variable(direction = "in", size = max_dist, region = scbi_study_region)
 
@@ -298,24 +287,47 @@ ggplot() +
   geom_sf(data = scbi_growth_df, aes(col = buffer), size = 0.5)
 ```
 
+Second, we associate each tree to spatial cross validation folds. In this case we define a 
+HEY BERT PICK IT UP HERE
+CONVERT THIS TO MANUAL DEFINITON OF GRID based on old/spatial_block_issue.R
+
 ```{r scbi-define-cv-folds}
-# SCBI
+fold1 <- rbind(c(0, 300), c(150, 300), c(150, 600), c(0, 600), c(0, 300))
+fold2 <- rbind(c(150, 300), c(300, 300), c(300, 600), c(150, 600), c(150, 300))
+blocks <- bind_rows(
+  sf_polygon(fold1),
+  sf_polygon(fold2) ) %>%
+  mutate(foldID = c(1, 2))
+
+ggplot() +
+  geom_sf(data = scbi_growth_df, aes(col = buffer), size = 2) +
+  geom_sf(data = blocks, fill = "transparent")
+
+
+
+
+
+
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = cv_fold_size, yOffset = 0.9999, k = 9, verbose = FALSE
+  speciesData = scbi_growth_df, theRange = cv_fold_size, yOffset = 0.9999, 
+  k = 9, verbose = FALSE
 )
 
-# Add foldID to data
+
+scbi_cv_grid_sf <- scbi_cv_grid$blocks %>%
+  st_as_sf()
+
+# Add foldID to each tree
 scbi_growth_df <- scbi_growth_df %>%
-  mutate(
-    foldID = scbi_cv_grid$foldID
-  )
+  mutate(foldID = scbi_cv_grid$foldID)
 
 # Visualize grid
 scbi_cv_grid$plots +
   geom_sf(data = scbi_growth_df, aes(col = factor(foldID)), size = 0.1)
 
-scbi_cv_grid_sf <- scbi_cv_grid$blocks %>%
-  st_as_sf()
+
+ggplot() +
+  geom_sf(data = scbi_cv_grid_sf)
 ```
 
 
