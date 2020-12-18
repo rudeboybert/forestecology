@@ -245,12 +245,10 @@ THIS IS A MESS. We use the  @valavi_blockcv_2019, whose elements will act as the
 ```{r bw-define-cv-folds}
 set.seed(76)
 bw_cv_grid <- spatialBlock(
-  speciesData = bw_growth_df, theRange = cv_fold_size, verbose = FALSE,
-  k = 28, xOffset = 0.5, yOffset = 0
+  speciesData = bw_growth_df, theRange = cv_fold_size,
+  k = 28, xOffset = 0.5, yOffset = 0,
+  verbose = FALSE
 )
-
-bw_cv_grid_sf <- bw_cv_grid$blocks %>%
-  st_as_sf()
 
 # Add foldID to each tree
 bw_growth_df <- bw_growth_df %>%
@@ -260,9 +258,14 @@ bw_growth_df <- bw_growth_df %>%
 bw_cv_grid$plots +
   geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col = factor(foldID)), size = 0.1)
 
+# Remove empty folds
 bw_growth_df <- bw_growth_df %>%
   filter(!foldID %in% c(19, 23, 21, 17, 8, 19)) %>%
   mutate(foldID = as.character(foldID))
+
+# Save crossvalidation spatial grid
+bw_cv_grid_sf <- bw_cv_grid$blocks %>%
+  st_as_sf()
 ```
 
 ### SCBI
@@ -283,52 +286,42 @@ ggplot() +
   geom_sf(data = scbi_growth_df, aes(col = buffer), size = 0.5)
 ```
 
-Second, we associate each tree to spatial cross validation folds. In this case we define a 
-HEY BERT PICK IT UP HERE
-CONVERT THIS TO MANUAL DEFINITON OF GRID based on old/spatial_block_issue.R
+Second, we associate each tree to spatial cross validation folds. In this case we manually define a spatial crossvaliation grid. Figure \ref{fig:scbi-define-cv-folds} displays the resulting cross-validation folds along with the buffer from Figure \ref{fig:scbi-define-buffer}.
 
-```{r scbi-define-cv-folds}
-fold1 <- rbind(c(0, 300), c(150, 300), c(150, 600), c(0, 600), c(0, 300))
-fold2 <- rbind(c(150, 300), c(300, 300), c(300, 600), c(150, 600), c(150, 300))
-blocks <- bind_rows(
-  sf_polygon(fold1),
-  sf_polygon(fold2) ) %>%
-  mutate(foldID = c(1, 2))
-
-ggplot() +
-  geom_sf(data = scbi_growth_df, aes(col = buffer), size = 2) +
-  geom_sf(data = blocks, fill = "transparent")
-
-
-
-
-
+```{r scbi-define-cv-folds, out.width="100%", fig.cap="Buffer region for SCBI study region."}
+fold1 <- rbind(c(0, 300), c(150, 300), c(150, 600), c(0, 600), c(0, 300)) %>%
+  sf_polygon() %>% 
+  mutate(foldID = 1)
+fold2 <- rbind(c(150, 300), c(300, 300), c(300, 600), c(150, 600), c(150, 300)) %>%
+  sf_polygon() %>% 
+  mutate(foldID = 2)
+blocks <- bind_rows(fold1, fold2)
 
 scbi_cv_grid <- spatialBlock(
-  speciesData = scbi_growth_df, theRange = cv_fold_size, yOffset = 0.9999, 
-  k = 9, verbose = FALSE
+  speciesData = scbi_growth_df,
+  k = 2,
+  verbose = FALSE,
+  showBlocks = FALSE,
+  # Note new arguments:
+  selection = "systematic",
+  blocks = blocks
 )
-
-
-scbi_cv_grid_sf <- scbi_cv_grid$blocks %>%
-  st_as_sf()
 
 # Add foldID to each tree
 scbi_growth_df <- scbi_growth_df %>%
   mutate(foldID = scbi_cv_grid$foldID)
 
-# Visualize grid
-scbi_cv_grid$plots +
-  geom_sf(data = scbi_growth_df, aes(col = factor(foldID)), size = 0.1)
-
-
 ggplot() +
-  geom_sf(data = scbi_cv_grid_sf)
+  geom_sf_text(data = scbi_growth_df, aes(label = foldID, col = buffer)) +
+  geom_sf(data = scbi_study_region, fill = "transparent") +
+  geom_sf(data = blocks, fill = "transparent")
 ```
 
 
 
 ## Focal versus competitor trees
+
+HEY BERT PICK IT UP HERE
 
 Next we create the `focal_vs_comp` data frame which connects each tree in `growth_df` to the trees in its competitive neighborhood range (as defined by `max_dist`). So for example, if `growth_df` consisted of two focal trees with two and three neighbors respectively, `focal_vs_comp` would consist of 5 rows. This requires the `growth_df` data frame; `max_dist`, the scalar defining competitive range; `cv_grid_sf`, giving the cross validation grid; and the `id` variable as inputs.
 
@@ -345,7 +338,7 @@ glimpse(focal_vs_comp_bw)
 
 ```{r scbi-focal-vs-comp, eval = FALSE}
 focal_vs_comp_scbi <- scbi_growth_df %>%
-  create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid_sf, id = "stemID")
+  create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid, id = "stemID")
 
 glimpse(focal_vs_comp_scbi)
 ```
