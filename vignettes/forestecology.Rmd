@@ -23,7 +23,6 @@ header-includes:
 - \usepackage{xcolor, soul, xspace, float, subfig}
 ---
 
-
 ```{r setup, include = FALSE, cache = FALSE}
 # knitr settings
 knitr::opts_chunk$set(
@@ -66,10 +65,6 @@ if (!knitr::is_html_output()) {
 options(width = 70)
 ```
 
-
-
-
-
 # Introduction
 
 Repeat-censused forest plots offer excellent data to test neighborhood models of tree competition @allen_permutation_2020 @canham_neighborhood_2006 @uriarte_spatially_2004. Here we describe an R package, `forestecology`, to do that. This package implements the methods in @allen_permutation_2020. It provides: a convenient way specify and fit models of tree growth based on neighborhood competition; a spatial cross validation method to test and compare model fits @roberts_cross-validation_2017; and an ANOVA-like method to assess whether the competitor identity matters in these models. The model is written to work with ForestGEO plot data @andersonteixeira_ctfs-forestgeo_2015, but we envision that it could easily be modified to work with data from other forest plots, e.g. the US Forest Service Forest Inventory and Analysis plots @smith_forest_2002.
@@ -100,7 +95,6 @@ library(sfheaders)
 library(snakecase)
 library(yardstick)
 ```
-
 
 ## Preprocess census data 
 
@@ -337,8 +331,9 @@ focal_vs_comp_bw <- bw_growth_df %>%
   create_focal_vs_comp(max_dist, cv_grid_sf = bw_cv_grid, id = "treeID")
 ```
 
+TODO: Figure out how to show this data frame's contents.
+
 ```{r}
-# TODO: Figure out how to show this data frame's contents.
 head(focal_vs_comp_bw)
 ```
 
@@ -349,39 +344,52 @@ focal_vs_comp_scbi <- scbi_growth_df %>%
   create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid, id = "stemID")
 ```
 
+TODO: Figure out how to show this data frame's contents.
+
 ```{r}
-# TODO: Figure out how to show this data frame's contents.
 head(focal_vs_comp_scbi)
 ```
 
 
 
 
-
 ## Fit model and make predictions
 
-HEY BERT PICK IT UP HERE
+Next we fit the following linear model to the dbh of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of ``focal'' species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ ``competitor'' species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
 
-We fit a linear regression model. However, to speed computation we assume a linear. 
+$$
+\newcommand{\dbh}{\text{DBH}}
+\newcommand{\biomass}{\text{biomass}}
+\newcommand{\BA}{\text{BA}}
+y_{ij} = f(\vec{x}_{ij}) + \epsilon_{ij} = \beta_{0,j} + \beta_{\dbh,j} \cdot \dbh_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot \BA_{ijk} + \epsilon_{ij}
+$$
+
+<!--where $\beta_{0,j}$ is the diameter-independent growth rate for group $j$; $\dbh_{ij}$ is the diameter at breast height (in centimeters) of the focal tree at the earlier census; $\beta_{\dbh,j}$ is the amount of the growth rate changed depending on diameter for group $j$;  $\BA_{ijk}$ is the sum of the basal area of all trees of competitor species group $k$; $\lambda_{jk}$ is the change in growth for individuals of group $j$ from nearby competitors of group $k$; and $\epsilon_{ij}$ is a random error term distributed $\text{Normal}(0, \sigma^2)$.-->
+
+We estimate the model's parameters using Bayesian linear regression implemented in the `fit_bayesian_model()` function. TODO: define all parameters
+
+For this linear model's case, there exists a closed form solution as described here. As such, the `fit_bayesian_model()` function using matrix algebra to obtain all parameter estimates, rather than computationally expensive Monte Carlo approximations. The inputs to this function are a `focal_vs_comp` data frame, `prior_param` a list of priors, and a boolean flag `run_shuffle` on whether or not to run competitor-species identity permutations which we will demonstrate below on the Michigan Big Woods data. This function returns the posterior means of all parameters.
+
+Using these posterior means, we then use the posterior predictive distribution to obtain fitted/predicted values $\widehat{y}$ of the dbh for each focal tree using the `predict_bayesian_model()`. These $\widehat{y}$ can then be compared to the observed $y$ dbh's to compute the root mean-square error, a measure of a model's predictive error which has the same units as the observed data $y$.
 
 ### Big Woods 
 
-Now we are ready to fit the competition model with `fit_bayesian_model`. This function needs only the `focal_vs_comp` as an input. Other options allow the user to specify prior parameters and run a competitor-species identity shuffle (see below).
+For the Michigan Big Woods data we present two use cases of the model fitting and prediction scheme. HEY BERT PICK IT UP HERE
 
-```{r bw-model-fit, eval = FALSE}
-# Big Woods
+```{r bw-model-fit, eval = TRUE}
 posterior_param_bw <- focal_vs_comp_bw %>%
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 ```
 
 This output has the posterior parameters for the specified competition model. This `posterior_param` output can be used to get predicted growths for each individual (with `predict_bayesian_model`) to test how well the model performs. Or this `posterior_param` output can be plotted (either the betas or lambdas with `plot_posterior_params`) to understand what controls growth and the nature of the competitive ineractions.
 
-Here we calculate the RMSE
-
-```{r bw-model-RMSE, eval = FALSE}
+```{r bw-model-predict, eval = TRUE}
 predictions <- focal_vs_comp_bw %>%
   predict_bayesian_model(posterior_param = posterior_param_bw) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+```
+
+```{r}
 predictions %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
@@ -389,14 +397,18 @@ predictions %>%
 
 Now we test whether the identity of the competitor matters. We do this by shuffling the identity of competitors (but not of focal trees or spatial locations or sizes) and fitting the model again. We then compare RMSEs to see whether competitor identity matters to competitive interactions.
 
-```{r bw-model-shuffle, eval = FALSE}
+```{r bw-model-shuffle-fit, eval = TRUE}
 posterior_param_bw_shuffle <- focal_vs_comp_bw %>%
   fit_bayesian_model(prior_param = NULL, run_shuffle = TRUE)
+```
 
-# b) Make predictions and compute RMSE
+```{r bw-model-shuffle-predict, eval = TRUE}
 predictions_shuffle <- focal_vs_comp_bw %>%
   predict_bayesian_model(posterior_param = posterior_param_bw_shuffle) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
+```
+
+```{r}
 predictions_shuffle %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
@@ -406,24 +418,28 @@ The RMSE is lower for the non-shuffled version. This gives support for the idea 
 
 ### SCBI 
 
-```{r scbi-model-fit, eval = FALSE}
+```{r scbi-model-fit, eval = TRUE}
 posterior_param_scbi <- focal_vs_comp_scbi %>%
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 ```
 
 Here we provide examples of seeing how well the model fits and then a spatial plot of the residuals to see whether there are any consistent spatial patterns to them.
 
-```{r scbi-model-residuals, eval = FALSE}
-# SCBI
+```{r scbi-model-predict, eval = TRUE}
 scbi_growth_df_noCV <- focal_vs_comp_scbi %>%
   predict_bayesian_model(posterior_param = posterior_param_scbi) %>%
   right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
+```
 
+```{r}
 scbi_growth_df_noCV %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
+```
 
-# Observed vs predicted growth
+Observed vs predicted growth
+
+```{r}
 ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
   geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = "lm") +
@@ -434,12 +450,9 @@ ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
     title = "Predicted vs Observed Growth"
   )
 
-reslab <- expression(paste("Residual (cm ", y^{
-  -1
-}, ")"))
 scbi_growth_df_noCV %>%
   st_as_sf() %>%
-  # Need to investigate missingness
+  # TODO: Need to investigate missingness
   filter(!is.na(growth_hat)) %>%
   mutate(
     error = growth - growth_hat,
@@ -451,7 +464,7 @@ scbi_growth_df_noCV %>%
   theme_bw() +
   scale_color_gradient2(
     low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf",
-    name = reslab,
+    name = expression(paste("Residual (cm ", y^{-1}, ")")),
     breaks = seq(from = -0.75, to = 0.75, by = 0.25),
     labels = c("< -0.75", "-0.5", "0.25", "0", "0.25", "0.5", "> 0.75")
   ) +
