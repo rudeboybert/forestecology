@@ -374,35 +374,39 @@ Using these posterior means, we then use the posterior predictive distribution t
 
 ### Big Woods 
 
-For the Michigan Big Woods data we present two use cases of the model fitting and prediction scheme. HEY BERT PICK IT UP HERE
+For the Michigan Big Woods data we present two use cases of the model fitting and prediction scheme. The first use case is the simplest where we assess the fit of the model using root mean squared error. The second use case then answers the question of whether species competitor identity matters using permutation test. 
 
-```{r bw-model-fit, eval = TRUE}
+For the first use case, we fit the linear model specified in Equation XXX to our data frame of type `focal_vs_comp`. This input/outputs of the `fit_bayesian_model()` function are lists of the prior/posterior means of parameters of the linear regression specified in XXX. Generally speaking, there are two classes of regression parameters: $\beta$ main effects and $\lambda$ competitive effects. In the upcoming Section \ref{viz-posterior-distributions}, we will present code visualizing this posterior distributions.
+
+```{r bw-model-fit}
 posterior_param_bw <- focal_vs_comp_bw %>%
-  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+  fit_bayesian_model(prior_param = NULL)
 ```
 
-This output has the posterior parameters for the specified competition model. This `posterior_param` output can be used to get predicted growths for each individual (with `predict_bayesian_model`) to test how well the model performs. Or this `posterior_param` output can be plotted (either the betas or lambdas with `plot_posterior_params`) to understand what controls growth and the nature of the competitive ineractions.
+This output of posterior parameters for the specified competition model are then used along with the posterior predictive distribution encoded in `predict_bayesian_model()` to return predicted growths for each individual tree. We join these predicted growths to the original growth data frame. 
 
-```{r bw-model-predict, eval = TRUE}
+```{r bw-model-predict}
 predictions <- focal_vs_comp_bw %>%
   predict_bayesian_model(posterior_param = posterior_param_bw) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 ```
 
+We then use the `rmse()` function from the `yardstick` package to obtain the root mean squared error of the observed versus fitted values of growth. 
+
 ```{r}
 predictions %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
 
-Now we test whether the identity of the competitor matters. We do this by shuffling the identity of competitors (but not of focal trees or spatial locations or sizes) and fitting the model again. We then compare RMSEs to see whether competitor identity matters to competitive interactions.
+The second use case is near identical to the first, but with a small change in the code to test whether the identity of the competitor matters. By adding a `run_shuffle = TRUE` argument to `fit_bayesian_model()`, for each focal tree its competitor trees' species identity will be "shuffled" randomly much like in a permutation test. By shuffling these species labels we are effectively fitting the model under a null model that competitor species identity does not matter. If the "shuffled" RMSE's are consistently lower than the unshuffled RMSE corresponding to the observed data, then we have evidence to suggest that competitor identity matters to competitive interactions.
 
-```{r bw-model-shuffle-fit, eval = TRUE}
+```{r bw-model-shuffle-fit}
 posterior_param_bw_shuffle <- focal_vs_comp_bw %>%
   fit_bayesian_model(prior_param = NULL, run_shuffle = TRUE)
 ```
 
-```{r bw-model-shuffle-predict, eval = TRUE}
+```{r bw-model-shuffle-predict}
 predictions_shuffle <- focal_vs_comp_bw %>%
   predict_bayesian_model(posterior_param = posterior_param_bw_shuffle) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
@@ -414,9 +418,11 @@ predictions_shuffle %>%
   pull(.estimate)
 ```
 
-The RMSE is lower for the non-shuffled version. This gives support for the idea that competitor identity does matter for competitive interactions. 
+The RMSE is fact lower for the non-shuffled version, indicative of a better model fit. This gives support for the idea that competitor identity does matter for competitive interactions. In @allen_permutation_2020 we run this shuffle a large number of times to construct a full permutation distribution to show that this difference is robust to resampling variation.
 
 ### SCBI 
+
+HEY BERT PICK IT UP HERE
 
 ```{r scbi-model-fit, eval = TRUE}
 posterior_param_scbi <- focal_vs_comp_scbi %>%
@@ -489,7 +495,7 @@ cv_bw %>%
   pull(.estimate)
 ```
 
-As expected this RMSE is higher than that when the model is fit without cross validation. See Allen and Kim (2020) for more discussion of this. 
+As expected this RMSE is higher than that when the model is fit without cross validation. See @allen_permutation_2020 for more discussion of this. 
 
 ### SCBI
 
@@ -507,7 +513,7 @@ Here also this RMSE is much higher than that for the above SCBI model fit withou
 
 
 
-## Visualize posterior distributions
+## Visualize posterior distributions {#viz-posterior-distributions}
 
 Lastly, we present tools to explore the posterior distributions of all parameters in our model. 
 
