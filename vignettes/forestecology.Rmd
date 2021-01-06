@@ -393,7 +393,7 @@ predictions <- focal_vs_comp_bw %>%
 
 We then use the `rmse()` function from the `yardstick` package to obtain the root mean squared error of the observed versus fitted values of growth. 
 
-```{r}
+```{r bw-model-rmse}
 predictions %>%
   yardstick::rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
@@ -412,7 +412,7 @@ predictions_shuffle <- focal_vs_comp_bw %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 ```
 
-```{r}
+```{r bw-model-shuffle-rmse}
 predictions_shuffle %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
@@ -422,30 +422,28 @@ The RMSE is fact lower for the non-shuffled version, indicative of a better mode
 
 ### SCBI 
 
-HEY BERT PICK IT UP HERE
+In the case of the SCBI data, we once again perform the same model fitting and computing of fitted growths as with the Big Woods data, but this time we map the residuals of the observed minus fitted values to look for spatial patterns. 
 
-```{r scbi-model-fit, eval = TRUE}
+```{r scbi-model-fit}
 posterior_param_scbi <- focal_vs_comp_scbi %>%
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 ```
 
-Here we provide examples of seeing how well the model fits and then a spatial plot of the residuals to see whether there are any consistent spatial patterns to them.
-
-```{r scbi-model-predict, eval = TRUE}
+```{r scbi-model-predict}
 scbi_growth_df_noCV <- focal_vs_comp_scbi %>%
   predict_bayesian_model(posterior_param = posterior_param_scbi) %>%
   right_join(scbi_growth_df, by = c("focal_ID" = "stemID"))
 ```
 
-```{r}
+```{r scbi-model-rmse}
 scbi_growth_df_noCV %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
 
-Observed vs predicted growth
+In Figures \ref{fig:scbi-model-residuals} and \ref{fig:scbi-model-residuals-2} we present the residuals. 
 
-```{r}
+```{r scbi-model-residuals, out.width="100%", fig.cap="Spatial distribution of residuals for model applied to SCBI data."}
 ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
   geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = "lm") +
@@ -455,7 +453,9 @@ ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
     x = "Observed growth in dbh", y = "Predicted growth in dbh",
     title = "Predicted vs Observed Growth"
   )
+```
 
+```{r scbi-model-residuals-2, out.width="100%", fig.cap="Spatial distribution of residuals for model applied to SCBI data part 2."}
 scbi_growth_df_noCV %>%
   st_as_sf() %>%
   # TODO: Need to investigate missingness
@@ -477,7 +477,7 @@ scbi_growth_df_noCV %>%
   labs(x = "Meter", y = "Meter")
 ```
 
-
+HEY BERT PICK IT UP HERE
 
 ## Run spatial cross-validation
 
