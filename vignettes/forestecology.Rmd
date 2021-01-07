@@ -486,7 +486,7 @@ The model fits and predictions in Section \ref{model-fit-predict} all suffer fro
 
 Applying this spatially cross-validated model fit yields an RMSE is higher than that when the model is fit without cross validation. In other words, our model fits in \ref{model-fit-predict} were overly optimistic in the model's fitting power, whereas a cross-validated results yield an estimate that is closer to the truth. See @allen_permutation_2020 for more discussion of this. 
 
-```{r bw-spatial-cv, eval = FALSE}
+```{r bw-spatial-cv}
 cv_bw <- focal_vs_comp_bw %>%
   run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
@@ -501,7 +501,7 @@ cv_bw %>%
 
 Observe once again that this RMSE is much higher than that for the above SCBI model fit without cross-validation. 
 
-```{r scbi-spatial-cv, eval = FALSE}
+```{r scbi-spatial-cv}
 cv_scbi <- focal_vs_comp_scbi %>%
   run_cv(max_dist = max_dist, cv_grid = scbi_cv_grid) %>%
   right_join(scbi_growth_df, by = c("focal_ID" = "treeID"))
@@ -516,74 +516,71 @@ cv_scbi %>%
 
 ## Visualize posterior distributions {#viz-posterior-distributions}
 
-Lastly, we return to the model fits from Section \ref{model-fit-predict} and present tools to visually explore the posterior distributions of all parameters in our model. 
+Lastly, we return to the model fits from Section \ref{model-fit-predict} and present tools to visually explore the posterior distributions of all parameters in our model. There are two main groups of parameters to consider. The $\beta$ coefficients tell us about how fast each species grows and how this depends on DBH while the full matrix of $\lambda$ values describe the competitive effects between pairs of species. There is a rich literature on this matrix (cite). 
+
+DO WE NEED TO DESCRIBE MECHANICS? Because of the structure of the `bw_fit_model` object we cannot simply draw these curves based on the posterior distribution. `bw_fit_model()` gives the parameters *compared* to a baseline. This is not of direct interest. So to display these parameters, as we care about them, we have to sample from the baseline distribution and from the comparison one to get the posterior distribution of interest. 
+
 
 ### Big Woods 
 
+Here we re-run the model fit to the Big Woods data from Section \ref{model-fit-predict}, but this time use "family" as the group for comparison which has. This makes the posterior distributions easier to follow. Also, surprisingly, grouping by family performed just as well as grouping by species @allen_permutation_2020. First we re-run `create_focal_vs_comp()` and `fit_bayesian_model()` with no permutation shuffling with the grouping variable as family.
 
-
-We might be interested in the posterior distributions of parameters. The betas tell us about how fast each species grows and how this depends on DBH. The lambdas, often of more interest, are the species-specific competition coefficients. The full lambda matrix gives competition strength between species. There is a rich literature on this matrix (cite). 
-
-Because of the structure of the `bw_fit_model` object we cannot simply draw these curves based on the posterior distribution. `bw_fit_model` gives the parameters *compared* to a baseline. This is not of direct interest. So to display these parameters, as we care about them, we have to sample from the baseline distribution and from the comparison one to get the posterior distribution of interest. 
-
-Here we re-run the Big Woods model but using the family as the group for comparison. This makes the posterior distributions easier to follow. Also, surprisingly, grouping by family performed just as well as grouping by species (see Allen and Kim 2020). First we re-run `create_focal_vs_comp` and `fit_bayesian_model` with the grouping variable as family.
-
-```{r bw-posterior-viz-0, eval = FALSE}
+```{r bw-posterior-viz-0}
 focal_vs_comp_bw <- bw_growth_df %>%
-  # mutate(sp = trait_group) %>%
   mutate(sp = family) %>%
   create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid, id = "treeID")
 
-# a) Fit model (compute posterior parameters) with no permutation shuffling
 posterior_param_bw <- focal_vs_comp_bw %>%
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 ```
 
-Now the output of `fit_bayesian_model` is passed to `plot_posterior_parameters`.
+Now the posterior parameter outputs of `fit_bayesian_model()` are passed to `plot_posterior_parameters()` to generate visualizations of the posterior parameters. These visualizations are displayed in Figure 5 of @allen_permutation_2020. For simplicity we only plot a subset of the species families. 
 
-```{r bw-posterior-viz-1, eval = FALSE}
-# b) Recreate Fig5 from Allen (2020): Posterior distributions of selected lambdas
+```{r bw-posterior-viz-1}
 posterior_plots <- plot_posterior_parameters(
   posterior_param = posterior_param_bw,
-  sp_to_plot = c("cornaceae", "fagaceae", "hamamelidaceae", "juglandaceae", "lauraceae", "rosaceae", "sapindaceae", "ulmaceae")
+  sp_to_plot = c("cornaceae", "fagaceae", "hamamelidaceae", "juglandaceae", 
+                 "lauraceae", "rosaceae", "sapindaceae", "ulmaceae")
 )
 ```
 
-The output is a list with three plots stored. The element `beta_0` gives the growth intercept, i.e., how fast an individual of each group grows independent of DBH).
+The output is a list with three plots stored. The element `beta_0` gives the baseline growth intercept $\beta_0$, i.e., how fast an individual of each group grows independent of DBH).
 
-```{r bw-posterior-viz-beta0, eval = FALSE}
+```{r bw-posterior-viz-beta0, out.width="50%", fig.cap="Posterior distribution of beta_0."}
 posterior_plots[["beta_0"]]
 ```
 
-Next `beta_dbh` gives the DBH-growth slope for each group.
+Next `beta_dbh` gives the slope for DBH slope $\beta_{dbh,i}$ for each group.
 
-```{r bw-posterior-viz-beta-dbh, eval = FALSE}
+```{r bw-posterior-viz-beta-dbh, out.width="100%", fig.cap="Posterior distribution of beta_0."}
 posterior_plots[["beta_dbh"]]
 ```
 
-Finally `lambda` gives the competition coeffiencts.
+Finally `lambda` gives the competition coefficients $\lambda$.
 
-```{r bw-posterior-viz-lambda, eval = FALSE}
+```{r bw-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda."}
 posterior_plots[["lambda"]]
 ```
 
 
 ### SCBI
 
-```{r scbi-posterior-viz-1, eval = FALSE}
+We revisit the posterior parameters for the SCBI from Section {model-fit-predict}, but this time only focus on the $\lambda$ competition coefficients. 
+
+```{r scbi-posterior-viz-1}
 posterior_plots_scbi <- plot_posterior_parameters(
   posterior_param = posterior_param_scbi,
   sp_to_plot = c("quru", "litu", "cagl", "cato")
 )
 ```
 
-```{r scbi-posterior-viz-lambda, eval = FALSE}
+```{r scbi-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda."}
 posterior_plots_scbi[["lambda"]]
 ```
 
+Add explanation here. 
 
-
-
+HEY BERT PICK IT UP HERE
 
 # Conclusions
 
