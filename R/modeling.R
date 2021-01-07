@@ -648,28 +648,12 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
 #'
 #' @examples
 #' 1 + 1
-run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE, all_folds = TRUE) {
-  if (FALSE) {
-    # Code to test BigWoods
-    focal_vs_comp <- focal_vs_comp_bw
-    cv_grid <- bw_cv_grid
-    run_shuffle <- FALSE
-    prior_param <- NULL
-    all_folds <- TRUE
-  }
-
-  # TODO: remove this later
-  # if subset is true just two folds
-  if (all_folds) {
-    folds <- focal_vs_comp %>%
-      pull(foldID) %>%
-      unique() %>%
-      sort()
-  } else {
-    folds <- c(23, 2)
-  }
-
+run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
   # For each fold, store resulting y-hat for each focal tree in list
+  folds <- focal_vs_comp %>%
+    pull(foldID) %>%
+    unique() %>%
+    sort()
   focal_trees <- vector(mode = "list", length = length(folds))
 
   for (i in 1:length(folds)) {
@@ -685,7 +669,7 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
     }
 
     # Define sf object of boundary of test fold
-    test_fold_boundary <- cv_grid$blocks %>%
+    test_fold_boundary <- cv_grid %>%
       subset(folds == i) %>%
       st_bbox() %>%
       st_as_sfc()

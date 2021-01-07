@@ -9,8 +9,7 @@ run_cv(
   max_dist,
   cv_grid,
   prior_param = NULL,
-  run_shuffle = FALSE,
-  all_folds = TRUE
+  run_shuffle = FALSE
 )
 }
 \arguments{
