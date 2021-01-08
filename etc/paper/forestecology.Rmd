@@ -1,27 +1,30 @@
 ---
 title: "`forestecology` package for modeling interspecies competition between trees"
+
+# to produce blinded version set to 1 and change blinded <- TRUE on line 54 below
 blinded: 0
+
 authors: 
 - name: Albert Y. Kim 
-  thanks: "Albert Y. Kim is Assistant Professor, Statistical & Data Sciences, Smith College, Northampton, MA 01063 (e-mail: akim04@smith.edu)."
+  thanks: "Albert Y. Kim is Assistant Professor, Statistical & Data Sciences, Smith College, Northampton, MA 01063 (e-mail: akim04@smith.edu). This work was not supported by any grant. The authors thank numerous colleagues and students for their support."
   affiliation: Program in Statistical & Data Sciences, Smith College
+  
 - name: David Allen
   affiliation: Biology Department, Middlebury College
+
 keywords:
-- forest ecology.
+- forestecology, trees
+
 abstract: 
-- "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-  tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-  nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis
-  aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat
-  nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui
-  officia deserunt mollit anim id est laborum."
+- "We provide a computational exercise suitable for early introduction in an undergraduate statistics or data science course that allows students to 'play the whole game' of data science: performing both data collection and data analysis. While many teaching resources exist for data analysis, such resources are not as abundant for data collection given the inherent difficulty of the task. Our proposed exercise centers around student use of Google Calendar to collect data with the goal of answering the question 'How do I spend my time?' On the one hand, the exercise involves answering a question with near universal appeal, but on the other hand, the data collection mechanism is not beyond the reach of a typical undergraduate student. A further benefit of the exercise is that it provides an opportunity for discussions on ethical questions and considerations that data providers and data analysts face in today's age of large-scale internet-based data collection."
+
 bibliography: paper.bib
 output: rticles::asa_article
 link-citations: yes
 header-includes:
 - \usepackage{xcolor, soul, xspace, float, subfig}
 ---
+
 
 ```{r setup, include = FALSE, cache = FALSE}
 # knitr settings
@@ -544,19 +547,19 @@ posterior_plots <- plot_posterior_parameters(
 )
 ```
 
-The output is a list with three plots stored. The element `beta_0` gives the baseline growth intercept $\beta_0$, i.e., how fast an individual of each group grows independent of DBH).
+The output is a list with three plots stored. Figure \ref{fig:bw-posterior-viz-beta0} The element `beta_0` gives the baseline growth intercept $\beta_0$, i.e., how fast an individual of each group grows independent of DBH).
 
-```{r bw-posterior-viz-beta0, out.width="50%", fig.cap="Posterior distribution of beta_0."}
+```{r bw-posterior-viz-beta0, out.width="50%", fig.cap="Posterior distribution of beta0."}
 posterior_plots[["beta_0"]]
 ```
 
-Next `beta_dbh` gives the slope for DBH slope $\beta_{dbh,i}$ for each group.
+Figure \ref{fig:bw-posterior-viz-beta-dbh} Next `beta_dbh` gives the slope for DBH slope $\beta_{dbh,i}$ for each group.
 
-```{r bw-posterior-viz-beta-dbh, out.width="100%", fig.cap="Posterior distribution of beta_0."}
+```{r bw-posterior-viz-beta-dbh, out.width="100%", fig.cap="Posterior distribution of betadbh."}
 posterior_plots[["beta_dbh"]]
 ```
 
-Finally `lambda` gives the competition coefficients $\lambda$.
+Finally Figure \ref{fig:bw-posterior-viz-lambda} `lambda` gives the competition coefficients $\lambda$.
 
 ```{r bw-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda."}
 posterior_plots[["lambda"]]
@@ -582,13 +585,15 @@ Add explanation here.
 
 HEY BERT PICK IT UP HERE
 
+
+
 # Conclusions
 
 
 
 
 
-# Acknowledgements
+# Acknowledgments
 
 
 
