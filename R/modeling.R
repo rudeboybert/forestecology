@@ -636,7 +636,6 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
 #'
 #' @inheritParams fit_bayesian_model
 #' @inheritParams create_focal_vs_comp
-#' @param all_folds Boolean as to whether to run on all folds
 #' @param cv_grid \code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}
 #' @description Run cross-validation
 #'

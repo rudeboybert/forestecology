@@ -23,8 +23,6 @@ run_cv(
 
 \item{run_shuffle}{boolean as to whether to run permutation test shuffle of
 competitor tree species within a particular focal_ID}
-
-\item{all_folds}{Boolean as to whether to run on all folds}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}
