@@ -1,177 +1,3 @@
-#' Create focal versus competitor trees data frame
-#'
-#' @param growth_df A \code{\link{compute_growth}} output converted to \code{sf} object
-#' @param cv_grid_sf An sf object of a \code{blockCV} block output
-#' @param max_dist Distance to determine which neighboring trees to a focal tree are competitors.
-#' @param id A character string of the variable name in \code{growth_df} uniquely identifying each tree
-#' @return \code{focal_vs_comp} data frame of all focal trees and for each focal
-#'   tree all possible competitor trees. In particular, for each competitor tree
-#'   we compute the \href{https://en.wikipedia.org/wiki/Basal_area}{basal area}
-#'   (in meters-squared) based on the `dbh1` variable from the first census
-#'   (assumed to be in cm).
-#' @export
-#' @import dplyr
-#' @description "Focal versus competitor trees" data frames are the main data
-#'   frame used for analysis. "Focal trees" are all trees that satisfy the
-#'   following criteria
-#' \tabular{l}{
-#'   1. Were alive at both censuses \cr
-#'   2. Were not part of the study region's buffer as computed by \code{\link{add_buffer_variable}} \cr
-#'   3. Were not a resprout at the second census. Such trees should be coded as
-#'   `"R"` in the `codes2` variable (OK if a resprout at first census)
-#' }
-#' For each focal tree, "competitor trees" are all trees that (1) were alive at
-#' the first census and (2) within \code{max_dist} distance of the focal tree.
-#' @note In order to speed computation, in particular of distances between all
-#'   focal/competitor tree pairs, we use the cross-validation \code{blockCV}
-#'   object to divide the study region into smaller subsets.
-#' @seealso \code{\link{focal_vs_comp_distance}}
-#' @examples
-#' library(ggplot2)
-#' library(dplyr)
-#' library(stringr)
-#' library(sf)
-#' library(sfheaders)
-#' library(tibble)
-#'
-#' # Create fold information sf object. TODO: clean this
-#' cv_grid_ex <-
-#'   tibble(
-#'     # Study region boundary
-#'     x = c(0, 0, 5, 5),
-#'     y = c(0, 5, 5, 0)
-#'   ) %>%
-#'   # Convert to sf object
-#'   sf_polygon() %>%
-#'   mutate(folds = "1")
-#'
-#' # Plot example data. Observe for max_dist = 1.5, there are 6 focal vs comp pairs:
-#' # 1. focal 1 vs comp 2
-#' # 2. focal 2 vs comp 1
-#' # 3. focal 2 vs comp 3
-#' # 4. focal 3 vs comp 2
-#' # 5. focal 4 vs comp 5
-#' # 6. focal 5 vs comp 4
-#' ggplot() +
-#'   geom_sf(data = cv_grid_ex, fill = "transparent") +
-#'   geom_sf_label(data = growth_df_ex, aes(label = ID))
-#'
-#' # Return corresponding data frame
-#' growth_df_ex %>%
-#'   create_focal_vs_comp(max_dist = 1.5, cv_grid_sf = cv_grid_ex, id = "ID")
-#'
-#' # Load in growth_df with spatial data
-#' # See ?ex_growth_df for attaching spatial data to growth_df
-#' data(ex_growth_df_spatial)
-#' # Load in cv_grid
-#' data(ex_cv_grid_sf)
-#'
-#' focal_vs_comp_ex <- ex_growth_df_spatial %>%
-#'   create_focal_vs_comp(max_dist = 1, cv_grid_sf = ex_cv_grid_sf, id = "ID")
-create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
-  # TODO: Create example for this function using toy dataset
-  # TODO: Inputs checks that growth_df has sp variable, maybe id variable
-
-  # 1. Define focal trees
-  focal_trees <- growth_df %>%
-    # Identify trees that satisfy focal tree criteria
-    filter(dbh1 > 0, dbh2 > 0, !buffer, codes2 != "R") %>%
-    # Define notion of species as factor
-    rename(dbh = dbh1) %>%
-    # ID numbers to join focal trees with competitor trees
-    mutate(focal_ID = .data[[id]]) %>%
-    select(focal_ID, foldID, geometry, growth, focal_sp = sp, dbh)
-
-
-  # 2. Define set of candidate competitor trees:
-  comp_trees <- growth_df %>%
-    # Identify trees that satisfy competitor tree criteria
-    filter(dbh1 > 0) %>%
-    mutate(
-      comp_ID = .data[[id]],
-      # Compute basal area using dbh1 from first census
-      comp_basal_area = 0.0001 * pi * (dbh1 / 2)^2
-    ) %>%
-    select(comp_ID, foldID, comp_sp = sp, comp_basal_area)
-
-
-  # 3. For each focal tree, identify all candidate competitor trees that are
-  # within max_dist distance of it, and save as data frame. Note that to we do
-  # this fold-by-fold using the previously computed blockCV grid object. We do
-  # this to acceleration computation, in particular all distance pairs.
-  all_folds <- focal_trees$foldID %>%
-    unique()
-  focal_vs_comp <- vector(mode = "list", length = length(all_folds))
-
-  for (i in 1:length(all_folds)) {
-    # Identify this fold's boundary
-    fold_boundary <- cv_grid_sf %>%
-      filter(folds == all_folds[i])
-
-    # Identify focal trees in this fold
-    focal_trees_fold <- focal_trees %>%
-      filter(foldID == all_folds[i])
-
-    # Identify comp trees in this fold: both trees inside fold and those within
-    # max_dist distance outwards of fold boundary
-    comp_trees_fold <- comp_trees %>%
-      add_buffer_variable(direction = "out", size = max_dist, region = fold_boundary) %>%
-      filter(!buffer)
-
-    if (FALSE) {
-      # Sanity check plot: for the ith fold, smaller black dots are competitor
-      # trees and cyan larger dots are the test set. orange ones separating test
-      # set from training set (trees in all other folds)
-      ggplot() +
-        # Focal & competitor trees:
-        geom_sf(data = comp_trees_fold, col = "orange", size = 3, ) +
-        geom_sf(data = focal_trees_fold, col = "black", size = 1, fill = "transparent") +
-        # Boundaries
-        # geom_sf(data = bw_study_region, col = "black", fill = "transparent", linetype = "dashed") +
-        geom_sf(data = fold_boundary, col = "black", fill = "transparent") +
-        labs(
-          title = str_c("Fold ", all_folds[i], ": Focal = black, competitor = orange")
-        )
-    }
-
-    # Save current fold info
-    focal_vs_comp[[i]] <-
-      # Take focal trees in this fold
-      focal_trees_fold %>%
-      # Compute distances to all competitor trees in this fold
-      focal_vs_comp_distance(comp_trees_fold) %>%
-      # Remove pairs more than max_dist apart
-      filter(dist < max_dist) %>%
-      # join focal tree data
-      left_join(focal_trees_fold, by = "focal_ID") %>%
-      # Join competitor tree data
-      left_join(comp_trees_fold, by = "comp_ID") %>%
-      # Clean up mess from join:
-      select(-c(foldID.y, geometry.y)) %>%
-      rename(foldID = foldID.x, geometry = geometry.x)
-  }
-
-
-  # 4. Return output data frame
-  # TODO: Questions to consider
-  # 1. Should we make this a nested-list object?
-  # 2. Should we convert to sf object using st_as_sf() here?
-  focal_vs_comp <- focal_vs_comp %>%
-    # Convert list to tibble:
-    bind_rows() %>%
-    arrange(focal_ID, comp_ID) %>%
-    mutate(growth_hat = NA) %>%
-    select(
-      # Relating to focal tree:
-      focal_ID, focal_sp, dbh, foldID, geometry, growth,
-      # Relating to competitor tree:
-      comp_ID, dist, comp_sp, comp_basal_area
-    )
-
-  return(focal_vs_comp)
-}
-
-
 #' Fit Bayesian competition model
 #'
 #' @param focal_vs_comp data frame from \code{\link{create_focal_vs_comp}}
@@ -271,6 +97,9 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
 }
 
 
+
+
+
 #' Make predictions based on fitted Bayesian model
 #'
 #' @description Applies fitted model from \code{\link{fit_bayesian_model}} and
@@ -340,6 +169,83 @@ predict_bayesian_model <- function(focal_vs_comp, posterior_param) {
 
 
 
+
+
+#' Run the bayesian model with spatial cross validation
+#'
+#' @inheritParams fit_bayesian_model
+#' @inheritParams create_focal_vs_comp
+#' @param cv_grid \code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}
+#' @description Run cross-validation
+#'
+#' @import dplyr
+#' @import sf
+#' @import sfheaders
+#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
+#' @export
+#'
+#' @examples
+#' 1 + 1
+run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
+  # For each fold, store resulting y-hat for each focal tree in list
+  folds <- focal_vs_comp %>%
+    pull(foldID) %>%
+    unique() %>%
+    sort()
+  focal_trees <- vector(mode = "list", length = length(folds))
+
+  for (i in 1:length(folds)) {
+    # Define test set and "full" training set (we will remove buffer region below)
+    test <- focal_vs_comp %>%
+      filter(foldID == folds[i])
+    train_full <- focal_vs_comp %>%
+      filter(foldID != folds[i])
+
+    # If no trees in test skip, skip to next iteration in for loop
+    if (nrow(test) == 0) {
+      next
+    }
+
+    # Define sf object of boundary of test fold
+    test_fold_boundary <- cv_grid %>%
+      subset(folds == i) %>%
+      st_bbox() %>%
+      st_as_sfc()
+
+    # Remove trees in training set that are part of test set and buffer region to test set
+    train <- train_full %>%
+      st_as_sf() %>%
+      add_buffer_variable(direction = "out", size = max_dist, region = test_fold_boundary) %>%
+      filter(buffer) %>%
+      as_tibble()
+
+    if (FALSE) {
+      # Visualize test set trees + boundary
+      ggplot() +
+        geom_sf(data = train %>% sample_frac(0.01) %>% st_as_sf(), col = "black", alpha = 0.1) +
+        geom_sf(data = test_fold_boundary, col = "orange", fill = "transparent") +
+        geom_sf(data = test %>% st_as_sf(), col = "orange")
+    }
+
+    # Fit model on training data and predict on test
+    posterior_param_fold <- train %>%
+      fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle)
+
+    focal_trees[[i]] <- test %>%
+      predict_bayesian_model(posterior_param = posterior_param_fold)
+  }
+
+  # Convert list to data frame and return
+  focal_trees <- focal_trees %>%
+    bind_rows()
+  return(focal_trees)
+}
+
+
+
+
+
+
 #' Create input data frame for Bayesian regression
 #'
 #' @inheritParams fit_bayesian_model
@@ -394,7 +300,9 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
 
 
 
-#' Plot beta_0 parameters
+
+
+#' Plot Bayesian model parameters
 #'
 #' @param posterior_param Output of \code{\link{fit_bayesian_model}}
 #' @param sp_to_plot Vector of subset of species to plot
@@ -480,7 +388,6 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
   plot_list <- vector(mode = "list", length = 3)
 
 
-
   # 2. Plot intercept coefficients ------------------------------
   posterior_sample <- beta_lambda_posterior_df %>%
     filter(coefficient_type == "intercept")
@@ -510,7 +417,6 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
       }, ")")),
       y = "species"
     )
-
 
 
   # 3. Plot dbh coefficients ------------------------------
@@ -591,10 +497,6 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
 
   posterior_lambda <- posterior_lambda %>%
     unnest(cols = c(values))
-  # mutate(
-  #   competitor = str_to_title(competitor),
-  #   focal = str_to_title(focal)
-  # )
 
   # When we only want to plot a subset of species:
   if (!is.null(sp_to_plot)) {
@@ -626,78 +528,4 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
     )
 
   return(plot_list)
-}
-
-
-
-
-
-#' Run the bayesian model with spatial cross validation
-#'
-#' @inheritParams fit_bayesian_model
-#' @inheritParams create_focal_vs_comp
-#' @param cv_grid \code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}
-#' @description Run cross-validation
-#'
-#' @import dplyr
-#' @import sf
-#' @import sfheaders
-#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
-#' @export
-#'
-#' @examples
-#' 1 + 1
-run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
-  # For each fold, store resulting y-hat for each focal tree in list
-  folds <- focal_vs_comp %>%
-    pull(foldID) %>%
-    unique() %>%
-    sort()
-  focal_trees <- vector(mode = "list", length = length(folds))
-
-  for (i in 1:length(folds)) {
-    # Define test set and "full" training set (we will remove buffer region below)
-    test <- focal_vs_comp %>%
-      filter(foldID == folds[i])
-    train_full <- focal_vs_comp %>%
-      filter(foldID != folds[i])
-
-    # If no trees in test skip, skip to next iteration in for loop
-    if (nrow(test) == 0) {
-      next
-    }
-
-    # Define sf object of boundary of test fold
-    test_fold_boundary <- cv_grid %>%
-      subset(folds == i) %>%
-      st_bbox() %>%
-      st_as_sfc()
-
-    # Remove trees in training set that are part of test set and buffer region to test set
-    train <- train_full %>%
-      st_as_sf() %>%
-      add_buffer_variable(direction = "out", size = max_dist, region = test_fold_boundary) %>%
-      filter(buffer) %>%
-      as_tibble()
-
-    if (FALSE) {
-      # Visualize test set trees + boundary
-      ggplot() +
-        geom_sf(data = train %>% sample_frac(0.01) %>% st_as_sf(), col = "black", alpha = 0.1) +
-        geom_sf(data = test_fold_boundary, col = "orange", fill = "transparent") +
-        geom_sf(data = test %>% st_as_sf(), col = "orange")
-    }
-
-    # Fit model on training data and predict on test
-    posterior_param_fold <- train %>%
-      fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle)
-
-    focal_trees[[i]] <- test %>%
-      predict_bayesian_model(posterior_param = posterior_param_fold)
-  }
-
-  # Convert list to data frame and return
-  focal_trees <- focal_trees %>%
-    bind_rows()
-  return(focal_trees)
 }

@@ -1,8 +1,5 @@
-globalVariables(c(
-  "x_dir", "y_dir"
-))
-
-#' Computer buffer to a region.
+#' Compute buffer to a region.
+#'
 #' @inheritParams add_buffer_variable
 #' @param region An \code{sf} polygon object of region to be buffered
 #' @param direction "in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.
@@ -56,6 +53,9 @@ compute_buffer_region <- function(region, direction = "in", size) {
 
   return(buffer_region)
 }
+
+
+
 
 
 #' Identify trees in the buffer region
@@ -127,6 +127,8 @@ add_buffer_variable <- function(growth_df, direction, size, region) {
 
   return(growth_df)
 }
+
+
 
 
 

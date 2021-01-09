@@ -9,6 +9,10 @@
 #' @name forestecology
 NULL
 
+
+
+
+
 ## quiets concerns of R CMD check re: the .'s that appear in pipelines
 if (getRversion() >= "2.15.1") {
   utils::globalVariables(
@@ -26,7 +30,24 @@ if (getRversion() >= "2.15.1") {
       "Var1", "Var2", "aes", "as.formula", "codes2", "coefficient_type", "comp_basal_area",
       "comp_sp", "dist", "facet_wrap", "fct_rev", "focal_sp", "foldID", "foldID.x", "foldID.y",
       "folds", "gather", "geom_vline", "geometry", "geometry.x", "geometry.y", "ggplot", "labs",
-      "offset", "sim_ID", "str_c", "str_sub", "type", "value", "values"
+      "offset", "sim_ID", "str_c", "str_sub", "type", "value", "values", "codes", "date1", "date2",
+      "x_dir", "y_dir"
     )
   )
 }
+
+
+
+
+
+#' Pipe operator
+#'
+#' See \code{magrittr::\link[magrittr]{\%>\%}} for details.
+#'
+#' @name %>%
+#' @rdname pipe
+#' @keywords internal
+#' @export
+#' @importFrom magrittr %>%
+#' @usage lhs \%>\% rhs
+NULL
