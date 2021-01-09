@@ -1,7 +1,7 @@
 # forestecology 0.1.0.9003: "Bad first draft" of package paper
 
 * Completed "bad first draft" of paper on package itself, including Michigan Big Woods & SCBI running examples
-* Further refactoring of v1 of code
+* Further refactoring of alpha-version of `forestecology` package code
 
 
 # forestecology 0.1.0.9002: Created Michigan Big Woods & SCBI data modeling examples
