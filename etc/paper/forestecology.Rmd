@@ -71,10 +71,10 @@ options(width = 70)
 
 # Abstract (350 words)
 
-1. set the context for and purpose of the work 
-1. indicate the approach and the methods 
-1. outline the main results 
-1. identify the conclusions and wider implications
+1. set the context for and purpose of the work: models for interspecific competition. Robert and spatial crossvalidation 
+1. indicate the approach and the methods: use tidyverse, sf, and tidymodels packages. 
+1. outline the main results: Recreate the figure in PLOSOne paper. Code would've been way more complicated in base. We don't have to worry about how the component functions work, only that sequence/converyor belt is correct and output is correct. scientist is abstracted away from ugly programming details.
+1. identify the conclusions and wider implications: the fact truths hold was already covered in PLOSOne paper, this package implements this and can serve as a blueprint for others who model
 
 # Introduction
 
@@ -269,8 +269,9 @@ bw_growth_df <- bw_growth_df %>%
 ggplot() +
   geom_sf(data = bw_spatialBlock$blocks %>% st_as_sf()) + 
   geom_sf(data = bw_growth_df %>% sample_frac(0.2), 
-          aes(col = factor(foldID)), size = 0.1) + 
-  theme(legend.position="bottom")
+          aes(col = factor(foldID)), size = 0.1, show.legend = FALSE) + 
+  geom_sf_text(data = bw_spatialBlock$blocks %>% st_as_sf(), 
+               aes(label = folds))
 ```
 
 
