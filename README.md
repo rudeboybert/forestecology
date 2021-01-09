@@ -180,7 +180,7 @@ predictions %>%
 
 # Plot posteriors
 plot_ex <- posterior_param_ex %>%
-  plot_posterior_parameters()
+  plot_bayesian_model_parameters()
 plot_ex[["lambda"]]
 ```
 
@@ -193,7 +193,7 @@ was overly optimistic.
 ``` r
 # Fit model with cross-validation
 ex_bw <- focal_vs_comp_ex %>%
-  run_cv(max_dist = max_dist, cv_grid = ex_cv_grid) %>%
+  run_cv(max_dist = max_dist, cv_grid = ex_cv_grid_sf) %>%
   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 
 # Compute RMSE of true vs predicted dbh values

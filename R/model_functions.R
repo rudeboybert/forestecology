@@ -322,7 +322,7 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
 #' library(ggridges)
 #' # Load in posterior parameter example
 #' data(posterior_param_ex)
-#' plots <- plot_posterior_parameters(posterior_param_ex)
+#' plots <- plot_bayesian_model_parameters(posterior_param_ex)
 #'
 #' # Plot beta_0, growth intercepts
 #' plots[[1]]
@@ -332,10 +332,7 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
 #'
 #' # Plot lambdas, competition coefficents
 #' plots[[3]]
-plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
-  if (FALSE) {
-    posterior_param <- posterior_param_bw
-  }
+plot_bayesian_model_parameters <- function(posterior_param, sp_to_plot = NULL) {
 
   # Identify all species and baseline category of species used for regression
   sp_list <- posterior_param$sp_list
@@ -407,6 +404,15 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
     # mutate(type = str_to_title(type)) %>%
     select(-offset)
 
+  # When we only want to plot a subset of species:
+  if (!is.null(sp_to_plot)) {
+    sp_to_plot <- sort(sp_to_plot)
+
+    posterior_beta_0 <- posterior_beta_0 %>%
+      filter(type %in% sp_to_plot)
+  }
+
+
   plot_list[["beta_0"]] <-
     ggplot(posterior_beta_0, aes(x = value, y = fct_rev(type))) +
     geom_density_ridges() +
@@ -437,6 +443,14 @@ plot_posterior_parameters <- function(posterior_param, sp_to_plot = NULL) {
     ) %>%
     # mutate(type = str_to_title(type)) %>%
     select(-offset)
+
+  # When we only want to plot a subset of species:
+  if (!is.null(sp_to_plot)) {
+    sp_to_plot <- sort(sp_to_plot)
+
+    posterior_beta_dbh <- posterior_beta_dbh %>%
+      filter(type %in% sp_to_plot)
+  }
 
   plot_list[["beta_dbh"]] <-
     ggplot(posterior_beta_dbh, aes(x = value, y = fct_rev(type))) +

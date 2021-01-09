@@ -30,7 +30,7 @@ predictions \%>\%
 
 # Plot posterior parameters
 posterior_param_ex \%>\%
-  plot_posterior_parameters()
+  plot_bayesian_model_parameters()
 }
 \seealso{
 \code{\link{focal_vs_comp_ex}}
