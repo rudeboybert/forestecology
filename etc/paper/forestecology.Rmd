@@ -87,6 +87,9 @@ We demonstrate the `forestecology` package's features on two data sets, both bas
 
 Second, the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot, located at the Smithsonian's National Zoo and Conservation Biology Institute in Front Royal, VA, USA. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US: the Blue Ridge, Ridge and Valley, and Piedmont provinces and is adjacent to the northern end of Shenandoah National Park. The forest type is typical mature secondary eastern mixed deciduous forest, with a canopy dominated by tulip poplar (Liriodendron tulipifera), oaks (Quercus spp.), and hickories (Carya spp.), and an understory composed mainly of spicebush (Lindera benzoin), paw-paw (Asimina triloba), American hornbeam (Carpinus caroliniana), and witch hazel (Hamamelis virginiana) @bourg_initial_2013. In the example below, we will preface any data frames from this plot in with `scbi_`.
 
+The code that generates Figures are included in the supplementary materials. 
+
+
 We load all the necessary packages.
 
 ```{r load-packages}
@@ -97,7 +100,6 @@ library(tidyverse)
 library(lubridate)
 
 # Load spatial packages:
-# devtools::install_github("rvalavi/blockCV")
 library(blockCV)
 library(sf)
 library(sfheaders)
@@ -192,9 +194,9 @@ scbi_growth_df <-
 
 ### Comparison
 
-Figure \ref{fig:growth-histogram} displays histograms comparing the distribution of average annual growth at both sites. Observe that average annual growth appears higher at the Big Woods site. 
+Figure \ref{fig:growth-histogram} displays histograms comparing the distribution of average annual growth at both sites. Observe that average annual growth appears higher at the Big Woods site.
 
-```{r growth-histogram, out.width="100%", fig.cap="Distribution of average annual growth in DBH for both sites."}
+```{r growth-histogram, out.width="100%", fig.cap="Distribution of average annual growth in DBH for both sites.", echo = FALSE}
 # Both Big Woods & SCBI
 bind_rows(
   bw_growth_df %>% st_drop_geometry() %>% select(growth) %>% mutate(Site = "Big Woods"),
@@ -236,33 +238,45 @@ First, we indicate which trees are part of the buffer. This necessitates informa
 data(bw_study_region)
 
 bw_growth_df <- bw_growth_df %>%
-  add_buffer_variable(direction = "in", size = max_dist, region = bw_study_region)
+  add_buffer_variable(direction = "in", size = max_dist, 
+                      region = bw_study_region)
 
 ggplot() +
-  geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col = buffer), size = 0.5)
+  geom_sf(data = bw_growth_df %>% sample_frac(0.2), 
+          aes(col = buffer), size = 0.5)
 ```
 
 Second, we associate each tree to spatial cross validation folds. In this case, we use the `spatialBlock()` function from the `blockCV` package to define the spatial grid which 
 
 THIS IS A MESS. We use the  @valavi_blockcv_2019, whose elements will act as the folds in our leave-one-out (by "one" we mean "one grid block") cross-validation scheme. The upshot here is we add `foldID` to `growth_df` which identifies which fold each individual is in, and the creation of a `cv_grid_sf` object which gives the geometry of the cross validation grid.
 
-```{r bw-define-cv-folds}
+```{r bw-define-cv-folds, out.width="100%", fig.cap="blockCV function output."}
 set.seed(76)
 bw_spatialBlock <- spatialBlock(
-  speciesData = bw_growth_df, theRange = cv_fold_size,
-  k = 28, xOffset = 0.5, yOffset = 0,
-  verbose = FALSE
+  speciesData = bw_growth_df, theRange = cv_fold_size, k = 28, xOffset = 0.5, 
+  yOffset = 0, verbose = FALSE, showBlocks = FALSE
 )
+```
 
 # Add foldID to each tree
+```{r}
 bw_growth_df <- bw_growth_df %>%
   mutate(foldID = bw_spatialBlock$foldID)
+```
 
+```{r bw-define-cv-folds-with-trees, out.width="100%", fig.cap="Inspect blocks closely."}
 # Visualize grid. Why does fold 19 repeat?
-bw_spatialBlock$plots +
-  geom_sf(data = bw_growth_df %>% sample_frac(0.2), aes(col = factor(foldID)), size = 0.1)
+ggplot() +
+  geom_sf(data = bw_spatialBlock$blocks %>% st_as_sf()) + 
+  geom_sf(data = bw_growth_df %>% sample_frac(0.2), 
+          aes(col = factor(foldID)), size = 0.1) + 
+  theme(legend.position="bottom")
+```
+
 
 # Remove empty folds
+
+```{r}
 bw_growth_df <- bw_growth_df %>%
   filter(!foldID %in% c(19, 23, 21, 17, 8, 19)) %>%
   mutate(foldID = as.character(foldID))
@@ -289,7 +303,8 @@ scbi_study_region <- tibble(
   sf_polygon()
 
 scbi_growth_df <- scbi_growth_df %>%
-  add_buffer_variable(direction = "in", size = max_dist, region = scbi_study_region)
+  add_buffer_variable(direction = "in", size = max_dist, 
+                      region = scbi_study_region)
 
 ggplot() +
   geom_sf(data = scbi_growth_df, aes(col = buffer), size = 0.5)
@@ -300,10 +315,10 @@ Second, we associate each tree to spatial cross validation folds. In this case w
 Here we manually define the spatial cross-validation grid as an `sf_polygon` object `scbi_cv_grid`
 
 ```{r}
-fold1 <- rbind(c(0, 300), c(150, 300), c(150, 600), c(0, 600), c(0, 300)) %>%
+fold1 <- rbind(c(0, 300), c(150, 300), c(150, 600), c(0, 600)) %>%
   sf_polygon() %>% 
   mutate(folds = 1)
-fold2 <- rbind(c(150, 300), c(300, 300), c(300, 600), c(150, 600), c(150, 300)) %>%
+fold2 <- rbind(c(150, 300), c(300, 300), c(300, 600), c(150, 600)) %>%
   sf_polygon() %>% 
   mutate(folds = 2)
 scbi_cv_grid <- bind_rows(fold1, fold2)
@@ -311,13 +326,9 @@ scbi_cv_grid <- bind_rows(fold1, fold2)
 
 ```{r scbi-define-cv-folds, out.width="50%", fig.cap="Buffer region for SCBI study region."}
 scbi_spatialBlock <- spatialBlock(
-  speciesData = scbi_growth_df,
-  k = 2,
-  verbose = FALSE,
-  showBlocks = FALSE,
+  speciesData = scbi_growth_df, k = 2, verbose = FALSE, showBlocks = FALSE,
   # Note new arguments:
-  selection = "systematic",
-  blocks = scbi_cv_grid
+  selection = "systematic", blocks = scbi_cv_grid
 )
 
 # Add foldID to each tree
@@ -325,7 +336,8 @@ scbi_growth_df <- scbi_growth_df %>%
   mutate(foldID = scbi_spatialBlock$foldID)
 
 ggplot() +
-  geom_sf_text(data = scbi_growth_df, aes(label = foldID, col = buffer)) +
+  geom_sf_text(data = scbi_growth_df, 
+               aes(label = foldID, col = buffer)) +
   geom_sf(data = scbi_cv_grid, fill = "transparent")
 ```
 
@@ -344,9 +356,6 @@ focal_vs_comp_bw <- bw_growth_df %>%
 
 TODO: Figure out how to show this data frame's contents.
 
-```{r}
-head(focal_vs_comp_bw)
-```
 
 ### SCBI 
 
@@ -357,16 +366,12 @@ focal_vs_comp_scbi <- scbi_growth_df %>%
 
 TODO: Figure out how to show this data frame's contents.
 
-```{r}
-head(focal_vs_comp_scbi)
-```
-
 
 
 
 ## Fit model and make predictions {#model-fit-predict}
 
-Next we fit the following linear model to the dbh of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of ``focal'' species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ ``competitor'' species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
+Next we fit the following linear model to the dbh of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
 
 $$
 \newcommand{\dbh}{\text{DBH}}
@@ -454,7 +459,7 @@ scbi_growth_df_noCV %>%
 
 In Figures \ref{fig:scbi-model-residuals} and \ref{fig:scbi-model-residuals-2} we present the residuals. 
 
-```{r scbi-model-residuals, out.width="100%", fig.cap="Spatial distribution of residuals for model applied to SCBI data."}
+```{r scbi-model-residuals, out.width="100%", fig.cap="Predicted versus observed growth.", echo = FALSE}
 ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
   geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = "lm") +
@@ -466,7 +471,7 @@ ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
   )
 ```
 
-```{r scbi-model-residuals-2, out.width="100%", fig.cap="Spatial distribution of residuals for model applied to SCBI data part 2."}
+```{r scbi-model-residuals-2, out.width="80%", fig.cap="Spatial distribution of residuals for model applied to SCBI data.", echo = FALSE}
 scbi_growth_df_noCV %>%
   st_as_sf() %>%
   # TODO: Need to investigate missingness
@@ -539,16 +544,17 @@ Here we re-run the model fit to the Big Woods data from Section \ref{model-fit-p
 ```{r bw-posterior-viz-0}
 focal_vs_comp_bw <- bw_growth_df %>%
   mutate(sp = family) %>%
-  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid, id = "treeID")
+  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid, 
+                       id = "treeID")
 
 posterior_param_bw <- focal_vs_comp_bw %>%
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 ```
 
-Now the posterior parameter outputs of `fit_bayesian_model()` are passed to `plot_posterior_parameters()` to generate visualizations of the posterior parameters. These visualizations are displayed in Figure 5 of @allen_permutation_2020. For simplicity we only plot a subset of the species families. 
+Now the posterior parameter outputs of `fit_bayesian_model()` are passed to `plot_bayesian_model_parameters()` to generate visualizations of the posterior parameters. These visualizations are displayed in Figure 5 of @allen_permutation_2020. For simplicity we only plot a subset of the species families. 
 
 ```{r bw-posterior-viz-1}
-posterior_plots <- plot_posterior_parameters(
+posterior_plots_bw <- plot_bayesian_model_parameters(
   posterior_param = posterior_param_bw,
   sp_to_plot = c("cornaceae", "fagaceae", "hamamelidaceae", "juglandaceae", 
                  "lauraceae", "rosaceae", "sapindaceae", "ulmaceae")
@@ -557,20 +563,20 @@ posterior_plots <- plot_posterior_parameters(
 
 The output is a list with three plots stored. Figure \ref{fig:bw-posterior-viz-beta0} The element `beta_0` gives the baseline growth intercept $\beta_0$, i.e., how fast an individual of each group grows independent of DBH).
 
-```{r bw-posterior-viz-beta0, out.width="50%", fig.cap="Posterior distribution of beta0."}
-posterior_plots[["beta_0"]]
+```{r bw-posterior-viz-beta0, out.width="100%", fig.cap="Posterior distribution of beta0."}
+posterior_plots_bw[["beta_0"]]
 ```
 
 Figure \ref{fig:bw-posterior-viz-beta-dbh} Next `beta_dbh` gives the slope for DBH slope $\beta_{dbh,i}$ for each group.
 
 ```{r bw-posterior-viz-beta-dbh, out.width="100%", fig.cap="Posterior distribution of betadbh."}
-posterior_plots[["beta_dbh"]]
+posterior_plots_bw[["beta_dbh"]]
 ```
 
 Finally Figure \ref{fig:bw-posterior-viz-lambda} `lambda` gives the competition coefficients $\lambda$.
 
-```{r bw-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda."}
-posterior_plots[["lambda"]]
+```{r bw-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda's for Big Woods."}
+posterior_plots_bw[["lambda"]]
 ```
 
 
@@ -579,13 +585,13 @@ posterior_plots[["lambda"]]
 We revisit the posterior parameters for the SCBI from Section {model-fit-predict}, but this time only focus on the $\lambda$ competition coefficients. 
 
 ```{r scbi-posterior-viz-1}
-posterior_plots_scbi <- plot_posterior_parameters(
+posterior_plots_scbi <- plot_bayesian_model_parameters(
   posterior_param = posterior_param_scbi,
   sp_to_plot = c("quru", "litu", "cagl", "cato")
 )
 ```
 
-```{r scbi-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda."}
+```{r scbi-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda's for SCBI."}
 posterior_plots_scbi[["lambda"]]
 ```
 
