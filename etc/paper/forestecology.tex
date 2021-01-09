@@ -127,21 +127,62 @@ Move abstract below here after completed.
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  set the context for and purpose of the work: models for interspecific
-  competition. Robert and spatial crossvalidation
+  Set the context for and purpose of the work: The scientific
+  question/problem and the desiderata
+
+  \begin{itemize}
+  \tightlist
+  \item
+    fitting models for interspecific competition and assessing them
+    using spatial crossvalidation
+  \item
+    Leverage ForestGEO protocols providing standardization
+  \end{itemize}
 \item
-  indicate the approach and the methods: use tidyverse, sf, and
-  tidymodels packages.
+  Indicate the approach and the methods: Use tidyverse, simple features,
+  and tidymodels packages.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    tidyverse: as stated in tidy tools manifesto: standadized data
+    structures, functional programming with pipe, designed for humans
+  \item
+    sf: tidyverse-friendly package that makes wrangling and visualizing
+    spatial data much easier
+  \item
+    tidymodels: given our spatial-crossvalidation, use tidymodels
+    framework is a collection of packages for modeling and machine
+    learning using tidyverse principles
+  \end{itemize}
 \item
-  outline the main results: Recreate the figure in PLOSOne paper. Code
-  would've been way more complicated in base. We don't have to worry
-  about how the component functions work, only that sequence/converyor
-  belt is correct and output is correct. scientist is abstracted away
-  from ugly programming details.
+  Outline the main results: We replicate from scratch the figure in
+  PLOSOne paper using Big Woods data, conduct similar analysis for SCBI
+  data.
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Code would've been way more complicated in base.
+  \item
+    We don't have to worry about how the component functions work, only
+    that sequence/converyor belt is correct and output is correct.
+  \item
+    Scientist is abstracted away from ugly programming details.
+  \end{itemize}
 \item
-  identify the conclusions and wider implications: the fact truths hold
-  was already covered in PLOSOne paper, this package implements this and
-  can serve as a blueprint for others who model
+  Identify the conclusions and wider implications:
+
+  \begin{itemize}
+  \tightlist
+  \item
+    New scientific conclusions from SCBI data
+  \item
+    this can serve as blue print for other modeling situations.
+  \item
+    Modularly switch out our bayesian lm() functions to anything you
+    want.
+  \end{itemize}
 \end{enumerate}
 
 \hypertarget{introduction}{%
