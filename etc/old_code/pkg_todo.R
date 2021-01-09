@@ -166,7 +166,7 @@ posterior_param_bw <- focal_vs_comp_bw %>%
   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
 
 # b) Recreate Fig5 from Allen (2020): Posterior distributions of selected lambdas
-posterior_plots <- plot_posterior_parameters(
+posterior_plots <- plot_bayesian_model_parameters(
   posterior_param = posterior_param_bw,
   sp_to_plot = c("black_northern_pin_hybrid", "northern_white_cedar", "white_oak")
 )
