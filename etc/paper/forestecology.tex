@@ -133,8 +133,8 @@ Move abstract below here after completed.
   \begin{itemize}
   \tightlist
   \item
-    fitting models for interspecific competition and assessing them
-    using spatial crossvalidation
+    (Eventually) modularly fitting models for interspecific competition
+    and assessing them using spatial crossvalidation
   \item
     Leverage ForestGEO protocols providing standardization
   \end{itemize}
@@ -154,6 +154,12 @@ Move abstract below here after completed.
     tidymodels: given our spatial-crossvalidation, use tidymodels
     framework is a collection of packages for modeling and machine
     learning using tidyverse principles
+  \item
+    Dave: hmm, I think here we might need to mention the methods we
+    implement. Something like, the package provides functions to
+    specific a linear, bayesian neighborhood competition model of
+    growth, then fit the model, and compare competing models with
+    spatiall cross validation. Or somethign like that.
   \end{itemize}
 \item
   Outline the main results: We replicate from scratch the figure in
@@ -178,10 +184,10 @@ Move abstract below here after completed.
   \item
     New scientific conclusions from SCBI data
   \item
-    this can serve as blue print for other modeling situations.
-  \item
     Modularly switch out our bayesian lm() functions to anything you
     want.
+  \item
+    this can serve as blue print for other modeling situations.
   \end{itemize}
 \end{enumerate}
 
@@ -193,7 +199,7 @@ models of tree competition \citet{allen_permutation_2020}
 \citet{canham_neighborhood_2006} \citet{uriarte_spatially_2004}. Here we
 describe an R package, \texttt{forestecology}, to do that. This package
 implements the methods in \citet{allen_permutation_2020}. It provides: a
-convenient way specify and fit models of tree growth based on
+convenient way to specify and fit models of tree growth based on
 neighborhood competition; a spatial cross validation method to test and
 compare model fits \citet{roberts_cross-validation_2017}; and an
 ANOVA-like method to assess whether the competitor identity matters in
@@ -212,12 +218,12 @@ Institution's ForestGEO international network of 72 long‐term forest
 dynamics research sites \citet{andersonteixeira_ctfs-forestgeo_2015}.
 First, the Michigan Big Woods Forest Dynamics Plot located at the Edwin
 S. George Reserve in Pinckney, MI, USA. The 23 ha plot is situated in
-mature oak-hickory forest. The canopy is dominated by white oak (Quercus
-alba), northern red oak (Quercus rubra), black oak (Quercus velutina),
-shagbark hickory (Carya ovata) and pignut hickory (Carya glabra). The
-most common understory tree is witch-hazel (Hamamelis virginiana)
-\citet{allen_michigan_2020}. In the example below, we will preface any
-data frames from this plot in with \texttt{bw\_}.
+mature oak-hickory forest. The canopy is dominated by white oak
+(\emph{Quercus alba}), northern red oak (\emph{Q. rubra}), black oak
+(\emph{Q. velutina}), shagbark hickory (\emph{Carya ovata}) and pignut
+hickory (\emph{C. glabra}) \citet{allen_michigan_2020}. In the example
+below, we will preface any data frames from this plot in with
+\texttt{bw\_}.
 
 Second, the Smithsonian Conservation Biology Institute (SCBI) large
 forest dynamics plot, located at the Smithsonian's National Zoo and
@@ -227,11 +233,12 @@ physiographic provinces of the eastern US: the Blue Ridge, Ridge and
 Valley, and Piedmont provinces and is adjacent to the northern end of
 Shenandoah National Park. The forest type is typical mature secondary
 eastern mixed deciduous forest, with a canopy dominated by tulip poplar
-(Liriodendron tulipifera), oaks (Quercus spp.), and hickories (Carya
-spp.), and an understory composed mainly of spicebush (Lindera benzoin),
-paw-paw (Asimina triloba), American hornbeam (Carpinus caroliniana), and
-witch hazel (Hamamelis virginiana) \citet{bourg_initial_2013}. In the
-example below, we will preface any data frames from this plot in with
+(\emph{Liriodendron tulipifera}), oaks (\emph{Quercus} spp.), and
+hickories (\emph{Carya} spp.), and an understory composed mainly of
+spicebush (\emph{Lindera benzoin}), paw-paw (\emph{Asimina triloba}),
+American hornbeam (\emph{Carpinus caroliniana}), and witch hazel
+(\emph{Hamamelis virginiana}) \citet{bourg_initial_2013}. In the example
+below, we will preface any data frames from this plot in with
 \texttt{scbi\_}.
 
 The code that generates Figures are included in the supplementary
@@ -362,8 +369,9 @@ Section REF)
 
 In the case of Big Woods data, we first remove all trees that were
 re-sprouts in the later (2014) census. Additionally, we have included
-three classification of tree species: \texttt{species}, \texttt{family},
-and \texttt{trait\_group}. DESCRIBE THESE
+two classification of tree species: \texttt{species} and
+\texttt{family}. To illustrate model comparison, we test competition
+models in which individuals are grouped by species and by family.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -399,8 +407,9 @@ and \texttt{trait\_group}. DESCRIBE THESE
 \hypertarget{comparison}{%
 \subsubsection{Comparison}\label{comparison}}
 
-Figure \ref{fig:growth-histogram} displays histograms comparing the
-distribution of average annual growth at both sites. Observe that
+DAVE: I THINK THIS FIGURE IS UNNEEDED. COULD BE REMOVED FOR SPACE
+REASONS. Figure \ref{fig:growth-histogram} displays histograms comparing
+the distribution of average annual growth at both sites. Observe that
 average annual growth appears higher at the Big Woods site.
 
 \begin{figure}
@@ -420,7 +429,7 @@ frames. First, in order to control for study region edge effects, we add
 ``buffers'' to the periphery of the study region (cite Waller?). Our
 model of interspecific competition relies on a spatial definition of who
 the competitor trees are for focal trees of interest. Since certain
-explanatory variables such as biomass are cumulative, we must ensure
+explanatory variables such as basal area are cumulative, we must ensure
 that all trees being modeled are not biased to have different neighbor
 structures. This is a particular concern for trees at the boundary of
 study regions, which will not have the same number of neighbors as trees
@@ -433,8 +442,9 @@ individual observations at random. However, underlying this scheme is an
 assumption that the observations are independent. In the case of forest
 census data, observations exhibit spatial autocorrelation, and thus this
 dependence must be incorporated in our resampling scheme in spatial
-cross-validation \citet{roberts2017} \citet{pohjankukka2017}. We will
-therefore associate portions of the study region to spatial folds.
+cross-validation \citet{roberts_cross-validation_2017}
+\citet{pohjankukka_estimating_2017} We will therefore associate portions
+of the study region to spatial folds.
 
 To these two ends, we define two constants, both of which are in the
 same units as the \texttt{gx} and \texttt{gy} variables (most often
@@ -474,7 +484,7 @@ restricted be squares). We will then use this constant to associate each
 observed tree to one of \(k\) folds in the respective study region. In
 the Big Woods example below we will use the \texttt{blockCV} R package
 that has implemented spatial cross-validation while for the SCBI we will
-do this manually \citet{valavi2019}.
+do this manually \citet{valavi_blockcv_2019}
 
 \hypertarget{big-woods-2}{%
 \subsubsection{Big Woods}\label{big-woods-2}}
