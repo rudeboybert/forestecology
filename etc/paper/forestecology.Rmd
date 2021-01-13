@@ -78,6 +78,7 @@ options(width = 70)
     + tidyverse: as stated in tidy tools manifesto: standadized data structures, functional programming with pipe, designed for humans
     + sf: tidyverse-friendly package that makes wrangling and visualizing spatial data much easier
     + tidymodels: given our spatial-crossvalidation, use tidymodels framework is a collection of packages for modeling and machine learning using tidyverse principles
+    + Dave: hmm, I think here we might need to mention the methods we implement. Something like, the package provides functions to specific a linear, bayesian neighborhood competition model of growth, then fit the model, and compare competing models with spatiall cross validation. Or somethign like that.
 1. Outline the main results: We replicate from scratch the figure in PLOSOne paper using Big Woods data, conduct similar analysis for SCBI data.
     + Code would've been way more complicated in base. 
     + We don't have to worry about how the component functions work, only that sequence/converyor belt is correct and output is correct.
@@ -89,14 +90,14 @@ options(width = 70)
 
 # Introduction
 
-Repeat-censused forest plots offer excellent data to test neighborhood models of tree competition @allen_permutation_2020 @canham_neighborhood_2006 @uriarte_spatially_2004. Here we describe an R package, `forestecology`, to do that. This package implements the methods in @allen_permutation_2020. It provides: a convenient way specify and fit models of tree growth based on neighborhood competition; a spatial cross validation method to test and compare model fits @roberts_cross-validation_2017; and an ANOVA-like method to assess whether the competitor identity matters in these models. The model is written to work with ForestGEO plot data @andersonteixeira_ctfs-forestgeo_2015, but we envision that it could easily be modified to work with data from other forest plots, e.g. the US Forest Service Forest Inventory and Analysis plots @smith_forest_2002.
+Repeat-censused forest plots offer excellent data to test neighborhood models of tree competition @allen_permutation_2020 @canham_neighborhood_2006 @uriarte_spatially_2004. Here we describe an R package, `forestecology`, to do that. This package implements the methods in @allen_permutation_2020. It provides: a convenient way to specify and fit models of tree growth based on neighborhood competition; a spatial cross validation method to test and compare model fits @roberts_cross-validation_2017; and an ANOVA-like method to assess whether the competitor identity matters in these models. The model is written to work with ForestGEO plot data @andersonteixeira_ctfs-forestgeo_2015, but we envision that it could easily be modified to work with data from other forest plots, e.g. the US Forest Service Forest Inventory and Analysis plots @smith_forest_2002.
 
 
 # Example
 
-We demonstrate the `forestecology` package's features on two data sets, both based on inventory censuses of two sites from the Smithsonian Institution’s ForestGEO international network of 72 long‐term forest dynamics research sites @andersonteixeira_ctfs-forestgeo_2015. First, the Michigan Big Woods Forest Dynamics Plot located at the Edwin S. George Reserve in Pinckney, MI, USA. The 23 ha plot is situated in mature oak-hickory forest. The canopy is dominated by white oak (Quercus alba), northern red oak (Quercus rubra), black oak (Quercus velutina), shagbark hickory (Carya ovata) and pignut hickory (Carya glabra). The most common understory tree is witch-hazel (Hamamelis virginiana) @allen_michigan_2020. In the example below, we will preface any data frames from this plot in with `bw_`.
+We demonstrate the `forestecology` package's features on two data sets, both based on inventory censuses of two sites from the Smithsonian Institution’s ForestGEO international network of 72 long‐term forest dynamics research sites @andersonteixeira_ctfs-forestgeo_2015. First, the Michigan Big Woods Forest Dynamics Plot located at the Edwin S. George Reserve in Pinckney, MI, USA. The 23 ha plot is situated in mature oak-hickory forest. The canopy is dominated by white oak (*Quercus alba*), northern red oak (*Q. rubra*), black oak (*Q. velutina*), shagbark hickory (*Carya ovata*) and pignut hickory (*C. glabra*) @allen_michigan_2020. In the example below, we will preface any data frames from this plot in with `bw_`.
 
-Second, the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot, located at the Smithsonian's National Zoo and Conservation Biology Institute in Front Royal, VA, USA. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US: the Blue Ridge, Ridge and Valley, and Piedmont provinces and is adjacent to the northern end of Shenandoah National Park. The forest type is typical mature secondary eastern mixed deciduous forest, with a canopy dominated by tulip poplar (Liriodendron tulipifera), oaks (Quercus spp.), and hickories (Carya spp.), and an understory composed mainly of spicebush (Lindera benzoin), paw-paw (Asimina triloba), American hornbeam (Carpinus caroliniana), and witch hazel (Hamamelis virginiana) @bourg_initial_2013. In the example below, we will preface any data frames from this plot in with `scbi_`.
+Second, the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot, located at the Smithsonian's National Zoo and Conservation Biology Institute in Front Royal, VA, USA. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US: the Blue Ridge, Ridge and Valley, and Piedmont provinces and is adjacent to the northern end of Shenandoah National Park. The forest type is typical mature secondary eastern mixed deciduous forest, with a canopy dominated by tulip poplar (*Liriodendron tulipifera*), oaks (*Quercus* spp.), and hickories (*Carya* spp.), and an understory composed mainly of spicebush (*Lindera benzoin*), paw-paw (*Asimina triloba*), American hornbeam (*Carpinus caroliniana*), and witch hazel (*Hamamelis virginiana*) @bourg_initial_2013. In the example below, we will preface any data frames from this plot in with `scbi_`.
 
 The code that generates Figures are included in the supplementary materials. 
 
@@ -175,7 +176,7 @@ After computing the average annual growth for each tree, we ensure to convert al
 
 ### Big Woods
 
-In the case of Big Woods data, we first remove all trees that were re-sprouts in the later (2014) census. Additionally, we have included three classification of tree species: `species`, `family`, and `trait_group`. DESCRIBE THESE
+In the case of Big Woods data, we first remove all trees that were re-sprouts in the later (2014) census. Additionally, we have included two classification of tree species: `species` and `family`. To illustrate model comparison, we test competition models in which individuals are grouped by species and by family.
 
 ```{r bw-compute-growth}
 bw_census_2014 <- bw_census_2014 %>%
@@ -205,7 +206,7 @@ scbi_growth_df <-
 
 ### Comparison
 
-Figure \ref{fig:growth-histogram} displays histograms comparing the distribution of average annual growth at both sites. Observe that average annual growth appears higher at the Big Woods site.
+DAVE: I THINK THIS FIGURE IS UNNEEDED. COULD BE REMOVED FOR SPACE REASONS. Figure \ref{fig:growth-histogram} displays histograms comparing the distribution of average annual growth at both sites. Observe that average annual growth appears higher at the Big Woods site.
 
 ```{r growth-histogram, out.width="100%", fig.cap="Distribution of average annual growth in DBH for both sites.", echo = FALSE}
 # Both Big Woods & SCBI
@@ -223,9 +224,9 @@ bind_rows(
 
 ## Add spatial information {#spatial-information}
 
-We now encode spatial information to the `growth_df` data frames. First, in order to control for study region edge effects, we add "buffers" to the periphery of the study region (cite Waller?). Our model of interspecific competition relies on a spatial definition of who the competitor trees are for focal trees of interest. Since certain explanatory variables such as biomass are cumulative, we must ensure that all trees being modeled are not biased to have different neighbor structures. This is a particular concern for trees at the boundary of study regions, which will not have the same number of neighbors as trees in the internal part of the study region. 
+We now encode spatial information to the `growth_df` data frames. First, in order to control for study region edge effects, we add "buffers" to the periphery of the study region (cite Waller?). Our model of interspecific competition relies on a spatial definition of who the competitor trees are for focal trees of interest. Since certain explanatory variables such as basal area are cumulative, we must ensure that all trees being modeled are not biased to have different neighbor structures. This is a particular concern for trees at the boundary of study regions, which will not have the same number of neighbors as trees in the internal part of the study region. 
 
-Second, our ultimate method for model assessment will rely on estimates of model error as generated by cross-validation. Conventional cross-validation schemes assign observations to folds by resampling individual observations at random. However, underlying this scheme is an assumption that the observations are independent. In the case of forest census data, observations exhibit spatial autocorrelation, and thus this dependence must be incorporated in our resampling scheme in spatial cross-validation @roberts2017 @pohjankukka2017. We will therefore associate portions of the study region to spatial folds. 
+Second, our ultimate method for model assessment will rely on estimates of model error as generated by cross-validation. Conventional cross-validation schemes assign observations to folds by resampling individual observations at random. However, underlying this scheme is an assumption that the observations are independent. In the case of forest census data, observations exhibit spatial autocorrelation, and thus this dependence must be incorporated in our resampling scheme in spatial cross-validation @roberts_cross-validation_2017 @pohjankukka_estimating_2017 We will therefore associate portions of the study region to spatial folds. 
 
 To these two ends, we define two constants, both of which are in the same units as the `gx` and `gy` variables (most often meters). 
 
@@ -238,7 +239,7 @@ The first constant is `max_dist` which defines the maximum distance for a tree's
 
 Furthermore, `max_dist` will define the size of all buffers considered, which will be encoded as a binary variable `buffer` as computed by the `add_buffer_variable()` function. This function takes as input the main `growth_df` data frame, the `size` of the buffer which we set as `max_dist`, and the boundary of the study region encoded as a simple features polygon @pebesma_simple_2018. DESCRIBE SF PACKAGE. In the Big Woods example below we will use a pre-loaded simple features polygon while for the SCBI example we present example code on how to manually construct one. 
 
-The second constant is `cv_fold_size` which defines the length and width of the spatial folds (note that for now the spatial folds are restricted be squares). We will then use this constant to associate each observed tree to one of $k$ folds in the respective study region. In the Big Woods example below we will use the `blockCV` R package that has implemented spatial cross-validation while for the SCBI we will do this manually @valavi2019.
+The second constant is `cv_fold_size` which defines the length and width of the spatial folds (note that for now the spatial folds are restricted be squares). We will then use this constant to associate each observed tree to one of $k$ folds in the respective study region. In the Big Woods example below we will use the `blockCV` R package that has implemented spatial cross-validation while for the SCBI we will do this manually @valavi_blockcv_2019
 
 
 ### Big Woods
