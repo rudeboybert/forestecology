@@ -72,7 +72,7 @@ options(width = 70)
 # Abstract (350 words)
 
 1. Set the context for and purpose of the work: The scientific question/problem and the desiderata
-    + fitting models for interspecific competition and assessing them using spatial crossvalidation
+    + (Eventually) modularly fitting models for interspecific competition and assessing them using spatial crossvalidation
     + Leverage ForestGEO protocols providing standardization
 1. Indicate the approach and the methods: Use tidyverse, simple features, and tidymodels packages. 
     + tidyverse: as stated in tidy tools manifesto: standadized data structures, functional programming with pipe, designed for humans
@@ -84,8 +84,8 @@ options(width = 70)
     + Scientist is abstracted away from ugly programming details.
 1. Identify the conclusions and wider implications:
     + New scientific conclusions from SCBI data
-    + this can serve as blue print for other modeling situations.
     + Modularly switch out our bayesian lm() functions to anything you want.
+    + this can serve as blue print for other modeling situations.
 
 # Introduction
 
