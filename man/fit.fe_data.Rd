@@ -35,8 +35,6 @@ Fit a Bayesian linear regression model with interactions terms where \deqn{y = X
 }
 }
 \examples{
-library(dplyr)
-
 # Load in focal versus comp
 data(focal_vs_comp_ex)
 

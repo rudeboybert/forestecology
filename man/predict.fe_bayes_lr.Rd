@@ -7,12 +7,10 @@
 Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 }
 \usage{
-\method{predict}{fe_bayes_lr}(object, posterior_param, ...)
+\method{predict}{fe_bayes_lr}(object, ...)
 }
 \arguments{
 \item{object}{data frame from \code{\link{create_focal_vs_comp}}}
-
-\item{posterior_param}{Output of \link{fit.fe_data}: A fitted \code{fe_bayes_lr} object.}
 
 \item{...}{Currently ignored, only included for consistency with generic.}
 }

@@ -26,22 +26,14 @@
 #' @export
 #'
 #' @examples
-#' library(dplyr)
-#'
 #' # Load in focal versus comp
 #' data(focal_vs_comp_ex)
 #'
 #' posterior_param_ex <- focal_vs_comp_ex %>%
 #'   fit(prior_param = NULL, run_shuffle = FALSE)
 fit.fe_data <- function(object, prior_param = NULL, run_shuffle = FALSE, ...) {
-  if (FALSE) {
-    focal_vs_comp <- focal_vs_comp_bw
-    run_shuffle <- FALSE
-    prior_param <- NULL
-  }
-
   # Create linear regression model formula object
-  sp_list <- focal_vs_comp$focal_sp %>%
+  sp_list <- object$focal_sp %>%
     levels() %>%
     sort()
   model_formula <- sp_list %>%
@@ -50,7 +42,7 @@ fit.fe_data <- function(object, prior_param = NULL, run_shuffle = FALSE, ...) {
     as.formula()
 
   # Create matrices & vectors for Bayesian regression
-  focal_trees <- focal_vs_comp %>%
+  focal_trees <- object %>%
     create_bayesian_model_data(run_shuffle = run_shuffle)
 
   X <- model.matrix(model_formula, data = focal_trees)
@@ -89,16 +81,24 @@ fit.fe_data <- function(object, prior_param = NULL, run_shuffle = FALSE, ...) {
   ) %>%
     as.vector()
 
-  # Append posterior parameters
-  object[["post_params"]] <- list(
-    a_star = a_star,
-    b_star = b_star,
-    mu_star = mu_star,
-    V_star = V_star,
-    sp_list = sp_list
+  out <- init_fe_bayes_lr(
+    object,
+    list(
+      a_0 = a_0,
+      b_0 = b_0,
+      mu_0 = mu_0,
+      V_0
+    ),
+    list(
+      a_star = a_star,
+      b_star = b_star,
+      mu_star = mu_star,
+      V_star = V_star,
+      sp_list = sp_list
+    )
   )
 
-  object
+  constr_fe_bayes_lr(out)
 }
 
 
@@ -106,7 +106,8 @@ fit.fe_data <- function(object, prior_param = NULL, run_shuffle = FALSE, ...) {
 
 
 # For now, we haven't solidified what `fe_data` objects should look like.
-# Since they subclass `tbl_df`, we'll define the fit method for them.
+# Since they subclass `tbl_df`, we'll define the fit method for them using
+# that class.
 #' @rdname fit.fe_data
 #' @method fit tbl_df
 #' @export fit.tbl_df
@@ -123,7 +124,6 @@ fit.tbl_df <- fit.fe_data
 #'   returns posterior predicted values.
 #'
 #' @inheritParams fit.fe_data
-#' @param posterior_param Output of [fit.fe_data]: A fitted `fe_bayes_lr` object.
 #' @inheritParams create_focal_vs_comp
 #'
 #' @import dplyr
@@ -153,11 +153,8 @@ fit.tbl_df <- fit.fe_data
 #'   ggplot(aes(growth, .pred)) +
 #'   geom_point() +
 #'   geom_abline(slope = 1, intercept = 0)
-predict.fe_bayes_lr <- function(object, posterior_param, ...) {
-  if (FALSE) {
-    focal_vs_comp <- focal_vs_comp_bw
-    posterior_param <- bw_fit_model
-  }
+predict.fe_bayes_lr <- function(object, ...) {
+  constr_fe_bayes_lr(object)
 
   # Create linear regression model formula object
   sp_list <- focal_vs_comp$focal_sp %>%
@@ -178,7 +175,7 @@ predict.fe_bayes_lr <- function(object, posterior_param, ...) {
   n <- nrow(X)
 
   # Make posterior predictions
-  mu_star <- posterior_param$mu_star
+  mu_star <- object$post_params$mu_star
 
   focal_trees %>%
     transmute(.pred = as.vector(X %*% mu_star))
