@@ -44,14 +44,14 @@ check_post_params <- function(x) {
     c("a_star", "b_star", "mu_star", "V_star", "sp_list"),
     c("numeric", "numeric", "matrix", "matrix", "character"),
     check_params_element,
-    x,
-    "posterior"
+    x = x,
+    params = "posterior"
   )
 
   invisible(TRUE)
 }
 
-check_params_element <- function(x, element, what, params) {
+check_params_element <- function(element, what, x, params) {
   if (!inherits(x[[element]], what)) {
     glue_stop("The {x[[element]]} element of `{params}` needs to inherit from ",
               "class {what}, but its class is {list(class(x[[element]]))}.")

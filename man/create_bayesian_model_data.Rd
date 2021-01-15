@@ -4,9 +4,11 @@
 \alias{create_bayesian_model_data}
 \title{Create input data frame for Bayesian regression}
 \usage{
-create_bayesian_model_data(focal_vs_comp, run_shuffle = FALSE)
+create_bayesian_model_data(object, run_shuffle = FALSE)
 }
 \arguments{
+\item{object}{data frame from \code{\link{create_focal_vs_comp}}}
+
 \item{run_shuffle}{boolean as to whether to run permutation test shuffle of
 competitor tree species within a particular focal_ID}
 }

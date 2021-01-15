@@ -12,7 +12,7 @@ plot_bayesian_model_parameters(posterior_param, sp_to_plot = NULL)
 \item{sp_to_plot}{Vector of subset of species to plot}
 }
 \value{
-\code{focal_vs_comp} with new column of predicted \code{.pred}
+A list of plots
 }
 \description{
 Plot Bayesian model parameters

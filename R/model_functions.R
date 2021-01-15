@@ -87,7 +87,7 @@ fit.fe_data <- function(object, prior_param = NULL, run_shuffle = FALSE, ...) {
       a_0 = a_0,
       b_0 = b_0,
       mu_0 = mu_0,
-      V_0
+      V_0 = V_0
     ),
     list(
       a_star = a_star,
@@ -200,9 +200,9 @@ predict.fe_bayes_lr <- function(object, ...) {
 #'
 #' @examples
 #' 1 + 1
-run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
+run_cv <- function(object, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
   # For each fold, store resulting y-hat for each focal tree in list
-  folds <- focal_vs_comp %>%
+  folds <- object %>%
     pull(foldID) %>%
     unique() %>%
     sort()
@@ -210,9 +210,9 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
 
   for (i in 1:length(folds)) {
     # Define test set and "full" training set (we will remove buffer region below)
-    test <- focal_vs_comp %>%
+    test <- object %>%
       filter(foldID == folds[i])
-    train_full <- focal_vs_comp %>%
+    train_full <- object %>%
       filter(foldID != folds[i])
 
     # If no trees in test skip, skip to next iteration in for loop
@@ -269,9 +269,9 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
 #' @export
 #' @examples
 #' 1 + 1
-create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
+create_bayesian_model_data <- function(object, run_shuffle = FALSE) {
   # Prepare data for regression
-  focal_trees <- focal_vs_comp %>%
+  focal_trees <- object %>%
     group_by(focal_ID, comp_sp) %>%
     # Sum basal area of all neighbors; set to 0 for cases of no neighbors
     # within range.
@@ -303,7 +303,7 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
     ungroup()
 
   # Matrix and vector objects for analytic computation of all posteriors
-  focal_trees <- focal_vs_comp %>%
+  focal_trees <- object %>%
     select(focal_ID, focal_sp, dbh, growth) %>%
     distinct() %>%
     left_join(focal_trees, by = "focal_ID") %>%
@@ -328,7 +328,7 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
 #' @importFrom ggridges geom_density_ridges
 #' @importFrom stats as.formula
 #' @import stringr
-#' @return \code{focal_vs_comp} with new column of predicted \code{.pred}
+#' @return A list of plots
 #' @export
 #'
 #' @examples
