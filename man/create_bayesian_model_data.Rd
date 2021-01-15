@@ -7,8 +7,6 @@
 create_bayesian_model_data(focal_vs_comp, run_shuffle = FALSE)
 }
 \arguments{
-\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
-
 \item{run_shuffle}{boolean as to whether to run permutation test shuffle of
 competitor tree species within a particular focal_ID}
 }
@@ -16,7 +14,7 @@ competitor tree species within a particular focal_ID}
 Data frame that can be used for lm()
 }
 \description{
-This function is used both by \code{\link{fit_bayesian_model}} and \code{\link{predict_bayesian_model}}
+This function is used both by \link{fit.fe_data} and \link{predict.fe_bayes_lr}
 }
 \examples{
 1 + 1

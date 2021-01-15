@@ -59,3 +59,10 @@ check_params_element <- function(x, element, what, params) {
 
   invisible(TRUE)
 }
+
+# Re-exports
+# ------------------------------------------------------------------------
+
+#' @importFrom generics fit
+#' @export
+generics::fit

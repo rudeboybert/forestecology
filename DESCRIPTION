@@ -28,6 +28,7 @@ Imports:
     magrittr,
     rlang,
     glue,
+    generics,
     ggplot2,
     stringr,
     dplyr,

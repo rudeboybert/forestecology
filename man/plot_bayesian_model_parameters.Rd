@@ -7,12 +7,12 @@
 plot_bayesian_model_parameters(posterior_param, sp_to_plot = NULL)
 }
 \arguments{
-\item{posterior_param}{Output of \code{\link{fit_bayesian_model}}}
+\item{posterior_param}{Output of \code{\link{fit.fe_data}}}
 
 \item{sp_to_plot}{Vector of subset of species to plot}
 }
 \value{
-\code{focal_vs_comp} with new column of predicted \code{growth_hat}
+\code{focal_vs_comp} with new column of predicted \code{.pred}
 }
 \description{
 Plot Bayesian model parameters
