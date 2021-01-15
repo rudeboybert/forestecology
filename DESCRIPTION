@@ -26,6 +26,8 @@ Suggests:
     rmarkdown
 Imports: 
     magrittr,
+    rlang,
+    glue,
     ggplot2,
     stringr,
     dplyr,
