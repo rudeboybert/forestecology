@@ -21,9 +21,13 @@ library(dplyr)
 library(yardstick)
 
 # Compare model predictions to observation
-predictions <- focal_vs_comp_ex \%>\%
-  predict(posterior_param = posterior_param_ex) \%>\%
-  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+predictions <-
+  predict(posterior_param_ex, newdata = focal_vs_comp_ex) \%>\%
+    bind_cols(
+      focal_vs_comp_ex \%>\%
+        select(focal_ID, focal_sp, dbh, growth) \%>\%
+        distinct()
+    )
 predictions \%>\%
   rmse(truth = growth, estimate = .pred) \%>\%
   pull(.estimate)

@@ -105,25 +105,13 @@ fit.fe_data <- function(object, prior_param = NULL, run_shuffle = FALSE, ...) {
 
 
 
-# For now, we haven't solidified what `fe_data` objects should look like.
-# Since they subclass `tbl_df`, we'll define the fit method for them using
-# that class.
-#' @rdname fit.fe_data
-#' @method fit tbl_df
-#' @export fit.tbl_df
-#' @export
-fit.tbl_df <- fit.fe_data
-
-
-
-
-
 #' Make predictions based on fitted Bayesian model
 #'
 #' @description Applies fitted model from [fit.fe_data] and
 #'   returns posterior predicted values.
 #'
 #' @inheritParams fit.fe_data
+#' @param newdata Data to predict on. If NULL, defaults to the training data.
 #' @inheritParams create_focal_vs_comp
 #'
 #' @import dplyr
@@ -146,18 +134,25 @@ fit.tbl_df <- fit.fe_data
 #' # and growth data to compare to
 #' data(posterior_param_ex, ex_growth_df)
 #'
-#' predictions <- focal_vs_comp_ex %>%
-#'   predict(posterior_param = posterior_param_ex) %>%
-#'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#' predictions <-
+#'   predict(posterior_param_ex, newdata = focal_vs_comp_ex) %>%
+#'     bind_cols(
+#'       focal_vs_comp_ex %>%
+#'         select(focal_ID, focal_sp, dbh, growth) %>%
+#'         distinct()
+#'     )
+#'
 #' predictions %>%
 #'   ggplot(aes(growth, .pred)) +
 #'   geom_point() +
 #'   geom_abline(slope = 1, intercept = 0)
-predict.fe_bayes_lr <- function(object, ...) {
+predict.fe_bayes_lr <- function(object, newdata = NULL, ...) {
   constr_fe_bayes_lr(object)
 
+  newdata <- if (is.null(newdata)) {object$fe_data} else {newdata}
+
   # Create linear regression model formula object
-  sp_list <- focal_vs_comp$focal_sp %>%
+  sp_list <- newdata$focal_sp %>%
     levels() %>%
     sort()
   model_formula <- sp_list %>%
@@ -166,7 +161,7 @@ predict.fe_bayes_lr <- function(object, ...) {
     as.formula()
 
   # Create matrices & vectors for Bayesian regression
-  focal_trees <- focal_vs_comp %>%
+  focal_trees <- newdata %>%
     create_bayesian_model_data()
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
@@ -201,8 +196,10 @@ predict.fe_bayes_lr <- function(object, ...) {
 #' @examples
 #' 1 + 1
 run_cv <- function(object, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
+  focal_vs_comp <- object$fe_data
+
   # For each fold, store resulting y-hat for each focal tree in list
-  folds <- object %>%
+  folds <- focal_vs_comp %>%
     pull(foldID) %>%
     unique() %>%
     sort()
@@ -210,9 +207,9 @@ run_cv <- function(object, max_dist, cv_grid, prior_param = NULL, run_shuffle = 
 
   for (i in 1:length(folds)) {
     # Define test set and "full" training set (we will remove buffer region below)
-    test <- object %>%
+    test <- focal_vs_comp %>%
       filter(foldID == folds[i])
-    train_full <- object %>%
+    train_full <- focal_vs_comp %>%
       filter(foldID != folds[i])
 
     # If no trees in test skip, skip to next iteration in for loop
@@ -245,8 +242,8 @@ run_cv <- function(object, max_dist, cv_grid, prior_param = NULL, run_shuffle = 
     posterior_param_fold <- train %>%
       fit(prior_param = prior_param, run_shuffle = run_shuffle)
 
-    focal_trees[[i]] <- test %>%
-      predict(posterior_param = posterior_param_fold)
+    focal_trees[[i]] <-
+      predict(posterior_param_fold, newdata = test)
   }
 
   # Convert list to data frame and return
@@ -347,6 +344,8 @@ create_bayesian_model_data <- function(object, run_shuffle = FALSE) {
 #' # Plot lambdas, competition coefficents
 #' plots[[3]]
 plot_bayesian_model_parameters <- function(posterior_param, sp_to_plot = NULL) {
+
+  posterior_param <- posterior_param$post_params
 
   # Identify all species and baseline category of species used for regression
   sp_list <- posterior_param$sp_list
@@ -557,3 +556,18 @@ plot_bayesian_model_parameters <- function(posterior_param, sp_to_plot = NULL) {
 
   return(plot_list)
 }
+
+# For now, we haven't solidified what `fe_data` objects should look like.
+# Since they subclass `tbl_df`, we'll define the fit method for them using
+# that class.
+#' @rdname fit.fe_data
+#' @method fit tbl_df
+#' @export fit.tbl_df
+#' @export
+fit.tbl_df <- fit.fe_data
+
+#' @rdname predict.fe_bayes_lr
+#' @method predict tbl_df
+#' @export predict.tbl_df
+#' @export
+predict.tbl_df <- predict.fe_bayes_lr

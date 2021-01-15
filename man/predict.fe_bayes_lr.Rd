@@ -2,15 +2,20 @@
 % Please edit documentation in R/model_functions.R
 \name{predict.fe_bayes_lr}
 \alias{predict.fe_bayes_lr}
+\alias{predict.tbl_df}
 \title{Make predictions based on fitted Bayesian model}
 \source{
 Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 }
 \usage{
-\method{predict}{fe_bayes_lr}(object, ...)
+\method{predict}{fe_bayes_lr}(object, newdata = NULL, ...)
+
+\method{predict}{tbl_df}(object, newdata = NULL, ...)
 }
 \arguments{
 \item{object}{data frame from \code{\link{create_focal_vs_comp}}}
+
+\item{newdata}{Data to predict on. If NULL, defaults to the training data.}
 
 \item{...}{Currently ignored, only included for consistency with generic.}
 }
@@ -30,9 +35,14 @@ library(ggplot2)
 # and growth data to compare to
 data(posterior_param_ex, ex_growth_df)
 
-predictions <- focal_vs_comp_ex \%>\%
-  predict(posterior_param = posterior_param_ex) \%>\%
-  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+predictions <-
+  predict(posterior_param_ex, newdata = focal_vs_comp_ex) \%>\%
+    bind_cols(
+      focal_vs_comp_ex \%>\%
+        select(focal_ID, focal_sp, dbh, growth) \%>\%
+        distinct()
+    )
+
 predictions \%>\%
   ggplot(aes(growth, .pred)) +
   geom_point() +

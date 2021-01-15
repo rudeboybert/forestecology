@@ -168,13 +168,15 @@ posterior_param_ex <- focal_vs_comp_ex %>%
   fit(prior_param = NULL, run_shuffle = FALSE)
 
 # Get predicted dbh values values
-predictions <- focal_vs_comp_ex %>%
-  predict(posterior_param = posterior_param_ex) %>%
-  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+predictions <- 
+  posterior_param_ex$fe_data %>%
+  select(focal_ID, focal_sp, dbh, growth) %>%
+  distinct() %>%
+  bind_cols(predict(posterior_param_ex))
 
 # Compute RMSE of true vs predicted dbh values
 predictions %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = .pred) %>%
   pull(.estimate)
 #> [1] 0.1900981
 
@@ -192,13 +194,17 @@ was overly optimistic.
 
 ``` r
 # Fit model with cross-validation
-ex_bw <- focal_vs_comp_ex %>%
+ex_bw <- posterior_param_ex %>%
   run_cv(max_dist = max_dist, cv_grid = ex_cv_grid_sf) %>%
-  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+  bind_cols(
+    posterior_param_ex$fe_data %>%
+    select(focal_ID, focal_sp, dbh, growth) %>%
+    distinct()
+  )
 
 # Compute RMSE of true vs predicted dbh values
 ex_bw %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = .pred) %>%
   pull(.estimate)
 #> [1] 0.4068709
 ```
