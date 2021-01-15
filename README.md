@@ -165,11 +165,11 @@ matrix of competition coefficients.
 ``` r
 # Fit model
 posterior_param_ex <- focal_vs_comp_ex %>%
-  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+  fit(prior_param = NULL, run_shuffle = FALSE)
 
 # Get predicted dbh values values
 predictions <- focal_vs_comp_ex %>%
-  predict_bayesian_model(posterior_param = posterior_param_ex) %>%
+  predict(posterior_param = posterior_param_ex) %>%
   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 
 # Compute RMSE of true vs predicted dbh values

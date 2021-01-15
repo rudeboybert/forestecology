@@ -425,7 +425,7 @@ We then use the `rmse()` function from the `yardstick` package to obtain the roo
 
 ```{r bw-model-rmse}
 predictions %>%
-  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
+  yardstick::rmse(truth = growth, estimate = .pred) %>%
   pull(.estimate)
 ```
 
@@ -444,7 +444,7 @@ predictions_shuffle <- focal_vs_comp_bw %>%
 
 ```{r bw-model-shuffle-rmse}
 predictions_shuffle %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = .pred) %>%
   pull(.estimate)
 ```
 
@@ -467,14 +467,14 @@ scbi_growth_df_noCV <- focal_vs_comp_scbi %>%
 
 ```{r scbi-model-rmse}
 scbi_growth_df_noCV %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = .pred) %>%
   pull(.estimate)
 ```
 
 In Figures \ref{fig:scbi-model-residuals} and \ref{fig:scbi-model-residuals-2} we present the residuals. 
 
 ```{r scbi-model-residuals, out.width="100%", fig.cap="Predicted versus observed growth.", echo = FALSE}
-ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
+ggplot(scbi_growth_df_noCV, aes(x = growth, y = .pred)) +
   geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = "lm") +
   geom_abline(slope = 1, intercept = 0) +
@@ -489,9 +489,9 @@ ggplot(scbi_growth_df_noCV, aes(x = growth, y = growth_hat)) +
 scbi_growth_df_noCV %>%
   st_as_sf() %>%
   # TODO: Need to investigate missingness
-  filter(!is.na(growth_hat)) %>%
+  filter(!is.na(.pred)) %>%
   mutate(
-    error = growth - growth_hat,
+    error = growth - .pred,
     error_bin = cut_number(error, n = 5),
     error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
   ) %>%
@@ -522,7 +522,7 @@ cv_bw <- focal_vs_comp_bw %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 
 cv_bw %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = .pred) %>%
   pull(.estimate)
 ```
 
@@ -537,7 +537,7 @@ cv_scbi <- focal_vs_comp_scbi %>%
   right_join(scbi_growth_df, by = c("focal_ID" = "treeID"))
 
 cv_scbi %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = .pred) %>%
   pull(.estimate)
 ```
 

@@ -13,8 +13,6 @@ run_cv(
 )
 }
 \arguments{
-\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
-
 \item{max_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
 
 \item{cv_grid}{\code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}}
@@ -25,7 +23,7 @@ run_cv(
 competitor tree species within a particular focal_ID}
 }
 \value{
-\code{focal_vs_comp} with new column of predicted \code{growth_hat}
+\code{focal_vs_comp} with new column of predicted \code{.pred}
 }
 \description{
 Run cross-validation

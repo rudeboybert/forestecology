@@ -20,7 +20,7 @@ if (getRversion() >= "2.15.1") {
       "dbh08", "dbh14", "family_phylo", "trait_group", "buffer", "code14",
       "species", "focal_ID", "ID", "spCode", "fold", "basal_area", "dbh",
       "focal_ID_neighbor", "focal_bw_ID", "comp_species", "comp_biomass",
-      "inside", "growth", "biomass_total", "model_formula", "growth_hat",
+      "inside", "growth", "biomass_total", "model_formula", ".pred",
       "comp_ID", "x", "y", "x_fold", "y_fold", "neighbor",
       "notion_of_competitor_species",
       "ExactDate", "ExactDate2", "code", "code_2018", "dbh1", "dbh2", "family",

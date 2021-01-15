@@ -219,7 +219,7 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
     # Convert list to tibble:
     bind_rows() %>%
     arrange(focal_ID, comp_ID) %>%
-    mutate(growth_hat = NA) %>%
+    mutate(.pred = NA) %>%
     select(
       # Relating to focal tree:
       focal_ID, focal_sp, dbh, foldID, geometry, growth,
