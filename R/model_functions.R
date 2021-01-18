@@ -214,7 +214,7 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
 
   # If no trees in test skip, skip to next iteration in for loop
   if (nrow(test) == 0) {
-    next
+    return(NULL)
   }
 
   # Define sf object of boundary of test fold
