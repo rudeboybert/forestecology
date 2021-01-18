@@ -1,3 +1,9 @@
+# forestecology 0.1.0.9004: Refactoring package
+
+* Switched CI from travis to GitHub actions
+
+
+
 # forestecology 0.1.0.9003: "Bad first draft" of package paper
 
 * Completed "bad first draft" of paper on package itself, including Michigan Big Woods & SCBI running examples
