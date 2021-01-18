@@ -192,55 +192,51 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
     pull(foldID) %>%
     unique() %>%
     sort()
-  focal_trees <- vector(mode = "list", length = length(folds))
 
-  for (i in 1:length(folds)) {
-    # Define test set and "full" training set (we will remove buffer region below)
-    test <- focal_vs_comp %>%
-      filter(foldID == folds[i])
-    train_full <- focal_vs_comp %>%
-      filter(foldID != folds[i])
-
-    # If no trees in test skip, skip to next iteration in for loop
-    if (nrow(test) == 0) {
-      next
-    }
-
-    # Define sf object of boundary of test fold
-    test_fold_boundary <- cv_grid %>%
-      subset(folds == i) %>%
-      st_bbox() %>%
-      st_as_sfc()
-
-    # Remove trees in training set that are part of test set and buffer region to test set
-    train <- train_full %>%
-      st_as_sf() %>%
-      add_buffer_variable(direction = "out", size = max_dist, region = test_fold_boundary) %>%
-      filter(buffer) %>%
-      as_tibble()
-
-    if (FALSE) {
-      # Visualize test set trees + boundary
-      ggplot() +
-        geom_sf(data = train %>% sample_frac(0.01) %>% st_as_sf(), col = "black", alpha = 0.1) +
-        geom_sf(data = test_fold_boundary, col = "orange", fill = "transparent") +
-        geom_sf(data = test %>% st_as_sf(), col = "orange")
-    }
-
-    # Fit model on training data and predict on test
-    posterior_param_fold <- train %>%
-      fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle)
-
-    focal_trees[[i]] <- test %>%
-      predict_bayesian_model(posterior_param = posterior_param_fold)
-  }
-
-  # Convert list to data frame and return
-  focal_trees <- focal_trees %>%
-    bind_rows()
-  return(focal_trees)
+  purrr::map_dfr(
+    folds,
+    fit_one_fold,
+    focal_vs_comp,
+    max_dist,
+    cv_grid,
+    prior_param,
+    run_shuffle
+  )
 }
 
+fit_one_fold <- function(fold, focal_vs_comp, max_dist,
+                         cv_grid, prior_param, run_shuffle) {
+  # Define test set and "full" training set (we will remove buffer region below)
+  test <- focal_vs_comp %>%
+    filter(foldID == fold)
+  train_full <- focal_vs_comp %>%
+    filter(foldID != fold)
+
+  # If no trees in test skip, skip to next iteration in for loop
+  if (nrow(test) == 0) {
+    next
+  }
+
+  # Define sf object of boundary of test fold
+  test_fold_boundary <- cv_grid %>%
+    subset(folds == fold) %>%
+    st_bbox() %>%
+    st_as_sfc()
+
+  # Remove trees in training set that are part of test set and buffer region to test set
+  train <- train_full %>%
+    st_as_sf() %>%
+    add_buffer_variable(direction = "out", size = max_dist, region = test_fold_boundary) %>%
+    filter(buffer) %>%
+    as_tibble()
+
+  # Fit model on training data and predict on test
+  posterior_param_fold <- train %>%
+    fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle)
+
+  test %>%
+    predict_bayesian_model(posterior_param = posterior_param_fold)
+}
 
 
 
