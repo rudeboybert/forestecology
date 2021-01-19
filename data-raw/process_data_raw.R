@@ -154,7 +154,7 @@ use_data(focal_vs_comp_ex, overwrite = TRUE)
 
 # fit the model
 posterior_param_ex <- focal_vs_comp_ex %>%
-  fit_bayesian_model()
+  fe_bayes_lm()
 use_data(posterior_param_ex, overwrite = TRUE)
 
 
