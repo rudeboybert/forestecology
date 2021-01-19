@@ -1,6 +1,7 @@
 # forestecology 0.1.0.9004: Refactoring package
 
 * Switched CI from travis to GitHub actions
+* Refactored spatial cross-validation in `run_cv()` to use `purrr::map_dfr()` using the `fit_one_fold()` function
 
 
 
@@ -14,7 +15,7 @@
 
 * Got Smithsonian Conservation Biology Institute (loaded as CSV's directly from [SCBI GitHub](https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data)) example model working
 * Got Michigan Big Woods data (data from University of Michigan Deep Blue Data [repository](https://deepblue.lib.umich.edu/data/concern/data_sets/ht24wj48w) pre-loaded in package) example model working
-* Go ttoy example model working in README
+* Go toy example model working in README
 * Second pass at clean-up of package
 
 
