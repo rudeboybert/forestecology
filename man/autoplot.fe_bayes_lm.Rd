@@ -4,15 +4,17 @@
 \alias{autoplot.fe_bayes_lm}
 \title{Plot Bayesian model parameters}
 \usage{
-\method{autoplot}{fe_bayes_lm}(posterior_param, type = "intercepts", sp_to_plot = NULL)
+\method{autoplot}{fe_bayes_lm}(object, type = "intercepts", sp_to_plot = NULL, ...)
 }
 \arguments{
-\item{posterior_param}{Output of \code{\link{fe_bayes_lm}}}
+\item{object}{Output of \code{\link{fe_bayes_lm}}}
 
 \item{type}{A single character string for plot type with possible values
 "intercepts", "slopes", or "competition".}
 
 \item{sp_to_plot}{Vector of subset of species to plot}
+
+\item{...}{Currently igniored—only included for consistency with generic.}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}

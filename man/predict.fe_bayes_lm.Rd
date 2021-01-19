@@ -7,13 +7,15 @@
 Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 }
 \usage{
-\method{predict}{fe_bayes_lm}(focal_vs_comp, posterior_param)
+\method{predict}{fe_bayes_lm}(object, focal_vs_comp, ...)
 }
 \arguments{
+\item{object}{Output of \code{\link{fe_bayes_lm}}: A list of
+\verb{\{a_star, b_star, mu_star, V_star\}} posterior hyperparameters}
+
 \item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
 
-\item{posterior_param}{Output of \code{\link{fe_bayes_lm}}: A list of
-\verb{\{a_star, b_star, mu_star, V_star\}} posterior hyperparameters}
+\item{...}{Currently igniored—only included for consistency with generic.}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}
@@ -31,9 +33,10 @@ library(ggplot2)
 # and growth data to compare to
 data(posterior_param_ex, ex_growth_df)
 
-predictions <- focal_vs_comp_ex \%>\%
-  predict(posterior_param = posterior_param_ex) \%>\%
+predictions <- posterior_param_ex \%>\%
+  predict(focal_vs_comp = focal_vs_comp_ex) \%>\%
   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+
 predictions \%>\%
   ggplot(aes(growth, growth_hat)) +
   geom_point() +

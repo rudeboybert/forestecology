@@ -108,13 +108,17 @@ fe_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) 
 #'
 #' @description Applies fitted model from \code{\link{fe_bayes_lm}} and
 #'   returns posterior predicted values.
-#' @inheritParams fe_bayes_lm
-#' @param posterior_param Output of \code{\link{fe_bayes_lm}}: A list of
+#'
+#' @param object Output of \code{\link{fe_bayes_lm}}: A list of
 #'   `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
+#' @inheritParams fe_bayes_lm
 #' @inheritParams create_focal_vs_comp
+#' @param ... Currently igniored—only included for consistency with generic.
+#'
 #' @import dplyr
 #' @importFrom stats model.matrix
 #' @importFrom tidyr nest
+#'
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @seealso \code{\link{fe_bayes_lm}}
 #' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
@@ -129,17 +133,18 @@ fe_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) 
 #' # and growth data to compare to
 #' data(posterior_param_ex, ex_growth_df)
 #'
-#' predictions <- focal_vs_comp_ex %>%
-#'   predict(posterior_param = posterior_param_ex) %>%
+#' predictions <- posterior_param_ex %>%
+#'   predict(focal_vs_comp = focal_vs_comp_ex) %>%
 #'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#'
 #' predictions %>%
 #'   ggplot(aes(growth, growth_hat)) +
 #'   geom_point() +
 #'   geom_abline(slope = 1, intercept = 0)
-predict.fe_bayes_lm <- function(focal_vs_comp, posterior_param) {
+predict.fe_bayes_lm <- function(object, focal_vs_comp, ...) {
   if (FALSE) {
     focal_vs_comp <- focal_vs_comp_bw
-    posterior_param <- bw_fit_model
+    object <- bw_fit_model
   }
 
   # Create linear regression model formula object
@@ -161,7 +166,7 @@ predict.fe_bayes_lm <- function(focal_vs_comp, posterior_param) {
   n <- nrow(X)
 
   # Make posterior predictions
-  mu_star <- posterior_param$mu_star
+  mu_star <- object$mu_star
   focal_trees <- focal_trees %>%
     mutate(growth_hat = as.vector(X %*% mu_star)) %>%
     select(focal_ID, growth_hat)

@@ -180,7 +180,7 @@ predictions %>%
 
 # Plot posteriors
 plot_ex <- posterior_param_ex %>%
-  plot_bayesian_model_parameters()
+  autoplot()
 plot_ex[["lambda"]]
 ```
 

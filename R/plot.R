@@ -4,10 +4,11 @@ ggplot2::autoplot
 
 #' Plot Bayesian model parameters
 #'
-#' @param posterior_param Output of \code{\link{fe_bayes_lm}}
+#' @param object Output of \code{\link{fe_bayes_lm}}
 #' @param type A single character string for plot type with possible values
 #' "intercepts", "slopes", or "competition".
 #' @param sp_to_plot Vector of subset of species to plot
+#' @inheritParams predict.fe_bayes_lm
 #'
 #' @import ggridges
 #' @importFrom mvnfast rmvt
@@ -34,19 +35,20 @@ ggplot2::autoplot
 #' # Plot lambdas, competition coefficients
 #' autoplot(posterior_param_ex, type = "competition")
 #' @export
-autoplot.fe_bayes_lm <- function(posterior_param,
+autoplot.fe_bayes_lm <- function(object,
                                  type = "intercepts",
-                                 sp_to_plot = NULL) {
+                                 sp_to_plot = NULL,
+                                 ...) {
 
   # Identify all species and baseline category of species used for regression
-  sp_list <- posterior_param$sp_list
+  sp_list <- object$sp_list
   baseline_species <- sp_list %>%
     sort() %>%
     .[1]
 
   # Simulate observations from posterior
   beta_lambda_posterior_df <- simulate_beta_lambda_posterior(
-    posterior_param,
+    object,
     sp_list,
     baseline_species
   )
