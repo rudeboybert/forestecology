@@ -6,7 +6,7 @@ ggplot2::autoplot
 #'
 #' @param object Output of \code{\link{fe_bayes_lm}}
 #' @param type A single character string for plot type with possible values
-#' "intercepts", "slopes", or "competition".
+#' "intercepts", "dbh_slopes", or "competition".
 #' @param sp_to_plot Vector of subset of species to plot
 #' @inheritParams predict.fe_bayes_lm
 #'
@@ -30,7 +30,7 @@ ggplot2::autoplot
 #' autoplot(posterior_param_ex, type = "intercepts")
 #'
 #' # Plot beta_dbh, growth-dbh slope
-#' autoplot(posterior_param_ex, type = "slopes")
+#' autoplot(posterior_param_ex, type = "dbh_slopes")
 #'
 #' # Plot lambdas, competition coefficients
 #' autoplot(posterior_param_ex, type = "competition")
@@ -61,7 +61,7 @@ autoplot.fe_bayes_lm <- function(object,
       sp_list,
       baseline_species
     ),
-    "slopes" = slopes_plot(
+    "dbh_slopes" = dbh_slopes_plot(
       beta_lambda_posterior_df,
       sp_to_plot,
       sp_list,
@@ -100,7 +100,7 @@ simulate_beta_lambda_posterior <- function(posterior_param, sp_list,
           # intercepts:
           type == "(Intercept)" ~ "intercept",
           type %in% str_c("sp", sp_list) ~ "intercept",
-          # slopes for dbh
+          # dbh_slopes for dbh
           str_detect(type, "dbh") ~ "dbh",
           # competition
           type %in% sp_list ~ "competition",
@@ -160,7 +160,7 @@ intercepts_plot <- function(beta_lambda_posterior_df, sp_to_plot,
 }
 
 # plot dbh coefficients
-slopes_plot <- function(beta_lambda_posterior_df, sp_to_plot,
+dbh_slopes_plot <- function(beta_lambda_posterior_df, sp_to_plot,
                         sp_list, baseline_species) {
   posterior_sample <- beta_lambda_posterior_df %>%
     filter(coefficient_type == "dbh")

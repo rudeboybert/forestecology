@@ -10,7 +10,7 @@
 \item{object}{Output of \code{\link{fe_bayes_lm}}}
 
 \item{type}{A single character string for plot type with possible values
-"intercepts", "slopes", or "competition".}
+"intercepts", "dbh_slopes", or "competition".}
 
 \item{sp_to_plot}{Vector of subset of species to plot}
 
@@ -33,7 +33,7 @@ data(posterior_param_ex)
 autoplot(posterior_param_ex, type = "intercepts")
 
 # Plot beta_dbh, growth-dbh slope
-autoplot(posterior_param_ex, type = "slopes")
+autoplot(posterior_param_ex, type = "dbh_slopes")
 
 # Plot lambdas, competition coefficients
 autoplot(posterior_param_ex, type = "competition")
