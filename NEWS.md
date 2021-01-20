@@ -2,6 +2,7 @@
 
 * Switched CI from travis to GitHub actions
 * Refactored spatial cross-validation in `run_cv()` to use `purrr::map_dfr()` using the `fit_one_fold()` function
+* Transition modeling, prediction, and plotting functions from generics to S3 methods for the `comp_bayes_lm` class.
 
 
 

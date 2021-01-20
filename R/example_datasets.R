@@ -268,7 +268,7 @@
 #' library(dplyr)
 #'
 #' posterior_param_ex <- focal_vs_comp_ex %>%
-#'   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+#'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 "focal_vs_comp_ex"
 
 
@@ -291,16 +291,17 @@
 #' library(yardstick)
 #'
 #' # Compare model predictions to observation
-#' predictions <- focal_vs_comp_ex %>%
-#'   predict_bayesian_model(posterior_param = posterior_param_ex) %>%
+#' predictions <- posterior_param_ex %>%
+#'   predict(focal_vs_comp = focal_vs_comp_ex) %>%
 #'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#'
 #' predictions %>%
 #'   rmse(truth = growth, estimate = growth_hat) %>%
 #'   pull(.estimate)
 #'
 #' # Plot posterior parameters
 #' posterior_param_ex %>%
-#'   plot_bayesian_model_parameters()
+#'   autoplot()
 "posterior_param_ex"
 
 

@@ -18,7 +18,7 @@
 #' @importFrom tidyr spread
 #' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 #' @return A list of `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
-#' @seealso \code{\link{predict_bayesian_model}}
+#' @seealso \code{\link{predict.comp_bayes_lm}}
 #' @export
 #'
 #' @examples
@@ -28,8 +28,8 @@
 #' data(focal_vs_comp_ex)
 #'
 #' posterior_param_ex <- focal_vs_comp_ex %>%
-#'   fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
-fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) {
+#'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
+comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) {
   if (FALSE) {
     focal_vs_comp <- focal_vs_comp_bw
     run_shuffle <- FALSE
@@ -93,7 +93,11 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
     V_star = V_star,
     sp_list = sp_list
   )
-  return(posterior_hyperparameters)
+
+  structure(
+    posterior_hyperparameters,
+    class = c("comp_bayes_lm", class(posterior_hyperparameters))
+  )
 }
 
 
@@ -102,17 +106,21 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
 
 #' Make predictions based on fitted Bayesian model
 #'
-#' @description Applies fitted model from \code{\link{fit_bayesian_model}} and
+#' @description Applies fitted model from \code{\link{comp_bayes_lm}} and
 #'   returns posterior predicted values.
-#' @inheritParams fit_bayesian_model
-#' @param posterior_param Output of \code{\link{fit_bayesian_model}}: A list of
+#'
+#' @param object Output of \code{\link{comp_bayes_lm}}: A list of
 #'   `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
+#' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
+#' @param ... Currently igniored—only included for consistency with generic.
+#'
 #' @import dplyr
 #' @importFrom stats model.matrix
 #' @importFrom tidyr nest
+#'
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
-#' @seealso \code{\link{fit_bayesian_model}}
+#' @seealso \code{\link{comp_bayes_lm}}
 #' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 #' @export
 #'
@@ -125,17 +133,18 @@ fit_bayesian_model <- function(focal_vs_comp, prior_param = NULL, run_shuffle = 
 #' # and growth data to compare to
 #' data(posterior_param_ex, ex_growth_df)
 #'
-#' predictions <- focal_vs_comp_ex %>%
-#'   predict_bayesian_model(posterior_param = posterior_param_ex) %>%
+#' predictions <- posterior_param_ex %>%
+#'   predict(focal_vs_comp = focal_vs_comp_ex) %>%
 #'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#'
 #' predictions %>%
 #'   ggplot(aes(growth, growth_hat)) +
 #'   geom_point() +
 #'   geom_abline(slope = 1, intercept = 0)
-predict_bayesian_model <- function(focal_vs_comp, posterior_param) {
+predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
   if (FALSE) {
     focal_vs_comp <- focal_vs_comp_bw
-    posterior_param <- bw_fit_model
+    object <- bw_fit_model
   }
 
   # Create linear regression model formula object
@@ -157,7 +166,7 @@ predict_bayesian_model <- function(focal_vs_comp, posterior_param) {
   n <- nrow(X)
 
   # Make posterior predictions
-  mu_star <- posterior_param$mu_star
+  mu_star <- object$mu_star
   focal_trees <- focal_trees %>%
     mutate(growth_hat = as.vector(X %*% mu_star)) %>%
     select(focal_ID, growth_hat)
@@ -173,7 +182,7 @@ predict_bayesian_model <- function(focal_vs_comp, posterior_param) {
 
 #' Run the bayesian model with spatial cross validation
 #'
-#' @inheritParams fit_bayesian_model
+#' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
 #' @param cv_grid \code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}
 #' @description Run cross-validation
@@ -232,10 +241,10 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
 
   # Fit model on training data and predict on test
   posterior_param_fold <- train %>%
-    fit_bayesian_model(prior_param = prior_param, run_shuffle = run_shuffle)
+    comp_bayes_lm(prior_param = prior_param, run_shuffle = run_shuffle)
 
-  test %>%
-    predict_bayesian_model(posterior_param = posterior_param_fold)
+  posterior_param_fold %>%
+    predict(focal_vs_comp = test)
 }
 
 
@@ -244,10 +253,10 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
 
 #' Create input data frame for Bayesian regression
 #'
-#' @inheritParams fit_bayesian_model
+#' @inheritParams comp_bayes_lm
 #'
 #' @return Data frame that can be used for lm()
-#' @description This function is used both by \code{\link{fit_bayesian_model}} and \code{\link{predict_bayesian_model}}
+#' @description This function is used both by \code{\link{comp_bayes_lm}} and \code{\link{predict.comp_bayes_lm}}
 #' @export
 #' @examples
 #' 1 + 1
@@ -261,7 +270,7 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
 
   # Shuffle group label only if flag is set
   # TODO: Can we do this within a pipe, therefore we can connect above chain
-  # with chain below, that way we can re-use this code for predict_bayesian_model
+  # with chain below, that way we can re-use this code for predict
   # below that doesn't use run_shuffle?
   if (run_shuffle) {
     focal_trees <- focal_trees %>%
@@ -292,250 +301,4 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
     rename(sp = focal_sp)
 
   return(focal_trees)
-}
-
-
-
-
-
-#' Plot Bayesian model parameters
-#'
-#' @param posterior_param Output of \code{\link{fit_bayesian_model}}
-#' @param sp_to_plot Vector of subset of species to plot
-#'
-#' @import ggridges
-#' @importFrom mvnfast rmvt
-#' @importFrom purrr set_names
-#' @importFrom tidyr gather
-#' @importFrom ggridges geom_density_ridges
-#' @importFrom stats as.formula
-#' @import stringr
-#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
-#' @export
-#'
-#' @examples
-#' library(ggplot2)
-#' library(ggridges)
-#' # Load in posterior parameter example
-#' data(posterior_param_ex)
-#' plots <- plot_bayesian_model_parameters(posterior_param_ex)
-#'
-#' # Plot beta_0, growth intercepts
-#' plots[[1]]
-#'
-#' # Plot beta_dbh, growth-dbh slopt
-#' plots[[2]]
-#'
-#' # Plot lambdas, competition coefficents
-#' plots[[3]]
-plot_bayesian_model_parameters <- function(posterior_param, sp_to_plot = NULL) {
-
-  # Identify all species and baseline category of species used for regression
-  sp_list <- posterior_param$sp_list
-  baseline_species <- sp_list %>%
-    sort() %>%
-    .[1]
-
-  # 1. Simulate observations from posterior ------------------------------------
-  n_sim <- 1000
-  nu_star <- 2 * posterior_param$a_star
-  Sigma_star <- (posterior_param$b_star / posterior_param$a_star) * posterior_param$V_star
-
-  beta_lambda_posterior_df <-
-    rmvt(n_sim, sigma = Sigma_star, mu = as.vector(posterior_param$mu_star), df = nu_star) %>%
-    data.frame() %>%
-    as_tibble() %>%
-    set_names(colnames(posterior_param$V_star)) %>%
-    gather(key = type, value = value)
-
-  # Coefficient names in beta_lambda_posterior_df are a little hard to work with,
-  # so clean them up and join to beta_lambda_posterior_df
-  coefficient_types <- beta_lambda_posterior_df %>%
-    select(type) %>%
-    distinct() %>%
-    mutate(
-      coefficient_type =
-        case_when(
-          # intercepts:
-          type == "(Intercept)" ~ "intercept",
-          type %in% str_c("sp", sp_list) ~ "intercept",
-          # slopes for dbh
-          str_detect(type, "dbh") ~ "dbh",
-          # competition
-          type %in% sp_list ~ "competition",
-          str_detect(type, ":") ~ "competition",
-          # Need this for everything else that aren't the two cases above:
-          TRUE ~ "NA"
-        )
-    )
-
-  beta_lambda_posterior_df <- beta_lambda_posterior_df %>%
-    left_join(coefficient_types, by = "type") %>%
-    select(type, coefficient_type, value) %>%
-    group_by(type, coefficient_type) %>%
-    mutate(sim_ID = 1:n()) %>%
-    select(sim_ID, everything()) %>%
-    ungroup()
-
-  # Save plots here
-  plot_list <- vector(mode = "list", length = 3)
-
-
-  # 2. Plot intercept coefficients ------------------------------
-  posterior_sample <- beta_lambda_posterior_df %>%
-    filter(coefficient_type == "intercept")
-
-  posterior_sample_baseline <- posterior_sample %>%
-    filter(type == "(Intercept)") %>%
-    rename(offset = value) %>%
-    select(sim_ID, offset)
-
-  posterior_beta_0 <- posterior_sample %>%
-    left_join(posterior_sample_baseline, by = "sim_ID") %>%
-    mutate(
-      offset = ifelse(type == "(Intercept)", 0, offset),
-      value = value + offset,
-      type = ifelse(type == "(Intercept)", baseline_species, str_sub(type, nchar("sp") + 1))
-    ) %>%
-    # mutate(type = str_to_title(type)) %>%
-    select(-offset)
-
-  # When we only want to plot a subset of species:
-  if (!is.null(sp_to_plot)) {
-    sp_to_plot <- sort(sp_to_plot)
-
-    posterior_beta_0 <- posterior_beta_0 %>%
-      filter(type %in% sp_to_plot)
-  }
-
-
-  plot_list[["beta_0"]] <-
-    ggplot(posterior_beta_0, aes(x = value, y = fct_rev(type))) +
-    geom_density_ridges() +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    labs(
-      x = expression(paste(beta[0], " (cm ", y^{
-        -1
-      }, ")")),
-      y = "species"
-    )
-
-
-  # 3. Plot dbh coefficients ------------------------------
-  posterior_sample <- beta_lambda_posterior_df %>%
-    filter(coefficient_type == "dbh")
-
-  posterior_sample_baseline <- posterior_sample %>%
-    filter(type == "dbh") %>%
-    rename(offset = value) %>%
-    select(sim_ID, offset)
-
-  posterior_beta_dbh <- posterior_sample %>%
-    left_join(posterior_sample_baseline, by = "sim_ID") %>%
-    mutate(
-      offset = ifelse(type == "dbh", 0, offset),
-      value = value + offset,
-      type = ifelse(type == "dbh", baseline_species, str_sub(type, nchar("sp") + 1, -5))
-    ) %>%
-    # mutate(type = str_to_title(type)) %>%
-    select(-offset)
-
-  # When we only want to plot a subset of species:
-  if (!is.null(sp_to_plot)) {
-    sp_to_plot <- sort(sp_to_plot)
-
-    posterior_beta_dbh <- posterior_beta_dbh %>%
-      filter(type %in% sp_to_plot)
-  }
-
-  plot_list[["beta_dbh"]] <-
-    ggplot(posterior_beta_dbh, aes(x = value, y = fct_rev(type))) +
-    geom_density_ridges() +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    labs(
-      x = expression(paste(beta[DBH], " (", y^{
-        -1
-      }, ")")),
-      y = "species"
-    )
-
-
-
-  # 4. Plot lambda coefficients ------------------------------
-  posterior_sample <- beta_lambda_posterior_df %>%
-    filter(coefficient_type == "competition")
-
-  posterior_lambda <- expand.grid(sp_list, sp_list) %>%
-    as_tibble() %>%
-    rename(competitor = Var1, focal = Var2) %>%
-    mutate(
-      lambda = str_c(competitor, focal, sep = "_on_"),
-      values = list(NULL)
-    )
-
-  # We need to add baseline offset to all categories.
-  # effect of evergreen on oak focal tree:
-  # evergreen + speciesoak:evergreen
-  # which in reality is speciesmisc:evergreen + speciesoak:evergreen
-  #
-  # effect of evergreen on misc focal tree (which is baseline species):
-  # evergreen
-  # which in reality is speciesmisc:evergreen
-  #
-  # effect of misc on evergreen focal tree
-  # misc + speciesevergreen:misc
-  # which in reality is speciesmisc:misc + speciesevergreen:misc
-
-  for (i in 1:nrow(posterior_lambda)) {
-    competitor <- posterior_lambda$competitor[i]
-    focal <- posterior_lambda$focal[i]
-
-    if (focal == baseline_species) {
-      lambda_values <- posterior_sample %>%
-        filter(type == competitor) %>%
-        pull(value)
-    } else {
-      lambda_values <- posterior_sample %>%
-        filter(type == competitor | type == str_c("sp", focal, ":", competitor, sep = "")) %>%
-        select(sim_ID, type, value) %>%
-        spread(type, value) %>%
-        select(2:3) %>%
-        rowSums()
-    }
-    posterior_lambda$values[i] <- list(lambda_values)
-  }
-
-  posterior_lambda <- posterior_lambda %>%
-    unnest(cols = c(values))
-
-  # When we only want to plot a subset of species:
-  if (!is.null(sp_to_plot)) {
-    sp_to_plot <- sort(sp_to_plot)
-
-    posterior_lambda <- posterior_lambda %>%
-      filter(
-        competitor %in% sp_to_plot,
-        focal %in% sp_to_plot
-      )
-  }
-
-  n_sp_to_plot <- posterior_lambda %>%
-    pull(competitor) %>%
-    unique() %>%
-    length()
-
-  plot_list[["lambda"]] <-
-    ggplot(posterior_lambda, aes(x = values, y = fct_rev(competitor))) +
-    geom_density_ridges() +
-    facet_wrap(~focal, ncol = n_sp_to_plot) +
-    geom_vline(xintercept = 0, linetype = "dashed") +
-    # theme(panel.spacing.x = unit(0, "cm")) +
-    labs(
-      x = expression(lambda),
-      y = "Species",
-      title = "Competitor species in rows, focal species in columns",
-      subtitle = str_c("Ex: Top row, second column = competitive effect of", sp_to_plot[1], "on", sp_to_plot[2], sep = " ")
-    )
-
-  return(plot_list)
 }

@@ -3,7 +3,7 @@
 
 # forestecology
 
-[![Build 
+[![Build
 Status](https://github.com/rudeboybert/forestecology/workflows/R-CMD-check/badge.svg)](https://github.com/rudeboybert/forestecology/actions)
 [![Lifecycle:
 stable](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
@@ -165,11 +165,11 @@ matrix of competition coefficients.
 ``` r
 # Fit model
 posterior_param_ex <- focal_vs_comp_ex %>%
-  fit_bayesian_model(prior_param = NULL, run_shuffle = FALSE)
+  comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 
 # Get predicted dbh values values
-predictions <- focal_vs_comp_ex %>%
-  predict_bayesian_model(posterior_param = posterior_param_ex) %>%
+predictions <- posterior_param_ex %>%
+  predict(focal_vs_comp = focal_vs_comp_ex) %>%
   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 
 # Compute RMSE of true vs predicted dbh values
@@ -179,12 +179,25 @@ predictions %>%
 #> [1] 0.1900981
 
 # Plot posteriors
-plot_ex <- posterior_param_ex %>%
-  plot_bayesian_model_parameters()
-plot_ex[["lambda"]]
+posterior_param_ex %>%
+  autoplot(type = "intercepts")
 ```
 
 <img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+
+``` r
+posterior_param_ex %>%
+  autoplot(type = "dbh_slopes")
+```
+
+<img src="man/figures/README-unnamed-chunk-9-2.png" width="100%" />
+
+``` r
+posterior_param_ex %>%
+  autoplot(type = "competition")
+```
+
+<img src="man/figures/README-unnamed-chunk-9-3.png" width="100%" />
 
 Here we repeat the process but with cross-validation. Note the increase
 in RMSE, reflecting the fact that our original estimate of model error
