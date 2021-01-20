@@ -16,7 +16,7 @@ competitor tree species within a particular focal_ID}
 Data frame that can be used for lm()
 }
 \description{
-This function is used both by \code{\link{fe_bayes_lm}} and \code{\link{predict.fe_bayes_lm}}
+This function is used both by \code{\link{comp_bayes_lm}} and \code{\link{predict.comp_bayes_lm}}
 }
 \examples{
 1 + 1

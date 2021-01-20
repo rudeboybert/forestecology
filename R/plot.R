@@ -4,11 +4,11 @@ ggplot2::autoplot
 
 #' Plot Bayesian model parameters
 #'
-#' @param object Output of \code{\link{fe_bayes_lm}}
+#' @param object Output of \code{\link{comp_bayes_lm}}
 #' @param type A single character string for plot type with possible values
 #' "intercepts", "dbh_slopes", or "competition".
 #' @param sp_to_plot Vector of subset of species to plot
-#' @inheritParams predict.fe_bayes_lm
+#' @inheritParams predict.comp_bayes_lm
 #'
 #' @import ggridges
 #' @importFrom mvnfast rmvt
@@ -35,7 +35,7 @@ ggplot2::autoplot
 #' # Plot lambdas, competition coefficients
 #' autoplot(posterior_param_ex, type = "competition")
 #' @export
-autoplot.fe_bayes_lm <- function(object,
+autoplot.comp_bayes_lm <- function(object,
                                  type = "intercepts",
                                  sp_to_plot = NULL,
                                  ...) {

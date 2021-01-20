@@ -18,7 +18,7 @@
 #' @importFrom tidyr spread
 #' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 #' @return A list of `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
-#' @seealso \code{\link{predict.fe_bayes_lm}}
+#' @seealso \code{\link{predict.comp_bayes_lm}}
 #' @export
 #'
 #' @examples
@@ -28,8 +28,8 @@
 #' data(focal_vs_comp_ex)
 #'
 #' posterior_param_ex <- focal_vs_comp_ex %>%
-#'   fe_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
-fe_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) {
+#'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
+comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) {
   if (FALSE) {
     focal_vs_comp <- focal_vs_comp_bw
     run_shuffle <- FALSE
@@ -96,7 +96,7 @@ fe_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) 
 
   structure(
     posterior_hyperparameters,
-    class = c("fe_bayes_lm", class(posterior_hyperparameters))
+    class = c("comp_bayes_lm", class(posterior_hyperparameters))
   )
 }
 
@@ -106,12 +106,12 @@ fe_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) 
 
 #' Make predictions based on fitted Bayesian model
 #'
-#' @description Applies fitted model from \code{\link{fe_bayes_lm}} and
+#' @description Applies fitted model from \code{\link{comp_bayes_lm}} and
 #'   returns posterior predicted values.
 #'
-#' @param object Output of \code{\link{fe_bayes_lm}}: A list of
+#' @param object Output of \code{\link{comp_bayes_lm}}: A list of
 #'   `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
-#' @inheritParams fe_bayes_lm
+#' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
 #' @param ... Currently igniored—only included for consistency with generic.
 #'
@@ -120,7 +120,7 @@ fe_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) 
 #' @importFrom tidyr nest
 #'
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
-#' @seealso \code{\link{fe_bayes_lm}}
+#' @seealso \code{\link{comp_bayes_lm}}
 #' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 #' @export
 #'
@@ -141,7 +141,7 @@ fe_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) 
 #'   ggplot(aes(growth, growth_hat)) +
 #'   geom_point() +
 #'   geom_abline(slope = 1, intercept = 0)
-predict.fe_bayes_lm <- function(object, focal_vs_comp, ...) {
+predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
   if (FALSE) {
     focal_vs_comp <- focal_vs_comp_bw
     object <- bw_fit_model
@@ -182,7 +182,7 @@ predict.fe_bayes_lm <- function(object, focal_vs_comp, ...) {
 
 #' Run the bayesian model with spatial cross validation
 #'
-#' @inheritParams fe_bayes_lm
+#' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
 #' @param cv_grid \code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}
 #' @description Run cross-validation
@@ -241,7 +241,7 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
 
   # Fit model on training data and predict on test
   posterior_param_fold <- train %>%
-    fe_bayes_lm(prior_param = prior_param, run_shuffle = run_shuffle)
+    comp_bayes_lm(prior_param = prior_param, run_shuffle = run_shuffle)
 
   posterior_param_fold %>%
     predict(focal_vs_comp = test)
@@ -253,10 +253,10 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
 
 #' Create input data frame for Bayesian regression
 #'
-#' @inheritParams fe_bayes_lm
+#' @inheritParams comp_bayes_lm
 #'
 #' @return Data frame that can be used for lm()
-#' @description This function is used both by \code{\link{fe_bayes_lm}} and \code{\link{predict.fe_bayes_lm}}
+#' @description This function is used both by \code{\link{comp_bayes_lm}} and \code{\link{predict.comp_bayes_lm}}
 #' @export
 #' @examples
 #' 1 + 1

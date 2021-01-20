@@ -165,7 +165,7 @@ matrix of competition coefficients.
 ``` r
 # Fit model
 posterior_param_ex <- focal_vs_comp_ex %>%
-  fe_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
+  comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 
 # Get predicted dbh values values
 predictions <- posterior_param_ex %>%
