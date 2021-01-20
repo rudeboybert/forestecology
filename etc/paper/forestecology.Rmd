@@ -11,6 +11,9 @@ authors:
   
 - name: David Allen
   affiliation: Biology Department, Middlebury College
+  
+- name: Simon P. Couch
+  affiliation: Mathematics Department, Reed College
 
 abstract: 
 - "Move abstract below here after completed."
