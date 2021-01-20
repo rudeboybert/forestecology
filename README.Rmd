@@ -152,8 +152,8 @@ posterior_param_ex <- focal_vs_comp_ex %>%
   fe_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 
 # Get predicted dbh values values
-predictions <- focal_vs_comp_ex %>%
-  predict(posterior_param = posterior_param_ex) %>%
+predictions <- posterior_param_ex %>%
+  predict(focal_vs_comp = focal_vs_comp_ex) %>%
   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 
 # Compute RMSE of true vs predicted dbh values
@@ -162,9 +162,12 @@ predictions %>%
   pull(.estimate)
 
 # Plot posteriors
-plot_ex <- posterior_param_ex %>%
-  autoplot()
-plot_ex[["lambda"]]
+posterior_param_ex %>%
+  autoplot(type = "intercepts")
+posterior_param_ex %>%
+  autoplot(type = "dbh_slopes")
+posterior_param_ex %>%
+  autoplot(type = "competition")
 ```
 
 Here we repeat the process but with cross-validation. Note the increase in RMSE, reflecting the fact that our original estimate of model error was overly optimistic.
