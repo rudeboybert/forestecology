@@ -243,8 +243,8 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
   posterior_param_fold <- train %>%
     fe_bayes_lm(prior_param = prior_param, run_shuffle = run_shuffle)
 
-  test %>%
-    predict(posterior_param = posterior_param_fold)
+  posterior_param_fold %>%
+    predict(focal_vs_comp = test)
 }
 
 
