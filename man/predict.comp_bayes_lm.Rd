@@ -15,7 +15,7 @@ Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371
 
 \item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
 
-\item{...}{Currently igniored—only included for consistency with generic.}
+\item{...}{Currently ignored—only included for consistency with generic.}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}

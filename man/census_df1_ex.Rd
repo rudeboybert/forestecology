@@ -9,14 +9,14 @@ A \code{tibble}
 \describe{
 \item{ID}{Tree identification number. This identifies an individual tree and
 can be used to connect trees between the two censuses.}
-\item{sp}{Speices of the individual}
+\item{sp}{Species of the individual}
 \item{gx}{x-coordinate meters from reference point}
 \item{gy}{y-coordinate meters from reference point}
 \item{date}{Date the stem was measured}
 \item{codes}{Code for additional information on the stem: M means the main stem
 of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 this stands for resprout.}
-\item{dbh}{Diameter at breast hieght of the tree in cm}
+\item{dbh}{Diameter at breast height of the tree in cm}
 }
 }
 \usage{

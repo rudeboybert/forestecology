@@ -10,7 +10,7 @@ Maintainer: Albert Y. Kim <albert.ys.kim@gmail.com>
 Description: Code for assessing and selecting models for predicting the growth 
     of trees. In particular spatial cross-validation for estimation of 
     out-of-sample prediction error, permutation methods for testing the 
-    signficance of competitor species, and Bayesian linear regression.
+    significance of competitor species, and Bayesian linear regression.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

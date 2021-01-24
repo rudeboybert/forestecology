@@ -157,7 +157,7 @@ print.comp_bayes_lm <- function(x, ...) {
 #'   `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
 #' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
-#' @param ... Currently igniored—only included for consistency with generic.
+#' @param ... Currently ignored—only included for consistency with generic.
 #'
 #' @import dplyr
 #' @importFrom stats model.matrix

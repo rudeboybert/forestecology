@@ -11,15 +11,15 @@ A \link[tibble:tbl_df-class]{tibble::tbl_df}:
 \item{focal_sp}{Species of the focal tree}
 \item{dbh}{Diameter at breast height of the focal tree at the first census}
 \item{foldID}{The CV-fold that the focal tree is in}
-\item{geometry}{The point location oif the focal tree}
+\item{geometry}{The point location of the focal tree}
 \item{growth}{The average annual growth of the focal tree between censuses}
 \item{comp}{A list-column: characteristics of the relevant competitor trees}
 }
 
 The \code{comp} list-column contains \link[tibble:tbl_df-class]{tibble::tbl_df}s with columns:
 \describe{
-\item{comp_ID}{Tree identificaiton number for the competitor tree}
-\item{dist}{The distance between the focal and comp tree, this will be less than the max distnace specified.}
+\item{comp_ID}{Tree identification number for the competitor tree}
+\item{dist}{The distance between the focal and comp tree, this will be less than the max distance specified.}
 \item{comp_so}{Species of the comp tree}
 \item{comp_basal_area}{Basal area of the comp tree}
 }

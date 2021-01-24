@@ -6,14 +6,14 @@
 #' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
-#'   \item{sp}{Speices of the individual}
+#'   \item{sp}{Species of the individual}
 #'   \item{gx}{x-coordinate meters from reference point}
 #'   \item{gy}{y-coordinate meters from reference point}
 #'   \item{date}{Date the stem was measured}
 #'   \item{codes}{Code for additional information on the stem: M means the main stem
 #'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
-#'   \item{dbh}{Diameter at breast hieght of the tree in cm}
+#'   \item{dbh}{Diameter at breast height of the tree in cm}
 #' }
 #' @seealso \code{\link{census_df2_ex}}
 #' @examples
@@ -46,14 +46,14 @@
 #' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
-#'   \item{sp}{Speices of the individual}
+#'   \item{sp}{Species of the individual}
 #'   \item{gx}{x-coordinate meters from reference point}
 #'   \item{gy}{y-coordinate meters from reference point}
 #'   \item{date}{Date the stem was measured}
 #'   \item{codes}{Code for additional information on the stem: M means the main stem
 #'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
-#'   \item{dbh}{Diameter at breast hieght of the tree in cm}
+#'   \item{dbh}{Diameter at breast height of the tree in cm}
 #' }
 #' @seealso \code{\link{census_df1_ex}}
 #' @examples
@@ -112,12 +112,12 @@
 #' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
-#'   \item{sp}{Speices of the individual}
+#'   \item{sp}{Species of the individual}
 #'   \item{codes1}{Code for additional information on the stem during the first census: M means the main stem
 #'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
-#'   \item{dbh1}{Diameter at breast hieght of the tree in cm at the first census}
-#'   \item{dbh2}{Diameter at breast hieght of the tree in cm at the second census}
+#'   \item{dbh1}{Diameter at breast height of the tree in cm at the first census}
+#'   \item{dbh2}{Diameter at breast height of the tree in cm at the second census}
 #'   \item{growth}{Average annual growth between the two censuses in cm per year}
 #'   \item{codes2}{Codes at the second census}
 #'   \item{geometry}{Point location of the individual}
@@ -177,12 +177,12 @@
 #' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
-#'   \item{sp}{Speices of the individual}
+#'   \item{sp}{Species of the individual}
 #'   \item{codes1}{Code for additional information on the stem during the first census: M means the main stem
 #'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
-#'   \item{dbh1}{Diameter at breast hieght of the tree in cm at the first census}
-#'   \item{dbh2}{Diameter at breast hieght of the tree in cm at the second census}
+#'   \item{dbh1}{Diameter at breast height of the tree in cm at the first census}
+#'   \item{dbh2}{Diameter at breast height of the tree in cm at the second census}
 #'   \item{growth}{Average annual growth between the two censuses in cm per year}
 #'   \item{codes2}{Codes at the second census}
 #'   \item{geometry}{Point location of the individual}
@@ -257,15 +257,15 @@
 #'   \item{focal_sp}{Species of the focal tree}
 #'   \item{dbh}{Diameter at breast height of the focal tree at the first census}
 #'   \item{foldID}{The CV-fold that the focal tree is in}
-#'   \item{geometry}{The point location oif the focal tree}
+#'   \item{geometry}{The point location of the focal tree}
 #'   \item{growth}{The average annual growth of the focal tree between censuses}
 #'   \item{comp}{A list-column: characteristics of the relevant competitor trees}
 #' }
 #'
 #' The `comp` list-column contains [tibble::tbl_df]s with columns:
 #' \describe{
-#'   \item{comp_ID}{Tree identificaiton number for the competitor tree}
-#'   \item{dist}{The distance between the focal and comp tree, this will be less than the max distnace specified.}
+#'   \item{comp_ID}{Tree identification number for the competitor tree}
+#'   \item{dist}{The distance between the focal and comp tree, this will be less than the max distance specified.}
 #'   \item{comp_so}{Species of the comp tree}
 #'   \item{comp_basal_area}{Basal area of the comp tree}
 #' }

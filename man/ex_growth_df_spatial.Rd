@@ -9,12 +9,12 @@ A \code{sf} spatial tibble
 \describe{
 \item{ID}{Tree identification number. This identifies an individual tree and
 can be used to connect trees between the two censuses.}
-\item{sp}{Speices of the individual}
+\item{sp}{Species of the individual}
 \item{codes1}{Code for additional information on the stem during the first census: M means the main stem
 of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 this stands for resprout.}
-\item{dbh1}{Diameter at breast hieght of the tree in cm at the first census}
-\item{dbh2}{Diameter at breast hieght of the tree in cm at the second census}
+\item{dbh1}{Diameter at breast height of the tree in cm at the first census}
+\item{dbh2}{Diameter at breast height of the tree in cm at the second census}
 \item{growth}{Average annual growth between the two censuses in cm per year}
 \item{codes2}{Codes at the second census}
 \item{geometry}{Point location of the individual}

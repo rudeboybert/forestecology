@@ -14,7 +14,7 @@
 
 \item{sp_to_plot}{Vector of subset of species to plot}
 
-\item{...}{Currently igniored—only included for consistency with generic.}
+\item{...}{Currently ignored—only included for consistency with generic.}
 }
 \value{
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}
