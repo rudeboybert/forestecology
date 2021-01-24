@@ -70,6 +70,7 @@ compute_growth <- function(census_df1, census_df2, id) {
 #'   (assumed to be in cm).
 #' @export
 #' @import dplyr
+#' @importFrom tidyr nest
 #' @description "Focal versus competitor trees" data frames are the main data
 #'   frame used for analysis. "Focal trees" are all trees that satisfy the
 #'   following criteria
@@ -212,9 +213,8 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
 
 
   # 4. Return output data frame
-  # TODO: Questions to consider
-  # 1. Should we make this a nested-list object?
-  # 2. Should we convert to sf object using st_as_sf() here?
+  # TODO: Question to consider
+  # Should we convert to sf object using st_as_sf() here?
   focal_vs_comp <- focal_vs_comp %>%
     # Convert list to tibble:
     bind_rows() %>%
@@ -225,7 +225,8 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
       focal_ID, focal_sp, dbh, foldID, geometry, growth,
       # Relating to competitor tree:
       comp_ID, dist, comp_sp, comp_basal_area
-    )
+    ) %>%
+    nest(comp = c(comp_ID, dist, comp_sp, comp_basal_area))
 
   return(focal_vs_comp)
 }
