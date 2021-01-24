@@ -35,7 +35,7 @@ library(dplyr)
 # Load in focal versus comp
 data(focal_vs_comp_ex)
 
-posterior_param_ex <- focal_vs_comp_ex \%>\%
+comp_bayes_lm_ex <- focal_vs_comp_ex \%>\%
   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 }
 \seealso{

@@ -31,9 +31,9 @@ library(ggplot2)
 
 # Load in posterior parameter example
 # and growth data to compare to
-data(posterior_param_ex, ex_growth_df)
+data(comp_bayes_lm_ex, ex_growth_df)
 
-predictions <- posterior_param_ex \%>\%
+predictions <- comp_bayes_lm_ex \%>\%
   predict(focal_vs_comp = focal_vs_comp_ex) \%>\%
   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 

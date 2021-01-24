@@ -275,7 +275,7 @@
 #' @examples
 #' library(dplyr)
 #'
-#' posterior_param_ex <- focal_vs_comp_ex %>%
+#' comp_bayes_lm_ex <- focal_vs_comp_ex %>%
 #'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 "focal_vs_comp_ex"
 
@@ -299,7 +299,7 @@
 #' library(yardstick)
 #'
 #' # Compare model predictions to observation
-#' predictions <- posterior_param_ex %>%
+#' predictions <- comp_bayes_lm_ex %>%
 #'   predict(focal_vs_comp = focal_vs_comp_ex) %>%
 #'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 #'
@@ -308,9 +308,9 @@
 #'   pull(.estimate)
 #'
 #' # Plot posterior parameters
-#' posterior_param_ex %>%
+#' comp_bayes_lm_ex %>%
 #'   autoplot()
-"posterior_param_ex"
+"comp_bayes_lm_ex"
 
 
 

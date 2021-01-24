@@ -27,14 +27,14 @@ library(ggplot2)
 library(ggridges)
 
 # Load in posterior parameter example
-data(posterior_param_ex)
+data(comp_bayes_lm_ex)
 
 # Plot beta_0, growth intercepts
-autoplot(posterior_param_ex, type = "intercepts")
+autoplot(comp_bayes_lm_ex, type = "intercepts")
 
 # Plot beta_dbh, growth-dbh slope
-autoplot(posterior_param_ex, type = "dbh_slopes")
+autoplot(comp_bayes_lm_ex, type = "dbh_slopes")
 
 # Plot lambdas, competition coefficients
-autoplot(posterior_param_ex, type = "competition")
+autoplot(comp_bayes_lm_ex, type = "competition")
 }

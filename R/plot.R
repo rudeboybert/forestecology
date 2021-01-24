@@ -24,16 +24,16 @@ ggplot2::autoplot
 #' library(ggridges)
 #'
 #' # Load in posterior parameter example
-#' data(posterior_param_ex)
+#' data(comp_bayes_lm_ex)
 #'
 #' # Plot beta_0, growth intercepts
-#' autoplot(posterior_param_ex, type = "intercepts")
+#' autoplot(comp_bayes_lm_ex, type = "intercepts")
 #'
 #' # Plot beta_dbh, growth-dbh slope
-#' autoplot(posterior_param_ex, type = "dbh_slopes")
+#' autoplot(comp_bayes_lm_ex, type = "dbh_slopes")
 #'
 #' # Plot lambdas, competition coefficients
-#' autoplot(posterior_param_ex, type = "competition")
+#' autoplot(comp_bayes_lm_ex, type = "competition")
 #' @export
 autoplot.comp_bayes_lm <- function(object,
                                  type = "intercepts",
@@ -41,14 +41,14 @@ autoplot.comp_bayes_lm <- function(object,
                                  ...) {
 
   # Identify all species and baseline category of species used for regression
-  sp_list <- object$sp_list
+  sp_list <- object$post_params$sp_list
   baseline_species <- sp_list %>%
     sort() %>%
     .[1]
 
   # Simulate observations from posterior
   beta_lambda_posterior_df <- simulate_beta_lambda_posterior(
-    object,
+    object$post_params,
     sp_list,
     baseline_species
   )

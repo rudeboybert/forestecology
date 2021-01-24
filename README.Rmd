@@ -148,11 +148,11 @@ With `focal_v_comp`, we can then run the growth model and get predictions from i
 
 ```{r}
 # Fit model
-posterior_param_ex <- focal_vs_comp_ex %>%
+comp_bayes_lm_ex <- focal_vs_comp_ex %>%
   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 
 # Get predicted dbh values values
-predictions <- posterior_param_ex %>%
+predictions <- comp_bayes_lm_ex %>%
   predict(focal_vs_comp = focal_vs_comp_ex) %>%
   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
 
@@ -162,11 +162,11 @@ predictions %>%
   pull(.estimate)
 
 # Plot posteriors
-posterior_param_ex %>%
+comp_bayes_lm_ex %>%
   autoplot(type = "intercepts")
-posterior_param_ex %>%
+comp_bayes_lm_ex %>%
   autoplot(type = "dbh_slopes")
-posterior_param_ex %>%
+comp_bayes_lm_ex %>%
   autoplot(type = "competition")
 ```
 
