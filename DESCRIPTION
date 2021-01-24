@@ -21,11 +21,13 @@ BugReports: https://github.com/rudeboybert/forestecology/issues
 Depends:
     R (>= 3.2.4)
 Suggests: 
-    testthat,
+    testthat (>= 3.0.0),
     knitr,
     rmarkdown
 Imports: 
     magrittr,
+    rlang,
+    glue,
     ggplot2,
     stringr,
     dplyr,
@@ -42,3 +44,4 @@ Imports:
     blockCV,
     forcats
 VignetteBuilder: knitr
+Config/testthat/edition: 3
