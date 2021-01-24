@@ -71,6 +71,7 @@ compute_growth <- function(census_df1, census_df2, id) {
 #' @export
 #' @import dplyr
 #' @importFrom tidyr nest
+#' @importFrom purrr map2
 #' @description "Focal versus competitor trees" data frames are the main data
 #'   frame used for analysis. "Focal trees" are all trees that satisfy the
 #'   following criteria
@@ -129,8 +130,22 @@ compute_growth <- function(census_df1, census_df2, id) {
 #' focal_vs_comp_ex <- ex_growth_df_spatial %>%
 #'   create_focal_vs_comp(max_dist = 1, cv_grid_sf = ex_cv_grid_sf, id = "ID")
 create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
-  # TODO: Create example for this function using toy dataset
-  # TODO: Inputs checks that growth_df has sp variable, maybe id variable
+
+  check_inherits(growth_df, "data.frame")
+  check_inherits(max_dist, "numeric")
+  check_inherits(cv_grid_sf, "sf")
+  check_inherits(id, "character")
+
+  if (!id %in% colnames(growth_df)) {
+    glue_stop("The `id` argument must be the name of a column in `growth_df`.")
+  }
+
+  map2(
+    c("ID", "sp",  "dbh1", "dbh2",  "growth", "geometry", "buffer", "foldID"),
+    c("numeric", "factor", "numeric", "numeric", "numeric", "sfc", "logical", "factor"),
+    check_column,
+    growth_df
+  )
 
   # 1. Define focal trees
   focal_trees <- growth_df %>%

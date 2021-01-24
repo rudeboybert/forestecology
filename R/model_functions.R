@@ -30,11 +30,9 @@
 #' comp_bayes_lm_ex <- focal_vs_comp_ex %>%
 #'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) {
-  if (FALSE) {
-    focal_vs_comp <- focal_vs_comp_bw
-    run_shuffle <- FALSE
-    prior_param <- NULL
-  }
+  check_focal_vs_comp(focal_vs_comp)
+  if (!is.null(prior_param)) {check_prior_params(prior_param)}
+  check_inherits(run_shuffle, "logical")
 
   # Create linear regression model formula object
   sp_list <- focal_vs_comp$focal_sp %>%
@@ -186,10 +184,8 @@ print.comp_bayes_lm <- function(x, ...) {
 #'   geom_point() +
 #'   geom_abline(slope = 1, intercept = 0)
 predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
-  if (FALSE) {
-    focal_vs_comp <- focal_vs_comp_bw
-    object <- bw_fit_model
-  }
+  check_comp_bayes_lm(object)
+  check_focal_vs_comp(focal_vs_comp)
 
   # Create linear regression model formula object
   model_formula <- object$terms
@@ -232,6 +228,12 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 #' @examples
 #' 1 + 1
 run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
+  check_focal_vs_comp(focal_vs_comp)
+  check_inherits(max_dist, "numeric")
+  check_inherits(cv_grid, "sf")
+  if (!is.null(prior_param)) {check_prior_params(prior_param)}
+  check_inherits(run_shuffle, "logical")
+
   # For each fold, store resulting y-hat for each focal tree in list
   folds <- focal_vs_comp %>%
     pull(foldID) %>%

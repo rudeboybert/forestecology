@@ -17,8 +17,18 @@ glue_message <- function(..., .sep = "", .envir = parent.frame()) {
 check_inherits <- function(x, what) {
   cl <- match.call()
 
+  what <-
+    switch(
+      what,
+      "numeric" = c("numeric", "integer"),
+      "integer" = c("numeric", "integer"),
+      "factor" = c("character", "factor"),
+      "character" = c("character", "factor"),
+      what
+    )
+
   if (!inherits(x, what)) {
-    glue_stop("Element `{list(cl$x)}` needs to inherit from `{what}`, but its ",
+    glue_stop("Element `{list(cl$x)}` needs to inherit from `{list(what)}`, but its ",
               "class is `{list(class(x))}`.")
   }
 
@@ -32,6 +42,16 @@ check_column <- function(column, type = NULL, df) {
   }
 
   if (!is.null(type)) {
+    type <-
+      switch(
+        type,
+        "numeric" = c("numeric", "integer"),
+        "integer" = c("numeric", "integer"),
+        "factor" = c("character", "factor"),
+        "character" = c("character", "factor"),
+        type
+      )
+
     if (!inherits(df[[column]], type)) {
       glue_stop('The "{column}" column should inherit from {type}, but its ',
                 "class is {list(class(df[[column]]))}.")
@@ -98,7 +118,3 @@ check_focal_vs_comp <- function(focal_vs_comp) {
     focal_vs_comp
   )
 }
-
-
-
-

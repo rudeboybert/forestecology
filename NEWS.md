@@ -3,9 +3,10 @@
 * Switched CI from travis to GitHub actions
 * Refactored spatial cross-validation in `run_cv()` to use `purrr::map_dfr()` using the `fit_one_fold()` function
 * Transition modeling, prediction, and plotting functions from generics to S3 methods for the `comp_bayes_lm` class.
-* Align inputs and outputs of modeling and prediction functions with S3 modeling conventions and tidy data principles. Namely,
+* Aligned inputs and outputs of modeling and prediction functions with S3 modeling conventions and tidy data principles. Namely,
     - The `comp_bayes_lm()` modeling function takes in a data frame at a level of observation equivalent to that which the model is actually fitted to—each row is a unique focal observation rather than focal-competitor observation pair. The function outputs a model object with several associated modeling S3 methods.
     - `predict.comp_bayes_lm()` takes in a model object as its first argument and input data as its second argument. The output, an unnamed vector, has length equal to the input data.
+* Added argument checks.
 
 
 # forestecology 0.1.0.9003: "Bad first draft" of package paper
