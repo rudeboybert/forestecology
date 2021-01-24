@@ -249,7 +249,9 @@
 #' distance from them. In this case that distance is 1. This is the focal
 #' versus comp for \code{\link{ex_growth_df_spatial}}.
 #'
-#' @format A tibble
+#' @format
+#'
+#' A [tibble::tbl_df]:
 #' \describe{
 #'   \item{focal_ID}{Tree identification number for the focal tree}
 #'   \item{focal_sp}{Species of the focal tree}
@@ -257,11 +259,17 @@
 #'   \item{foldID}{The CV-fold that the focal tree is in}
 #'   \item{geometry}{The point location oif the focal tree}
 #'   \item{growth}{The average annual growth of the focal tree between censuses}
+#'   \item{comp}{A list-column: characteristics of the relevant competitor trees}
+#' }
+#'
+#' The `comp` list-column contains [tibble::tbl_df]s with columns:
+#' \describe{
 #'   \item{comp_ID}{Tree identificaiton number for the competitor tree}
 #'   \item{dist}{The distance between the focal and comp tree, this will be less than the max distnace specified.}
 #'   \item{comp_so}{Species of the comp tree}
 #'   \item{comp_basal_area}{Basal area of the comp tree}
 #' }
+#'
 #' @seealso \code{\link{ex_growth_df_spatial}}
 #' @importFrom forcats fct_rev
 #' @examples

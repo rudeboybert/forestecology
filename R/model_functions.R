@@ -255,6 +255,7 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
 #'
 #' @inheritParams comp_bayes_lm
 #'
+#' @importFrom tidyr unnest
 #' @return Data frame that can be used for lm()
 #' @description This function is used both by \code{\link{comp_bayes_lm}} and \code{\link{predict.comp_bayes_lm}}
 #' @export
@@ -263,6 +264,7 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
 create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
   # Prepare data for regression
   focal_trees <- focal_vs_comp %>%
+    unnest(comp) %>%
     group_by(focal_ID, comp_sp) %>%
     # Sum basal area of all neighbors; set to 0 for cases of no neighbors
     # within range.

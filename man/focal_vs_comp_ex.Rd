@@ -5,7 +5,7 @@
 \alias{focal_vs_comp_ex}
 \title{Example focal versus comp data frame}
 \format{
-A tibble
+A \link[tibble:tbl_df-class]{tibble::tbl_df}:
 \describe{
 \item{focal_ID}{Tree identification number for the focal tree}
 \item{focal_sp}{Species of the focal tree}
@@ -13,6 +13,11 @@ A tibble
 \item{foldID}{The CV-fold that the focal tree is in}
 \item{geometry}{The point location oif the focal tree}
 \item{growth}{The average annual growth of the focal tree between censuses}
+\item{comp}{A list-column: characteristics of the relevant competitor trees}
+}
+
+The \code{comp} list-column contains \link[tibble:tbl_df-class]{tibble::tbl_df}s with columns:
+\describe{
 \item{comp_ID}{Tree identificaiton number for the competitor tree}
 \item{dist}{The distance between the focal and comp tree, this will be less than the max distnace specified.}
 \item{comp_so}{Species of the comp tree}
