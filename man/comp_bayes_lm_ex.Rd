@@ -3,18 +3,22 @@
 \docType{data}
 \name{comp_bayes_lm_ex}
 \alias{comp_bayes_lm_ex}
-\title{Example fit model}
+\title{Example bayesian competition model fit}
 \format{
-??
+A list subclass containing the following elements:
+
 \describe{
-\item{??}{Something}
+\item{prior_params}{Prior parameters supplied to \code{\link[=comp_bayes_lm]{comp_bayes_lm()}}}
+\item{post_params}{Posterior parameters outputted by \code{\link[=comp_bayes_lm]{comp_bayes_lm()}}}
+\item{terms}{The formula object used in model fitting}
 }
 }
 \usage{
 comp_bayes_lm_ex
 }
 \description{
-This has posterior parameters for the fit growth model.
+This object contains an example fitted bayesian competition
+model outputted by \code{\link[=comp_bayes_lm]{comp_bayes_lm()}}.
 }
 \examples{
 library(dplyr)

@@ -283,13 +283,17 @@
 
 
 
-#' Example fit model
+#' Example bayesian competition model fit
 #'
-#' This has posterior parameters for the fit growth model.
+#' @description This object contains an example fitted bayesian competition
+#' model outputted by [comp_bayes_lm()].
 #'
-#' @format ??
+#' @format A list subclass containing the following elements:
+#'
 #' \describe{
-#'   \item{??}{Something}
+#'   \item{prior_params}{Prior parameters supplied to [comp_bayes_lm()]}
+#'   \item{post_params}{Posterior parameters outputted by [comp_bayes_lm()]}
+#'   \item{terms}{The formula object used in model fitting}
 #' }
 #' @importFrom forcats fct_rev
 #' @import ggplot2
