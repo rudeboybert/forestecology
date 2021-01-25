@@ -57,6 +57,7 @@ test_that("readme code works", {
   focal_vs_comp_ex <- ex_growth_df %>%
     create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
 
+  # Checks each column in focal_vs_comp is of appropriate type
   expect_true(check_inherits(focal_vs_comp_ex, "data.frame"))
   expect_true(
     check_focal_vs_comp(focal_vs_comp_ex) %>%
@@ -66,6 +67,7 @@ test_that("readme code works", {
 
   comp_bayes_lm_ex <- focal_vs_comp_ex %>%
     comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
+
 
   expect_true(check_comp_bayes_lm(comp_bayes_lm_ex))
 

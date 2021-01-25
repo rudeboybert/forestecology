@@ -173,6 +173,8 @@ scbi_2018 <- read_csv("scbi.stem3.csv") %>%
 
 ## Compute annual growth
 
+MERGE THIS SUBSECTION with previous?
+
 For each plot we then compute average annual growth between the two censuses using the `compute_growth()` function. This function takes the two census data frames as well as a character indicating which variable in both data frames uniquely identifies each stem. This function returns a single data frame that includes a numerical variable `growth` reflecting the average annual dbh growth (in cm) of all trees alive at both time points. Furthermore, variables that (in theory) remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. Here the resulting data frames are named with some variation of `growth_df`.
 
 After computing the average annual growth for each tree, we ensure to convert all variables denote species from type character to factors; this is to ensure that issues of rare species being accounted for in both training and test sets in our upcoming cross-validation step (see Section REF)

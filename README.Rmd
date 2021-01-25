@@ -25,7 +25,6 @@ knitr::opts_chunk$set(
 [![CRAN status](https://www.r-pkg.org/badges/version/forestecology)](https://cran.r-project.org/package=forestecology)
 
 
-
 ## Installation
 
 You can install the released version of forestecology from [CRAN](https://CRAN.R-project.org) with:
@@ -36,10 +35,9 @@ install.packages("forestecology")
 
 And the development version from [GitHub](https://github.com/) with:
 
-
 ```{r, eval = FALSE}
 # install.packages("remotes")
-# remotes::install_github("rudeboybert/forestecology")
+remotes::install_github("rudeboybert/forestecology")
 ```
 
 This package is designed to work for spatially mapped, repeat censused forests plots. The package has commands to fit models of tree growth based on neighborhood competition which can be used to estimate species-specific competition coefficients. The models fits can then be evaluated using a spatial cross-validation scheme to detect possible overfitting. Additionally these models can test whether the species identity of competitors matters using a permutation test-style shuffling of competitor identity (under the null hypothesis) and subsequently evaluating if model performance changes. See Allen and Kim (2020) [A permutation test and spatial cross-validation approach to assess models of interspecific competition between trees](https://doi.org/10.1371/journal.pone.0229930) for a full description.  
@@ -47,7 +45,7 @@ This package is designed to work for spatially mapped, repeat censused forests p
 
 ## Example analysis
 
-Here we provide an example with a small dataset. 
+We present an example analysis using toy data pre-loaded into the package. 
 
 ```{r}
 library(tidyverse)
@@ -59,51 +57,56 @@ library(yardstick)
 library(snakecase)
 ```
 
-First we combine two example census data files into a single `tibble` and compute the growth of all surviving individuals.
+### Preprocess census data 
+
+We first combine data from two repeat censuses into a single `tibble` and compute the growth of all surviving individuals. Note that per Allen and Kim (2020) we first remove resprouts from the second census.
 
 ```{r}
-# Read in census files
 data(census_df1_ex, census_df2_ex)
 
 # Filter out resprouts
 census_df2_ex_no_r <- census_df2_ex %>%
   filter(!str_detect(codes, "R"))
 
-# Name of variable in tibble that uniquely identifies each stem:
-id <- "ID"
-
-# Merge both censuses and compute growth:
-ex_growth_df <-
-  compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
-  mutate(
-    sp = to_any_case(sp),
-    # Must be a factor
-    sp = as.factor(sp)
-  )
+# Merge both censuses and compute growth. Note we require any species variable
+# to be coded as a factor
+census_combined_ex <-
+  compute_growth(census_df1_ex, census_df2_ex_no_r, id = "ID") %>%
+  mutate(sp = to_any_case(sp) %>% as.factor())
 ```
 
-All growth models in the package assume that two individuals compete if they are less than a specified distance away. Here we set this distance in `max_dist` and put all individuals within this distance of a plot boundary in a buffer (since we do not have full information about their competitors).
+### Add spatial information
+
+Our growth model assumes that two individual trees compete if they are less than a pre-specified distance `max_dist` apart. Furthermore, we define a buffer region of size `max_dist` from the boundary of the study region. All trees outside this buffer region will be our "focal" trees of interest since we have complete competitor information on them. All trees inside this buffer region will only be considered as "competitor" trees to "focal" trees.
 
 ```{r}
-# Load study region:
 data("ex_study_region")
 
-# Set max dist
+# Set competitor distance
 max_dist <- 1
 
-# Add buffer
-ex_growth_df <- ex_growth_df %>%
+# Create sf representation of buffer region
+buffer_region <- ex_study_region %>% 
+  compute_buffer_region(direction = "in", size = max_dist)
+
+# Add buffer variable
+census_combined_ex <- census_combined_ex %>%
   add_buffer_variable(direction = "in", size = max_dist, region = ex_study_region)
 
-ggplot() +
-  geom_sf(data = ex_growth_df, aes(col = buffer), size = 2)
+base_plot <- ggplot() +
+  geom_sf(data = ex_study_region, fill = "transparent") +
+  geom_sf(data = buffer_region, fill = "transparent", linetype = "dashed")
+
+base_plot + 
+  geom_sf(data = census_combined_ex, aes(col = buffer), size = 2)
 ```
 
-We then set blocks/folds for the spatial cross-validation scheme. We this both manually and using the [`blockCV`](https://github.com/rvalavi/blockCV) package. Note that here we define the geometric structure of the folds manually using `sfheaders::sf_polygon()`:
+We then manually define the blocks/folds for our spatial cross-validation scheme and convert them to an `sf` object using `sfheaders::sf_polygon()`:
 
 ```{r}
 fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
 fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
+
 blocks <- bind_rows(
   sf_polygon(fold1),
   sf_polygon(fold2)
@@ -111,76 +114,98 @@ blocks <- bind_rows(
   mutate(foldID = c(1, 2))
 ```
 
-Next we assign each point to folds using `blockCV::spatialBlock()`
+Next we assign each tree to blocks/folds using the `spatialBlock()` function from the [`blockCV`](https://github.com/rvalavi/blockCV) package.
 
 ```{r}
 ex_cv_grid <- spatialBlock(
-  speciesData = ex_growth_df,
-  verbose = FALSE,
-  k = 2,
-  selection = "systematic",
-  blocks = blocks,
-  showBlocks = FALSE
+  speciesData = census_combined_ex, k = 2, selection = "systematic", blocks = blocks,
+  showBlocks = FALSE, verbose = FALSE
 )
 
-# Add foldID to data
-ex_growth_df <- ex_growth_df %>%
-  mutate(foldID = ex_cv_grid$foldID %>% as.factor())
+# Add fold information to data
+census_combined_ex <- census_combined_ex %>%
+  mutate(foldID = ex_cv_grid$foldID %>% factor())
 
-# Deliverable
-ggplot() +
-  geom_sf(data = ex_growth_df, aes(col = buffer, shape = foldID), size = 2) +
-  geom_sf(data = blocks, fill = "transparent")
+base_plot + 
+  geom_sf(data = census_combined_ex, aes(col = buffer, shape = foldID), size = 2) +
+  geom_sf(data = blocks, fill = "transparent", col = "orange")
+```
 
-# Convert to sf object
+We also extract the spatial cross-validation grid itself as an `sf` object for later use. 
+
+```{r}
 ex_cv_grid_sf <- ex_cv_grid$blocks %>%
   st_as_sf()
+
+ggplot() +
+  geom_sf(data = ex_cv_grid_sf)
 ```
 
-We then create a `focal_v_comp` tibble which has a row for each competing pair of individuals (each pair of individuals within `max_dist` of one another):
+### Define focal versus competitor trees
+
+We then create a list-column data frame (via `tidyr::nest()`) where each row represents a focal tree of interest and the `comp` variable contains nested information on each of it's competitors
+
+
+which has a row for each competing pair of individuals (each pair of individuals within `max_dist` of one another):
 
 ```{r}
-focal_vs_comp_ex <- ex_growth_df %>%
+focal_vs_comp_ex <- census_combined_ex %>%
   create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
+
+# Nested view
+focal_vs_comp_ex
+
+# Unnested view:
+focal_vs_comp_ex %>% 
+  unnest(cols = "comp")
 ```
 
-With `focal_v_comp`, we can then run the growth model and get predictions from it. Here we run the model without cross validation. Posterior estimates can be plotted to give, for example, the lambda matrix of competition coefficients.
+### Fit model and make predictions
+
+We then fit our competitor growth model as specified in Allen and Kim (2020)
 
 ```{r}
-# Fit model
 comp_bayes_lm_ex <- focal_vs_comp_ex %>%
   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
-
-# Get predicted dbh values values
-predictions <- focal_vs_comp_ex %>%
-  mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
-
-# Compute RMSE of true vs predicted dbh values
-predictions %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
-  pull(.estimate)
-
-# Plot posteriors
-comp_bayes_lm_ex %>%
-  autoplot(type = "intercepts")
-comp_bayes_lm_ex %>%
-  autoplot(type = "dbh_slopes")
-comp_bayes_lm_ex %>%
-  autoplot(type = "competition")
 ```
 
-Here we repeat the process but with cross-validation. Note the increase in RMSE, reflecting the fact that our original estimate of model error was overly optimistic.
+Since the resulting output is an S3 object of class `comp_bayes_lm`, we can both print and visualize its output: the posterior distribution of all the linear regression parameters. 
 
 ```{r}
-# Fit model with cross-validation
+# Object summary
+comp_bayes_lm_ex
+
+# Visualizations
+autoplot(comp_bayes_lm_ex, type = "intercepts")
+autoplot(comp_bayes_lm_ex, type = "dbh_slopes")
+autoplot(comp_bayes_lm_ex, type = "competition")
+```
+
+Furthermore, we append fitted/predicted growth values for each tree using `predict.comp_bayes_lm()` to our data frame and then compute the root mean squared error (RMSE).
+
+```{r}
+focal_vs_comp_ex <- focal_vs_comp_ex %>%
+  mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
+
+# Compute RMSE
+focal_vs_comp_ex %>%
+  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+```
+
+### Run spatial cross-validation
+
+Here we repeat the process but with running spatial cross-validation: we fit the data to one fold and apply it to the other. Note the increase in RMSE, reflecting the fact that our original estimate of model error was overly optimistic as it did not account for spatial autocorrelation.
+
+```{r}
 ex_bw <- focal_vs_comp_ex %>%
   run_cv(max_dist = max_dist, cv_grid = ex_cv_grid_sf) %>%
-  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+  right_join(census_combined_ex, by = c("focal_ID" = "ID"))
 
-# Compute RMSE of true vs predicted dbh values
+# Compute RMSE of spatially cross-validated model
 ex_bw %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
 
-For fuller examples on actual datasets see ___.
+<!--For fuller examples on actual datasets see ___.-->
