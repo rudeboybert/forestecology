@@ -271,6 +271,7 @@ competition_plot <- function(beta_lambda_posterior_df, sp_to_plot,
   # When we only want to plot a subset of species:
   if (!is.null(sp_to_plot)) {
     sp_to_plot <- sort(sp_to_plot)
+    sp_list <- sp_to_plot
 
     posterior_lambda <- posterior_lambda %>%
       filter(
@@ -293,6 +294,6 @@ competition_plot <- function(beta_lambda_posterior_df, sp_to_plot,
       x = expression(lambda),
       y = "Species",
       title = "Competitor species in rows, focal species in columns",
-      subtitle = str_c("Ex: Top row, second column = competitive effect of", sp_to_plot[1], "on", sp_to_plot[2], sep = " ")
+      subtitle = str_c("Ex: Top row, second column: competitive effect of", sp_list[1], "on", sp_list[2], sep = " ")
     )
 }
