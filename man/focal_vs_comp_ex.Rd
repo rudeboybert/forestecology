@@ -5,16 +5,21 @@
 \alias{focal_vs_comp_ex}
 \title{Example focal versus comp data frame}
 \format{
-A tibble
+A \link[tibble:tbl_df-class]{tibble::tbl_df}:
 \describe{
 \item{focal_ID}{Tree identification number for the focal tree}
 \item{focal_sp}{Species of the focal tree}
 \item{dbh}{Diameter at breast height of the focal tree at the first census}
 \item{foldID}{The CV-fold that the focal tree is in}
-\item{geometry}{The point location oif the focal tree}
+\item{geometry}{The point location of the focal tree}
 \item{growth}{The average annual growth of the focal tree between censuses}
-\item{comp_ID}{Tree identificaiton number for the competitor tree}
-\item{dist}{The distance between the focal and comp tree, this will be less than the max distnace specified.}
+\item{comp}{A list-column: characteristics of the relevant competitor trees}
+}
+
+The \code{comp} list-column contains \link[tibble:tbl_df-class]{tibble::tbl_df}s with columns:
+\describe{
+\item{comp_ID}{Tree identification number for the competitor tree}
+\item{dist}{The distance between the focal and comp tree, this will be less than the max distance specified.}
 \item{comp_so}{Species of the comp tree}
 \item{comp_basal_area}{Basal area of the comp tree}
 }
@@ -31,7 +36,7 @@ versus comp for \code{\link{ex_growth_df_spatial}}.
 \examples{
 library(dplyr)
 
-posterior_param_ex <- focal_vs_comp_ex \%>\%
+comp_bayes_lm_ex <- focal_vs_comp_ex \%>\%
   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 }
 \seealso{

@@ -6,14 +6,14 @@
 #' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
-#'   \item{sp}{Speices of the individual}
+#'   \item{sp}{Species of the individual}
 #'   \item{gx}{x-coordinate meters from reference point}
 #'   \item{gy}{y-coordinate meters from reference point}
 #'   \item{date}{Date the stem was measured}
 #'   \item{codes}{Code for additional information on the stem: M means the main stem
 #'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
-#'   \item{dbh}{Diameter at breast hieght of the tree in cm}
+#'   \item{dbh}{Diameter at breast height of the tree in cm}
 #' }
 #' @seealso \code{\link{census_df2_ex}}
 #' @examples
@@ -46,14 +46,14 @@
 #' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
-#'   \item{sp}{Speices of the individual}
+#'   \item{sp}{Species of the individual}
 #'   \item{gx}{x-coordinate meters from reference point}
 #'   \item{gy}{y-coordinate meters from reference point}
 #'   \item{date}{Date the stem was measured}
 #'   \item{codes}{Code for additional information on the stem: M means the main stem
 #'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
-#'   \item{dbh}{Diameter at breast hieght of the tree in cm}
+#'   \item{dbh}{Diameter at breast height of the tree in cm}
 #' }
 #' @seealso \code{\link{census_df1_ex}}
 #' @examples
@@ -112,12 +112,12 @@
 #' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
-#'   \item{sp}{Speices of the individual}
+#'   \item{sp}{Species of the individual}
 #'   \item{codes1}{Code for additional information on the stem during the first census: M means the main stem
 #'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
-#'   \item{dbh1}{Diameter at breast hieght of the tree in cm at the first census}
-#'   \item{dbh2}{Diameter at breast hieght of the tree in cm at the second census}
+#'   \item{dbh1}{Diameter at breast height of the tree in cm at the first census}
+#'   \item{dbh2}{Diameter at breast height of the tree in cm at the second census}
 #'   \item{growth}{Average annual growth between the two censuses in cm per year}
 #'   \item{codes2}{Codes at the second census}
 #'   \item{geometry}{Point location of the individual}
@@ -177,12 +177,12 @@
 #' \describe{
 #'   \item{ID}{Tree identification number. This identifies an individual tree and
 #'   can be used to connect trees between the two censuses.}
-#'   \item{sp}{Speices of the individual}
+#'   \item{sp}{Species of the individual}
 #'   \item{codes1}{Code for additional information on the stem during the first census: M means the main stem
 #'   of the individual tree and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
-#'   \item{dbh1}{Diameter at breast hieght of the tree in cm at the first census}
-#'   \item{dbh2}{Diameter at breast hieght of the tree in cm at the second census}
+#'   \item{dbh1}{Diameter at breast height of the tree in cm at the first census}
+#'   \item{dbh2}{Diameter at breast height of the tree in cm at the second census}
 #'   \item{growth}{Average annual growth between the two censuses in cm per year}
 #'   \item{codes2}{Codes at the second census}
 #'   \item{geometry}{Point location of the individual}
@@ -249,25 +249,33 @@
 #' distance from them. In this case that distance is 1. This is the focal
 #' versus comp for \code{\link{ex_growth_df_spatial}}.
 #'
-#' @format A tibble
+#' @format
+#'
+#' A [tibble::tbl_df]:
 #' \describe{
 #'   \item{focal_ID}{Tree identification number for the focal tree}
 #'   \item{focal_sp}{Species of the focal tree}
 #'   \item{dbh}{Diameter at breast height of the focal tree at the first census}
 #'   \item{foldID}{The CV-fold that the focal tree is in}
-#'   \item{geometry}{The point location oif the focal tree}
+#'   \item{geometry}{The point location of the focal tree}
 #'   \item{growth}{The average annual growth of the focal tree between censuses}
-#'   \item{comp_ID}{Tree identificaiton number for the competitor tree}
-#'   \item{dist}{The distance between the focal and comp tree, this will be less than the max distnace specified.}
+#'   \item{comp}{A list-column: characteristics of the relevant competitor trees}
+#' }
+#'
+#' The `comp` list-column contains [tibble::tbl_df]s with columns:
+#' \describe{
+#'   \item{comp_ID}{Tree identification number for the competitor tree}
+#'   \item{dist}{The distance between the focal and comp tree, this will be less than the max distance specified.}
 #'   \item{comp_so}{Species of the comp tree}
 #'   \item{comp_basal_area}{Basal area of the comp tree}
 #' }
+#'
 #' @seealso \code{\link{ex_growth_df_spatial}}
 #' @importFrom forcats fct_rev
 #' @examples
 #' library(dplyr)
 #'
-#' posterior_param_ex <- focal_vs_comp_ex %>%
+#' comp_bayes_lm_ex <- focal_vs_comp_ex %>%
 #'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 "focal_vs_comp_ex"
 
@@ -275,13 +283,17 @@
 
 
 
-#' Example fit model
+#' Example bayesian competition model fit
 #'
-#' This has posterior parameters for the fit growth model.
+#' @description This object contains an example fitted bayesian competition
+#' model outputted by [comp_bayes_lm()].
 #'
-#' @format ??
+#' @format A list subclass containing the following elements:
+#'
 #' \describe{
-#'   \item{??}{Something}
+#'   \item{prior_params}{Prior parameters supplied to [comp_bayes_lm()]}
+#'   \item{post_params}{Posterior parameters outputted by [comp_bayes_lm()]}
+#'   \item{terms}{The formula object used in model fitting}
 #' }
 #' @importFrom forcats fct_rev
 #' @import ggplot2
@@ -291,18 +303,17 @@
 #' library(yardstick)
 #'
 #' # Compare model predictions to observation
-#' predictions <- posterior_param_ex %>%
-#'   predict(focal_vs_comp = focal_vs_comp_ex) %>%
-#'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#' predictions <- focal_vs_comp_ex %>%
+#'   mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
 #'
 #' predictions %>%
 #'   rmse(truth = growth, estimate = growth_hat) %>%
 #'   pull(.estimate)
 #'
 #' # Plot posterior parameters
-#' posterior_param_ex %>%
+#' comp_bayes_lm_ex %>%
 #'   autoplot()
-"posterior_param_ex"
+"comp_bayes_lm_ex"
 
 
 

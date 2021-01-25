@@ -164,13 +164,12 @@ matrix of competition coefficients.
 
 ``` r
 # Fit model
-posterior_param_ex <- focal_vs_comp_ex %>%
+comp_bayes_lm_ex <- focal_vs_comp_ex %>%
   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 
 # Get predicted dbh values values
-predictions <- posterior_param_ex %>%
-  predict(focal_vs_comp = focal_vs_comp_ex) %>%
-  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+predictions <- focal_vs_comp_ex %>%
+  mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
 
 # Compute RMSE of true vs predicted dbh values
 predictions %>%
@@ -179,21 +178,21 @@ predictions %>%
 #> [1] 0.1900981
 
 # Plot posteriors
-posterior_param_ex %>%
+comp_bayes_lm_ex %>%
   autoplot(type = "intercepts")
 ```
 
 <img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
 
 ``` r
-posterior_param_ex %>%
+comp_bayes_lm_ex %>%
   autoplot(type = "dbh_slopes")
 ```
 
 <img src="man/figures/README-unnamed-chunk-9-2.png" width="100%" />
 
 ``` r
-posterior_param_ex %>%
+comp_bayes_lm_ex %>%
   autoplot(type = "competition")
 ```
 

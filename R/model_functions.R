@@ -27,14 +27,12 @@
 #' # Load in focal versus comp
 #' data(focal_vs_comp_ex)
 #'
-#' posterior_param_ex <- focal_vs_comp_ex %>%
+#' comp_bayes_lm_ex <- focal_vs_comp_ex %>%
 #'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) {
-  if (FALSE) {
-    focal_vs_comp <- focal_vs_comp_bw
-    run_shuffle <- FALSE
-    prior_param <- NULL
-  }
+  check_focal_vs_comp(focal_vs_comp)
+  if (!is.null(prior_param)) {check_prior_params(prior_param)}
+  check_inherits(run_shuffle, "logical")
 
   # Create linear regression model formula object
   sp_list <- focal_vs_comp$focal_sp %>%
@@ -57,19 +55,13 @@ comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE
 
   # Set priors. If no prior_param specified:
   if (is.null(prior_param)) {
-    # Prior parameters for sigma2:
-    a_0 <- 250
-    b_0 <- 25
-    # Prior parameters for betas and lambdas:
-    mu_0 <- rep(0, ncol(X)) %>%
-      matrix(ncol = 1)
-    V_0 <- ncol(X) %>% diag()
-  } else {
-    a_0 <- prior_param$a_0
-    b_0 <- prior_param$b_0
-    mu_0 <- prior_param$mu_0
-    V_0 <- prior_param$V_0
+    prior_param <- default_prior_params(X)
   }
+
+  a_0 <- prior_param$a_0
+  b_0 <- prior_param$b_0
+  mu_0 <- prior_param$mu_0
+  V_0 <- prior_param$V_0
 
   # Compute posteriors
   # Posterior parameters for betas and lambdas:
@@ -86,7 +78,7 @@ comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE
     as.vector()
 
   # Return posterior parameters
-  posterior_hyperparameters <- list(
+  post_params <- list(
     a_star = a_star,
     b_star = b_star,
     mu_star = mu_star,
@@ -94,10 +86,60 @@ comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE
     sp_list = sp_list
   )
 
-  structure(
-    posterior_hyperparameters,
-    class = c("comp_bayes_lm", class(posterior_hyperparameters))
+  out <- list(
+    prior_params = prior_param,
+    post_params = post_params,
+    terms = model_formula
   )
+
+  structure(
+    out,
+    class = c("comp_bayes_lm", class(out))
+  )
+}
+
+
+
+
+
+default_prior_params <- function(X) {
+  list(
+    # Prior parameters for sigma2:
+    a_0 = 250,
+    b_0 = 25,
+    # Prior parameters for betas and lambdas:
+    mu_0 = rep(0, ncol(X)) %>%
+      matrix(ncol = 1),
+    V_0 = ncol(X) %>% diag()
+  )
+}
+
+
+
+
+#' @export
+print.comp_bayes_lm <- function(x, ...) {
+  cat(
+    paste0(
+      "A bayesian competition model (p = ",
+      length(unlist(x$prior_params[3])) - 1,
+      ").\n\n"
+    )
+  )
+
+  term_tbl <-
+    utils::capture.output(
+      print(
+        tibble(
+          term = unlist(names(x$prior_params[1:2])),
+          prior = unlist(unname(x$prior_params[1:2])),
+          posterior = unlist(unname(x$post_params[1:2]))
+        )
+      )
+    )
+
+  cat(term_tbl[2:length(term_tbl)], sep = "\n")
+
 }
 
 
@@ -113,13 +155,13 @@ comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE
 #'   `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
 #' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
-#' @param ... Currently igniored—only included for consistency with generic.
+#' @param ... Currently ignored—only included for consistency with generic.
 #'
 #' @import dplyr
 #' @importFrom stats model.matrix
 #' @importFrom tidyr nest
 #'
-#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
+#' @return A vector of predictions with length equal to the input data.
 #' @seealso \code{\link{comp_bayes_lm}}
 #' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 #' @export
@@ -131,30 +173,21 @@ comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE
 #'
 #' # Load in posterior parameter example
 #' # and growth data to compare to
-#' data(posterior_param_ex, ex_growth_df)
+#' data(comp_bayes_lm_ex, ex_growth_df)
 #'
-#' predictions <- posterior_param_ex %>%
-#'   predict(focal_vs_comp = focal_vs_comp_ex) %>%
-#'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#' predictions <- focal_vs_comp_ex %>%
+#'   mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
 #'
 #' predictions %>%
 #'   ggplot(aes(growth, growth_hat)) +
 #'   geom_point() +
 #'   geom_abline(slope = 1, intercept = 0)
 predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
-  if (FALSE) {
-    focal_vs_comp <- focal_vs_comp_bw
-    object <- bw_fit_model
-  }
+  check_comp_bayes_lm(object)
+  check_focal_vs_comp(focal_vs_comp)
 
   # Create linear regression model formula object
-  sp_list <- focal_vs_comp$focal_sp %>%
-    levels() %>%
-    sort()
-  model_formula <- sp_list %>%
-    paste(., "*sp", sep = "", collapse = " + ") %>%
-    paste("growth ~ sp + dbh + dbh*sp + ", .) %>%
-    as.formula()
+  model_formula <- object$terms
 
   # Create matrices & vectors for Bayesian regression
   focal_trees <- focal_vs_comp %>%
@@ -166,14 +199,8 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
   n <- nrow(X)
 
   # Make posterior predictions
-  mu_star <- object$mu_star
-  focal_trees <- focal_trees %>%
-    mutate(growth_hat = as.vector(X %*% mu_star)) %>%
-    select(focal_ID, growth_hat)
-
-  # TODO: why do we return focal_vs_comp?? Shouldn't we return focal_trees (one
-  # row per focal tree not per interaction)
-  return(focal_trees)
+  mu_star <- object$post_params$mu_star
+  as.vector(X %*% mu_star)
 }
 
 
@@ -190,12 +217,19 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 #' @import dplyr
 #' @import sf
 #' @import sfheaders
+#' @importFrom tibble enframe
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'
 #' @examples
 #' 1 + 1
 run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
+  check_focal_vs_comp(focal_vs_comp)
+  check_inherits(max_dist, "numeric")
+  check_inherits(cv_grid, "sf")
+  if (!is.null(prior_param)) {check_prior_params(prior_param)}
+  check_inherits(run_shuffle, "logical")
+
   # For each fold, store resulting y-hat for each focal tree in list
   folds <- focal_vs_comp %>%
     pull(foldID) %>%
@@ -240,11 +274,13 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
     as_tibble()
 
   # Fit model on training data and predict on test
-  posterior_param_fold <- train %>%
+  comp_bayes_lm_fold <- train %>%
     comp_bayes_lm(prior_param = prior_param, run_shuffle = run_shuffle)
 
-  posterior_param_fold %>%
-    predict(focal_vs_comp = test)
+  comp_bayes_lm_fold %>%
+    predict(focal_vs_comp = test) %>%
+    enframe(name = NULL, value = "growth_hat") %>%
+    mutate(focal_ID = test$focal_ID)
 }
 
 
@@ -255,6 +291,7 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
 #'
 #' @inheritParams comp_bayes_lm
 #'
+#' @importFrom tidyr unnest
 #' @return Data frame that can be used for lm()
 #' @description This function is used both by \code{\link{comp_bayes_lm}} and \code{\link{predict.comp_bayes_lm}}
 #' @export
@@ -263,6 +300,7 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
 create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
   # Prepare data for regression
   focal_trees <- focal_vs_comp %>%
+    unnest(comp) %>%
     group_by(focal_ID, comp_sp) %>%
     # Sum basal area of all neighbors; set to 0 for cases of no neighbors
     # within range.
