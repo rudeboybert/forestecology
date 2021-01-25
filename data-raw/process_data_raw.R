@@ -118,7 +118,7 @@ growth_ex <-
     census_1 = census_1_ex,
     census_2 = census_2_ex %>% filter(!str_detect(codes, "R")),
     id = "ID"
-    ) %>%
+  ) %>%
   mutate(sp = to_any_case(sp) %>% factor())
 use_data(growth_ex, overwrite = TRUE)
 

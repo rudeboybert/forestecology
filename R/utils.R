@@ -28,8 +28,10 @@ check_inherits <- function(x, what) {
     )
 
   if (!inherits(x, what)) {
-    glue_stop("Element `{list(cl$x)}` needs to inherit from `{list(what)}`, but its ",
-              "class is `{list(class(x))}`.")
+    glue_stop(
+      "Element `{list(cl$x)}` needs to inherit from `{list(what)}`, but its ",
+      "class is `{list(class(x))}`."
+    )
   }
 
   invisible(TRUE)
@@ -37,8 +39,10 @@ check_inherits <- function(x, what) {
 
 check_column <- function(column, type = NULL, df) {
   if (!column %in% colnames(df)) {
-    glue_stop("The inputted data {deparse(substitute(df))} needs to contain ",
-              'a "{column}" column, but it does not.')
+    glue_stop(
+      "The inputted data {deparse(substitute(df))} needs to contain ",
+      'a "{column}" column, but it does not.'
+    )
   }
 
   if (!is.null(type)) {
@@ -53,8 +57,10 @@ check_column <- function(column, type = NULL, df) {
       )
 
     if (!inherits(df[[column]], type)) {
-      glue_stop('The "{column}" column should inherit from {type}, but its ',
-                "class is {list(class(df[[column]]))}.")
+      glue_stop(
+        'The "{column}" column should inherit from {type}, but its ',
+        "class is {list(class(df[[column]]))}."
+      )
     }
   }
 
@@ -94,8 +100,10 @@ check_post_params <- function(x) {
 
 check_params_element <- function(element, what, x, params) {
   if (!inherits(x[[element]], what)) {
-    glue_stop("The {element} element of `{params}` needs to inherit from ",
-              "class {what}, but its class is {list(class(x[[element]]))}.")
+    glue_stop(
+      "The {element} element of `{params}` needs to inherit from ",
+      "class {what}, but its class is {list(class(x[[element]]))}."
+    )
   }
 
   invisible(TRUE)

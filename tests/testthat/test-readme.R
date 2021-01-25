@@ -93,7 +93,7 @@ test_that("readme code works", {
       focal_vs_comp_ex %>%
         run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex) %>%
         right_join(growth_ex, by = c("focal_ID" = "ID")),
-    "data.frame"
+      "data.frame"
     )
   )
 })

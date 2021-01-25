@@ -31,7 +31,9 @@
 #'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) {
   check_focal_vs_comp(focal_vs_comp)
-  if (!is.null(prior_param)) {check_prior_params(prior_param)}
+  if (!is.null(prior_param)) {
+    check_prior_params(prior_param)
+  }
   check_inherits(run_shuffle, "logical")
 
   # Create linear regression model formula object
@@ -139,7 +141,6 @@ print.comp_bayes_lm <- function(x, ...) {
     )
 
   cat(term_tbl[2:length(term_tbl)], sep = "\n")
-
 }
 
 
@@ -227,7 +228,9 @@ run_cv <- function(focal_vs_comp, comp_dist, cv_grid, prior_param = NULL, run_sh
   check_focal_vs_comp(focal_vs_comp)
   check_inherits(comp_dist, "numeric")
   check_inherits(cv_grid, "sf")
-  if (!is.null(prior_param)) {check_prior_params(prior_param)}
+  if (!is.null(prior_param)) {
+    check_prior_params(prior_param)
+  }
   check_inherits(run_shuffle, "logical")
 
   # For each fold, store resulting y-hat for each focal tree in list

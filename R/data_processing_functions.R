@@ -130,7 +130,6 @@ compute_growth <- function(census_1, census_2, id) {
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
 #'   create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
-
   check_inherits(growth_df, "data.frame")
   check_inherits(comp_dist, "numeric")
   check_inherits(cv_grid_sf, "sf")
@@ -141,7 +140,7 @@ create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
   }
 
   purrr::map2(
-    c("ID", "sp",  "dbh1", "dbh2",  "growth", "geometry", "buffer", "foldID"),
+    c("ID", "sp", "dbh1", "dbh2", "growth", "geometry", "buffer", "foldID"),
     c("numeric", "factor", "numeric", "numeric", "numeric", "sfc", "logical", "factor"),
     check_column,
     growth_df
