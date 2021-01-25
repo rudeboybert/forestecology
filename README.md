@@ -293,9 +293,8 @@ to the training data, but compute fitted/predicted growths for the
 separate and independent data.
 
 ``` r
-ex_bw <- focal_vs_comp_ex %>%
-  run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex) %>%
-  right_join(growth_ex, by = c("focal_ID" = "ID"))
+focal_vs_comp_ex <- focal_vs_comp_ex %>%
+  run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex)
 ```
 
 Note the increase in RMSE, reflecting the fact that our original
@@ -303,8 +302,8 @@ estimate of model error was overly optimistic as it did not account for
 spatial autocorrelation.
 
 ``` r
-ex_bw %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+focal_vs_comp_ex %>%
+  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 #> [1] 0.4068709
 ```

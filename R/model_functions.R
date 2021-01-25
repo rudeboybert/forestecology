@@ -273,14 +273,13 @@ fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
     filter(buffer) %>%
     as_tibble()
 
-  # Fit model on training data and predict on test
+  # Fit model on training data
   comp_bayes_lm_fold <- train %>%
     comp_bayes_lm(prior_param = prior_param, run_shuffle = run_shuffle)
 
-  comp_bayes_lm_fold %>%
-    predict(focal_vs_comp = test) %>%
-    enframe(name = NULL, value = "growth_hat") %>%
-    mutate(focal_ID = test$focal_ID)
+  # Compute predicted values and append to test
+  test %>%
+    mutate(growth_hat = predict(comp_bayes_lm_fold, test))
 }
 
 

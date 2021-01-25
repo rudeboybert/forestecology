@@ -203,16 +203,15 @@ focal_vs_comp_ex %>%
 Whereas in our example above we fit our model to the entirety of the data and then generated fitted/predicted growths on this same data, we now apply the same model with spatial cross-validation. All the trees in a given fold will be given a turn as the "test" data while the trees is all remaining folds will be the "training" data. We then fit the model to the training data, but compute fitted/predicted growths for the separate and independent data. 
 
 ```{r}
-ex_bw <- focal_vs_comp_ex %>%
-  run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex) %>%
-  right_join(growth_ex, by = c("focal_ID" = "ID"))
+focal_vs_comp_ex <- focal_vs_comp_ex %>%
+  run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex)
 ```
 
 Note the increase in RMSE, reflecting the fact that our original estimate of model error was overly optimistic as it did not account for spatial autocorrelation.
 
 ```{r}
-ex_bw %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+focal_vs_comp_ex %>%
+  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
 
