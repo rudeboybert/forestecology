@@ -70,7 +70,7 @@ growth_ex <-
     census_2 = census_2_ex %>% filter(!str_detect(codes, "R")),
     id = "ID"
     ) %>%
-  mutate(sp = to_any_case(sp) %>% factor())
+  mutate(sp = snakecase::to_any_case(sp) %>% factor())
 ```
 
 ### Add spatial information
@@ -114,18 +114,17 @@ base_plot +
 
 Next we add information pertaining to our spatial cross-validation
 scheme. We first manually define the spatial blocks that will act as our
-cross-validation folds and convert them to an `sf` object using
-`sf_polygon()` function from the `sfheaders` package.
+cross-validation folds and convert them to an `sf` object.
 
 ``` r
 fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
 fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
 
-blocks <- bind_rows(
-  sf_polygon(fold1),
-  sf_polygon(fold2)
+blocks_ex <- bind_rows(
+  sfheaders::sf_polygon(fold1),
+  sfheaders::sf_polygon(fold2)
 ) %>%
-  mutate(foldID = c(1, 2))
+  mutate(folds = c(1, 2) %>% factor())
 ```
 
 Next we assign each tree to the correct folds using the `foldID`
@@ -133,26 +132,14 @@ variable of the output returned by the `spatialBlock()` function from
 the [`blockCV`](https://github.com/rvalavi/blockCV) package.
 
 ``` r
-SpatialBlock_ex <- spatialBlock(
-  speciesData = growth_ex, k = 2, selection = "systematic", blocks = blocks,
+SpatialBlock_ex <- blockCV::spatialBlock(
+  speciesData = growth_ex, k = 2, selection = "systematic", blocks = blocks_ex,
   showBlocks = FALSE, verbose = FALSE
 )
 
 growth_ex <- growth_ex %>%
   mutate(foldID = SpatialBlock_ex$foldID %>% factor())
 ```
-
-We also extract the spatial cross-validation grid itself as an `sf`
-object for later use.
-
-``` r
-cv_grid_sf_ex <- SpatialBlock_ex$blocks %>%
-  st_as_sf()
-ggplot() +
-  geom_sf(data = cv_grid_sf_ex)
-```
-
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
 
 In the visualization below, the spatial blocks that act as our
 cross-validation folds are delineated in orange. Correspondingly the
@@ -161,10 +148,10 @@ shape of each point indicates which fold each tree has been assigned to.
 ``` r
 base_plot + 
   geom_sf(data = growth_ex, aes(col = buffer, shape = foldID), size = 2) +
-  geom_sf(data = blocks, fill = "transparent", col = "orange")
+  geom_sf(data = blocks_ex, fill = "transparent", col = "orange")
 ```
 
-<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
 
 ### Compute focal versus competitor tree information
 
@@ -178,7 +165,7 @@ multiple times.
 
 ``` r
 focal_vs_comp_ex <- growth_ex %>%
-  create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+  create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_ex, id = "ID")
 focal_vs_comp_ex
 #> # A tibble: 6 x 7
 #>   focal_ID focal_sp         dbh foldID    geometry growth comp            
@@ -198,7 +185,7 @@ distance from it.
 
 ``` r
 focal_vs_comp_ex %>% 
-  unnest(cols = "comp")
+  tidyr::unnest(cols = "comp")
 #> # A tibble: 11 x 10
 #>    focal_ID focal_sp   dbh foldID                  geometry growth comp_ID  dist
 #>       <dbl> <fct>    <dbl> <fct>                    <POINT>  <dbl>   <dbl> <dbl>
@@ -249,7 +236,7 @@ p3 <- autoplot(comp_bayes_lm_ex, type = "competition")
 (p1 | p2) / p3
 ```
 
-<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
 
 Furthermore, we can apply a generic `predict()` function to the
 resulting `comp_bayes_lm` object to obtain fitted/predicted values of
