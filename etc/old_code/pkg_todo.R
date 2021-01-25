@@ -62,11 +62,11 @@ bw_growth_df <-
 
 # Add buffers ---------------------------------------------------------------
 # This number acts as buffer size, but also determining neighbors
-max_dist <- 7.5
+comp_dist <- 7.5
 
 # Add buffer variable to data frame
 bw_growth_df <- bw_growth_df %>%
-  add_buffer_variable(direction = "in", size = max_dist, region = study_region_bw)
+  add_buffer_variable(direction = "in", size = comp_dist, region = study_region_bw)
 
 ggplot() +
   geom_sf(data = bw_growth_df, aes(col = buffer))
@@ -122,7 +122,7 @@ bw_cv_grid_sf <- bw_cv_grid$blocks %>%
 
 # Bayesian modeling ------------------------------------------------------------
 focal_vs_comp_bw <- bw_growth_df %>%
-  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
+  create_focal_vs_comp(comp_dist = comp_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
 
 # a) Fit model (compute posterior parameters) with no permutation shuffling
 posterior_param_bw <- focal_vs_comp_bw %>%
@@ -159,7 +159,7 @@ if(FALSE){
 focal_vs_comp_bw <- bw_growth_df %>%
   # mutate(sp = trait_group) %>%
   mutate(sp = family) %>%
-  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
+  create_focal_vs_comp(comp_dist = comp_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
 
 # a) Fit model (compute posterior parameters) with no permutation shuffling
 posterior_param_bw <- focal_vs_comp_bw %>%
@@ -183,7 +183,7 @@ str_c("results/", format(Sys.time(), "%Y-%m-%d"), "_posterior_lambda_family.png"
 # Cross-validation -------------------------------------------------------------
 tic()
 cv_bw <- focal_vs_comp_bw %>%
-  run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+  run_cv(comp_dist = comp_dist, cv_grid = bw_cv_grid) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 toc()
 
@@ -220,7 +220,7 @@ for(i in 1:length(species_notion_vector)){
   # Focal vs comp main dataframe for analysis
   focal_vs_comp_bw <- bw_growth_df %>%
     mutate(sp = .data[[species_notion_vector[i]]]) %>%
-    create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
+    create_focal_vs_comp(comp_dist = comp_dist, cv_grid_sf = bw_cv_grid_sf, id = "treeID")
 
 
   # 1. Compute observed test statistic: RMSE with no cross-validation ----
@@ -238,7 +238,7 @@ for(i in 1:length(species_notion_vector)){
 
   # 2. Compute observed test statistic: RMSE with cross-validation ----
   observed_RMSE_CV[i] <- focal_vs_comp_bw %>%
-    run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+    run_cv(comp_dist = comp_dist, cv_grid = bw_cv_grid) %>%
     right_join(bw_growth_df, by = c("focal_ID" = "treeID")) %>%
     rmse(truth = growth, estimate = growth_hat) %>%
     pull(.estimate)
@@ -270,7 +270,7 @@ for(i in 1:length(species_notion_vector)){
   for(j in 1:num_shuffle){
     # Compute and save RMSE, and reset
     shuffle_RMSE_CV[[i]][j] <- focal_vs_comp_bw %>%
-      run_cv(max_dist = max_dist, cv_grid = bw_cv_grid, run_shuffle = TRUE) %>%
+      run_cv(comp_dist = comp_dist, cv_grid = bw_cv_grid, run_shuffle = TRUE) %>%
       right_join(bw_growth_df, by = c("focal_ID" = "treeID")) %>%
       rmse(truth = growth, estimate = growth_hat) %>%
       pull(.estimate)

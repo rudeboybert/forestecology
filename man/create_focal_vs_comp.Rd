@@ -4,12 +4,12 @@
 \alias{create_focal_vs_comp}
 \title{Create focal versus competitor trees data frame}
 \usage{
-create_focal_vs_comp(growth_df, max_dist, cv_grid_sf, id)
+create_focal_vs_comp(growth_df, comp_dist, cv_grid_sf, id)
 }
 \arguments{
 \item{growth_df}{A \code{\link{compute_growth}} output converted to \code{sf} object}
 
-\item{max_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
+\item{comp_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
 
 \item{cv_grid_sf}{An sf object of a \code{blockCV} block output}
 
@@ -34,7 +34,7 @@ following criteria
 \code{"R"} in the \code{codes2} variable (OK if a resprout at first census)
 }
 For each focal tree, "competitor trees" are all trees that (1) were alive at
-the first census and (2) within \code{max_dist} distance of the focal tree.
+the first census and (2) within \code{comp_dist} distance of the focal tree.
 }
 }
 \note{
@@ -51,7 +51,7 @@ library(sfheaders)
 library(tibble)
 
 # Create fold information sf object. TODO: clean this
-cv_grid_ex <-
+SpatialBlock_ex <-
   tibble(
     # Study region boundary
     x = c(0, 0, 5, 5),
@@ -61,7 +61,7 @@ cv_grid_ex <-
   sf_polygon() \%>\%
   mutate(folds = "1")
 
-# Plot example data. Observe for max_dist = 1.5, there are 6 focal vs comp pairs:
+# Plot example data. Observe for comp_dist = 1.5, there are 6 focal vs comp pairs:
 # 1. focal 1 vs comp 2
 # 2. focal 2 vs comp 1
 # 3. focal 2 vs comp 3
@@ -69,12 +69,12 @@ cv_grid_ex <-
 # 5. focal 4 vs comp 5
 # 6. focal 5 vs comp 4
 ggplot() +
-  geom_sf(data = cv_grid_ex, fill = "transparent") +
+  geom_sf(data = SpatialBlock_ex, fill = "transparent") +
   geom_sf_label(data = growth_toy, aes(label = ID))
 
 # Return corresponding data frame
 growth_toy \%>\%
-  create_focal_vs_comp(max_dist = 1.5, cv_grid_sf = cv_grid_ex, id = "ID")
+  create_focal_vs_comp(comp_dist = 1.5, cv_grid_sf = SpatialBlock_ex, id = "ID")
 
 # Load in growth_df with spatial data
 # See ?growth_ex for attaching spatial data to growth_df
@@ -83,7 +83,7 @@ data(growth_spatial_ex)
 data(cv_grid_sf_ex)
 
 focal_vs_comp_ex <- growth_spatial_ex \%>\%
-  create_focal_vs_comp(max_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+  create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 }
 \seealso{
 \code{\link{focal_vs_comp_distance}}

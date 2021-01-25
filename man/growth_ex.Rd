@@ -56,7 +56,7 @@ blocks <- bind_rows(
 ) \%>\%
   mutate(foldID = c(1, 2))
 
-cv_grid_ex <- spatialBlock(
+SpatialBlock_ex <- spatialBlock(
   speciesData = growth_ex,
   verbose = FALSE,
   k = 2,
@@ -66,7 +66,7 @@ cv_grid_ex <- spatialBlock(
 
 # Add foldID to data
 growth_spatial_ex <- growth_spatial_ex \%>\%
-  mutate(foldID = cv_grid_ex$foldID \%>\% as.factor())
+  mutate(foldID = SpatialBlock_ex$foldID \%>\% as.factor())
 }
 \seealso{
 \code{\link{census_1_ex}}, \code{\link{census_2_ex}}, and \code{\link{compute_growth}}

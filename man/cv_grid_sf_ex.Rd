@@ -23,14 +23,14 @@ comp data frame and run cross-validated models
 library(ggplot2)
 library(sf)
 
-max_dist <- 1
+comp_dist <- 1
 
 ggplot(cv_grid_sf_ex) +
   geom_sf() +
   geom_sf(data = growth_spatial_ex)
 
 focal_vs_comp_ex <- growth_spatial_ex \%>\%
-  create_focal_vs_comp(max_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+  create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 }
 \seealso{
 \code{\link{growth_spatial_ex}}

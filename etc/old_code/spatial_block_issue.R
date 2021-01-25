@@ -27,16 +27,16 @@ growth_ex <-
 data(study_region_ex)
 
 # set max dist
-max_dist <- 1
+comp_dist <- 1
 
 # add buffer
 growth_ex <- growth_ex %>%
-  add_buffer_variable(direction = "in", size = max_dist, region = study_region_ex)
+  add_buffer_variable(direction = "in", size = comp_dist, region = study_region_ex)
 
 ggplot() +
   geom_sf(data = growth_ex, aes(col = buffer), size = 2)
 
-#cv_grid_ex <- spatialBlock(
+#SpatialBlock_ex <- spatialBlock(
 #  speciesData = growth_ex, theRange = 5, verbose = FALSE, k = 2
 #)
 
@@ -56,7 +56,7 @@ ggplot() +
   geom_sf(data = blocks, fill = "transparent")
 
 # fit spatialBlock()
-cv_grid_ex <- spatialBlock(
+SpatialBlock_ex <- spatialBlock(
   speciesData = growth_ex,
   verbose = FALSE,
   k = 2,
@@ -68,10 +68,10 @@ cv_grid_ex <- spatialBlock(
 
 # Add foldID to data
 growth_ex <- growth_ex %>%
-  mutate(foldID = cv_grid_ex$foldID %>% as.factor())
+  mutate(foldID = SpatialBlock_ex$foldID %>% as.factor())
 
 # Visualize grid
-cv_grid_ex$plots +
+SpatialBlock_ex$plots +
   geom_sf(data = growth_ex, aes(col = foldID), size = 2)
 
 # Deliverable

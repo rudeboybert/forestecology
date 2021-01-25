@@ -223,9 +223,9 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 #'
 #' @examples
 #' 1 + 1
-run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
+run_cv <- function(focal_vs_comp, comp_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
   check_focal_vs_comp(focal_vs_comp)
-  check_inherits(max_dist, "numeric")
+  check_inherits(comp_dist, "numeric")
   check_inherits(cv_grid, "sf")
   if (!is.null(prior_param)) {check_prior_params(prior_param)}
   check_inherits(run_shuffle, "logical")
@@ -240,14 +240,14 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
     folds,
     fit_one_fold,
     focal_vs_comp,
-    max_dist,
+    comp_dist,
     cv_grid,
     prior_param,
     run_shuffle
   )
 }
 
-fit_one_fold <- function(fold, focal_vs_comp, max_dist,
+fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
                          cv_grid, prior_param, run_shuffle) {
   # Define test set and "full" training set (we will remove buffer region below)
   test <- focal_vs_comp %>%
@@ -269,7 +269,7 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
   # Remove trees in training set that are part of test set and buffer region to test set
   train <- train_full %>%
     st_as_sf() %>%
-    add_buffer_variable(direction = "out", size = max_dist, region = test_fold_boundary) %>%
+    add_buffer_variable(direction = "out", size = comp_dist, region = test_fold_boundary) %>%
     filter(buffer) %>%
     as_tibble()
 

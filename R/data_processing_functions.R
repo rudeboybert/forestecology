@@ -5,7 +5,7 @@
 #'
 #' @param census_1 A data frame of the first census.
 #' @param census_2 A data frame of the second (later) census
-#' @param id Name of variable common to \code{census_1} and \code{census_2}
+#' @param id Name of variable that uniquely identifies each tree common to \code{census_1} and \code{census_2}
 #' allowing you to join/merge both data frames.
 #'
 #' @return growth_df An sf data frame with \code{growth}: average annual growth in dbh.
@@ -61,7 +61,7 @@ compute_growth <- function(census_1, census_2, id) {
 #'
 #' @param growth_df A \code{\link{compute_growth}} output converted to \code{sf} object
 #' @param cv_grid_sf An sf object of a \code{blockCV} block output
-#' @param max_dist Distance to determine which neighboring trees to a focal tree are competitors.
+#' @param comp_dist Distance to determine which neighboring trees to a focal tree are competitors.
 #' @param id A character string of the variable name in \code{growth_df} uniquely identifying each tree
 #' @return \code{focal_vs_comp} data frame of all focal trees and for each focal
 #'   tree all possible competitor trees. In particular, for each competitor tree
@@ -82,7 +82,7 @@ compute_growth <- function(census_1, census_2, id) {
 #'   `"R"` in the `codes2` variable (OK if a resprout at first census)
 #' }
 #' For each focal tree, "competitor trees" are all trees that (1) were alive at
-#' the first census and (2) within \code{max_dist} distance of the focal tree.
+#' the first census and (2) within \code{comp_dist} distance of the focal tree.
 #' @note In order to speed computation, in particular of distances between all
 #'   focal/competitor tree pairs, we use the cross-validation \code{blockCV}
 #'   object to divide the study region into smaller subsets.
@@ -96,7 +96,7 @@ compute_growth <- function(census_1, census_2, id) {
 #' library(tibble)
 #'
 #' # Create fold information sf object. TODO: clean this
-#' cv_grid_ex <-
+#' SpatialBlock_ex <-
 #'   tibble(
 #'     # Study region boundary
 #'     x = c(0, 0, 5, 5),
@@ -106,7 +106,7 @@ compute_growth <- function(census_1, census_2, id) {
 #'   sf_polygon() %>%
 #'   mutate(folds = "1")
 #'
-#' # Plot example data. Observe for max_dist = 1.5, there are 6 focal vs comp pairs:
+#' # Plot example data. Observe for comp_dist = 1.5, there are 6 focal vs comp pairs:
 #' # 1. focal 1 vs comp 2
 #' # 2. focal 2 vs comp 1
 #' # 3. focal 2 vs comp 3
@@ -114,12 +114,12 @@ compute_growth <- function(census_1, census_2, id) {
 #' # 5. focal 4 vs comp 5
 #' # 6. focal 5 vs comp 4
 #' ggplot() +
-#'   geom_sf(data = cv_grid_ex, fill = "transparent") +
+#'   geom_sf(data = SpatialBlock_ex, fill = "transparent") +
 #'   geom_sf_label(data = growth_toy, aes(label = ID))
 #'
 #' # Return corresponding data frame
 #' growth_toy %>%
-#'   create_focal_vs_comp(max_dist = 1.5, cv_grid_sf = cv_grid_ex, id = "ID")
+#'   create_focal_vs_comp(comp_dist = 1.5, cv_grid_sf = SpatialBlock_ex, id = "ID")
 #'
 #' # Load in growth_df with spatial data
 #' # See ?growth_ex for attaching spatial data to growth_df
@@ -128,11 +128,11 @@ compute_growth <- function(census_1, census_2, id) {
 #' data(cv_grid_sf_ex)
 #'
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
-#'   create_focal_vs_comp(max_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
-create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
+#'   create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
 
   check_inherits(growth_df, "data.frame")
-  check_inherits(max_dist, "numeric")
+  check_inherits(comp_dist, "numeric")
   check_inherits(cv_grid_sf, "sf")
   check_inherits(id, "character")
 
@@ -171,7 +171,7 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
 
 
   # 3. For each focal tree, identify all candidate competitor trees that are
-  # within max_dist distance of it, and save as data frame. Note that to we do
+  # within comp_dist distance of it, and save as data frame. Note that to we do
   # this fold-by-fold using the previously computed blockCV grid object. We do
   # this to acceleration computation, in particular all distance pairs.
   all_folds <- focal_trees$foldID %>%
@@ -188,9 +188,9 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
       filter(foldID == all_folds[i])
 
     # Identify comp trees in this fold: both trees inside fold and those within
-    # max_dist distance outwards of fold boundary
+    # comp_dist distance outwards of fold boundary
     comp_trees_fold <- comp_trees %>%
-      add_buffer_variable(direction = "out", size = max_dist, region = fold_boundary) %>%
+      add_buffer_variable(direction = "out", size = comp_dist, region = fold_boundary) %>%
       filter(!buffer)
 
     if (FALSE) {
@@ -215,8 +215,8 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
       focal_trees_fold %>%
       # Compute distances to all competitor trees in this fold
       focal_vs_comp_distance(comp_trees_fold) %>%
-      # Remove pairs more than max_dist apart
-      filter(dist < max_dist) %>%
+      # Remove pairs more than comp_dist apart
+      filter(dist < comp_dist) %>%
       # join focal tree data
       left_join(focal_trees_fold, by = "focal_ID") %>%
       # Join competitor tree data

@@ -11,7 +11,7 @@ compute_growth(census_1, census_2, id)
 
 \item{census_2}{A data frame of the second (later) census}
 
-\item{id}{Name of variable common to \code{census_1} and \code{census_2}
+\item{id}{Name of variable that uniquely identifies each tree common to \code{census_1} and \code{census_2}
 allowing you to join/merge both data frames.}
 }
 \value{

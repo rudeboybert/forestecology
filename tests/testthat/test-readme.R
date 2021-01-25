@@ -24,10 +24,10 @@ test_that("readme code works", {
       sp = as.factor(sp)
     )
 
-  max_dist <- 1
+  comp_dist <- 1
 
   growth_ex <- growth_ex %>%
-    add_buffer_variable(direction = "in", size = max_dist, region = study_region_ex)
+    add_buffer_variable(direction = "in", size = comp_dist, region = study_region_ex)
 
   expect_true(check_inherits(growth_ex, "data.frame"))
 
@@ -39,7 +39,7 @@ test_that("readme code works", {
   ) %>%
     mutate(foldID = c(1, 2))
 
-  cv_grid_ex <- spatialBlock(
+  SpatialBlock_ex <- spatialBlock(
     speciesData = growth_ex,
     verbose = FALSE,
     k = 2,
@@ -49,13 +49,13 @@ test_that("readme code works", {
   )
 
   growth_ex <- growth_ex %>%
-    mutate(foldID = cv_grid_ex$foldID %>% as.factor())
+    mutate(foldID = SpatialBlock_ex$foldID %>% as.factor())
 
-  cv_grid_sf_ex <- cv_grid_ex$blocks %>%
+  cv_grid_sf_ex <- SpatialBlock_ex$blocks %>%
     st_as_sf()
 
   focal_vs_comp_ex <- growth_ex %>%
-    create_focal_vs_comp(max_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+    create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 
   # Checks each column in focal_vs_comp is of appropriate type
   expect_true(check_inherits(focal_vs_comp_ex, "data.frame"))
@@ -91,7 +91,7 @@ test_that("readme code works", {
   expect_true(
     check_inherits(
       focal_vs_comp_ex %>%
-        run_cv(max_dist = max_dist, cv_grid = cv_grid_sf_ex) %>%
+        run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex) %>%
         right_join(growth_ex, by = c("focal_ID" = "ID")),
     "data.frame"
     )

@@ -136,7 +136,7 @@ blocks <- bind_rows(
 ) %>%
   mutate(foldID = c(1, 2))
 
-cv_grid_ex <- spatialBlock(
+SpatialBlock_ex <- spatialBlock(
   speciesData = growth_ex,
   k = 2,
   selection = "systematic",
@@ -146,19 +146,19 @@ cv_grid_ex <- spatialBlock(
 
 # Add foldID to data
 growth_spatial_ex <- growth_spatial_ex %>%
-  mutate(foldID = cv_grid_ex$foldID %>% as.factor())
+  mutate(foldID = SpatialBlock_ex$foldID %>% as.factor())
 use_data(growth_spatial_ex, overwrite = TRUE)
 
 
 ## Create spatial objects ----
-cv_grid_sf_ex <- cv_grid_ex$blocks %>%
+cv_grid_sf_ex <- SpatialBlock_ex$blocks %>%
   st_as_sf()
 use_data(cv_grid_sf_ex, overwrite = TRUE)
 
 
 ## Create focal_vs_comp data frame  ----
 focal_vs_comp_ex <- growth_spatial_ex %>%
-  create_focal_vs_comp(max_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+  create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 use_data(focal_vs_comp_ex, overwrite = TRUE)
 
 

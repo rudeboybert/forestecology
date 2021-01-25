@@ -151,7 +151,7 @@
 #' ) %>%
 #'   mutate(foldID = c(1, 2))
 #'
-#' cv_grid_ex <- spatialBlock(
+#' SpatialBlock_ex <- spatialBlock(
 #'   speciesData = growth_ex,
 #'   verbose = FALSE,
 #'   k = 2,
@@ -161,7 +161,7 @@
 #'
 #' # Add foldID to data
 #' growth_spatial_ex <- growth_spatial_ex %>%
-#'   mutate(foldID = cv_grid_ex$foldID %>% as.factor())
+#'   mutate(foldID = SpatialBlock_ex$foldID %>% as.factor())
 "growth_ex"
 
 
@@ -195,7 +195,7 @@
 #' library(dplyr)
 #' library(sf)
 #'
-#' max_dist <- 1
+#' comp_dist <- 1
 #'
 #' ggplot() +
 #'   geom_sf(data = growth_spatial_ex, aes(col = buffer), size = 2)
@@ -205,7 +205,7 @@
 #'
 #' # Create the focal versus comp data frame
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
-#'   create_focal_vs_comp(max_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+#'   create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 "growth_spatial_ex"
 
 
@@ -228,14 +228,14 @@
 #' library(ggplot2)
 #' library(sf)
 #'
-#' max_dist <- 1
+#' comp_dist <- 1
 #'
 #' ggplot(cv_grid_sf_ex) +
 #'   geom_sf() +
 #'   geom_sf(data = growth_spatial_ex)
 #'
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
-#'   create_focal_vs_comp(max_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+#'   create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 "cv_grid_sf_ex"
 
 

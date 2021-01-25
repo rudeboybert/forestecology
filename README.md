@@ -56,63 +56,66 @@ library(snakecase)
 library(patchwork)
 ```
 
-### Preprocess census data
+### Compute growth of trees based on census data
 
-We first combine data from two repeat censuses into a single `tibble`
-and compute the growth of all surviving individuals. Note that per Allen
-and Kim (2020) we first remove resprouts from the second census.
+We first combine data from two repeat censuses into a single `growth`
+data frame that has the average annual growth of all trees alive at both
+censuses that aren’t resprouts at the second census per Allen and Kim
+(2020).
 
 ``` r
-data(census_df1_ex, census_df2_ex)
-
-# Filter out resprouts
-census_df2_ex_no_r <- census_df2_ex %>%
-  filter(!str_detect(codes, "R"))
-
-# Merge both censuses and compute growth. Note we require any species variable
-# to be coded as a factor
-census_combined_ex <-
-  compute_growth(census_df1_ex, census_df2_ex_no_r, id = "ID") %>%
-  mutate(sp = to_any_case(sp) %>% as.factor())
+growth_ex <-
+  compute_growth(
+    census_1 = census_1_ex,
+    census_2 = census_2_ex %>% filter(!str_detect(codes, "R")),
+    id = "ID"
+    ) %>%
+  mutate(sp = to_any_case(sp) %>% factor())
 ```
 
 ### Add spatial information
 
 Our growth model assumes that two individual trees compete if they are
-less than a pre-specified distance `max_dist` apart. Furthermore, we
-define a buffer region of size `max_dist` from the boundary of the study
-region. All trees outside this buffer region will be our “focal” trees
-of interest since we have complete competitor information on them. All
-trees inside this buffer region will only be considered as “competitor”
-trees to “focal” trees.
+less than a pre-specified distance `comp_dist` apart. Furthermore, we
+define a buffer region of size `comp_dist` from the boundary of the
+study region.
 
 ``` r
-data("ex_study_region")
-
 # Set competitor distance
-max_dist <- 1
+comp_dist <- 1
 
-# Create sf representation of buffer region
-buffer_region <- ex_study_region %>% 
-  compute_buffer_region(direction = "in", size = max_dist)
+# Add buffer variable to growth data frame
+growth_ex <- growth_ex %>%
+  add_buffer_variable(direction = "in", size = comp_dist, region = study_region_ex)
 
-# Add buffer variable
-census_combined_ex <- census_combined_ex %>%
-  add_buffer_variable(direction = "in", size = max_dist, region = ex_study_region)
+# Optional: Create sf representation of buffer region
+buffer_region <- study_region_ex %>% 
+  compute_buffer_region(direction = "in", size = comp_dist)
+```
 
+In the visualization below, the solid line represents the boundary of
+the study region while the dashed line delimits the buffer region
+within. All trees outside this buffer region (in red) will be our
+“focal” trees of interest in our model since we have complete
+competitor information on all of them. All trees inside this buffer
+region (in blue) will only be considered as “competitor” trees to
+“focal” trees.
+
+``` r
 base_plot <- ggplot() +
-  geom_sf(data = ex_study_region, fill = "transparent") +
+  geom_sf(data = study_region_ex, fill = "transparent") +
   geom_sf(data = buffer_region, fill = "transparent", linetype = "dashed")
 
 base_plot + 
-  geom_sf(data = census_combined_ex, aes(col = buffer), size = 2)
+  geom_sf(data = growth_ex, aes(col = buffer), size = 2)
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
 
-We then manually define the blocks/folds for our spatial
-cross-validation scheme and convert them to an `sf` object using
-`sfheaders::sf_polygon()`:
+Next we add information pertaining to our spatial cross-validation
+scheme. We first manually define the spatial blocks that will act as our
+cross-validation folds and convert them to an `sf` object using
+`sf_polygon()` function from the `sfheaders` package.
 
 ``` r
 fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
@@ -125,54 +128,57 @@ blocks <- bind_rows(
   mutate(foldID = c(1, 2))
 ```
 
-Next we assign each tree to blocks/folds using the `spatialBlock()`
-function from the [`blockCV`](https://github.com/rvalavi/blockCV)
-package.
+Next we assign each tree to the correct folds using the `foldID`
+variable of the output returned by the `spatialBlock()` function from
+the [`blockCV`](https://github.com/rvalavi/blockCV) package.
 
 ``` r
-ex_cv_grid <- spatialBlock(
-  speciesData = census_combined_ex, k = 2, selection = "systematic", blocks = blocks,
+SpatialBlock_ex <- spatialBlock(
+  speciesData = growth_ex, k = 2, selection = "systematic", blocks = blocks,
   showBlocks = FALSE, verbose = FALSE
 )
 
-# Add fold information to data
-census_combined_ex <- census_combined_ex %>%
-  mutate(foldID = ex_cv_grid$foldID %>% factor())
-
-base_plot + 
-  geom_sf(data = census_combined_ex, aes(col = buffer, shape = foldID), size = 2) +
-  geom_sf(data = blocks, fill = "transparent", col = "orange")
+growth_ex <- growth_ex %>%
+  mutate(foldID = SpatialBlock_ex$foldID %>% factor())
 ```
-
-<img src="man/figures/README-unnamed-chunk-7-1.png" width="100%" />
 
 We also extract the spatial cross-validation grid itself as an `sf`
 object for later use.
 
 ``` r
-ex_cv_grid_sf <- ex_cv_grid$blocks %>%
+cv_grid_sf_ex <- SpatialBlock_ex$blocks %>%
   st_as_sf()
-
 ggplot() +
-  geom_sf(data = ex_cv_grid_sf)
+  geom_sf(data = cv_grid_sf_ex)
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
 
-### Define focal versus competitor trees
-
-We then create a list-column data frame (via `tidyr::nest()`) where each
-row represents a focal tree of interest and the `comp` variable contains
-nested information on each of it’s competitors
-
-which has a row for each competing pair of individuals (each pair of
-individuals within `max_dist` of one another):
+In the visualization below, the spatial blocks that act as our
+cross-validation folds are delineated in orange. Correspondingly the
+shape of each point indicates which fold each tree has been assigned to.
 
 ``` r
-focal_vs_comp_ex <- census_combined_ex %>%
-  create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
+base_plot + 
+  geom_sf(data = growth_ex, aes(col = buffer, shape = foldID), size = 2) +
+  geom_sf(data = blocks, fill = "transparent", col = "orange")
+```
 
-# Nested view
+<img src="man/figures/README-unnamed-chunk-10-1.png" width="100%" />
+
+### Compute focal versus competitor tree information
+
+Based on our `growth` data frame, we now explicitly define all “focal”
+trees and their respective “competitor” trees in a `focal_vs_comp` data
+frame. This data frame has rows corresponding to each focal tree and all
+information about its competitors are saved in list-column variable
+`comp`. We implemented this nested format using `tidyr::nest()` in order
+to minimize redundancy, given that the same tree can act as a competitor
+multiple times.
+
+``` r
+focal_vs_comp_ex <- growth_ex %>%
+  create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 focal_vs_comp_ex
 #> # A tibble: 6 x 7
 #>   focal_ID focal_sp         dbh foldID    geometry growth comp            
@@ -183,8 +189,14 @@ focal_vs_comp_ex
 #> 4        5 sugar_maple       35 1      (3.25 1.75)  1.40  <tibble [1 × 4]>
 #> 5        7 sugar_maple       22 2          (8 1.5)  0.600 <tibble [3 × 4]>
 #> 6        9 sugar_maple       42 2       (8.75 1.5)  1.40  <tibble [3 × 4]>
+```
 
-# Unnested view:
+Using `unnest()` we can fully expand the competitor information saved in
+the `focal_vs_comp` data frame. For example the tree with `focal_ID`
+equal to 2 located at (1.5, 2.5) has two competitors within `comp_dist`
+distance from it.
+
+``` r
 focal_vs_comp_ex %>% 
   unnest(cols = "comp")
 #> # A tibble: 11 x 10
@@ -207,19 +219,21 @@ focal_vs_comp_ex %>%
 ### Fit model and make predictions
 
 We then fit our competitor growth model as specified in Allen and Kim
-(2020)
+(2020).
 
 ``` r
 comp_bayes_lm_ex <- focal_vs_comp_ex %>%
-  comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
+  comp_bayes_lm(prior_param = NULL)
 ```
 
-Since the resulting output is an S3 object of class `comp_bayes_lm`, we
-can both print and visualize its output: the posterior distribution of
-all the linear regression parameters.
+Since the resulting output is an S3 object of class `comp_bayes_lm` we
+defined, we can both print and visualize its output: the posterior
+distribution of all linear regression parameters: the intercept, the
+slope for dbh for each species, and a matrix of all species pairs
+competitive effects on growth.
 
 ``` r
-# Object summary
+# Print
 comp_bayes_lm_ex
 #> A bayesian competition model (p = 7).
 #> 
@@ -235,17 +249,33 @@ p3 <- autoplot(comp_bayes_lm_ex, type = "competition")
 (p1 | p2) / p3
 ```
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-14-1.png" width="100%" />
 
-Furthermore, we append fitted/predicted growth values for each tree
-using `predict.comp_bayes_lm()` to our data frame and then compute the
-root mean squared error (RMSE).
+Furthermore, we can apply a generic `predict()` function to the
+resulting `comp_bayes_lm` object to obtain fitted/predicted values of
+this model. We append these `growth_hat` values to our `focal_vs_comp`
+data frame.
 
 ``` r
 focal_vs_comp_ex <- focal_vs_comp_ex %>%
   mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
+focal_vs_comp_ex
+#> # A tibble: 6 x 8
+#>   focal_ID focal_sp   dbh foldID                  geometry growth comp 
+#>      <dbl> <fct>    <dbl> <fct>                    <POINT>  <dbl> <lis>
+#> 1        2 america…    20 1                      (1.5 2.5)  0.800 <tib…
+#> 2        3 sugar_m…    15 1                    (1.75 2.25)  1.00  <tib…
+#> 3        4 america…    12 1                        (3 1.5)  0.400 <tib…
+#> 4        5 sugar_m…    35 1                    (3.25 1.75)  1.40  <tib…
+#> 5        7 sugar_m…    22 2                        (8 1.5)  0.600 <tib…
+#> 6        9 sugar_m…    42 2                     (8.75 1.5)  1.40  <tib…
+#> # … with 1 more variable: growth_hat <dbl>
+```
 
-# Compute RMSE
+We then compute the root mean squared error (RMSE) of the observed
+versus fitted growths as a measure of our model’s fit.
+
+``` r
 focal_vs_comp_ex %>%
   yardstick::rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
@@ -254,17 +284,25 @@ focal_vs_comp_ex %>%
 
 ### Run spatial cross-validation
 
-Here we repeat the process but with running spatial cross-validation: we
-fit the data to one fold and apply it to the other. Note the increase in
-RMSE, reflecting the fact that our original estimate of model error was
-overly optimistic as it did not account for spatial autocorrelation.
+Whereas in our example above we fit our model to the entirety of the
+data and then generated fitted/predicted growths on this same data, we
+now apply the same model with spatial cross-validation. All the trees in
+a given fold will be given a turn as the “test” data while the trees is
+all remaining folds will be the “training” data. We then fit the model
+to the training data, but compute fitted/predicted growths for the
+separate and independent data.
 
 ``` r
 ex_bw <- focal_vs_comp_ex %>%
-  run_cv(max_dist = max_dist, cv_grid = ex_cv_grid_sf) %>%
-  right_join(census_combined_ex, by = c("focal_ID" = "ID"))
+  run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex) %>%
+  right_join(growth_ex, by = c("focal_ID" = "ID"))
+```
 
-# Compute RMSE of spatially cross-validated model
+Note the increase in RMSE, reflecting the fact that our original
+estimate of model error was overly optimistic as it did not account for
+spatial autocorrelation.
+
+``` r
 ex_bw %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
