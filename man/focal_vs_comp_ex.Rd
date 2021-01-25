@@ -31,7 +31,7 @@ focal_vs_comp_ex
 This is an example focal versus comp data frame. The rows are focal
 trees which are repeated for all competitor trees within a specified
 distance from them. In this case that distance is 1. This is the focal
-versus comp for \code{\link{ex_growth_df_spatial}}.
+versus comp for \code{\link{growth_spatial_ex}}.
 }
 \examples{
 library(dplyr)
@@ -40,6 +40,6 @@ comp_bayes_lm_ex <- focal_vs_comp_ex \%>\%
   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 }
 \seealso{
-\code{\link{ex_growth_df_spatial}}
+\code{\link{growth_spatial_ex}}
 }
 \keyword{datasets}

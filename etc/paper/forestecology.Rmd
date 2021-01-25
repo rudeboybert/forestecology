@@ -135,11 +135,11 @@ Furthermore, we ensure that the different variables have the correct names, type
 We load census data from 2008 and 2014 saved in the package, then merge species data (genus, species, linnean classification, family, etc). 
 
 ```{r bw-load-data}
-data(bw_census_2008, bw_census_2014, bw_species)
+data(census_2008_bw, census_2014_bw, species_bw)
 
 # Append additional species data
-bw_census_2008 <- bw_census_2008 %>%
-  left_join(bw_species, by = "sp") %>%
+census_2008_bw <- census_2008_bw %>%
+  left_join(species_bw, by = "sp") %>%
   select(-c(genus, species, latin))
 ```
 
@@ -184,11 +184,11 @@ After computing the average annual growth for each tree, we ensure to convert al
 In the case of Big Woods data, we first remove all trees that were re-sprouts in the later (2014) census. Additionally, we have included two classification of tree species: `species` and `family`. To illustrate model comparison, we test competition models in which individuals are grouped by species and by family.
 
 ```{r bw-compute-growth}
-bw_census_2014 <- bw_census_2014 %>%
+census_2014_bw <- census_2014_bw %>%
   filter(!str_detect(codes, "R"))
 
 bw_growth_df <-
-  compute_growth(bw_census_2008, bw_census_2014, id = "treeID") %>%
+  compute_growth(census_2008_bw, census_2014_bw, id = "treeID") %>%
   # Convert all variables denoting species to factors
   mutate(
     sp = sp %>% to_any_case() %>% as.factor(),
@@ -249,14 +249,14 @@ The second constant is `cv_fold_size` which defines the length and width of the 
 
 ### Big Woods
 
-First, we indicate which trees are part of the buffer. This necessitates information about the study region boundary. In this case, we use a `sf_polygon` object `bw_study_region` which comes pre-loaded in the `forestecology` packages. After loading `bw_study_region`, we illustrate the results of the `add_buffer_variable()` function in Figure \ref{fig:bw-define-buffer}. Trees on the periphery denote with lighter colors are part of the buffer and will not be considered as "focal" trees of interest going forward; they will only be considered as competitor trees. 
+First, we indicate which trees are part of the buffer. This necessitates information about the study region boundary. In this case, we use a `sf_polygon` object `study_region_bw` which comes pre-loaded in the `forestecology` packages. After loading `study_region_bw`, we illustrate the results of the `add_buffer_variable()` function in Figure \ref{fig:bw-define-buffer}. Trees on the periphery denote with lighter colors are part of the buffer and will not be considered as "focal" trees of interest going forward; they will only be considered as competitor trees. 
 
 ```{r bw-define-buffer, out.width="100%", fig.cap="Buffer region for Big Woods study region."}
-data(bw_study_region)
+data(study_region_bw)
 
 bw_growth_df <- bw_growth_df %>%
   add_buffer_variable(direction = "in", size = max_dist, 
-                      region = bw_study_region)
+                      region = study_region_bw)
 
 ggplot() +
   geom_sf(data = bw_growth_df %>% sample_frac(0.2), 

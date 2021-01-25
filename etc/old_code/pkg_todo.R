@@ -19,8 +19,8 @@ library(ggridges)
 
 # Load & preprocess data -------------------------------------------------------
 # Append additional species data
-bw_census_2008 <- bw_census_2008 %>%
-  left_join(bw_species, by = "sp") %>%
+census_2008_bw <- census_2008_bw %>%
+  left_join(species_bw, by = "sp") %>%
   select(-c(genus, species, latin))
 
 # Maybe?
@@ -30,9 +30,9 @@ bw_census_2008 <- bw_census_2008 %>%
 
 
 # Compute growth ---------------------------------------------------------------
-census_2008 <- bw_census_2008
+census_2008 <- census_2008_bw
 # we need to filter out the resprouts
-census_2014 <- bw_census_2014 %>%
+census_2014 <- census_2014_bw %>%
   filter(!str_detect(codes, "R"))
 
 # How to designate unique identifier?
@@ -66,7 +66,7 @@ max_dist <- 7.5
 
 # Add buffer variable to data frame
 bw_growth_df <- bw_growth_df %>%
-  add_buffer_variable(direction = "in", size = max_dist, region = bw_study_region)
+  add_buffer_variable(direction = "in", size = max_dist, region = study_region_bw)
 
 ggplot() +
   geom_sf(data = bw_growth_df, aes(col = buffer))

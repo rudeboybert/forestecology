@@ -173,7 +173,7 @@ print.comp_bayes_lm <- function(x, ...) {
 #'
 #' # Load in posterior parameter example
 #' # and growth data to compare to
-#' data(comp_bayes_lm_ex, ex_growth_df)
+#' data(comp_bayes_lm_ex, growth_ex)
 #'
 #' predictions <- focal_vs_comp_ex %>%
 #'   mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))

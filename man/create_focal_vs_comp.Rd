@@ -70,20 +70,20 @@ cv_grid_ex <-
 # 6. focal 5 vs comp 4
 ggplot() +
   geom_sf(data = cv_grid_ex, fill = "transparent") +
-  geom_sf_label(data = growth_df_ex, aes(label = ID))
+  geom_sf_label(data = growth_toy, aes(label = ID))
 
 # Return corresponding data frame
-growth_df_ex \%>\%
+growth_toy \%>\%
   create_focal_vs_comp(max_dist = 1.5, cv_grid_sf = cv_grid_ex, id = "ID")
 
 # Load in growth_df with spatial data
-# See ?ex_growth_df for attaching spatial data to growth_df
-data(ex_growth_df_spatial)
+# See ?growth_ex for attaching spatial data to growth_df
+data(growth_spatial_ex)
 # Load in cv_grid
-data(ex_cv_grid_sf)
+data(cv_grid_sf_ex)
 
-focal_vs_comp_ex <- ex_growth_df_spatial \%>\%
-  create_focal_vs_comp(max_dist = 1, cv_grid_sf = ex_cv_grid_sf, id = "ID")
+focal_vs_comp_ex <- growth_spatial_ex \%>\%
+  create_focal_vs_comp(max_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 }
 \seealso{
 \code{\link{focal_vs_comp_distance}}
