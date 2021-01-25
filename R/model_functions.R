@@ -117,7 +117,7 @@ default_prior_params <- function(X) {
 
 
 
-
+#' @export
 print.comp_bayes_lm <- function(x, ...) {
   cat(
     paste0(

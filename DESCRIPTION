@@ -1,10 +1,11 @@
 Package: forestecology
 Type: Package
 Title: Methods and Data for Forest Ecology Model Assessment and Selection
-Version: 0.1.0.9003
+Version: 0.1.0.9004
 Authors@R: c(
-    person("Albert Y.", "Kim", email = "albert.ys.kim@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-306X")),
-    person("David", "Allen", email = "dallen@middlebury.edu", role = "aut", comment = c(ORCID = "0000-0002-0712-9603"))
+    person(given = "Albert Y.", family = "Kim", email = "albert.ys.kim@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-306X")),
+    person(given = "David", family = "Allen", email = "dallen@middlebury.edu", role = "aut", comment = c(ORCID = "0000-0002-0712-9603")),
+    person(given = "Simon", family = "Couch", email = "simonpatrickcouch@gmail.com", role = "aut")
     )
 Maintainer: Albert Y. Kim <albert.ys.kim@gmail.com>
 Description: Code for assessing and selecting models for predicting the growth 
