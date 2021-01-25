@@ -140,7 +140,7 @@ create_focal_vs_comp <- function(growth_df, max_dist, cv_grid_sf, id) {
     glue_stop("The `id` argument must be the name of a column in `growth_df`.")
   }
 
-  map2(
+  purrr::map2(
     c("ID", "sp",  "dbh1", "dbh2",  "growth", "geometry", "buffer", "foldID"),
     c("numeric", "factor", "numeric", "numeric", "numeric", "sfc", "logical", "factor"),
     check_column,
