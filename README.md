@@ -58,6 +58,40 @@ library(patchwork)
 
 ### Compute growth of trees based on census data
 
+The starting point of our analysis are data from two repeat censuses
+`census_1_ex` and `census_2_ex`. For example consider the forest census
+data in `census_1_ex`
+
+``` r
+census_1_ex
+#> # A tibble: 10 x 7
+#>       ID sp                gx    gy date       codes   dbh
+#>    <int> <chr>          <dbl> <dbl> <date>     <chr> <dbl>
+#>  1     1 sugar maple     0.75  2.5  2015-06-01 M         5
+#>  2     2 American beech  1.5   2.5  2015-06-01 M        20
+#>  3     3 sugar maple     1.75  2.25 2015-06-01 M        15
+#>  4     4 American beech  3     1.5  2015-06-01 M        12
+#>  5     5 sugar maple     3.25  1.75 2015-06-01 M        35
+#>  6     6 American beech  5.5   4.5  2015-06-01 M         6
+#>  7     7 sugar maple     8     1.5  2015-06-01 M        22
+#>  8     8 American beech  8.5   0.75 2015-06-01 M        14
+#>  9     9 sugar maple     8.75  1.5  2015-06-01 M        42
+#> 10    10 American beech  8.75  1.75 2015-06-01 M         4
+```
+
+We convert the `census_1_ex` data frame to an object of type `sf` and
+then plot using `geom_sf()`.
+
+``` r
+ggplot() +
+  geom_sf(
+    data = census_1_ex %>% sf::st_as_sf(coords = c("gx", "gy")),
+    aes(col = sp, size = dbh)
+  )
+```
+
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+
 We first combine data from two repeat censuses into a single `growth`
 data frame that has the average annual growth of all trees alive at both
 censuses that aren’t resprouts at the second census per Allen and Kim
@@ -110,7 +144,7 @@ base_plot +
   geom_sf(data = growth_ex, aes(col = buffer), size = 2)
 ```
 
-<img src="man/figures/README-unnamed-chunk-6-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 Next we add information pertaining to our spatial cross-validation
 scheme. We first manually define the spatial blocks that will act as our
@@ -151,7 +185,7 @@ base_plot +
   geom_sf(data = blocks_ex, fill = "transparent", col = "orange")
 ```
 
-<img src="man/figures/README-unnamed-chunk-9-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 ### Compute focal versus competitor tree information
 
@@ -229,14 +263,14 @@ comp_bayes_lm_ex
 #> 1 a_0     250     253  
 #> 2 b_0      25      25.1
 
-# Visualizations (combined with patchwork pkg)
+# Posterior distributions (plots combined with patchwork pkg)
 p1 <- autoplot(comp_bayes_lm_ex, type = "intercepts")
 p2 <- autoplot(comp_bayes_lm_ex, type = "dbh_slopes")
 p3 <- autoplot(comp_bayes_lm_ex, type = "competition")
 (p1 | p2) / p3
 ```
 
-<img src="man/figures/README-unnamed-chunk-13-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
 Furthermore, we can apply a generic `predict()` function to the
 resulting `comp_bayes_lm` object to obtain fitted/predicted values of

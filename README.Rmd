@@ -60,6 +60,22 @@ library(patchwork)
 
 ### Compute growth of trees based on census data
 
+The starting point of our analysis are data from two repeat censuses `census_1_ex` and `census_2_ex`. For example consider the forest census data in `census_1_ex`
+
+```{r}
+census_1_ex
+```
+
+We convert the `census_1_ex` data frame to an object of type `sf` and then plot using `geom_sf()`. 
+
+```{r}
+ggplot() +
+  geom_sf(
+    data = census_1_ex %>% sf::st_as_sf(coords = c("gx", "gy")),
+    aes(col = sp, size = dbh)
+  )
+```
+
 We first combine data from two repeat censuses into a single `growth` data frame that has the average annual growth of all trees alive at both censuses that aren't resprouts at the second census per Allen and Kim (2020).
 
 ```{r}
@@ -165,7 +181,7 @@ Since the resulting output is an S3 object of class `comp_bayes_lm` we defined, 
 # Print
 comp_bayes_lm_ex
 
-# Visualizations (combined with patchwork pkg)
+# Posterior distributions (plots combined with patchwork pkg)
 p1 <- autoplot(comp_bayes_lm_ex, type = "intercepts")
 p2 <- autoplot(comp_bayes_lm_ex, type = "dbh_slopes")
 p3 <- autoplot(comp_bayes_lm_ex, type = "competition")
