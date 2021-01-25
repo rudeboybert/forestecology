@@ -303,9 +303,8 @@
 #' library(yardstick)
 #'
 #' # Compare model predictions to observation
-#' predictions <- comp_bayes_lm_ex %>%
-#'   predict(focal_vs_comp = focal_vs_comp_ex) %>%
-#'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#' predictions <- focal_vs_comp_ex %>%
+#'   mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
 #'
 #' predictions %>%
 #'   rmse(truth = growth, estimate = growth_hat) %>%

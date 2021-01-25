@@ -69,9 +69,8 @@ test_that("readme code works", {
 
   expect_true(check_comp_bayes_lm(comp_bayes_lm_ex))
 
-  predictions <- comp_bayes_lm_ex %>%
-    predict(focal_vs_comp = focal_vs_comp_ex) %>%
-    right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+  predictions <- focal_vs_comp_ex %>%
+    mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
 
   expect_true(
     check_inherits(

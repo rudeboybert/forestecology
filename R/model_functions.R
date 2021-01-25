@@ -161,7 +161,7 @@ print.comp_bayes_lm <- function(x, ...) {
 #' @importFrom stats model.matrix
 #' @importFrom tidyr nest
 #'
-#' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
+#' @return A vector of predictions with length equal to the input data.
 #' @seealso \code{\link{comp_bayes_lm}}
 #' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 #' @export
@@ -175,9 +175,8 @@ print.comp_bayes_lm <- function(x, ...) {
 #' # and growth data to compare to
 #' data(comp_bayes_lm_ex, ex_growth_df)
 #'
-#' predictions <- comp_bayes_lm_ex %>%
-#'   predict(focal_vs_comp = focal_vs_comp_ex) %>%
-#'   right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+#' predictions <- focal_vs_comp_ex %>%
+#'   mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
 #'
 #' predictions %>%
 #'   ggplot(aes(growth, growth_hat)) +
@@ -201,11 +200,7 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 
   # Make posterior predictions
   mu_star <- object$post_params$mu_star
-  focal_trees <- focal_trees %>%
-    mutate(growth_hat = as.vector(X %*% mu_star)) %>%
-    select(focal_ID, growth_hat)
-
-  focal_trees
+  as.vector(X %*% mu_star)
 }
 
 
@@ -222,6 +217,7 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 #' @import dplyr
 #' @import sf
 #' @import sfheaders
+#' @importFrom tibble enframe
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 #' @export
 #'
@@ -282,7 +278,9 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
     comp_bayes_lm(prior_param = prior_param, run_shuffle = run_shuffle)
 
   comp_bayes_lm_fold %>%
-    predict(focal_vs_comp = test)
+    predict(focal_vs_comp = test) %>%
+    enframe(name = NULL, value = "growth_hat") %>%
+    mutate(focal_ID = test$focal_ID)
 }
 
 

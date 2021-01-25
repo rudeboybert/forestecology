@@ -18,7 +18,7 @@ Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371
 \item{...}{Currently ignored—only included for consistency with generic.}
 }
 \value{
-\code{focal_vs_comp} with new column of predicted \code{growth_hat}
+A vector of predictions with length equal to the input data.
 }
 \description{
 Applies fitted model from \code{\link{comp_bayes_lm}} and
@@ -33,9 +33,8 @@ library(ggplot2)
 # and growth data to compare to
 data(comp_bayes_lm_ex, ex_growth_df)
 
-predictions <- comp_bayes_lm_ex \%>\%
-  predict(focal_vs_comp = focal_vs_comp_ex) \%>\%
-  right_join(ex_growth_df, by = c("focal_ID" = "ID"))
+predictions <- focal_vs_comp_ex \%>\%
+  mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
 
 predictions \%>\%
   ggplot(aes(growth, growth_hat)) +
