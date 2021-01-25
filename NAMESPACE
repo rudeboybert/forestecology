@@ -2,6 +2,7 @@
 
 S3method(autoplot,comp_bayes_lm)
 S3method(predict,comp_bayes_lm)
+S3method(print,comp_bayes_lm)
 export("%>%")
 export(add_buffer_variable)
 export(autoplot)
