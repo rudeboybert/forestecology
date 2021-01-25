@@ -53,6 +53,7 @@ library(sfheaders)
 library(blockCV)
 library(yardstick)
 library(snakecase)
+library(patchwork)
 ```
 
 ### Preprocess census data
@@ -220,121 +221,21 @@ all the linear regression parameters.
 ``` r
 # Object summary
 comp_bayes_lm_ex
-#> $prior_params
-#> $prior_params$a_0
-#> [1] 250
+#> A bayesian competition model (p = 7).
 #> 
-#> $prior_params$b_0
-#> [1] 25
-#> 
-#> $prior_params$mu_0
-#>      [,1]
-#> [1,]    0
-#> [2,]    0
-#> [3,]    0
-#> [4,]    0
-#> [5,]    0
-#> [6,]    0
-#> [7,]    0
-#> [8,]    0
-#> 
-#> $prior_params$V_0
-#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]
-#> [1,]    1    0    0    0    0    0    0    0
-#> [2,]    0    1    0    0    0    0    0    0
-#> [3,]    0    0    1    0    0    0    0    0
-#> [4,]    0    0    0    1    0    0    0    0
-#> [5,]    0    0    0    0    1    0    0    0
-#> [6,]    0    0    0    0    0    1    0    0
-#> [7,]    0    0    0    0    0    0    1    0
-#> [8,]    0    0    0    0    0    0    0    1
-#> 
-#> 
-#> $post_params
-#> $post_params$a_star
-#> [1] 253
-#> 
-#> $post_params$b_star
-#> [1] 25.12089
-#> 
-#> $post_params$mu_star
-#>                                      [,1]
-#> (Intercept)                   0.083819125
-#> spsugar_maple                 0.113931378
-#> dbh                           0.033355199
-#> american_beech                0.006250450
-#> sugar_maple                  -0.046483896
-#> spsugar_maple:dbh            -0.002587294
-#> spsugar_maple:american_beech  0.006250450
-#> spsugar_maple:sugar_maple    -0.039783887
-#> 
-#> $post_params$V_star
-#>                               (Intercept) spsugar_maple           dbh
-#> (Intercept)                   0.691319289  -0.224229160 -0.0404523384
-#> spsugar_maple                -0.224229160   0.746619818  0.0131442503
-#> dbh                          -0.040452338   0.013144250  0.0042064465
-#> american_beech               -0.007634041  -0.008580683  0.0004467626
-#> sugar_maple                  -0.032044185  -0.011296992 -0.0009065543
-#> spsugar_maple:dbh             0.026112952  -0.029195775 -0.0033641647
-#> spsugar_maple:american_beech -0.007634041  -0.008580683  0.0004467626
-#> spsugar_maple:sugar_maple    -0.014855675  -0.017044786  0.0009068123
-#>                              american_beech   sugar_maple spsugar_maple:dbh
-#> (Intercept)                   -7.634041e-03 -0.0320441845      0.0261129520
-#> spsugar_maple                 -8.580683e-03 -0.0112969920     -0.0291957747
-#> dbh                            4.467626e-04 -0.0009065543     -0.0033641647
-#> american_beech                 9.996076e-01  0.0002161445     -0.0004693054
-#> sugar_maple                    2.161445e-04  0.9827276993      0.0010241026
-#> spsugar_maple:dbh             -4.693054e-04  0.0010241026      0.0037292520
-#> spsugar_maple:american_beech  -3.924257e-04  0.0002161445     -0.0004693054
-#> spsugar_maple:sugar_maple      2.510005e-05 -0.0129115517     -0.0011460871
-#>                              spsugar_maple:american_beech
-#> (Intercept)                                 -7.634041e-03
-#> spsugar_maple                               -8.580683e-03
-#> dbh                                          4.467626e-04
-#> american_beech                              -3.924257e-04
-#> sugar_maple                                  2.161445e-04
-#> spsugar_maple:dbh                           -4.693054e-04
-#> spsugar_maple:american_beech                 9.996076e-01
-#> spsugar_maple:sugar_maple                    2.510005e-05
-#>                              spsugar_maple:sugar_maple
-#> (Intercept)                              -1.485568e-02
-#> spsugar_maple                            -1.704479e-02
-#> dbh                                       9.068123e-04
-#> american_beech                            2.510005e-05
-#> sugar_maple                              -1.291155e-02
-#> spsugar_maple:dbh                        -1.146087e-03
-#> spsugar_maple:american_beech              2.510005e-05
-#> spsugar_maple:sugar_maple                 9.866460e-01
-#> 
-#> $post_params$sp_list
-#> [1] "american_beech" "sugar_maple"   
-#> 
-#> 
-#> $terms
-#> growth ~ sp + dbh + dbh * sp + american_beech * sp + sugar_maple * 
-#>     sp
-#> <environment: 0x7fdbf0fe78d8>
-#> 
-#> attr(,"class")
-#> [1] "comp_bayes_lm" "list"
+#>   term  prior posterior
+#>   <chr> <dbl>     <dbl>
+#> 1 a_0     250     253  
+#> 2 b_0      25      25.1
 
-# Visualizations
-autoplot(comp_bayes_lm_ex, type = "intercepts")
+# Visualizations (combined with patchwork pkg)
+p1 <- autoplot(comp_bayes_lm_ex, type = "intercepts")
+p2 <- autoplot(comp_bayes_lm_ex, type = "dbh_slopes")
+p3 <- autoplot(comp_bayes_lm_ex, type = "competition")
+(p1 | p2) / p3
 ```
 
 <img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
-
-``` r
-autoplot(comp_bayes_lm_ex, type = "dbh_slopes")
-```
-
-<img src="man/figures/README-unnamed-chunk-11-2.png" width="100%" />
-
-``` r
-autoplot(comp_bayes_lm_ex, type = "competition")
-```
-
-<img src="man/figures/README-unnamed-chunk-11-3.png" width="100%" />
 
 Furthermore, we append fitted/predicted growth values for each tree
 using `predict.comp_bayes_lm()` to our data frame and then compute the

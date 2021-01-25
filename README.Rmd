@@ -55,6 +55,7 @@ library(sfheaders)
 library(blockCV)
 library(yardstick)
 library(snakecase)
+library(patchwork)
 ```
 
 ### Preprocess census data 
@@ -175,10 +176,11 @@ Since the resulting output is an S3 object of class `comp_bayes_lm`, we can both
 # Object summary
 comp_bayes_lm_ex
 
-# Visualizations
-autoplot(comp_bayes_lm_ex, type = "intercepts")
-autoplot(comp_bayes_lm_ex, type = "dbh_slopes")
-autoplot(comp_bayes_lm_ex, type = "competition")
+# Visualizations (combined with patchwork pkg)
+p1 <- autoplot(comp_bayes_lm_ex, type = "intercepts")
+p2 <- autoplot(comp_bayes_lm_ex, type = "dbh_slopes")
+p3 <- autoplot(comp_bayes_lm_ex, type = "competition")
+(p1 | p2) / p3
 ```
 
 Furthermore, we append fitted/predicted growth values for each tree using `predict.comp_bayes_lm()` to our data frame and then compute the root mean squared error (RMSE).
