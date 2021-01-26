@@ -123,9 +123,8 @@ default_prior_params <- function(X) {
 print.comp_bayes_lm <- function(x, ...) {
   cat(
     paste0(
-      "A bayesian competition model (p = ",
-      length(unlist(x$prior_params[3])) - 1,
-      ").\n\n"
+      "Parameters of a Bayesian linear regression model with a multivariate Normal likelihood\n",
+      "(for details see https://doi.org/10.1371/journal.pone.0229930.s004):\n\n"
     )
   )
 
@@ -133,14 +132,51 @@ print.comp_bayes_lm <- function(x, ...) {
     utils::capture.output(
       print(
         tibble(
-          term = unlist(names(x$prior_params[1:2])),
-          prior = unlist(unname(x$prior_params[1:2])),
-          posterior = unlist(unname(x$post_params[1:2]))
+          parameter_type = c(rep("Inverse-Gamma on sigma^2", 2), rep("Multivariate t on beta", 2)),
+          prior = c("a_0", "b_0", "mu_0", "V_0"),
+          posterior = c("a_star", "b_star", "mu_star", "V_star")
         )
       )
     )
+  cat(term_tbl[c(2, 4:length(term_tbl))], sep = "\n")
 
-  cat(term_tbl[2:length(term_tbl)], sep = "\n")
+  cat(
+    paste0(
+      "\n",
+      "Model formula:\n",
+      x[[3]] %>% as.character() %>% .[2],
+      " ~ ",
+      x[[3]] %>% as.character() %>% .[3],
+      "\n"
+    )
+  )
+
+  # # a and b parameters
+  # term_tbl <-
+  #   utils::capture.output(
+  #     print(
+  #       tibble(
+  #         term = c("a", "b"),
+  #         prior = unlist(unname(x$prior_params[1:2])),
+  #         posterior = unlist(unname(x$post_params[1:2]))
+  #       )
+  #     )
+  #   )
+  # cat(term_tbl[2:length(term_tbl)], sep = "\n\n")
+  #
+  # # mu vector parameter
+  # term_tbl <-
+  #   utils::capture.output(
+  #     print(
+  #       tibble(
+  #         prior = unlist(unname(x$prior_params[3])),
+  #         posterior = unlist(unname(x$post_params[3]))
+  #       )
+  #     )
+  #   )
+  # cat(term_tbl[2:length(term_tbl)], sep = "\n\n")
+  #
+  # # V matrix ???
 }
 
 
