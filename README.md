@@ -29,9 +29,9 @@ remotes::install_github("rudeboybert/forestecology")
 This package is designed to work for spatially mapped, repeat censused
 forests plots. The package has commands to fit models of tree growth
 based on neighborhood competition which can be used to estimate
-species-specific competition coefficients. The models fits can then be
+species-specific competition coefficients. The model fits can then be
 evaluated using a spatial cross-validation scheme to detect possible
-overfitting. Additionally these models can test whether the species
+overfitting. Additionally, these models can test whether the species
 identity of competitors matters using a permutation test-style shuffling
 of competitor identity (under the null hypothesis) and subsequently
 evaluating if model performance changes. See Allen and Kim (2020) [A
@@ -54,13 +54,14 @@ library(blockCV)
 library(yardstick)
 library(snakecase)
 library(patchwork)
+library(tidyr)
 ```
 
 ### Compute growth of trees based on census data
 
 The starting point of our analysis are data from two repeat censuses
-`census_1_ex` and `census_2_ex`. For example consider the forest census
-data in `census_1_ex`
+`census_1_ex` and `census_2_ex`. For example, consider the forest census
+data in `census_1_ex`.
 
 ``` r
 census_1_ex
@@ -176,8 +177,8 @@ growth_ex <- growth_ex %>%
 ```
 
 In the visualization below, the spatial blocks that act as our
-cross-validation folds are delineated in orange. Correspondingly the
-shape of each point indicates which fold each tree has been assigned to.
+cross-validation folds are delineated in orange. The shape of each point
+indicates which fold each tree has been assigned to.
 
 ``` r
 base_plot + 
@@ -191,11 +192,11 @@ base_plot +
 
 Based on our `growth` data frame, we now explicitly define all “focal”
 trees and their respective “competitor” trees in a `focal_vs_comp` data
-frame. This data frame has rows corresponding to each focal tree and all
-information about its competitors are saved in list-column variable
-`comp`. We implemented this nested format using `tidyr::nest()` in order
-to minimize redundancy, given that the same tree can act as a competitor
-multiple times.
+frame. This data frame has rows corresponding to each focal tree, and
+all information about its competitors are saved in the list-column
+variable `comp`. We implemented this nested format using `nest()` in
+order to minimize redundancy, given that the same tree can act as a
+competitor multiple times.
 
 ``` r
 focal_vs_comp_ex <- growth_ex %>%
@@ -213,13 +214,13 @@ focal_vs_comp_ex
 ```
 
 Using `unnest()` we can fully expand the competitor information saved in
-the `focal_vs_comp` data frame. For example the tree with `focal_ID`
+the `focal_vs_comp` data frame. For example, the tree with `focal_ID`
 equal to 2 located at (1.5, 2.5) has two competitors within `comp_dist`
 distance from it.
 
 ``` r
 focal_vs_comp_ex %>% 
-  tidyr::unnest(cols = "comp")
+  unnest(cols = "comp")
 #> # A tibble: 11 x 10
 #>    focal_ID focal_sp   dbh foldID                  geometry growth comp_ID  dist
 #>       <dbl> <fct>    <dbl> <fct>                    <POINT>  <dbl>   <dbl> <dbl>
@@ -247,21 +248,26 @@ comp_bayes_lm_ex <- focal_vs_comp_ex %>%
   comp_bayes_lm(prior_param = NULL)
 ```
 
-Since the resulting output is an S3 object of class `comp_bayes_lm` we
-defined, we can both print and visualize its output: the posterior
-distribution of all linear regression parameters: the intercept, the
-slope for dbh for each species, and a matrix of all species pairs
-competitive effects on growth.
+The resulting output is an `comp_bayes_lm` object containing the
+posterior distribution of all linear regression parameters, the
+intercept, the slope for dbh for each species, and a matrix of all
+species pairs competitive effects on growth. The S3 object class is
+associated with several methods.
 
 ``` r
 # Print
 comp_bayes_lm_ex
-#> A bayesian competition model (p = 7).
+#> Parameters of a Bayesian linear regression model with a multivariate Normal likelihood
+#> (for details see https://doi.org/10.1371/journal.pone.0229930.s004):
 #> 
-#>   term  prior posterior
-#>   <chr> <dbl>     <dbl>
-#> 1 a_0     250     253  
-#> 2 b_0      25      25.1
+#>   parameter_type           prior posterior
+#> 1 Inverse-Gamma on sigma^2 a_0   a_star   
+#> 2 Inverse-Gamma on sigma^2 b_0   b_star   
+#> 3 Multivariate t on beta   mu_0  mu_star  
+#> 4 Multivariate t on beta   V_0   V_star   
+#> 
+#> Model formula:
+#> growth ~ sp + dbh + dbh * sp + american_beech * sp + sugar_maple * sp
 
 # Posterior distributions (plots combined with patchwork pkg)
 p1 <- autoplot(comp_bayes_lm_ex, type = "intercepts")
@@ -272,10 +278,9 @@ p3 <- autoplot(comp_bayes_lm_ex, type = "competition")
 
 <img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
-Furthermore, we can apply a generic `predict()` function to the
-resulting `comp_bayes_lm` object to obtain fitted/predicted values of
-this model. We append these `growth_hat` values to our `focal_vs_comp`
-data frame.
+Furthermore, we can apply a `predict()` method to the resulting
+`comp_bayes_lm` object to obtain fitted/predicted values of this model.
+We append these `growth_hat` values to our `focal_vs_comp` data frame.
 
 ``` r
 focal_vs_comp_ex <- focal_vs_comp_ex %>%
@@ -306,9 +311,9 @@ focal_vs_comp_ex %>%
 ### Run spatial cross-validation
 
 Whereas in our example above we fit our model to the entirety of the
-data and then generated fitted/predicted growths on this same data, we
+data and then generate fitted/predicted growths on this same data, we
 now apply the same model with spatial cross-validation. All the trees in
-a given fold will be given a turn as the “test” data while the trees is
+a given fold will be given a turn as the “test” data while the trees in
 all remaining folds will be the “training” data. We then fit the model
 to the training data, but compute fitted/predicted growths for the
 separate and independent data.
