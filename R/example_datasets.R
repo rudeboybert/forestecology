@@ -15,24 +15,24 @@
 #'   this stands for resprout.}
 #'   \item{dbh}{Diameter at breast height of the tree in cm}
 #' }
-#' @seealso \code{\link{census_df2_ex}}
+#' @seealso \code{\link{census_2_ex}}
 #' @examples
-#' data(census_df1_ex, census_df2_ex)
+#' data(census_1_ex, census_2_ex)
 #' library(dplyr)
 #' library(stringr)
 #' library(snakecase)
 #' # Filter out resprouts
-#' census_df2_ex_no_r <- census_df2_ex %>%
+#' census_2_ex_no_r <- census_2_ex %>%
 #'   filter(!str_detect(codes, "R"))
 #' id <- "ID"
-#' ex_growth_df <-
+#' growth_ex <-
 #'   # Merge both censuses and compute growth:
-#'   compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
+#'   compute_growth(census_1_ex, census_2_ex_no_r, id) %>%
 #'   mutate(
 #'     sp = to_any_case(sp),
 #'     sp = as.factor(sp)
 #'   )
-"census_df1_ex"
+"census_1_ex"
 
 
 
@@ -55,24 +55,24 @@
 #'   this stands for resprout.}
 #'   \item{dbh}{Diameter at breast height of the tree in cm}
 #' }
-#' @seealso \code{\link{census_df1_ex}}
+#' @seealso \code{\link{census_1_ex}}
 #' @examples
-#' data(census_df1_ex, census_df2_ex)
+#' data(census_1_ex, census_2_ex)
 #' library(dplyr)
 #' library(stringr)
 #' library(snakecase)
 #' # Filter out resprouts
-#' census_df2_ex_no_r <- census_df2_ex %>%
+#' census_2_ex_no_r <- census_2_ex %>%
 #'   filter(!str_detect(codes, "R"))
 #' id <- "ID"
-#' ex_growth_df <-
+#' growth_ex <-
 #'   # Merge both censuses and compute growth:
-#'   compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
+#'   compute_growth(census_1_ex, census_2_ex_no_r, id) %>%
 #'   mutate(
 #'     sp = to_any_case(sp),
 #'     sp = as.factor(sp)
 #'   )
-"census_df2_ex"
+"census_2_ex"
 
 
 
@@ -83,20 +83,20 @@
 #' Boundary region for small example data set defined in terms of (x,y) vertices of a polygon.
 #'
 #' @format A \code{sf} spatial features polygon
-#' @seealso \code{\link{census_df1_ex}}
+#' @seealso \code{\link{census_1_ex}}
 #' @examples
 #' library(ggplot2)
 #' library(sf)
 #'
 #' # Convert stems to sf object
-#' census_df1_ex_sf <- census_df1_ex %>%
+#' census_1_ex_sf <- census_1_ex %>%
 #'   st_as_sf(coords = c("gx", "gy"))
 #'
 #' # Plot stems with plot boundary
 #' ggplot() +
-#'   geom_sf(data = ex_study_region) +
-#'   geom_sf(data = bw_study_region, color = "red", fill = "transparent")
-"ex_study_region"
+#'   geom_sf(data = study_region_ex) +
+#'   geom_sf(data = study_region_bw, color = "red", fill = "transparent")
+"study_region_ex"
 
 
 
@@ -105,7 +105,7 @@
 #' Example growth data frame for small example
 #'
 #' This is an example growth data frame formed from two census data frames. In this case it is
-#' made by combining \code{\link{census_df1_ex}} and \code{\link{census_df2_ex}}. The
+#' made by combining \code{\link{census_1_ex}} and \code{\link{census_2_ex}}. The
 #' individuals alive in both censuses were linked by their tree ID.
 #'
 #' @format A \code{sf} spatial tibble
@@ -122,7 +122,7 @@
 #'   \item{codes2}{Codes at the second census}
 #'   \item{geometry}{Point location of the individual}
 #' }
-#' @seealso \code{\link{census_df1_ex}}, \code{\link{census_df2_ex}}, and \code{\link{compute_growth}}
+#' @seealso \code{\link{census_1_ex}}, \code{\link{census_2_ex}}, and \code{\link{compute_growth}}
 #' @examples
 #' library(ggplot2)
 #' library(dplyr)
@@ -130,17 +130,17 @@
 #' library(sfheaders)
 #' library(blockCV)
 #'
-#' ex_growth_df %>%
+#' growth_ex %>%
 #'   ggplot() +
 #'   geom_sf()
 #'
-#' ex_growth_df %>%
+#' growth_ex %>%
 #'   group_by(sp) %>%
 #'   summarize(mean(growth))
 #'
 #' # Add buffer
-#' ex_growth_df_spatial <- ex_growth_df %>%
-#'   add_buffer_variable(direction = "in", size = 1, region = ex_study_region)
+#' growth_spatial_ex <- growth_ex %>%
+#'   add_buffer_variable(direction = "in", size = 1, region = study_region_ex)
 #'
 #' # Add cross-validation folds
 #' fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
@@ -151,8 +151,8 @@
 #' ) %>%
 #'   mutate(foldID = c(1, 2))
 #'
-#' ex_cv_grid <- spatialBlock(
-#'   speciesData = ex_growth_df,
+#' SpatialBlock_ex <- spatialBlock(
+#'   speciesData = growth_ex,
 #'   verbose = FALSE,
 #'   k = 2,
 #'   selection = "systematic",
@@ -160,9 +160,9 @@
 #' )
 #'
 #' # Add foldID to data
-#' ex_growth_df_spatial <- ex_growth_df_spatial %>%
-#'   mutate(foldID = ex_cv_grid$foldID %>% as.factor())
-"ex_growth_df"
+#' growth_spatial_ex <- growth_spatial_ex %>%
+#'   mutate(foldID = SpatialBlock_ex$foldID %>% as.factor())
+"growth_ex"
 
 
 
@@ -171,7 +171,7 @@
 #' Example growth data frame with spatial data for small example
 #'
 #' This is an example growth data frame formed from two census data frames which
-#' has been updated with spatial data. It starts from \code{\link{ex_growth_df}}.
+#' has been updated with spatial data. It starts from \code{\link{growth_ex}}.
 #'
 #' @format A \code{sf} spatial tibble
 #' \describe{
@@ -189,24 +189,24 @@
 #'   \item{buffer}{A boolean variable for whether the individual is in the buffer region or not}
 #'   \item{foldID}{Which cross-validation fold the individual is in}
 #' }
-#' @seealso \code{\link{ex_growth_df}}, \code{\link{add_buffer_variable}}, \code{\link{ex_cv_grid_sf}}
+#' @seealso \code{\link{growth_ex}}, \code{\link{add_buffer_variable}}, \code{\link{cv_grid_sf_ex}}
 #' @examples
 #' library(ggplot2)
 #' library(dplyr)
 #' library(sf)
 #'
-#' max_dist <- 1
+#' comp_dist <- 1
 #'
 #' ggplot() +
-#'   geom_sf(data = ex_growth_df_spatial, aes(col = buffer), size = 2)
+#'   geom_sf(data = growth_spatial_ex, aes(col = buffer), size = 2)
 #'
 #' ggplot() +
-#'   geom_sf(data = ex_growth_df_spatial, aes(col = foldID), size = 2)
+#'   geom_sf(data = growth_spatial_ex, aes(col = foldID), size = 2)
 #'
 #' # Create the focal versus comp data frame
-#' focal_vs_comp_ex <- ex_growth_df_spatial %>%
-#'   create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
-"ex_growth_df_spatial"
+#' focal_vs_comp_ex <- growth_spatial_ex %>%
+#'   create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+"growth_spatial_ex"
 
 
 
@@ -223,20 +223,20 @@
 #'   can be used to connect trees between the two censuses.}
 #'   \item{geometry}{Point location of the individual}
 #' }
-#' @seealso \code{\link{ex_growth_df_spatial}}
+#' @seealso \code{\link{growth_spatial_ex}}
 #' @examples
 #' library(ggplot2)
 #' library(sf)
 #'
-#' max_dist <- 1
+#' comp_dist <- 1
 #'
-#' ggplot(ex_cv_grid_sf) +
+#' ggplot(cv_grid_sf_ex) +
 #'   geom_sf() +
-#'   geom_sf(data = ex_growth_df_spatial)
+#'   geom_sf(data = growth_spatial_ex)
 #'
-#' focal_vs_comp_ex <- ex_growth_df_spatial %>%
-#'   create_focal_vs_comp(max_dist, cv_grid_sf = ex_cv_grid_sf, id = "ID")
-"ex_cv_grid_sf"
+#' focal_vs_comp_ex <- growth_spatial_ex %>%
+#'   create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+"cv_grid_sf_ex"
 
 
 
@@ -247,7 +247,7 @@
 #' This is an example focal versus comp data frame. The rows are focal
 #' trees which are repeated for all competitor trees within a specified
 #' distance from them. In this case that distance is 1. This is the focal
-#' versus comp for \code{\link{ex_growth_df_spatial}}.
+#' versus comp for \code{\link{growth_spatial_ex}}.
 #'
 #' @format
 #'
@@ -270,7 +270,7 @@
 #'   \item{comp_basal_area}{Basal area of the comp tree}
 #' }
 #'
-#' @seealso \code{\link{ex_growth_df_spatial}}
+#' @seealso \code{\link{growth_spatial_ex}}
 #' @importFrom forcats fct_rev
 #' @examples
 #' library(dplyr)
@@ -326,4 +326,4 @@
 #' @format A \code{sf} spatial features polygon
 #' @examples
 #' 1 + 1
-"growth_df_ex"
+"growth_toy"

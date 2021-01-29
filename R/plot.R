@@ -36,15 +36,16 @@ ggplot2::autoplot
 #' autoplot(comp_bayes_lm_ex, type = "competition")
 #' @export
 autoplot.comp_bayes_lm <- function(object,
-                                 type = "intercepts",
-                                 sp_to_plot = NULL,
-                                 ...) {
-
+                                   type = "intercepts",
+                                   sp_to_plot = NULL,
+                                   ...) {
   check_comp_bayes_lm(object)
   check_inherits(type, "character")
   if (!type %in% c("intercepts", "dbh_slopes", "competition")) {
-    glue_stop('The `type` argument must be one of "intercepts", ',
-              '"dbh_slopes", or "competition".')
+    glue_stop(
+      'The `type` argument must be one of "intercepts", ',
+      '"dbh_slopes", or "competition".'
+    )
   }
 
 
@@ -58,10 +59,11 @@ autoplot.comp_bayes_lm <- function(object,
     check_inherits(sp_to_plot, "character")
 
     if (any(!sp_to_plot %in% sp_list)) {
-      glue_stop("The `sp_to_plot` argument must be a subset of species in the ",
-                "training data. \nThe following elements of `sp_to_plot` could ",
-                "not be matched to a ",
-                "species: {list(sp_to_plot[!sp_to_plot %in% sp_list])}\n"
+      glue_stop(
+        "The `sp_to_plot` argument must be a subset of species in the ",
+        "training data. \nThe following elements of `sp_to_plot` could ",
+        "not be matched to a ",
+        "species: {list(sp_to_plot[!sp_to_plot %in% sp_list])}\n"
       )
     }
   }
@@ -181,7 +183,7 @@ intercepts_plot <- function(beta_lambda_posterior_df, sp_to_plot,
 
 # plot dbh coefficients
 dbh_slopes_plot <- function(beta_lambda_posterior_df, sp_to_plot,
-                        sp_list, baseline_species) {
+                            sp_list, baseline_species) {
   posterior_sample <- beta_lambda_posterior_df %>%
     filter(coefficient_type == "dbh")
 
@@ -271,6 +273,7 @@ competition_plot <- function(beta_lambda_posterior_df, sp_to_plot,
   # When we only want to plot a subset of species:
   if (!is.null(sp_to_plot)) {
     sp_to_plot <- sort(sp_to_plot)
+    sp_list <- sp_to_plot
 
     posterior_lambda <- posterior_lambda %>%
       filter(
@@ -293,6 +296,6 @@ competition_plot <- function(beta_lambda_posterior_df, sp_to_plot,
       x = expression(lambda),
       y = "Species",
       title = "Competitor species in rows, focal species in columns",
-      subtitle = str_c("Ex: Top row, second column = competitive effect of", sp_to_plot[1], "on", sp_to_plot[2], sep = " ")
+      subtitle = str_c("Ex: Top row, second column: competitive effect of", sp_list[1], "on", sp_list[2], sep = " ")
     )
 }

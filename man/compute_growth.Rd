@@ -4,14 +4,14 @@
 \alias{compute_growth}
 \title{Compute growth of trees}
 \usage{
-compute_growth(census_df1, census_df2, id)
+compute_growth(census_1, census_2, id)
 }
 \arguments{
-\item{census_df1}{A data frame of the first census.}
+\item{census_1}{A data frame of the first census.}
 
-\item{census_df2}{A data frame of the second (later) census}
+\item{census_2}{A data frame of the second (later) census}
 
-\item{id}{Name of variable common to \code{census_df1} and \code{census_df2}
+\item{id}{Name of variable that uniquely identifies each tree common to \code{census_1} and \code{census_2}
 allowing you to join/merge both data frames.}
 }
 \value{
@@ -25,10 +25,10 @@ trees that were alive at (TODO: fill this in).
 library(dplyr)
 library(stringr)
 # Load in data from two forst censuses
-data(census_df1_ex, census_df2_ex)
+data(census_1_ex, census_2_ex)
 # Filter out resprouts in second census
-census_df2_ex_no_r <- census_df2_ex \%>\%
+census_2_ex_no_r <- census_2_ex \%>\%
   filter(!str_detect(codes, "R"))
 id <- "ID"
-ex_growth_df <- compute_growth(census_df1_ex, census_df2_ex_no_r, id)
+growth_ex <- compute_growth(census_1_ex, census_2_ex_no_r, id)
 }

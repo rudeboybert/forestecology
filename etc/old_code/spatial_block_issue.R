@@ -7,37 +7,37 @@ library(sf)
 library(sfheaders)
 
 # Read in census files
-data(census_df1_ex, census_df2_ex)
+data(census_1_ex, census_2_ex)
 
 # Filter out resprouts
-census_df2_ex_no_r <- census_df2_ex %>%
+census_2_ex_no_r <- census_2_ex %>%
   filter(!str_detect(codes, 'R'))
 
 id <- 'ID'
 
-ex_growth_df <-
+growth_ex <-
   # Merge both censuses and compute growth:
-  compute_growth(census_df1_ex, census_df2_ex_no_r, id) %>%
+  compute_growth(census_1_ex, census_2_ex_no_r, id) %>%
   mutate(
     sp = to_any_case(sp),
     sp = as.factor(sp)) %>%
   # drop stemID
   select(-ID)
 
-data(ex_study_region)
+data(study_region_ex)
 
 # set max dist
-max_dist <- 1
+comp_dist <- 1
 
 # add buffer
-ex_growth_df <- ex_growth_df %>%
-  add_buffer_variable(direction = "in", size = max_dist, region = ex_study_region)
+growth_ex <- growth_ex %>%
+  add_buffer_variable(direction = "in", size = comp_dist, region = study_region_ex)
 
 ggplot() +
-  geom_sf(data = ex_growth_df, aes(col = buffer), size = 2)
+  geom_sf(data = growth_ex, aes(col = buffer), size = 2)
 
-#ex_cv_grid <- spatialBlock(
-#  speciesData = ex_growth_df, theRange = 5, verbose = FALSE, k = 2
+#SpatialBlock_ex <- spatialBlock(
+#  speciesData = growth_ex, theRange = 5, verbose = FALSE, k = 2
 #)
 
 
@@ -52,12 +52,12 @@ blocks <- bind_rows(
 
 # Plot
 ggplot() +
-  geom_sf(data = ex_growth_df, aes(col = buffer), size = 2) +
+  geom_sf(data = growth_ex, aes(col = buffer), size = 2) +
   geom_sf(data = blocks, fill = "transparent")
 
 # fit spatialBlock()
-ex_cv_grid <- spatialBlock(
-  speciesData = ex_growth_df,
+SpatialBlock_ex <- spatialBlock(
+  speciesData = growth_ex,
   verbose = FALSE,
   k = 2,
   # Note new arguments
@@ -67,14 +67,14 @@ ex_cv_grid <- spatialBlock(
 )
 
 # Add foldID to data
-ex_growth_df <- ex_growth_df %>%
-  mutate(foldID = ex_cv_grid$foldID %>% as.factor())
+growth_ex <- growth_ex %>%
+  mutate(foldID = SpatialBlock_ex$foldID %>% as.factor())
 
 # Visualize grid
-ex_cv_grid$plots +
-  geom_sf(data = ex_growth_df, aes(col = foldID), size = 2)
+SpatialBlock_ex$plots +
+  geom_sf(data = growth_ex, aes(col = foldID), size = 2)
 
 # Deliverable
 ggplot() +
-  geom_sf(data = ex_growth_df, aes(col = foldID, shape = buffer))
+  geom_sf(data = growth_ex, aes(col = foldID, shape = buffer))
 

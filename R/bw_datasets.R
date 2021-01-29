@@ -25,7 +25,7 @@
 #'   at 1 and continues up from there. To uniquely identify a stem across the plot this
 #'   value must be combined with \code{treeID}.}
 #'   \item{dbh}{Diameter at breast}
-#'   \item{sp}{Code for the species. See \code{bw_species} for scientific name.}
+#'   \item{sp}{Code for the species. See \code{species_bw} for scientific name.}
 #'   \item{gx}{x-coordinate meters from reference point}
 #'   \item{gy}{y-coordinate meters from reference point}
 #'   \item{date}{Approximate date the stem was measured}
@@ -35,19 +35,19 @@
 #'   and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
 #' }
-#' @seealso \code{\link{bw_census_2014}}, \code{\link{bw_species}}, \code{\link{compute_growth}}
+#' @seealso \code{\link{census_2014_bw}}, \code{\link{species_bw}}, \code{\link{compute_growth}}
 #' @examples
 #' library(ggplot2)
 #' library(sf)
 #'
 #' # Convert all 2008 plot stems to sf object
-#' bw_census_2008_sf <- bw_census_2008 %>%
+#' census_2008_bw_sf <- census_2008_bw %>%
 #'   st_as_sf(coords = c("gx", "gy"))
 #'
 #' # Plot stems with plot boundary
 #' ggplot() +
-#'   geom_sf(data = bw_census_2008_sf, size = 0.25)
-"bw_census_2008"
+#'   geom_sf(data = census_2008_bw_sf, size = 0.25)
+"census_2008_bw"
 
 
 
@@ -79,7 +79,7 @@
 #'   \item{stemID}{Stem number for a multi-stemmed individual. For all trees this starts
 #'   at 1 and continues up from there. To uniquely identify a stem across the plot this
 #'   value must be combined with \code{treeID}.}
-#'   \item{sp}{Code for the species. See \code{\link{bw_species}} for scientific name.}
+#'   \item{sp}{Code for the species. See \code{\link{species_bw}} for scientific name.}
 #'   \item{dbh}{Diameter at breast}
 #'   \item{gx}{x-coordinate meters from reference point}
 #'   \item{gy}{y-coordinate meters from reference point}
@@ -90,28 +90,28 @@
 #'   and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
 #' }
-#' @seealso \code{\link{bw_census_2008}}, \code{\link{bw_species}}, \code{\link{compute_growth}}
+#' @seealso \code{\link{census_2008_bw}}, \code{\link{species_bw}}, \code{\link{compute_growth}}
 #' @examples
 #' library(ggplot2)
 #' library(sf)
 #' library(dplyr)
 #'
 #' # Convert all 2008 plot stems to sf object
-#' bw_census_2008_sf <- bw_census_2008 %>%
+#' census_2008_bw_sf <- census_2008_bw %>%
 #'   st_as_sf(coords = c("gx", "gy"))
 #'
 #' # Plot stems with plot boundary
 #' ggplot() +
-#'   geom_sf(data = bw_census_2008_sf, size = 0.25)
+#'   geom_sf(data = census_2008_bw_sf, size = 0.25)
 #'
 #' # Species-specific mortality between 2008 and 2014 censuses
-#' bw_census_2008 %>%
-#'   left_join(bw_census_2014, by = c("treeID", "stemID"), suffix = c("_2008", "_2014")) %>%
+#' census_2008_bw %>%
+#'   left_join(census_2014_bw, by = c("treeID", "stemID"), suffix = c("_2008", "_2014")) %>%
 #'   mutate(mortality = ifelse(is.na(dbh_2014), 1, 0)) %>%
 #'   group_by(sp_2008) %>%
 #'   summarize(mortality = mean(mortality), n = n()) %>%
 #'   arrange(desc(n))
-"bw_census_2014"
+"census_2014_bw"
 
 
 
@@ -125,7 +125,7 @@
 #'
 #' @format A data frame with 46 rows and 6 variables:
 #' \describe{
-#'   \item{sp}{The code for the species. Link to \code{\link{bw_census_2008}} and \code{\link{bw_census_2014}} with \code{sp} variable.}
+#'   \item{sp}{The code for the species. Link to \code{\link{census_2008_bw}} and \code{\link{census_2014_bw}} with \code{sp} variable.}
 #'   \item{genus}{Genus}
 #'   \item{species}{Species epithet}
 #'   \item{latin}{Scientific name}
@@ -137,17 +137,17 @@
 #' @source For more information on trait clustering see Allen and Kim 2020 "A permutation
 #' test and spatial cross-validation approach to assess models of interspecific competition
 #' between trees." \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
-#' @seealso \code{\link{bw_census_2008}}, \code{\link{bw_census_2014}}
+#' @seealso \code{\link{census_2008_bw}}, \code{\link{census_2014_bw}}
 #' @examples
 #' library(dplyr)
 #'
 #' # Original 2008 census data
-#' bw_census_2008
+#' census_2008_bw
 #'
 #' # 2008 census data with additional species information
-#' bw_census_2008 %>%
-#'   left_join(bw_species, by = "sp")
-"bw_species"
+#' census_2008_bw %>%
+#'   left_join(species_bw, by = "sp")
+"species_bw"
 
 
 
@@ -158,17 +158,17 @@
 #' Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
 #'
 #' @format A \code{sf} spatial features polygon
-#' @seealso \code{\link{bw_census_2008}} and \code{\link{bw_census_2014}}
+#' @seealso \code{\link{census_2008_bw}} and \code{\link{census_2014_bw}}
 #' @examples
 #' library(ggplot2)
 #' library(sf)
 #'
 #' # Convert all 2008 plot stems to sf object
-#' bw_census_2008_sf <- bw_census_2008 %>%
+#' census_2008_bw_sf <- census_2008_bw %>%
 #'   st_as_sf(coords = c("gx", "gy"))
 #'
 #' # Plot stems with plot boundary
 #' ggplot() +
-#'   geom_sf(data = bw_census_2008_sf, size = 0.25) +
-#'   geom_sf(data = bw_study_region, color = "red", fill = "transparent")
-"bw_study_region"
+#'   geom_sf(data = census_2008_bw_sf, size = 0.25) +
+#'   geom_sf(data = study_region_bw, color = "red", fill = "transparent")
+"study_region_bw"

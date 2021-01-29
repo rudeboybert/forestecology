@@ -135,11 +135,11 @@ Furthermore, we ensure that the different variables have the correct names, type
 We load census data from 2008 and 2014 saved in the package, then merge species data (genus, species, linnean classification, family, etc). 
 
 ```{r bw-load-data}
-data(bw_census_2008, bw_census_2014, bw_species)
+data(census_2008_bw, census_2014_bw, species_bw)
 
 # Append additional species data
-bw_census_2008 <- bw_census_2008 %>%
-  left_join(bw_species, by = "sp") %>%
+census_2008_bw <- census_2008_bw %>%
+  left_join(species_bw, by = "sp") %>%
   select(-c(genus, species, latin))
 ```
 
@@ -173,6 +173,8 @@ scbi_2018 <- read_csv("scbi.stem3.csv") %>%
 
 ## Compute annual growth
 
+MERGE THIS SUBSECTION with previous?
+
 For each plot we then compute average annual growth between the two censuses using the `compute_growth()` function. This function takes the two census data frames as well as a character indicating which variable in both data frames uniquely identifies each stem. This function returns a single data frame that includes a numerical variable `growth` reflecting the average annual dbh growth (in cm) of all trees alive at both time points. Furthermore, variables that (in theory) remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. Here the resulting data frames are named with some variation of `growth_df`.
 
 After computing the average annual growth for each tree, we ensure to convert all variables denote species from type character to factors; this is to ensure that issues of rare species being accounted for in both training and test sets in our upcoming cross-validation step (see Section REF)
@@ -182,11 +184,11 @@ After computing the average annual growth for each tree, we ensure to convert al
 In the case of Big Woods data, we first remove all trees that were re-sprouts in the later (2014) census. Additionally, we have included two classification of tree species: `species` and `family`. To illustrate model comparison, we test competition models in which individuals are grouped by species and by family.
 
 ```{r bw-compute-growth}
-bw_census_2014 <- bw_census_2014 %>%
+census_2014_bw <- census_2014_bw %>%
   filter(!str_detect(codes, "R"))
 
 bw_growth_df <-
-  compute_growth(bw_census_2008, bw_census_2014, id = "treeID") %>%
+  compute_growth(census_2008_bw, census_2014_bw, id = "treeID") %>%
   # Convert all variables denoting species to factors
   mutate(
     sp = sp %>% to_any_case() %>% as.factor(),
@@ -234,27 +236,27 @@ Second, our ultimate method for model assessment will rely on estimates of model
 To these two ends, we define two constants, both of which are in the same units as the `gx` and `gy` variables (most often meters). 
 
 ```{r}
-max_dist <- 7.5
+comp_dist <- 7.5
 cv_fold_size <- 100
 ```
 
-The first constant is `max_dist` which defines the maximum distance for a tree's competitive neighborhood. Trees within this distance of each other are assumed to compete while those farther than this distance apart do not. Put differently, all trees within `max_dist` of a focal tree will be considered its competitors (see below). Other studies have estimated the value of `max_dist`; we use an average of estimated values @canham_neighborhood_2004, @uriarte_spatially_2004, @tatsumi2013, @canham_neighborhood_2006. 
+The first constant is `comp_dist` which defines the maximum distance for a tree's competitive neighborhood. Trees within this distance of each other are assumed to compete while those farther than this distance apart do not. Put differently, all trees within `comp_dist` of a focal tree will be considered its competitors (see below). Other studies have estimated the value of `comp_dist`; we use an average of estimated values @canham_neighborhood_2004, @uriarte_spatially_2004, @tatsumi2013, @canham_neighborhood_2006. 
 
-Furthermore, `max_dist` will define the size of all buffers considered, which will be encoded as a binary variable `buffer` as computed by the `add_buffer_variable()` function. This function takes as input the main `growth_df` data frame, the `size` of the buffer which we set as `max_dist`, and the boundary of the study region encoded as a simple features polygon @pebesma_simple_2018. DESCRIBE SF PACKAGE. In the Big Woods example below we will use a pre-loaded simple features polygon while for the SCBI example we present example code on how to manually construct one. 
+Furthermore, `comp_dist` will define the size of all buffers considered, which will be encoded as a binary variable `buffer` as computed by the `add_buffer_variable()` function. This function takes as input the main `growth_df` data frame, the `size` of the buffer which we set as `comp_dist`, and the boundary of the study region encoded as a simple features polygon @pebesma_simple_2018. DESCRIBE SF PACKAGE. In the Big Woods example below we will use a pre-loaded simple features polygon while for the SCBI example we present example code on how to manually construct one. 
 
 The second constant is `cv_fold_size` which defines the length and width of the spatial folds (note that for now the spatial folds are restricted be squares). We will then use this constant to associate each observed tree to one of $k$ folds in the respective study region. In the Big Woods example below we will use the `blockCV` R package that has implemented spatial cross-validation while for the SCBI we will do this manually @valavi_blockcv_2019
 
 
 ### Big Woods
 
-First, we indicate which trees are part of the buffer. This necessitates information about the study region boundary. In this case, we use a `sf_polygon` object `bw_study_region` which comes pre-loaded in the `forestecology` packages. After loading `bw_study_region`, we illustrate the results of the `add_buffer_variable()` function in Figure \ref{fig:bw-define-buffer}. Trees on the periphery denote with lighter colors are part of the buffer and will not be considered as "focal" trees of interest going forward; they will only be considered as competitor trees. 
+First, we indicate which trees are part of the buffer. This necessitates information about the study region boundary. In this case, we use a `sf_polygon` object `study_region_bw` which comes pre-loaded in the `forestecology` packages. After loading `study_region_bw`, we illustrate the results of the `add_buffer_variable()` function in Figure \ref{fig:bw-define-buffer}. Trees on the periphery denote with lighter colors are part of the buffer and will not be considered as "focal" trees of interest going forward; they will only be considered as competitor trees. 
 
 ```{r bw-define-buffer, out.width="100%", fig.cap="Buffer region for Big Woods study region."}
-data(bw_study_region)
+data(study_region_bw)
 
 bw_growth_df <- bw_growth_df %>%
-  add_buffer_variable(direction = "in", size = max_dist, 
-                      region = bw_study_region)
+  add_buffer_variable(direction = "in", size = comp_dist, 
+                      region = study_region_bw)
 
 ggplot() +
   geom_sf(data = bw_growth_df %>% sample_frac(0.2), 
@@ -320,7 +322,7 @@ scbi_study_region <- tibble(
   sf_polygon()
 
 scbi_growth_df <- scbi_growth_df %>%
-  add_buffer_variable(direction = "in", size = max_dist, 
+  add_buffer_variable(direction = "in", size = comp_dist, 
                       region = scbi_study_region)
 
 ggplot() +
@@ -362,13 +364,13 @@ ggplot() +
 
 ## Define focal versus competitor trees
 
-Next we define `focal_vs_comp` data frames which connects each focal tree in the `growth_df` data frames to the trees in its competitive neighborhood range as defined by the `max_dist` constant. So for example, if `growth_df` consisted of two focal trees with two and three neighbors with `max_dist` respectively, `focal_vs_comp` would be a data frame of 5 rows connecting each focal tree to it's competitors. The `create_focal_vs_comp()` function makes this connection taking as inputs the `growth_df` data frame; the `max_dist` constant defining competitive range; `cv_grid_sf`, giving the cross validation grid; and the `id` variable.
+Next we define `focal_vs_comp` data frames which connects each focal tree in the `growth_df` data frames to the trees in its competitive neighborhood range as defined by the `comp_dist` constant. So for example, if `growth_df` consisted of two focal trees with two and three neighbors with `comp_dist` respectively, `focal_vs_comp` would be a data frame of 5 rows connecting each focal tree to it's competitors. The `create_focal_vs_comp()` function makes this connection taking as inputs the `growth_df` data frame; the `comp_dist` constant defining competitive range; `cv_grid_sf`, giving the cross validation grid; and the `id` variable.
 
 ### Big Woods
 
 ```{r bw-focal-vs-comp}
 focal_vs_comp_bw <- bw_growth_df %>%
-  create_focal_vs_comp(max_dist, cv_grid_sf = bw_cv_grid, id = "treeID")
+  create_focal_vs_comp(comp_dist, cv_grid_sf = bw_cv_grid, id = "treeID")
 ```
 
 TODO: Figure out how to show this data frame's contents.
@@ -378,7 +380,7 @@ TODO: Figure out how to show this data frame's contents.
 
 ```{r scbi-focal-vs-comp}
 focal_vs_comp_scbi <- scbi_growth_df %>%
-  create_focal_vs_comp(max_dist, cv_grid_sf = scbi_cv_grid, id = "stemID")
+  create_focal_vs_comp(comp_dist, cv_grid_sf = scbi_cv_grid, id = "stemID")
 ```
 
 TODO: Figure out how to show this data frame's contents.
@@ -428,7 +430,7 @@ We then use the `rmse()` function from the `yardstick` package to obtain the roo
 
 ```{r bw-model-rmse}
 predictions %>%
-  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
 
@@ -521,7 +523,7 @@ Applying this spatially cross-validated model fit yields an RMSE is higher than 
 
 ```{r bw-spatial-cv}
 cv_bw <- focal_vs_comp_bw %>%
-  run_cv(max_dist = max_dist, cv_grid = bw_cv_grid) %>%
+  run_cv(comp_dist = comp_dist, cv_grid = bw_cv_grid) %>%
   right_join(bw_growth_df, by = c("focal_ID" = "treeID"))
 
 cv_bw %>%
@@ -536,7 +538,7 @@ Observe once again that this RMSE is much higher than that for the above SCBI mo
 
 ```{r scbi-spatial-cv}
 cv_scbi <- focal_vs_comp_scbi %>%
-  run_cv(max_dist = max_dist, cv_grid = scbi_cv_grid) %>%
+  run_cv(comp_dist = comp_dist, cv_grid = scbi_cv_grid) %>%
   right_join(scbi_growth_df, by = c("focal_ID" = "treeID"))
 
 cv_scbi %>%
@@ -561,7 +563,7 @@ Here we re-run the model fit to the Big Woods data from Section \ref{model-fit-p
 ```{r bw-posterior-viz-0}
 focal_vs_comp_bw <- bw_growth_df %>%
   mutate(sp = family) %>%
-  create_focal_vs_comp(max_dist = max_dist, cv_grid_sf = bw_cv_grid, 
+  create_focal_vs_comp(comp_dist = comp_dist, cv_grid_sf = bw_cv_grid, 
                        id = "treeID")
 
 posterior_param_bw <- focal_vs_comp_bw %>%

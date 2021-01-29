@@ -16,7 +16,7 @@
 #' @importFrom stats model.matrix
 #' @importFrom tidyr unnest
 #' @importFrom tidyr spread
-#' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+#' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004)} (Source: \url{https://doi.org/10.1371/journal.pone.0229930.s004})
 #' @return A list of `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
 #' @seealso \code{\link{predict.comp_bayes_lm}}
 #' @export
@@ -31,7 +31,9 @@
 #'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE) {
   check_focal_vs_comp(focal_vs_comp)
-  if (!is.null(prior_param)) {check_prior_params(prior_param)}
+  if (!is.null(prior_param)) {
+    check_prior_params(prior_param)
+  }
   check_inherits(run_shuffle, "logical")
 
   # Create linear regression model formula object
@@ -121,9 +123,7 @@ default_prior_params <- function(X) {
 print.comp_bayes_lm <- function(x, ...) {
   cat(
     paste0(
-      "A bayesian competition model (p = ",
-      length(unlist(x$prior_params[3])) - 1,
-      ").\n\n"
+      "Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:\n\n"
     )
   )
 
@@ -131,15 +131,49 @@ print.comp_bayes_lm <- function(x, ...) {
     utils::capture.output(
       print(
         tibble(
-          term = unlist(names(x$prior_params[1:2])),
-          prior = unlist(unname(x$prior_params[1:2])),
-          posterior = unlist(unname(x$post_params[1:2]))
+          parameter_type = c(rep("Inverse-Gamma on sigma^2", 2), rep("Multivariate t on beta", 2)),
+          prior = c("a_0", "b_0", "mu_0", "V_0"),
+          posterior = c("a_star", "b_star", "mu_star", "V_star")
         )
       )
     )
+  cat(term_tbl[c(2, 4:length(term_tbl))], sep = "\n")
 
-  cat(term_tbl[2:length(term_tbl)], sep = "\n")
+  cat(
+    paste0(
+      "\n",
+      "Model formula:\n",
+      x[[3]] %>% as.character(),
+      "\n"
+    )
+  )
 
+  # # a and b parameters
+  # term_tbl <-
+  #   utils::capture.output(
+  #     print(
+  #       tibble(
+  #         term = c("a", "b"),
+  #         prior = unlist(unname(x$prior_params[1:2])),
+  #         posterior = unlist(unname(x$post_params[1:2]))
+  #       )
+  #     )
+  #   )
+  # cat(term_tbl[2:length(term_tbl)], sep = "\n\n")
+  #
+  # # mu vector parameter
+  # term_tbl <-
+  #   utils::capture.output(
+  #     print(
+  #       tibble(
+  #         prior = unlist(unname(x$prior_params[3])),
+  #         posterior = unlist(unname(x$post_params[3]))
+  #       )
+  #     )
+  #   )
+  # cat(term_tbl[2:length(term_tbl)], sep = "\n\n")
+  #
+  # # V matrix ???
 }
 
 
@@ -173,7 +207,7 @@ print.comp_bayes_lm <- function(x, ...) {
 #'
 #' # Load in posterior parameter example
 #' # and growth data to compare to
-#' data(comp_bayes_lm_ex, ex_growth_df)
+#' data(comp_bayes_lm_ex, growth_ex)
 #'
 #' predictions <- focal_vs_comp_ex %>%
 #'   mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
@@ -223,11 +257,13 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 #'
 #' @examples
 #' 1 + 1
-run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
+run_cv <- function(focal_vs_comp, comp_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
   check_focal_vs_comp(focal_vs_comp)
-  check_inherits(max_dist, "numeric")
+  check_inherits(comp_dist, "numeric")
   check_inherits(cv_grid, "sf")
-  if (!is.null(prior_param)) {check_prior_params(prior_param)}
+  if (!is.null(prior_param)) {
+    check_prior_params(prior_param)
+  }
   check_inherits(run_shuffle, "logical")
 
   # For each fold, store resulting y-hat for each focal tree in list
@@ -240,14 +276,14 @@ run_cv <- function(focal_vs_comp, max_dist, cv_grid, prior_param = NULL, run_shu
     folds,
     fit_one_fold,
     focal_vs_comp,
-    max_dist,
+    comp_dist,
     cv_grid,
     prior_param,
     run_shuffle
   )
 }
 
-fit_one_fold <- function(fold, focal_vs_comp, max_dist,
+fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
                          cv_grid, prior_param, run_shuffle) {
   # Define test set and "full" training set (we will remove buffer region below)
   test <- focal_vs_comp %>%
@@ -269,18 +305,17 @@ fit_one_fold <- function(fold, focal_vs_comp, max_dist,
   # Remove trees in training set that are part of test set and buffer region to test set
   train <- train_full %>%
     st_as_sf() %>%
-    add_buffer_variable(direction = "out", size = max_dist, region = test_fold_boundary) %>%
+    add_buffer_variable(direction = "out", size = comp_dist, region = test_fold_boundary) %>%
     filter(buffer) %>%
     as_tibble()
 
-  # Fit model on training data and predict on test
+  # Fit model on training data
   comp_bayes_lm_fold <- train %>%
     comp_bayes_lm(prior_param = prior_param, run_shuffle = run_shuffle)
 
-  comp_bayes_lm_fold %>%
-    predict(focal_vs_comp = test) %>%
-    enframe(name = NULL, value = "growth_hat") %>%
-    mutate(focal_ID = test$focal_ID)
+  # Compute predicted values and append to test
+  test %>%
+    mutate(growth_hat = predict(comp_bayes_lm_fold, test))
 }
 
 
