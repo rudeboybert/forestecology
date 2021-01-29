@@ -16,7 +16,7 @@
 #' @importFrom stats model.matrix
 #' @importFrom tidyr unnest
 #' @importFrom tidyr spread
-#' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+#' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004)} (Source: \url{https://doi.org/10.1371/journal.pone.0229930.s004})
 #' @return A list of `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
 #' @seealso \code{\link{predict.comp_bayes_lm}}
 #' @export
@@ -123,8 +123,7 @@ default_prior_params <- function(X) {
 print.comp_bayes_lm <- function(x, ...) {
   cat(
     paste0(
-      "Parameters of a Bayesian linear regression model with a multivariate Normal likelihood\n",
-      "(for details see https://doi.org/10.1371/journal.pone.0229930.s004):\n\n"
+      "Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:\n\n"
     )
   )
 
@@ -144,9 +143,7 @@ print.comp_bayes_lm <- function(x, ...) {
     paste0(
       "\n",
       "Model formula:\n",
-      x[[3]] %>% as.character() %>% .[2],
-      " ~ ",
-      x[[3]] %>% as.character() %>% .[3],
+      x[[3]] %>% as.character(),
       "\n"
     )
   )

@@ -43,18 +43,21 @@ description.
 ## Example analysis
 
 We present an example analysis using toy data pre-loaded into the
-package.
+package where we will
+
+1.  Compute growth of trees based on census data
+2.  Add spatial information
+3.  Compute focal versus competitor tree information
+4.  Fit model and make predictions
+5.  Run spatial cross-validation
+
+<!-- end list -->
 
 ``` r
 library(tidyverse)
 library(forestecology)
-library(sf)
-library(sfheaders)
 library(blockCV)
-library(yardstick)
-library(snakecase)
 library(patchwork)
-library(tidyr)
 ```
 
 ### Compute growth of trees based on census data
@@ -105,7 +108,7 @@ growth_ex <-
     census_2 = census_2_ex %>% filter(!str_detect(codes, "R")),
     id = "ID"
     ) %>%
-  mutate(sp = snakecase::to_any_case(sp) %>% factor())
+  mutate(sp = to_any_case(sp) %>% factor())
 ```
 
 ### Add spatial information
@@ -149,15 +152,16 @@ base_plot +
 
 Next we add information pertaining to our spatial cross-validation
 scheme. We first manually define the spatial blocks that will act as our
-cross-validation folds and convert them to an `sf` object.
+cross-validation folds and convert them to an `sf` object using the
+`sf_polygon()` function from the `sfheaders` package.
 
 ``` r
 fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
 fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
 
 blocks_ex <- bind_rows(
-  sfheaders::sf_polygon(fold1),
-  sfheaders::sf_polygon(fold2)
+  sf_polygon(fold1),
+  sf_polygon(fold2)
 ) %>%
   mutate(folds = c(1, 2) %>% factor())
 ```
@@ -257,8 +261,7 @@ associated with several methods.
 ``` r
 # Print
 comp_bayes_lm_ex
-#> Parameters of a Bayesian linear regression model with a multivariate Normal likelihood
-#> (for details see https://doi.org/10.1371/journal.pone.0229930.s004):
+#> Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:
 #> 
 #>   parameter_type           prior posterior
 #> 1 Inverse-Gamma on sigma^2 a_0   a_star   
@@ -267,7 +270,13 @@ comp_bayes_lm_ex
 #> 4 Multivariate t on beta   V_0   V_star   
 #> 
 #> Model formula:
-#> growth ~ sp + dbh + dbh * sp + american_beech * sp + sugar_maple * sp
+#> ~
+#>  
+#> Model formula:
+#> growth
+#>  
+#> Model formula:
+#> sp + dbh + dbh * sp + american_beech * sp + sugar_maple * sp
 
 # Posterior distributions (plots combined with patchwork pkg)
 p1 <- autoplot(comp_bayes_lm_ex, type = "intercepts")
@@ -303,7 +312,7 @@ versus fitted growths as a measure of our model’s fit.
 
 ``` r
 focal_vs_comp_ex %>%
-  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 #> [1] 0.1900981
 ```
@@ -329,7 +338,7 @@ spatial autocorrelation.
 
 ``` r
 focal_vs_comp_ex %>%
-  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 #> [1] 0.4068709
 ```

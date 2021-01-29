@@ -430,7 +430,7 @@ We then use the `rmse()` function from the `yardstick` package to obtain the roo
 
 ```{r bw-model-rmse}
 predictions %>%
-  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
 

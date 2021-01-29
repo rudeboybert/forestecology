@@ -45,18 +45,19 @@ This package is designed to work for spatially mapped, repeat censused forests p
 
 ## Example analysis
 
-We present an example analysis using toy data pre-loaded into the package. 
+We present an example analysis using toy data pre-loaded into the package where we will
+
+1. Compute growth of trees based on census data
+1. Add spatial information
+1. Compute focal versus competitor tree information
+1. Fit model and make predictions
+1. Run spatial cross-validation
 
 ```{r}
 library(tidyverse)
 library(forestecology)
-library(sf)
-library(sfheaders)
 library(blockCV)
-library(yardstick)
-library(snakecase)
 library(patchwork)
-library(tidyr)
 ```
 
 ### Compute growth of trees based on census data
@@ -86,7 +87,7 @@ growth_ex <-
     census_2 = census_2_ex %>% filter(!str_detect(codes, "R")),
     id = "ID"
     ) %>%
-  mutate(sp = snakecase::to_any_case(sp) %>% factor())
+  mutate(sp = to_any_case(sp) %>% factor())
 ```
 
 ### Add spatial information
@@ -117,15 +118,15 @@ base_plot +
   geom_sf(data = growth_ex, aes(col = buffer), size = 2)
 ```
 
-Next we add information pertaining to our spatial cross-validation scheme. We first manually define the spatial blocks that will act as our cross-validation folds and convert them to an `sf` object.
+Next we add information pertaining to our spatial cross-validation scheme. We first manually define the spatial blocks that will act as our cross-validation folds and convert them to an `sf` object using the `sf_polygon()` function from the `sfheaders` package.
 
 ```{r}
 fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
 fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
 
 blocks_ex <- bind_rows(
-  sfheaders::sf_polygon(fold1),
-  sfheaders::sf_polygon(fold2)
+  sf_polygon(fold1),
+  sf_polygon(fold2)
 ) %>%
   mutate(folds = c(1, 2) %>% factor())
 ```
@@ -201,7 +202,7 @@ We then compute the root mean squared error (RMSE) of the observed versus fitted
 
 ```{r}
 focal_vs_comp_ex %>%
-  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
 
@@ -218,7 +219,7 @@ Note the increase in RMSE, reflecting the fact that our original estimate of mod
 
 ```{r}
 focal_vs_comp_ex %>%
-  yardstick::rmse(truth = growth, estimate = growth_hat) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
 
