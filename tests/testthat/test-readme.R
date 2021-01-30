@@ -4,58 +4,45 @@ test_that("readme code works", {
   library(dplyr)
   library(ggplot2)
   library(stringr)
-
-  library(sf)
-  library(sfheaders)
   library(blockCV)
-
-  library(yardstick)
-  library(snakecase)
-
-  census_2_ex_no_r <- census_2_ex %>%
-    filter(!str_detect(codes, "R"))
-
-  id <- "ID"
-
-  growth_ex <-
-    compute_growth(census_1_ex, census_2_ex_no_r, id) %>%
-    mutate(
-      sp = to_any_case(sp),
-      sp = as.factor(sp)
-    )
 
   comp_dist <- 1
 
-  growth_ex <- growth_ex %>%
+  growth_ex <-
+    compute_growth(
+      census_1 = census_1_ex,
+      census_2 = census_2_ex %>% filter(!str_detect(codes, "R")),
+      id = "ID"
+    ) %>%
+    mutate(sp = to_any_case(sp) %>% factor()) %>%
     add_buffer_variable(direction = "in", size = comp_dist, region = study_region_ex)
 
   expect_true(check_inherits(growth_ex, "data.frame"))
 
+  buffer_region <- study_region_ex %>%
+    compute_buffer_region(direction = "in", size = comp_dist)
+
+  expect_true(check_inherits(buffer_region, "data.frame"))
+
   fold1 <- rbind(c(0, 0), c(5, 0), c(5, 5), c(0, 5), c(0, 0))
   fold2 <- rbind(c(5, 0), c(10, 0), c(10, 5), c(5, 5), c(5, 0))
-  blocks <- bind_rows(
+
+  blocks_ex <- bind_rows(
     sf_polygon(fold1),
     sf_polygon(fold2)
   ) %>%
-    mutate(foldID = c(1, 2))
+    mutate(folds = c(1, 2) %>% factor())
 
   SpatialBlock_ex <- spatialBlock(
-    speciesData = growth_ex,
-    verbose = FALSE,
-    k = 2,
-    selection = "systematic",
-    blocks = blocks,
-    showBlocks = FALSE
+    speciesData = growth_ex, k = 2, selection = "systematic", blocks = blocks_ex,
+    showBlocks = FALSE, verbose = FALSE
   )
 
   growth_ex <- growth_ex %>%
-    mutate(foldID = SpatialBlock_ex$foldID %>% as.factor())
-
-  cv_grid_sf_ex <- SpatialBlock_ex$blocks %>%
-    st_as_sf()
+    mutate(foldID = SpatialBlock_ex$foldID %>% factor())
 
   focal_vs_comp_ex <- growth_ex %>%
-    create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+    create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_ex, id = "ID")
 
   # Checks each column in focal_vs_comp is of appropriate type
   expect_true(check_inherits(focal_vs_comp_ex, "data.frame"))
@@ -66,17 +53,16 @@ test_that("readme code works", {
   )
 
   comp_bayes_lm_ex <- focal_vs_comp_ex %>%
-    comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
-
+    comp_bayes_lm(prior_param = NULL)
 
   expect_true(check_comp_bayes_lm(comp_bayes_lm_ex))
 
-  predictions <- focal_vs_comp_ex %>%
+  focal_vs_comp_ex <- focal_vs_comp_ex %>%
     mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
 
   expect_true(
     check_inherits(
-      predictions,
+      focal_vs_comp_ex,
       "data.frame"
     )
   )
@@ -95,5 +81,24 @@ test_that("readme code works", {
         right_join(growth_ex, by = c("focal_ID" = "ID")),
       "data.frame"
     )
+  )
+
+  expect_equal(
+    focal_vs_comp_ex %>%
+      rmse(truth = growth, estimate = growth_hat) %>%
+      pull(.estimate),
+    0.1900981,
+    tolerance = .01
+  )
+
+  focal_vs_comp_ex <- focal_vs_comp_ex %>%
+    run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex)
+
+  expect_equal(
+    focal_vs_comp_ex %>%
+      rmse(truth = growth, estimate = growth_hat) %>%
+      pull(.estimate),
+    0.4068709,
+    tolerance = .01
   )
 })
