@@ -11,24 +11,34 @@ compute_growth(census_1, census_2, id)
 
 \item{census_2}{A data frame of the second (later) census}
 
-\item{id}{Name of variable that uniquely identifies each tree common to \code{census_1} and \code{census_2}
-allowing you to join/merge both data frames.}
+\item{id}{Name of variable that uniquely identifies each tree common
+to \code{census_1} and \code{census_2} allowing you to join/merge
+both data frames.}
 }
 \value{
-growth_df An sf data frame with \code{growth}: average annual growth in dbh.
+An \code{sf} data frame with column \code{growth} giving the average
+annual growth in \code{dbh}.
 }
 \description{
-Based on two tree censuses compute the average annual growth in dbh for all
-trees that were alive at (TODO: fill this in).
+Based on two tree censuses, compute the average annual growth in \code{dbh} for all
+trees.
 }
 \examples{
 library(dplyr)
 library(stringr)
-# Load in data from two forst censuses
+
+# Load in data from two forest censuses
 data(census_1_ex, census_2_ex)
+
 # Filter out resprouts in second census
 census_2_ex_no_r <- census_2_ex \%>\%
   filter(!str_detect(codes, "R"))
-id <- "ID"
-growth_ex <- compute_growth(census_1_ex, census_2_ex_no_r, id)
+
+growth_ex <- compute_growth(census_1_ex, census_2_ex_no_r, id = "ID")
 }
+\seealso{
+Other data processing functions: 
+\code{\link{create_bayesian_model_data}()},
+\code{\link{create_focal_vs_comp}()}
+}
+\concept{data processing functions}

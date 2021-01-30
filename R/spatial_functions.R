@@ -3,11 +3,16 @@
 #' @inheritParams add_buffer_variable
 #' @param region An \code{sf} polygon object of region to be buffered
 #' @param direction "in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.
+#'
 #' @return An \code{sf} polygon object of buffer
+#'
 #' @importFrom sfheaders sf_polygon
 #' @importFrom sf st_buffer
-#' @seealso \code{\link{add_buffer_variable}}
+#'
+#' @family spatial functions
+#'
 #' @export
+#'
 #' @examples
 #' library(tibble)
 #' library(sfheaders)
@@ -63,14 +68,19 @@ compute_buffer_region <- function(region, direction = "in", size) {
 #' @param growth_df \code{sf} data frame
 #' @param size Distance to determine which neighboring trees to a focal tree are competitors.
 #' @inheritParams compute_buffer_region
+#'
 #' @return The same \code{growth_df} data frame but with a new boolean
 #'   variable \code{buffer} indicating if a tree is in the study region buffer
-#'   area. This uses \code{\link{compute_buffer_region}} to define the boundary
+#'   area. This uses [compute_buffer_region()] to define the boundary
 #'   of the buffer region.
+#'
 #' @import dplyr
 #' @importFrom sf st_intersects
-#' @seealso \code{\link{compute_buffer_region}}
+#'
+#' @family spatial functions
+#'
 #' @export
+#'
 #' @examples
 #' library(tibble)
 #' library(sfheaders)
@@ -136,9 +146,13 @@ add_buffer_variable <- function(growth_df, direction, size, region) {
 #'
 #' @param focal_trees An \code{sf} polygon object of the focal trees of interest
 #' @param comp_trees An \code{sf} polygon object of the competitor trees
+#'
 #' @return A data frame with three columns: \code{focal_ID} of focal tree,
 #'   \code{comp_dist} of competitor tree, and \code{dist} of distance between
 #'   them.
+#'
+#' @family spatial functions
+#'
 #' @export
 #'
 #' @examples

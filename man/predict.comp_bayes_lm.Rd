@@ -4,16 +4,17 @@
 \alias{predict.comp_bayes_lm}
 \title{Make predictions based on fitted Bayesian model}
 \source{
-Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+Closed-form solutions of Bayesian linear
+regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
 }
 \usage{
 \method{predict}{comp_bayes_lm}(object, focal_vs_comp, ...)
 }
 \arguments{
-\item{object}{Output of \code{\link{comp_bayes_lm}}: A list of
+\item{object}{Output of \code{\link[=comp_bayes_lm]{comp_bayes_lm()}}: A list of
 \verb{\{a_star, b_star, mu_star, V_star\}} posterior hyperparameters}
 
-\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
+\item{focal_vs_comp}{data frame from \code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}}
 
 \item{...}{Currently ignored—only included for consistency with generic.}
 }
@@ -21,7 +22,7 @@ Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371
 A vector of predictions with length equal to the input data.
 }
 \description{
-Applies fitted model from \code{\link{comp_bayes_lm}} and
+Applies fitted model from \code{\link[=comp_bayes_lm]{comp_bayes_lm()}} and
 returns posterior predicted values.
 }
 \examples{
@@ -42,5 +43,9 @@ predictions \%>\%
   geom_abline(slope = 1, intercept = 0)
 }
 \seealso{
-\code{\link{comp_bayes_lm}}
+Other modeling functions: 
+\code{\link{comp_bayes_lm}()},
+\code{\link{create_bayesian_model_data}()},
+\code{\link{run_cv}()}
 }
+\concept{modeling functions}

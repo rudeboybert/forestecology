@@ -48,3 +48,9 @@ ggplot() +
 # Compute corresponding distances between the 3 focal trees and 4 competitor trees
 focal_vs_comp_distance(focal_trees, comp_trees)
 }
+\seealso{
+Other spatial functions: 
+\code{\link{add_buffer_variable}()},
+\code{\link{compute_buffer_region}()}
+}
+\concept{spatial functions}

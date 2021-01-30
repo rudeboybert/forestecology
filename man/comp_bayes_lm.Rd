@@ -4,13 +4,14 @@
 \alias{comp_bayes_lm}
 \title{Fit Bayesian competition model}
 \source{
-Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004)} (Source: \url{https://doi.org/10.1371/journal.pone.0229930.s004})
+Closed-form solutions of Bayesian linear
+regression \url{https://doi.org/10.1371/journal.pone.0229930.s004)}
 }
 \usage{
 comp_bayes_lm(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE)
 }
 \arguments{
-\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
+\item{focal_vs_comp}{data frame from \code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}}
 
 \item{prior_param}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
 
@@ -39,5 +40,9 @@ comp_bayes_lm_ex <- focal_vs_comp_ex \%>\%
   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 }
 \seealso{
-\code{\link{predict.comp_bayes_lm}}
+Other modeling functions: 
+\code{\link{create_bayesian_model_data}()},
+\code{\link{predict.comp_bayes_lm}()},
+\code{\link{run_cv}()}
 }
+\concept{modeling functions}

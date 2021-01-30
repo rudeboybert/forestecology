@@ -17,6 +17,7 @@
 #' Observatory \href{https://forestgeo.si.edu/}{(ForestGEO)} global network of
 #' forest research sites. For complete details on this dataset see its
 #' \href{https://deepblue.lib.umich.edu/data/concern/data_sets/ht24wj48w}{Deep Blue Data repository page}.
+#'
 #' @format A data frame with 27193 rows and 8 variables:
 #' \describe{
 #'   \item{treeID}{Tree identification number. This identifies an individual tree and
@@ -35,7 +36,10 @@
 #'   and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
 #' }
-#' @seealso \code{\link{census_2014_bw}}, \code{\link{species_bw}}, \code{\link{compute_growth}}
+#'
+#' @family Big Woods data
+#' @family example data objects
+#'
 #' @examples
 #' library(ggplot2)
 #' library(sf)
@@ -72,6 +76,7 @@
 #' Observatory \href{https://forestgeo.si.edu/}{(ForestGEO)} global network of
 #' forest research sites. For complete details on this dataset see its
 #' \href{https://deepblue.lib.umich.edu/data/concern/data_sets/ht24wj48w}{Deep Blue Data repository page}.
+#'
 #' @format A data frame with 48371 rows and 8 variables:
 #' \describe{
 #'   \item{treeID}{Tree identification number. This identifies an individual tree and
@@ -90,7 +95,10 @@
 #'   and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
 #'   this stands for resprout.}
 #' }
-#' @seealso \code{\link{census_2008_bw}}, \code{\link{species_bw}}, \code{\link{compute_growth}}
+#'
+#' @family Big Woods data
+#' @family example data objects
+#'
 #' @examples
 #' library(ggplot2)
 #' library(sf)
@@ -134,10 +142,14 @@
 #'   their evolutionary relationships. The traits are specific leaf area, maximum
 #'   height, and wood density}
 #' }
+#'
 #' @source For more information on trait clustering see Allen and Kim 2020 "A permutation
 #' test and spatial cross-validation approach to assess models of interspecific competition
 #' between trees." \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
-#' @seealso \code{\link{census_2008_bw}}, \code{\link{census_2014_bw}}
+#'
+#' @family Big Woods data
+#' @family example data objects
+#'
 #' @examples
 #' library(dplyr)
 #'
@@ -158,7 +170,10 @@
 #' Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
 #'
 #' @format A \code{sf} spatial features polygon
-#' @seealso \code{\link{census_2008_bw}} and \code{\link{census_2014_bw}}
+#'
+#' @family Big Woods data
+#' @family example data objects
+#'
 #' @examples
 #' library(ggplot2)
 #' library(sf)

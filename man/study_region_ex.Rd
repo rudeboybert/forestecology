@@ -27,6 +27,19 @@ ggplot() +
   geom_sf(data = study_region_bw, color = "red", fill = "transparent")
 }
 \seealso{
-\code{\link{census_1_ex}}
+Other example data objects: 
+\code{\link{census_1_ex}},
+\code{\link{census_2008_bw}},
+\code{\link{census_2014_bw}},
+\code{\link{census_2_ex}},
+\code{\link{comp_bayes_lm_ex}},
+\code{\link{cv_grid_sf_ex}},
+\code{\link{focal_vs_comp_ex}},
+\code{\link{growth_ex}},
+\code{\link{growth_spatial_ex}},
+\code{\link{growth_toy}},
+\code{\link{species_bw}},
+\code{\link{study_region_bw}}
 }
+\concept{example data objects}
 \keyword{datasets}

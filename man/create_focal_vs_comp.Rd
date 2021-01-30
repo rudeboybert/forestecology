@@ -7,7 +7,7 @@
 create_focal_vs_comp(growth_df, comp_dist, cv_grid_sf, id)
 }
 \arguments{
-\item{growth_df}{A \code{\link{compute_growth}} output converted to \code{sf} object}
+\item{growth_df}{A \code{\link[=compute_growth]{compute_growth()}} output converted to \code{sf} object}
 
 \item{comp_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
 
@@ -29,7 +29,7 @@ following criteria
 \tabular{l}{
 \enumerate{
 \item Were alive at both censuses \cr
-\item Were not part of the study region's buffer as computed by \code{\link{add_buffer_variable}} \cr
+\item Were not part of the study region's buffer as computed by \code{\link[=add_buffer_variable]{add_buffer_variable()}} \cr
 \item Were not a resprout at the second census. Such trees should be coded as
 \code{"R"} in the \code{codes2} variable (OK if a resprout at first census)
 }
@@ -50,7 +50,7 @@ library(sf)
 library(sfheaders)
 library(tibble)
 
-# Create fold information sf object. TODO: clean this
+# Create fold information sf object.
 SpatialBlock_ex <-
   tibble(
     # Study region boundary
@@ -86,5 +86,8 @@ focal_vs_comp_ex <- growth_spatial_ex \%>\%
   create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 }
 \seealso{
-\code{\link{focal_vs_comp_distance}}
+Other data processing functions: 
+\code{\link{compute_growth}()},
+\code{\link{create_bayesian_model_data}()}
 }
+\concept{data processing functions}

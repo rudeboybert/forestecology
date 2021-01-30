@@ -6,6 +6,7 @@
 \title{Example cross validation grid}
 \format{
 A \code{sf} polygons
+
 \describe{
 \item{foldID}{Tree identification number. This identifies an individual tree and
 can be used to connect trees between the two censuses.}
@@ -33,6 +34,19 @@ focal_vs_comp_ex <- growth_spatial_ex \%>\%
   create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 }
 \seealso{
-\code{\link{growth_spatial_ex}}
+Other example data objects: 
+\code{\link{census_1_ex}},
+\code{\link{census_2008_bw}},
+\code{\link{census_2014_bw}},
+\code{\link{census_2_ex}},
+\code{\link{comp_bayes_lm_ex}},
+\code{\link{focal_vs_comp_ex}},
+\code{\link{growth_ex}},
+\code{\link{growth_spatial_ex}},
+\code{\link{growth_toy}},
+\code{\link{species_bw}},
+\code{\link{study_region_bw}},
+\code{\link{study_region_ex}}
 }
+\concept{example data objects}
 \keyword{datasets}

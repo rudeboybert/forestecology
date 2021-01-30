@@ -31,15 +31,29 @@ focal_vs_comp_ex
 This is an example focal versus comp data frame. The rows are focal
 trees which are repeated for all competitor trees within a specified
 distance from them. In this case that distance is 1. This is the focal
-versus comp for \code{\link{growth_spatial_ex}}.
+versus comp for \link{growth_spatial_ex}.
 }
 \examples{
-library(dplyr)
 
 comp_bayes_lm_ex <- focal_vs_comp_ex \%>\%
   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 }
 \seealso{
-\code{\link{growth_spatial_ex}}
+\code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}
+
+Other example data objects: 
+\code{\link{census_1_ex}},
+\code{\link{census_2008_bw}},
+\code{\link{census_2014_bw}},
+\code{\link{census_2_ex}},
+\code{\link{comp_bayes_lm_ex}},
+\code{\link{cv_grid_sf_ex}},
+\code{\link{growth_ex}},
+\code{\link{growth_spatial_ex}},
+\code{\link{growth_toy}},
+\code{\link{species_bw}},
+\code{\link{study_region_bw}},
+\code{\link{study_region_ex}}
 }
+\concept{example data objects}
 \keyword{datasets}

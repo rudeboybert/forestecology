@@ -7,17 +7,35 @@
 create_bayesian_model_data(focal_vs_comp, run_shuffle = FALSE)
 }
 \arguments{
-\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
+\item{focal_vs_comp}{data frame from \code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}}
 
 \item{run_shuffle}{boolean as to whether to run permutation test shuffle of
 competitor tree species within a particular focal_ID}
 }
 \value{
-Data frame that can be used for lm()
+Data frame for internal package use.
 }
 \description{
-This function is used both by \code{\link{comp_bayes_lm}} and \code{\link{predict.comp_bayes_lm}}
+This function "widens" focal-competitor data frames for use inside of
+package modeling functions, where each \code{comp_sp} inside of the \code{comp}
+list-column receives its own column with its associated total basal area.
+
+This function is used internally by \code{\link[=comp_bayes_lm]{comp_bayes_lm()}} and
+\code{\link[=predict.comp_bayes_lm]{predict.comp_bayes_lm()}} exported as a convenience for
+applications extending this package's functionality.
 }
 \examples{
-1 + 1
+create_bayesian_model_data(focal_vs_comp_ex)
 }
+\seealso{
+Other modeling functions: 
+\code{\link{comp_bayes_lm}()},
+\code{\link{predict.comp_bayes_lm}()},
+\code{\link{run_cv}()}
+
+Other data processing functions: 
+\code{\link{compute_growth}()},
+\code{\link{create_focal_vs_comp}()}
+}
+\concept{data processing functions}
+\concept{modeling functions}
