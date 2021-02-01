@@ -1,6 +1,8 @@
 context("utilities")
 
 test_that("readme code works", {
+  set.seed(76)
+
   library(dplyr)
   library(ggplot2)
   library(stringr)
