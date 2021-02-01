@@ -27,20 +27,17 @@ census_1_ex
 This is example forest census data to be analyzed with this package.
 }
 \examples{
-data(census_1_ex, census_2_ex)
 library(dplyr)
 library(stringr)
-library(snakecase)
-# Filter out resprouts
-census_2_ex_no_r <- census_2_ex \%>\%
-  filter(!str_detect(codes, "R"))
-id <- "ID"
+
 growth_ex <-
-  # Merge both censuses and compute growth:
-  compute_growth(census_1_ex, census_2_ex_no_r, id) \%>\%
-  mutate(
-    sp = to_any_case(sp),
-    sp = as.factor(sp)
+  compute_growth(
+    census_1 = census_1_ex \%>\%
+      mutate(sp = to_any_case(sp) \%>\% factor()),
+    census_2 = census_2_ex \%>\%
+      filter(!str_detect(codes, "R")) \%>\%
+      mutate(sp = to_any_case(sp) \%>\% factor()),
+    id = "ID"
   )
 }
 \seealso{

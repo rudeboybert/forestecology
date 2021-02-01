@@ -12,11 +12,13 @@ test_that("readme code works", {
 
   growth_ex <-
     compute_growth(
-      census_1 = census_1_ex,
-      census_2 = census_2_ex %>% filter(!str_detect(codes, "R")),
+      census_1 = census_1_ex %>%
+        mutate(sp = to_any_case(sp) %>% factor()),
+      census_2 = census_2_ex %>%
+        filter(!str_detect(codes, "R")) %>%
+        mutate(sp = to_any_case(sp) %>% factor()),
       id = "ID"
     ) %>%
-    mutate(sp = to_any_case(sp) %>% factor()) %>%
     add_buffer_variable(direction = "in", size = comp_dist, region = study_region_ex)
 
   expect_true(check_inherits(growth_ex, "data.frame"))

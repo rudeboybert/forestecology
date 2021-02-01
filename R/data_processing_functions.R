@@ -23,14 +23,15 @@
 #' library(dplyr)
 #' library(stringr)
 #'
-#' # Load in data from two forest censuses
-#' data(census_1_ex, census_2_ex)
-#'
-#' # Filter out resprouts in second census
-#' census_2_ex_no_r <- census_2_ex %>%
-#'   filter(!str_detect(codes, "R"))
-#'
-#' growth_ex <- compute_growth(census_1_ex, census_2_ex_no_r, id = "ID")
+#' growth_ex <-
+#'   compute_growth(
+#'     census_1 = census_1_ex %>%
+#'       mutate(sp = to_any_case(sp) %>% factor()),
+#'     census_2 = census_2_ex %>%
+#'       filter(!str_detect(codes, "R")) %>%
+#'       mutate(sp = to_any_case(sp) %>% factor()),
+#'     id = "ID"
+#'   )
 compute_growth <- function(census_1, census_2, id) {
   # 0. Check inputs
   check_inherits(census_1, "data.frame")
@@ -44,7 +45,7 @@ compute_growth <- function(census_1, census_2, id) {
     census_1
   )
   purrr::map2(
-    c("ID", "sp", "gx", "gy", "date", "codes", "dbh"),
+    c(id, "sp", "gx", "gy", "date", "codes", "dbh"),
     c("numeric", "factor", "numeric", "numeric", "Date", "character", "numeric"),
     check_column,
     census_2

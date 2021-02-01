@@ -359,6 +359,7 @@ fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
 #' @inheritParams comp_bayes_lm
 #'
 #' @importFrom tidyr unnest
+#' @export
 #'
 #' @return Data frame for internal package use.
 #'

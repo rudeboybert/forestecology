@@ -104,11 +104,13 @@ censuses that aren’t resprouts at the second census per Allen and Kim
 ``` r
 growth_ex <-
   compute_growth(
-    census_1 = census_1_ex,
-    census_2 = census_2_ex %>% filter(!str_detect(codes, "R")),
+    census_1 = census_1_ex %>% 
+      mutate(sp = to_any_case(sp) %>% factor()),
+    census_2 = census_2_ex %>% 
+      filter(!str_detect(codes, "R")) %>% 
+      mutate(sp = to_any_case(sp) %>% factor()),
     id = "ID"
-    ) %>%
-  mutate(sp = to_any_case(sp) %>% factor())
+  )
 ```
 
 ### Add spatial information

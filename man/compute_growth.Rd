@@ -27,14 +27,15 @@ trees.
 library(dplyr)
 library(stringr)
 
-# Load in data from two forest censuses
-data(census_1_ex, census_2_ex)
-
-# Filter out resprouts in second census
-census_2_ex_no_r <- census_2_ex \%>\%
-  filter(!str_detect(codes, "R"))
-
-growth_ex <- compute_growth(census_1_ex, census_2_ex_no_r, id = "ID")
+growth_ex <-
+  compute_growth(
+    census_1 = census_1_ex \%>\%
+      mutate(sp = to_any_case(sp) \%>\% factor()),
+    census_2 = census_2_ex \%>\%
+      filter(!str_detect(codes, "R")) \%>\%
+      mutate(sp = to_any_case(sp) \%>\% factor()),
+    id = "ID"
+  )
 }
 \seealso{
 Other data processing functions: 

@@ -179,12 +179,13 @@ growth_toy <- tibble(
   gy = c(4, 3, 2, 1, 2)
 ) %>%
   mutate(
+    sp = factor(sp),
     dbh1 = c(40, 25, 30, 35, 20),
     codes1 = rep("M", n()),
     codes2 = rep("M", n()),
     growth = c(1, 2, 1, 3, 2),
     dbh2 = dbh1 + growth,
-    foldID = rep(1, n()) %>% as.character(),
+    foldID = rep(1, n()) %>% as.factor(),
     buffer = rep(FALSE, n())
   ) %>%
   # Convert data frame to sf object
