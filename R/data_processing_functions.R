@@ -37,8 +37,11 @@ compute_growth <- function(census_1, census_2, id) {
   check_inherits(census_2, "data.frame")
   check_inherits(id, "character")
 
-  if (!id %in% colnames(growth_df)) {
-    glue_stop("The `id` argument must be the name of a column in both `census_1` and `census_2` that uniquely identifies each row.")
+  if (
+    (!id %in% colnames(census_1)) | (n_distinct(census_1$ID) != nrow(census_1)) |
+    (!id %in% colnames(census_2)) | (n_distinct(census_2$ID) != nrow(census_2))
+  ){
+    glue_stop("The `id` argument must be the name of a numeric variable in both `census_1` and `census_2` that uniquely identifies each row.")
   }
 
   purrr::map2(
