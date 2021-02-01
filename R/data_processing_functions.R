@@ -32,12 +32,28 @@
 #'
 #' growth_ex <- compute_growth(census_1_ex, census_2_ex_no_r, id = "ID")
 compute_growth <- function(census_1, census_2, id) {
+  # 0. Check inputs
+  check_inherits(census_1, "data.frame")
+  check_inherits(census_2, "data.frame")
+  check_inherits(id, "character")
 
-  # TODO: Write following checks
-  # - Both census data frames have variables: id, dbh, date, and codes.
-  # - Check variable types: chr, dbl, date/dttm, NA
-  # - Check that id uniquely identifies rows
-  # - Prompt use with message: "Assuming dbh are in cm"
+  if (!id %in% colnames(growth_df)) {
+    glue_stop("The `id` argument must be the name of a column in both `census_1` and `census_2` that uniquely identifies each row.")
+  }
+
+  purrr::map2(
+    c("ID", "sp", "gx", "gy", "date", "codes", "dbh"),
+    c("numeric", "factor", "numeric", "numeric", "Date", "character", "numeric"),
+    check_column,
+    census_1
+  )
+  purrr::map2(
+    c("ID", "sp", "gx", "gy", "date", "dbh"),
+    c("numeric", "factor", "numeric", "numeric", "Date", "character", "numeric"),
+    check_column,
+    census_2
+  )
+
 
   # Limit second census data to only those variables that can change
   census_2 <- census_2 %>%
@@ -146,13 +162,14 @@ compute_growth <- function(census_1, census_2, id) {
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
 #'   create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
+  # 0. Check inputs
   check_inherits(growth_df, "data.frame")
   check_inherits(comp_dist, "numeric")
   check_inherits(cv_grid_sf, "sf")
   check_inherits(id, "character")
 
   if (!id %in% colnames(growth_df)) {
-    glue_stop("The `id` argument must be the name of a column in `growth_df`.")
+    glue_stop("The `id` argument must be the name of a column in both `census_1` and `census_2` that uniquely identifies each row.")
   }
 
   purrr::map2(
