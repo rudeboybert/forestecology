@@ -22,7 +22,6 @@ check_inherits <- function(x, what) {
       what,
       "numeric" = c("numeric", "integer"),
       "integer" = c("numeric", "integer"),
-      "factor" = c("character", "factor"),
       "character" = c("character", "factor"),
       what
     )
@@ -51,7 +50,6 @@ check_column <- function(column, type = NULL, df) {
         type,
         "numeric" = c("numeric", "integer"),
         "integer" = c("numeric", "integer"),
-        "factor" = c("character", "factor"),
         "character" = c("character", "factor"),
         type
       )
