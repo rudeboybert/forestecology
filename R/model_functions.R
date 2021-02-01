@@ -377,9 +377,6 @@ create_bayes_lm_data <- function(focal_vs_comp, run_shuffle = FALSE) {
     summarise(comp_basal_area = sum(comp_basal_area))
 
   # Shuffle group label only if flag is set
-  # TODO: Can we do this within a pipe, therefore we can connect above chain
-  # with chain below, that way we can re-use this code for predict
-  # below that doesn't use run_shuffle?
   if (run_shuffle) {
     focal_trees <- focal_trees %>%
       group_by(focal_ID) %>%

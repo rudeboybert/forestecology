@@ -243,8 +243,6 @@ create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
 
 
   # 4. Return output data frame
-  # TODO: Question to consider
-  # Should we convert to sf object using st_as_sf() here?
   focal_vs_comp <- focal_vs_comp %>%
     # Convert list to tibble:
     bind_rows() %>%

@@ -122,10 +122,10 @@ add_buffer_variable <- function(growth_df, direction, size, region) {
   buffer_boundary <- region %>%
     compute_buffer_region(direction, size = size)
 
-  # TODO: Address why we need to do this:
-  # https://github.com/r-spatial/lwgeom/issues/6 based on googling error message
-  # if you don't do this:
+  # Was getting following error:
   # "OGR: Corrupt data Error in CPL_gdal_dimension(st_geometry(x), NA_if_empty) : OGR error"
+  # Solution from https://github.com/r-spatial/lwgeom/issues/6 based on googling error message
+  # is below:
   st_crs(growth_df) <- NA
   st_crs(buffer_boundary) <- NA
 
