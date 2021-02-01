@@ -51,7 +51,7 @@ compute_growth <- function(census_1, census_2, id) {
     census_1
   )
   purrr::map2(
-    c("ID", "sp", "gx", "gy", "date", "dbh"),
+    c("ID", "sp", "gx", "gy", "date", "codes", "dbh"),
     c("numeric", "factor", "numeric", "numeric", "Date", "character", "numeric"),
     check_column,
     census_2
