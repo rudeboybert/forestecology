@@ -38,7 +38,7 @@ growth_ex <- compute_growth(census_1_ex, census_2_ex_no_r, id = "ID")
 }
 \seealso{
 Other data processing functions: 
-\code{\link{create_bayesian_model_data}()},
+\code{\link{create_bayes_lm_data}()},
 \code{\link{create_focal_vs_comp}()}
 }
 \concept{data processing functions}

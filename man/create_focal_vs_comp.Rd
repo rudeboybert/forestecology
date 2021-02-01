@@ -88,6 +88,6 @@ focal_vs_comp_ex <- growth_spatial_ex \%>\%
 \seealso{
 Other data processing functions: 
 \code{\link{compute_growth}()},
-\code{\link{create_bayesian_model_data}()}
+\code{\link{create_bayes_lm_data}()}
 }
 \concept{data processing functions}

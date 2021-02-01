@@ -53,7 +53,7 @@ comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE
 
   # Create matrices & vectors for Bayesian regression
   focal_trees <- focal_vs_comp %>%
-    create_bayesian_model_data(run_shuffle = run_shuffle)
+    create_bayes_lm_data(run_shuffle = run_shuffle)
 
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
@@ -235,7 +235,7 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 
   # Create matrices & vectors for Bayesian regression
   focal_trees <- focal_vs_comp %>%
-    create_bayesian_model_data()
+    create_bayes_lm_data()
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
     pull(growth) %>%
@@ -365,11 +365,9 @@ fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
 #' @family modeling functions
 #' @family data processing functions
 #'
-#' @export
-#'
 #' @examples
-#' create_bayesian_model_data(focal_vs_comp_ex)
-create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
+#' create_bayes_lm_data(focal_vs_comp_ex)
+create_bayes_lm_data <- function(focal_vs_comp, run_shuffle = FALSE) {
   # Prepare data for regression
   focal_trees <- focal_vs_comp %>%
     unnest(comp) %>%

@@ -43,7 +43,7 @@ run_cv(
 \seealso{
 Other modeling functions: 
 \code{\link{comp_bayes_lm}()},
-\code{\link{create_bayesian_model_data}()},
+\code{\link{create_bayes_lm_data}()},
 \code{\link{predict.comp_bayes_lm}()}
 }
 \concept{modeling functions}

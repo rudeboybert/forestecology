@@ -41,7 +41,7 @@ comp_bayes_lm_ex <- focal_vs_comp_ex \%>\%
 }
 \seealso{
 Other modeling functions: 
-\code{\link{create_bayesian_model_data}()},
+\code{\link{create_bayes_lm_data}()},
 \code{\link{predict.comp_bayes_lm}()},
 \code{\link{run_cv}()}
 }
