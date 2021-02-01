@@ -16,6 +16,7 @@ knitr::opts_chunk$set(
   warning = FALSE,
   cache = FALSE
 )
+set.seed(76)
 ```
 
 # forestecology 
@@ -27,7 +28,7 @@ knitr::opts_chunk$set(
 
 ## Installation
 
-You can install the released version of forestecology from [CRAN](https://CRAN.R-project.org) with:
+You can install the released version of forestecology from [CRAN](https://CRAN.R-project.org) with: 
 
 ```{r, eval = FALSE}
 install.packages("forestecology")
@@ -45,7 +46,7 @@ This package is designed to work for spatially mapped, repeat censused forests p
 
 ## Example analysis
 
-We present an example analysis using toy data pre-loaded into the package where we will
+We present an example analysis using toy data pre-loaded into the package where we will:
 
 1. Compute growth of trees based on census data
 1. Add spatial information

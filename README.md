@@ -43,7 +43,7 @@ description.
 ## Example analysis
 
 We present an example analysis using toy data pre-loaded into the
-package where we will
+package where we will:
 
 1.  Compute growth of trees based on census data
 2.  Add spatial information
