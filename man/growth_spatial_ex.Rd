@@ -6,6 +6,7 @@
 \title{Example growth data frame with spatial data for small example}
 \format{
 A \code{sf} spatial tibble
+
 \describe{
 \item{ID}{Tree identification number. This identifies an individual tree and
 can be used to connect trees between the two censuses.}
@@ -27,7 +28,7 @@ growth_spatial_ex
 }
 \description{
 This is an example growth data frame formed from two census data frames which
-has been updated with spatial data. It starts from \code{\link{growth_ex}}.
+has been updated with spatial data. It starts from \link{growth_ex}.
 }
 \examples{
 library(ggplot2)
@@ -47,6 +48,21 @@ focal_vs_comp_ex <- growth_spatial_ex \%>\%
   create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 }
 \seealso{
-\code{\link{growth_ex}}, \code{\link{add_buffer_variable}}, \code{\link{cv_grid_sf_ex}}
+\code{\link[=compute_growth]{compute_growth()}}
+
+Other example data objects: 
+\code{\link{census_1_ex}},
+\code{\link{census_2008_bw}},
+\code{\link{census_2014_bw}},
+\code{\link{census_2_ex}},
+\code{\link{comp_bayes_lm_ex}},
+\code{\link{cv_grid_sf_ex}},
+\code{\link{focal_vs_comp_ex}},
+\code{\link{growth_ex}},
+\code{\link{growth_toy}},
+\code{\link{species_bw}},
+\code{\link{study_region_bw}},
+\code{\link{study_region_ex}}
 }
+\concept{example data objects}
 \keyword{datasets}

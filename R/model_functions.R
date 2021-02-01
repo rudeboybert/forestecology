@@ -1,10 +1,5 @@
 #' Fit Bayesian competition model
 #'
-#' @param focal_vs_comp data frame from \code{\link{create_focal_vs_comp}}
-#' @param run_shuffle boolean as to whether to run permutation test shuffle of
-#'   competitor tree species within a particular focal_ID
-#' @param prior_param A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters
-#'
 #' @description Fit a Bayesian linear regression model with interactions terms where \deqn{y = X \beta + \epsilon}
 #' \tabular{ll}{
 #' \eqn{\mu} \tab mean hyperparameter vector for \eqn{\beta} of length \eqn{p + 1} \cr
@@ -12,13 +7,24 @@
 #' \eqn{a} \tab shape hyperparameter for \eqn{\sigma^2 > 0} \cr
 #' \eqn{b} \tab scale hyperparameter for \eqn{\sigma^2 > 0}\cr
 #' }
+#'
+#' @param focal_vs_comp data frame from [create_focal_vs_comp()]
+#' @param run_shuffle boolean as to whether to run permutation test shuffle of
+#'   competitor tree species within a particular focal_ID
+#' @param prior_param A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters
+#'
 #' @import dplyr
 #' @importFrom stats model.matrix
 #' @importFrom tidyr unnest
 #' @importFrom tidyr spread
-#' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004)} (Source: \url{https://doi.org/10.1371/journal.pone.0229930.s004})
+#'
+#' @source Closed-form solutions of Bayesian linear
+#' regression \url{https://doi.org/10.1371/journal.pone.0229930.s004)}
+#'
 #' @return A list of `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
-#' @seealso \code{\link{predict.comp_bayes_lm}}
+#'
+#' @family modeling functions
+#'
 #' @export
 #'
 #' @examples
@@ -47,7 +53,7 @@ comp_bayes_lm <- function(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE
 
   # Create matrices & vectors for Bayesian regression
   focal_trees <- focal_vs_comp %>%
-    create_bayesian_model_data(run_shuffle = run_shuffle)
+    create_bayes_lm_data(run_shuffle = run_shuffle)
 
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
@@ -182,10 +188,10 @@ print.comp_bayes_lm <- function(x, ...) {
 
 #' Make predictions based on fitted Bayesian model
 #'
-#' @description Applies fitted model from \code{\link{comp_bayes_lm}} and
+#' @description Applies fitted model from [comp_bayes_lm()] and
 #'   returns posterior predicted values.
 #'
-#' @param object Output of \code{\link{comp_bayes_lm}}: A list of
+#' @param object Output of [comp_bayes_lm()]: A list of
 #'   `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
 #' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
@@ -196,8 +202,12 @@ print.comp_bayes_lm <- function(x, ...) {
 #' @importFrom tidyr nest
 #'
 #' @return A vector of predictions with length equal to the input data.
-#' @seealso \code{\link{comp_bayes_lm}}
-#' @source Closed-form solutions of Bayesian linear regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+#'
+#' @family modeling functions
+#'
+#' @source Closed-form solutions of Bayesian linear
+#' regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+#'
 #' @export
 #'
 #' @examples
@@ -225,7 +235,7 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 
   # Create matrices & vectors for Bayesian regression
   focal_trees <- focal_vs_comp %>%
-    create_bayesian_model_data()
+    create_bayes_lm_data()
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
     pull(growth) %>%
@@ -243,20 +253,33 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 
 #' Run the bayesian model with spatial cross validation
 #'
+#' @description
+#' This function carries out the bayesian modeling process with spatial
+#' cross-validation as described in Allen and Kim (2020). Given a
+#' focal-competitor data frame, it appends a column with predicted growth values.
+#'
 #' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
 #' @param cv_grid \code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}
-#' @description Run cross-validation
 #'
 #' @import dplyr
 #' @import sf
 #' @import sfheaders
 #' @importFrom tibble enframe
+#'
 #' @return \code{focal_vs_comp} with new column of predicted \code{growth_hat}
+#'
+#' @family modeling functions
+#'
 #' @export
 #'
 #' @examples
-#' 1 + 1
+#'
+#' run_cv(
+#'   focal_vs_comp_ex,
+#'   comp_dist = 1,
+#'   cv_grid = cv_grid_sf_ex
+#' )
 run_cv <- function(focal_vs_comp, comp_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
   check_focal_vs_comp(focal_vs_comp)
   check_inherits(comp_dist, "numeric")
@@ -324,15 +347,27 @@ fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
 
 #' Create input data frame for Bayesian regression
 #'
+#' @description
+#' This function "widens" focal-competitor data frames for use inside of
+#' package modeling functions, where each `comp_sp` inside of the `comp`
+#' list-column receives its own column with its associated total basal area.
+#'
+#' This function is used internally by [comp_bayes_lm()] and
+#' [predict.comp_bayes_lm()] exported as a convenience for
+#' applications extending this package's functionality.
+#'
 #' @inheritParams comp_bayes_lm
 #'
 #' @importFrom tidyr unnest
-#' @return Data frame that can be used for lm()
-#' @description This function is used both by \code{\link{comp_bayes_lm}} and \code{\link{predict.comp_bayes_lm}}
-#' @export
+#'
+#' @return Data frame for internal package use.
+#'
+#' @family modeling functions
+#' @family data processing functions
+#'
 #' @examples
-#' 1 + 1
-create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
+#' create_bayes_lm_data(focal_vs_comp_ex)
+create_bayes_lm_data <- function(focal_vs_comp, run_shuffle = FALSE) {
   # Prepare data for regression
   focal_trees <- focal_vs_comp %>%
     unnest(comp) %>%
@@ -342,9 +377,6 @@ create_bayesian_model_data <- function(focal_vs_comp, run_shuffle = FALSE) {
     summarise(comp_basal_area = sum(comp_basal_area))
 
   # Shuffle group label only if flag is set
-  # TODO: Can we do this within a pipe, therefore we can connect above chain
-  # with chain below, that way we can re-use this code for predict
-  # below that doesn't use run_shuffle?
   if (run_shuffle) {
     focal_trees <- focal_trees %>%
       group_by(focal_ID) %>%

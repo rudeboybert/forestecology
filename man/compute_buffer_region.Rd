@@ -50,5 +50,8 @@ ggplot() +
   labs(title = "Regions: original (black), inwards buffer (orange), and outwards buffer (blue)")
 }
 \seealso{
-\code{\link{add_buffer_variable}}
+Other spatial functions: 
+\code{\link{add_buffer_variable}()},
+\code{\link{focal_vs_comp_distance}()}
 }
+\concept{spatial functions}

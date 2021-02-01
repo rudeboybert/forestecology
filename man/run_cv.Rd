@@ -13,7 +13,7 @@ run_cv(
 )
 }
 \arguments{
-\item{focal_vs_comp}{data frame from \code{\link{create_focal_vs_comp}}}
+\item{focal_vs_comp}{data frame from \code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}}
 
 \item{comp_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
 
@@ -28,8 +28,22 @@ competitor tree species within a particular focal_ID}
 \code{focal_vs_comp} with new column of predicted \code{growth_hat}
 }
 \description{
-Run cross-validation
+This function carries out the bayesian modeling process with spatial
+cross-validation as described in Allen and Kim (2020). Given a
+focal-competitor data frame, it appends a column with predicted growth values.
 }
 \examples{
-1 + 1
+
+run_cv(
+  focal_vs_comp_ex,
+  comp_dist = 1,
+  cv_grid = cv_grid_sf_ex
+)
 }
+\seealso{
+Other modeling functions: 
+\code{\link{comp_bayes_lm}()},
+\code{\link{create_bayes_lm_data}()},
+\code{\link{predict.comp_bayes_lm}()}
+}
+\concept{modeling functions}

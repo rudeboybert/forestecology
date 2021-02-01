@@ -1,34 +1,62 @@
 #' Compute growth of trees
 #'
-#' Based on two tree censuses compute the average annual growth in dbh for all
-#' trees that were alive at (TODO: fill this in).
+#' Based on two tree censuses, compute the average annual growth in `dbh` for all
+#' trees.
 #'
 #' @param census_1 A data frame of the first census.
 #' @param census_2 A data frame of the second (later) census
-#' @param id Name of variable that uniquely identifies each tree common to \code{census_1} and \code{census_2}
-#' allowing you to join/merge both data frames.
+#' @param id Name of variable that uniquely identifies each tree common
+#' to \code{census_1} and \code{census_2} allowing you to join/merge
+#' both data frames.
 #'
-#' @return growth_df An sf data frame with \code{growth}: average annual growth in dbh.
-#' @export
+#' @return An `sf` data frame with column \code{growth} giving the average
+#' annual growth in `dbh`.
+#'
 #' @import dplyr
 #' @import sf
+#'
+#' @family data processing functions
+#'
+#' @export
+#'
 #' @examples
 #' library(dplyr)
 #' library(stringr)
-#' # Load in data from two forst censuses
+#'
+#' # Load in data from two forest censuses
 #' data(census_1_ex, census_2_ex)
+#'
 #' # Filter out resprouts in second census
 #' census_2_ex_no_r <- census_2_ex %>%
 #'   filter(!str_detect(codes, "R"))
-#' id <- "ID"
-#' growth_ex <- compute_growth(census_1_ex, census_2_ex_no_r, id)
+#'
+#' growth_ex <- compute_growth(census_1_ex, census_2_ex_no_r, id = "ID")
 compute_growth <- function(census_1, census_2, id) {
+  # 0. Check inputs
+  check_inherits(census_1, "data.frame")
+  check_inherits(census_2, "data.frame")
+  check_inherits(id, "character")
 
-  # TODO: Write following checks
-  # - Both census data frames have variables: id, dbh, date, and codes.
-  # - Check variable types: chr, dbl, date/dttm, NA
-  # - Check that id uniquely identifies rows
-  # - Prompt use with message: "Assuming dbh are in cm"
+  purrr::map2(
+    c(id, "sp", "gx", "gy", "date", "codes", "dbh"),
+    c("numeric", "factor", "numeric", "numeric", "Date", "character", "numeric"),
+    check_column,
+    census_1
+  )
+  purrr::map2(
+    c("ID", "sp", "gx", "gy", "date", "codes", "dbh"),
+    c("numeric", "factor", "numeric", "numeric", "Date", "character", "numeric"),
+    check_column,
+    census_2
+  )
+
+  if (
+    (!id %in% colnames(census_1)) | (n_distinct(census_1[[id]]) != nrow(census_1)) |
+    (!id %in% colnames(census_2)) | (n_distinct(census_2[[id]]) != nrow(census_2))
+  ){
+    glue_stop("The `id` argument must be the name of a numeric variable in both `census_1` and `census_2` that uniquely identifies each row.")
+  }
+
 
   # Limit second census data to only those variables that can change
   census_2 <- census_2 %>%
@@ -59,34 +87,41 @@ compute_growth <- function(census_1, census_2, id) {
 
 #' Create focal versus competitor trees data frame
 #'
-#' @param growth_df A \code{\link{compute_growth}} output converted to \code{sf} object
+#' @param growth_df A [compute_growth()] output converted to \code{sf} object
 #' @param cv_grid_sf An sf object of a \code{blockCV} block output
 #' @param comp_dist Distance to determine which neighboring trees to a focal tree are competitors.
 #' @param id A character string of the variable name in \code{growth_df} uniquely identifying each tree
+#'
 #' @return \code{focal_vs_comp} data frame of all focal trees and for each focal
 #'   tree all possible competitor trees. In particular, for each competitor tree
 #'   we compute the \href{https://en.wikipedia.org/wiki/Basal_area}{basal area}
 #'   (in meters-squared) based on the `dbh1` variable from the first census
 #'   (assumed to be in cm).
-#' @export
+#'
 #' @import dplyr
 #' @importFrom tidyr nest
 #' @importFrom purrr map2
+#'
 #' @description "Focal versus competitor trees" data frames are the main data
 #'   frame used for analysis. "Focal trees" are all trees that satisfy the
 #'   following criteria
 #' \tabular{l}{
 #'   1. Were alive at both censuses \cr
-#'   2. Were not part of the study region's buffer as computed by \code{\link{add_buffer_variable}} \cr
+#'   2. Were not part of the study region's buffer as computed by [add_buffer_variable()] \cr
 #'   3. Were not a resprout at the second census. Such trees should be coded as
 #'   `"R"` in the `codes2` variable (OK if a resprout at first census)
 #' }
 #' For each focal tree, "competitor trees" are all trees that (1) were alive at
 #' the first census and (2) within \code{comp_dist} distance of the focal tree.
+#'
 #' @note In order to speed computation, in particular of distances between all
 #'   focal/competitor tree pairs, we use the cross-validation \code{blockCV}
 #'   object to divide the study region into smaller subsets.
-#' @seealso \code{\link{focal_vs_comp_distance}}
+#'
+#' @family data processing functions
+#'
+#' @export
+#'
 #' @examples
 #' library(ggplot2)
 #' library(dplyr)
@@ -95,7 +130,7 @@ compute_growth <- function(census_1, census_2, id) {
 #' library(sfheaders)
 #' library(tibble)
 #'
-#' # Create fold information sf object. TODO: clean this
+#' # Create fold information sf object.
 #' SpatialBlock_ex <-
 #'   tibble(
 #'     # Study region boundary
@@ -130,17 +165,18 @@ compute_growth <- function(census_1, census_2, id) {
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
 #'   create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
 create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
+  # 0. Check inputs
   check_inherits(growth_df, "data.frame")
   check_inherits(comp_dist, "numeric")
   check_inherits(cv_grid_sf, "sf")
   check_inherits(id, "character")
 
   if (!id %in% colnames(growth_df)) {
-    glue_stop("The `id` argument must be the name of a column in `growth_df`.")
+    glue_stop("The `id` argument must be the name of a column in both `census_1` and `census_2` that uniquely identifies each row.")
   }
 
   purrr::map2(
-    c("ID", "sp", "dbh1", "dbh2", "growth", "geometry", "buffer", "foldID"),
+    c(id, "sp", "dbh1", "dbh2", "growth", "geometry", "buffer", "foldID"),
     c("numeric", "factor", "numeric", "numeric", "numeric", "sfc", "logical", "factor"),
     check_column,
     growth_df
@@ -227,8 +263,6 @@ create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
 
 
   # 4. Return output data frame
-  # TODO: Question to consider
-  # Should we convert to sf object using st_as_sf() here?
   focal_vs_comp <- focal_vs_comp %>%
     # Convert list to tibble:
     bind_rows() %>%

@@ -18,7 +18,7 @@ add_buffer_variable(growth_df, direction, size, region)
 \value{
 The same \code{growth_df} data frame but with a new boolean
 variable \code{buffer} indicating if a tree is in the study region buffer
-area. This uses \code{\link{compute_buffer_region}} to define the boundary
+area. This uses \code{\link[=compute_buffer_region]{compute_buffer_region()}} to define the boundary
 of the buffer region.
 }
 \description{
@@ -63,5 +63,8 @@ p +
   geom_sf(data = buffer_boundary, col = "red", fill = "transparent")
 }
 \seealso{
-\code{\link{compute_buffer_region}}
+Other spatial functions: 
+\code{\link{compute_buffer_region}()},
+\code{\link{focal_vs_comp_distance}()}
 }
+\concept{spatial functions}

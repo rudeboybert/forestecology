@@ -6,6 +6,7 @@
 \title{Example growth data frame for small example}
 \format{
 A \code{sf} spatial tibble
+
 \describe{
 \item{ID}{Tree identification number. This identifies an individual tree and
 can be used to connect trees between the two censuses.}
@@ -25,7 +26,7 @@ growth_ex
 }
 \description{
 This is an example growth data frame formed from two census data frames. In this case it is
-made by combining \code{\link{census_1_ex}} and \code{\link{census_2_ex}}. The
+made by combining \link{census_1_ex} and \link{census_2_ex}. The
 individuals alive in both censuses were linked by their tree ID.
 }
 \examples{
@@ -69,6 +70,21 @@ growth_spatial_ex <- growth_spatial_ex \%>\%
   mutate(foldID = SpatialBlock_ex$foldID \%>\% as.factor())
 }
 \seealso{
-\code{\link{census_1_ex}}, \code{\link{census_2_ex}}, and \code{\link{compute_growth}}
+\code{\link[=compute_growth]{compute_growth()}}
+
+Other example data objects: 
+\code{\link{census_1_ex}},
+\code{\link{census_2008_bw}},
+\code{\link{census_2014_bw}},
+\code{\link{census_2_ex}},
+\code{\link{comp_bayes_lm_ex}},
+\code{\link{cv_grid_sf_ex}},
+\code{\link{focal_vs_comp_ex}},
+\code{\link{growth_spatial_ex}},
+\code{\link{growth_toy}},
+\code{\link{species_bw}},
+\code{\link{study_region_bw}},
+\code{\link{study_region_ex}}
 }
+\concept{example data objects}
 \keyword{datasets}
