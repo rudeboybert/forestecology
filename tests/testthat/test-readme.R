@@ -57,25 +57,17 @@ test_that("readme code works", {
   comp_bayes_lm_ex <- focal_vs_comp_ex %>%
     comp_bayes_lm(prior_param = NULL)
 
+  # Check comp_bayes_lm fit works
   expect_true(check_comp_bayes_lm(comp_bayes_lm_ex))
 
   focal_vs_comp_ex <- focal_vs_comp_ex %>%
     mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
 
+  # Check model fit outputs:
+  expect_true(check_inherits(focal_vs_comp_ex, "data.frame"))
   expect_true(
-    check_inherits(
-      focal_vs_comp_ex,
-      "data.frame"
-    )
+    check_inherits(comp_bayes_lm_ex %>% autoplot(type = "intercepts"), "ggplot")
   )
-
-  expect_true(
-    check_inherits(
-      comp_bayes_lm_ex %>% autoplot(type = "intercepts"),
-      "ggplot"
-    )
-  )
-
   expect_true(
     check_inherits(
       focal_vs_comp_ex %>%
@@ -85,6 +77,7 @@ test_that("readme code works", {
     )
   )
 
+  # Check RMSE's are within tolerance
   expect_equal(
     focal_vs_comp_ex %>%
       rmse(truth = growth, estimate = growth_hat) %>%
