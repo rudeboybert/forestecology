@@ -37,15 +37,8 @@ compute_growth <- function(census_1, census_2, id) {
   check_inherits(census_2, "data.frame")
   check_inherits(id, "character")
 
-  if (
-    (!id %in% colnames(census_1)) | (n_distinct(census_1$ID) != nrow(census_1)) |
-    (!id %in% colnames(census_2)) | (n_distinct(census_2$ID) != nrow(census_2))
-  ){
-    glue_stop("The `id` argument must be the name of a numeric variable in both `census_1` and `census_2` that uniquely identifies each row.")
-  }
-
   purrr::map2(
-    c("ID", "sp", "gx", "gy", "date", "codes", "dbh"),
+    c(id, "sp", "gx", "gy", "date", "codes", "dbh"),
     c("numeric", "factor", "numeric", "numeric", "Date", "character", "numeric"),
     check_column,
     census_1
@@ -56,6 +49,13 @@ compute_growth <- function(census_1, census_2, id) {
     check_column,
     census_2
   )
+
+  if (
+    (!id %in% colnames(census_1)) | (n_distinct(census_1[[id]]) != nrow(census_1)) |
+    (!id %in% colnames(census_2)) | (n_distinct(census_2[[id]]) != nrow(census_2))
+  ){
+    glue_stop("The `id` argument must be the name of a numeric variable in both `census_1` and `census_2` that uniquely identifies each row.")
+  }
 
 
   # Limit second census data to only those variables that can change
@@ -176,7 +176,7 @@ create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
   }
 
   purrr::map2(
-    c("ID", "sp", "dbh1", "dbh2", "growth", "geometry", "buffer", "foldID"),
+    c(id, "sp", "dbh1", "dbh2", "growth", "geometry", "buffer", "foldID"),
     c("numeric", "factor", "numeric", "numeric", "numeric", "sfc", "logical", "factor"),
     check_column,
     growth_df
