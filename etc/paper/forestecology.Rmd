@@ -1,5 +1,5 @@
 ---
-title: "`forestecology` package for modeling interspecies competition between trees"
+title: "The `forestecology` R package for modeling interspecies competition between trees"
 
 # to produce blinded version set to 1 and change blinded <- TRUE on line 54 below
 blinded: 0
