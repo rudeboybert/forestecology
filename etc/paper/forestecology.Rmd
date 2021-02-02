@@ -74,6 +74,23 @@ options(width = 70)
 
 # Abstract (350 words)
 
+
+When modeling growth of trees, the effect of interspecies competition is often included. 
+
+We present the `forestecology` package providing methods .
+
+Using R's S3 object-oriented system, we implement a class and methods for a specific linear, Bayesian neighborhood competition model of tree growth. Furthermore, this model can be cast in a permutation test framework to evaluate a null hypothesis of no impact of competitor species' identity
+
+
+The package is setup such that it can be easily extended to other models. 
+
+The package follows a tidyverse-like structure whereby verb-named functions can be "piped" to form the sequence of steps of analysis from start to finish. Furthermore, most inputs/outputs are of `sf` class from the simple features package, thereby facilitating all wrangling and visualization of geospatial data. 
+
+We leverage the ForestGEO network's data collection protocols and standardized data formatting to ensure cross-site compatibility of analysis. We apply our model to the Smithsonian Conservation Biology Institute's large forest dynamics plot. 
+
+
+
+
 1. Set the context for and purpose of the work: The scientific question/problem and the desiderata
     + (Eventually) modularly fitting models for interspecific competition and assessing them using spatial crossvalidation
     + Leverage ForestGEO protocols providing standardization
