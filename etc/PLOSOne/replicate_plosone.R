@@ -72,10 +72,10 @@ focal_vs_comp_bw <- growth_bw %>%
 
 # Fit model and make predictions -----------------------------------------------
 # Number of permutation shuffles:
-num_shuffle <- 4
+num_shuffle <- 9
 
 # For all three possible notions of species
-species_notion_vector <- c("trait_group", "family", "species")
+species_notion_vector <- c("trait_group", "family", "sp")
 
 # Save results here
 run_time <- rep(0, length(species_notion_vector))
@@ -180,7 +180,7 @@ model_comp <- bind_rows(
     species_notion = case_when(
       species_notion == "trait_group" ~ "1. Trait-based (6): lambda = 6 x 6",
       species_notion == "family" ~ "2. Phylogenetic family (20): lambda = 20 x 20",
-      species_notion == "species" ~ "3. Actual species (36): lambda = 36 x 36"
+      species_notion == "sp" ~ "3. Actual species (36): lambda = 36 x 36"
     )
   )
 
@@ -200,7 +200,8 @@ cv_plot <- ggplot() +
   ) +
   facet_wrap(~species_notion, ncol = 1) +
   scale_color_viridis(discrete = TRUE, option = "D")+
-  scale_fill_viridis(discrete = TRUE)
+  scale_fill_viridis(discrete = TRUE) +
+  theme_light()
 cv_plot
 
 filename %>%
