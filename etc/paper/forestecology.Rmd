@@ -74,39 +74,19 @@ options(width = 70)
 
 # Abstract (350 words)
 
-
-When modeling growth of trees, the effect of interspecies competition is often included. 
-
-We present the `forestecology` package providing methods .
-
-Using R's S3 object-oriented system, we implement a class and methods for a specific linear, Bayesian neighborhood competition model of tree growth. Furthermore, this model can be cast in a permutation test framework to evaluate a null hypothesis of no impact of competitor species' identity
+1. Set the context for and purpose of the work: 
+1. Indicate the approach and the methods: 
+1. Outline the main results: 
+1. Identify the conclusions and wider implications
 
 
-The package is setup such that it can be easily extended to other models. 
-
-The package follows a tidyverse-like structure whereby verb-named functions can be "piped" to form the sequence of steps of analysis from start to finish. Furthermore, most inputs/outputs are of `sf` class from the simple features package, thereby facilitating all wrangling and visualization of geospatial data. 
-
-We leverage the ForestGEO network's data collection protocols and standardized data formatting to ensure cross-site compatibility of analysis. We apply our model to the Smithsonian Conservation Biology Institute's large forest dynamics plot. 
+1. When modeling growth of trees forest ecologists often incorporate the effect of interspecies competition. Many such models are based on a neighborhood effect assumption whereby all trees within a fixed distance of all focal trees are considered competitors. Methods are needed to evaluate the effect of interspecies competition and to assess their quality. 
+1. We present the `forestecology` package providing methods for both 1) evaluating the out-of-sample performance of our model using spatial-crossvaliation and 2) testing a null hypothesis of of no impact of competitor species' identity on the growth of trees using a permutation test. We implement a class and methods using R's S3 object-oriented system, for a specific linear, Bayesian neighborhood competition model of tree growth. 
+1. We demonstrate the package's functions using data from the Smithsonian Conservation Biology Institute's large forest dynamics plot, part of the ForestGEO network of reseach sites. Given ForestGEO's data collection protocols and data formatting standards, the package cross-compatibility of code. We show both that 1) competitor species identity matters and 2) that not spatially cross-validating leads to error estimates that are overly optimistic. 
+1. The package follows `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence to intuitively display the sequence of steps of analysis from start to finish. Additionally, most inputs/outputs of functions assume an are of `sf` class from the simple features package, thereby facilitating all wrangling and visualization of geospatial data. Lastly, even though our package is currently limited to one specific model, the package is setup such that it can be easily extended to other models. 
 
 
 
-
-1. Set the context for and purpose of the work: The scientific question/problem and the desiderata
-    + (Eventually) modularly fitting models for interspecific competition and assessing them using spatial crossvalidation
-    + Leverage ForestGEO protocols providing standardization
-1. Indicate the approach and the methods: Use tidyverse, simple features, and tidymodels packages. 
-    + tidyverse: as stated in tidy tools manifesto: standadized data structures, functional programming with pipe, designed for humans
-    + sf: tidyverse-friendly package that makes wrangling and visualizing spatial data much easier
-    + tidymodels: given our spatial-crossvalidation, use tidymodels framework is a collection of packages for modeling and machine learning using tidyverse principles
-    + Dave: hmm, I think here we might need to mention the methods we implement. Something like, the package provides functions to specific a linear, bayesian neighborhood competition model of growth, then fit the model, and compare competing models with spatiall cross validation. Or somethign like that.
-1. Outline the main results: We replicate from scratch the figure in PLOSOne paper using Big Woods data, conduct similar analysis for SCBI data.
-    + Code would've been way more complicated in base. 
-    + We don't have to worry about how the component functions work, only that sequence/converyor belt is correct and output is correct.
-    + Scientist is abstracted away from ugly programming details.
-1. Identify the conclusions and wider implications:
-    + New scientific conclusions from SCBI data
-    + Modularly switch out our bayesian lm() functions to anything you want.
-    + this can serve as blue print for other modeling situations.
 
 # Introduction
 
