@@ -250,20 +250,11 @@ We load all the necessary packages.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{library}\NormalTok{(forestecology)}
-
-\CommentTok{# Load tidyverse packages:}
 \KeywordTok{library}\NormalTok{(tidyverse)}
 \KeywordTok{library}\NormalTok{(lubridate)}
-
-\CommentTok{# Load spatial packages:}
-\KeywordTok{library}\NormalTok{(blockCV)}
 \KeywordTok{library}\NormalTok{(sf)}
-\KeywordTok{library}\NormalTok{(sfheaders)}
-
-\CommentTok{# Load other packages:}
-\KeywordTok{library}\NormalTok{(snakecase)}
-\KeywordTok{library}\NormalTok{(yardstick)}
+\KeywordTok{library}\NormalTok{(forestecology)}
+\KeywordTok{library}\NormalTok{(blockCV)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -293,11 +284,8 @@ species data (genus, species, linnean classification, family, etc).
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{data}\NormalTok{(bw_census_}\DecValTok{2008}\NormalTok{, bw_census_}\DecValTok{2014}\NormalTok{, bw_species)}
-
-\CommentTok{# Append additional species data}
-\NormalTok{bw_census_}\DecValTok{2008}\NormalTok{ <-}\StringTok{ }\NormalTok{bw_census_}\DecValTok{2008} \OperatorTok{%>%}
-\StringTok{  }\KeywordTok{left_join}\NormalTok{(bw_species, }\DataTypeTok{by =} \StringTok{"sp"}\NormalTok{) }\OperatorTok{%>%}
+\NormalTok{census_}\DecValTok{2008}\NormalTok{_bw <-}\StringTok{ }\NormalTok{census_}\DecValTok{2008}\NormalTok{_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{left_join}\NormalTok{(species_bw, }\DataTypeTok{by =} \StringTok{"sp"}\NormalTok{) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\KeywordTok{c}\NormalTok{(genus, species, latin))}
 \end{Highlighting}
 \end{Shaded}
@@ -320,22 +308,20 @@ of dbh from mm to cm. \footnote{A rule of thumb to ascertain if dbh is
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{scbi_}\DecValTok{2013}\NormalTok{ <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
+\NormalTok{census_}\DecValTok{2013}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{select}\NormalTok{(treeID, stemID, sp, ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =}\NormalTok{ ExactDate,}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh),}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date)}
+    \DataTypeTok{date =}\NormalTok{ ExactDate }\OperatorTok{%>%}\StringTok{ }\KeywordTok{mdy}\NormalTok{(),}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}
 \NormalTok{  ) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{dbh =}\NormalTok{ dbh }\OperatorTok{/}\StringTok{ }\DecValTok{10}\NormalTok{)}
 
-\NormalTok{scbi_}\DecValTok{2018}\NormalTok{ <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem3.csv"}\NormalTok{) }\OperatorTok{%>%}
+\NormalTok{census_}\DecValTok{2018}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem3.csv"}\NormalTok{) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{select}\NormalTok{(treeID, stemID, sp, ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =}\NormalTok{ ExactDate,}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh),}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date)}
+    \DataTypeTok{date =}\NormalTok{ ExactDate }\OperatorTok{%>%}\StringTok{ }\KeywordTok{mdy}\NormalTok{(),}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}
 \NormalTok{  ) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{dbh =}\NormalTok{ dbh }\OperatorTok{/}\StringTok{ }\DecValTok{10}\NormalTok{)}
@@ -344,6 +330,8 @@ of dbh from mm to cm. \footnote{A rule of thumb to ascertain if dbh is
 
 \hypertarget{compute-annual-growth}{%
 \subsection{Compute annual growth}\label{compute-annual-growth}}
+
+MERGE THIS SUBSECTION with previous?
 
 For each plot we then compute average annual growth between the two
 censuses using the \texttt{compute\_growth()} function. This function
@@ -377,20 +365,15 @@ models in which individuals are grouped by species and by family.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{bw_census_}\DecValTok{2014}\NormalTok{ <-}\StringTok{ }\NormalTok{bw_census_}\DecValTok{2014} \OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{))}
-
-\NormalTok{bw_growth_df <-}
-\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(bw_census_}\DecValTok{2008}\NormalTok{, bw_census_}\DecValTok{2014}\NormalTok{, }\DataTypeTok{id =} \StringTok{"treeID"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\CommentTok{# Convert all variables denoting species to factors}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{sp =}\NormalTok{ sp }\OperatorTok{%>%}\StringTok{ }\KeywordTok{to_any_case}\NormalTok{() }\OperatorTok{%>%}\StringTok{ }\KeywordTok{as.factor}\NormalTok{(),}
-    \DataTypeTok{species =}\NormalTok{ sp,}
-    \DataTypeTok{family =} \KeywordTok{as.factor}\NormalTok{(family),}
-    \DataTypeTok{trait_group =} \KeywordTok{as.factor}\NormalTok{(trait_group)}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\CommentTok{# Drop unnecessary variables}
-\StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{stemID)}
+\NormalTok{growth_bw <-}
+\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
+    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2008}\NormalTok{_bw }\OperatorTok{%>%}\StringTok{ }
+\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{to_any_case}\NormalTok{(sp) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()),}
+    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2014}\NormalTok{_bw }\OperatorTok{%>%}\StringTok{ }
+\StringTok{      }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{to_any_case}\NormalTok{(sp) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()),}
+    \DataTypeTok{id =} \StringTok{"treeID"}
+\NormalTok{  )}
 \end{Highlighting}
 \end{Shaded}
 
@@ -399,10 +382,15 @@ models in which individuals are grouped by species and by family.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{scbi_growth_df <-}
-\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(scbi_}\DecValTok{2013}\NormalTok{, scbi_}\DecValTok{2018}\NormalTok{, }\StringTok{"stemID"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\CommentTok{# Convert all variables denoting species to factors}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{as.factor}\NormalTok{(sp))}
+\NormalTok{growth_scbi <-}
+\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
+    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }
+\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{to_any_case}\NormalTok{(sp) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()),}
+    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }
+\StringTok{      }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{to_any_case}\NormalTok{(sp) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()),}
+    \DataTypeTok{id =} \StringTok{"stemID"}
+\NormalTok{  )}
 \end{Highlighting}
 \end{Shaded}
 
@@ -454,26 +442,26 @@ meters).
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{max_dist <-}\StringTok{ }\FloatTok{7.5}
+\NormalTok{comp_dist <-}\StringTok{ }\FloatTok{7.5}
 \NormalTok{cv_fold_size <-}\StringTok{ }\DecValTok{100}
 \end{Highlighting}
 \end{Shaded}
 
-The first constant is \texttt{max\_dist} which defines the maximum
+The first constant is \texttt{comp\_dist} which defines the maximum
 distance for a tree's competitive neighborhood. Trees within this
 distance of each other are assumed to compete while those farther than
 this distance apart do not. Put differently, all trees within
-\texttt{max\_dist} of a focal tree will be considered its competitors
+\texttt{comp\_dist} of a focal tree will be considered its competitors
 (see below). Other studies have estimated the value of
-\texttt{max\_dist}; we use an average of estimated values
+\texttt{comp\_dist}; we use an average of estimated values
 \citet{canham_neighborhood_2004}, \citet{uriarte_spatially_2004},
 \citet{tatsumi2013}, \citet{canham_neighborhood_2006}.
 
-Furthermore, \texttt{max\_dist} will define the size of all buffers
+Furthermore, \texttt{comp\_dist} will define the size of all buffers
 considered, which will be encoded as a binary variable \texttt{buffer}
 as computed by the \texttt{add\_buffer\_variable()} function. This
 function takes as input the main \texttt{growth\_df} data frame, the
-\texttt{size} of the buffer which we set as \texttt{max\_dist}, and the
+\texttt{size} of the buffer which we set as \texttt{comp\_dist}, and the
 boundary of the study region encoded as a simple features polygon
 \citet{pebesma_simple_2018}. DESCRIBE SF PACKAGE. In the Big Woods
 example below we will use a pre-loaded simple features polygon while for
@@ -493,9 +481,9 @@ do this manually \citet{valavi_blockcv_2019}
 
 First, we indicate which trees are part of the buffer. This necessitates
 information about the study region boundary. In this case, we use a
-\texttt{sf\_polygon} object \texttt{bw\_study\_region} which comes
+\texttt{sf\_polygon} object \texttt{study\_region\_bw} which comes
 pre-loaded in the \texttt{forestecology} packages. After loading
-\texttt{bw\_study\_region}, we illustrate the results of the
+\texttt{study\_region\_bw}, we illustrate the results of the
 \texttt{add\_buffer\_variable()} function in Figure
 \ref{fig:bw-define-buffer}. Trees on the periphery denote with lighter
 colors are part of the buffer and will not be considered as ``focal''
@@ -504,15 +492,13 @@ competitor trees.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{data}\NormalTok{(bw_study_region)}
+\KeywordTok{data}\NormalTok{(study_region_bw)}
 
-\NormalTok{bw_growth_df <-}\StringTok{ }\NormalTok{bw_growth_df }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{direction =} \StringTok{"in"}\NormalTok{, }\DataTypeTok{size =}\NormalTok{ max_dist, }
-                      \DataTypeTok{region =}\NormalTok{ bw_study_region)}
+\NormalTok{growth_bw <-}\StringTok{ }\NormalTok{growth_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{direction =} \StringTok{"in"}\NormalTok{, }\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_bw)}
 
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ bw_growth_df }\OperatorTok{%>%}\StringTok{ }\KeywordTok{sample_frac}\NormalTok{(}\FloatTok{0.2}\NormalTok{), }
-          \KeywordTok{aes}\NormalTok{(}\DataTypeTok{col =}\NormalTok{ buffer), }\DataTypeTok{size =} \FloatTok{0.5}\NormalTok{)}
+\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_bw }\OperatorTok{%>%}\StringTok{ }\KeywordTok{sample_frac}\NormalTok{(}\FloatTok{0.2}\NormalTok{), }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{col =}\NormalTok{ buffer), }\DataTypeTok{size =} \FloatTok{0.5}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -540,7 +526,7 @@ which gives the geometry of the cross validation grid.
 \begin{Highlighting}[]
 \KeywordTok{set.seed}\NormalTok{(}\DecValTok{76}\NormalTok{)}
 \NormalTok{bw_spatialBlock <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}
-  \DataTypeTok{speciesData =}\NormalTok{ bw_growth_df, }\DataTypeTok{theRange =}\NormalTok{ cv_fold_size, }\DataTypeTok{k =} \DecValTok{28}\NormalTok{, }\DataTypeTok{xOffset =} \FloatTok{0.5}\NormalTok{, }
+  \DataTypeTok{speciesData =}\NormalTok{ growth_bw, }\DataTypeTok{theRange =}\NormalTok{ cv_fold_size, }\DataTypeTok{k =} \DecValTok{28}\NormalTok{, }\DataTypeTok{xOffset =} \FloatTok{0.5}\NormalTok{, }
   \DataTypeTok{yOffset =} \DecValTok{0}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}
 \NormalTok{)}
 \end{Highlighting}
@@ -550,7 +536,7 @@ Then add foldID to each tree
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{bw_growth_df <-}\StringTok{ }\NormalTok{bw_growth_df }\OperatorTok{%>%}
+\NormalTok{growth_bw <-}\StringTok{ }\NormalTok{growth_bw }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ bw_spatialBlock}\OperatorTok{$}\NormalTok{foldID)}
 \end{Highlighting}
 \end{Shaded}
@@ -560,7 +546,7 @@ Then add foldID to each tree
 \CommentTok{# Visualize grid. Why does fold 19 repeat?}
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
 \StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ bw_spatialBlock}\OperatorTok{$}\NormalTok{blocks }\OperatorTok{%>%}\StringTok{ }\KeywordTok{st_as_sf}\NormalTok{()) }\OperatorTok{+}\StringTok{ }
-\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ bw_growth_df }\OperatorTok{%>%}\StringTok{ }\KeywordTok{sample_frac}\NormalTok{(}\FloatTok{0.2}\NormalTok{), }
+\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_bw }\OperatorTok{%>%}\StringTok{ }\KeywordTok{sample_frac}\NormalTok{(}\FloatTok{0.2}\NormalTok{), }
           \KeywordTok{aes}\NormalTok{(}\DataTypeTok{col =} \KeywordTok{factor}\NormalTok{(foldID)), }\DataTypeTok{size =} \FloatTok{0.1}\NormalTok{, }\DataTypeTok{show.legend =} \OtherTok{FALSE}\NormalTok{) }\OperatorTok{+}\StringTok{ }
 \StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ bw_spatialBlock}\OperatorTok{$}\NormalTok{blocks }\OperatorTok{%>%}\StringTok{ }\KeywordTok{st_as_sf}\NormalTok{(), }
                \KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ folds))}
@@ -580,18 +566,18 @@ Then remove empty folds
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{bw_growth_df <-}\StringTok{ }\NormalTok{bw_growth_df }\OperatorTok{%>%}
+\NormalTok{growth_bw <-}\StringTok{ }\NormalTok{growth_bw }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\NormalTok{foldID }\OperatorTok{%in%}\StringTok{ }\KeywordTok{c}\NormalTok{(}\DecValTok{19}\NormalTok{, }\DecValTok{23}\NormalTok{, }\DecValTok{21}\NormalTok{, }\DecValTok{17}\NormalTok{, }\DecValTok{8}\NormalTok{, }\DecValTok{19}\NormalTok{)) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =} \KeywordTok{as.character}\NormalTok{(foldID))}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =} \KeywordTok{factor}\NormalTok{(foldID))}
 \end{Highlighting}
 \end{Shaded}
 
 Separately, we save the spatial cross-validation grid as an
-\texttt{sf\_polygon} object \texttt{bw\_cv\_grid}
+\texttt{sf\_polygon} object \texttt{blocks\_bw}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{bw_cv_grid <-}\StringTok{ }\NormalTok{bw_spatialBlock}\OperatorTok{$}\NormalTok{blocks }\OperatorTok{%>%}
+\NormalTok{blocks_bw <-}\StringTok{ }\NormalTok{bw_spatialBlock}\OperatorTok{$}\NormalTok{blocks }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{st_as_sf}\NormalTok{()}
 \end{Highlighting}
 \end{Shaded}
@@ -608,18 +594,17 @@ displays the resulting buffer trees.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{scbi_study_region <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
+\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
   \DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{),}
   \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)}
 \NormalTok{) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{sf_polygon}\NormalTok{()}
 
-\NormalTok{scbi_growth_df <-}\StringTok{ }\NormalTok{scbi_growth_df }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{direction =} \StringTok{"in"}\NormalTok{, }\DataTypeTok{size =}\NormalTok{ max_dist, }
-                      \DataTypeTok{region =}\NormalTok{ scbi_study_region)}
+\NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{direction =} \StringTok{"in"}\NormalTok{, }\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
 
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ scbi_growth_df, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{col =}\NormalTok{ buffer), }\DataTypeTok{size =} \FloatTok{0.5}\NormalTok{)}
+\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{col =}\NormalTok{ buffer), }\DataTypeTok{size =} \FloatTok{0.5}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -642,32 +627,31 @@ Here we manually define the spatial cross-validation grid as an
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{fold1 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{600}\NormalTok{)) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{sf_polygon}\NormalTok{() }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \DecValTok{1}\NormalTok{)}
-\NormalTok{fold2 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{)) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{sf_polygon}\NormalTok{() }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \DecValTok{2}\NormalTok{)}
-\NormalTok{scbi_cv_grid <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(fold1, fold2)}
+\NormalTok{fold1 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\NormalTok{fold2 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
+  \KeywordTok{sf_polygon}\NormalTok{(fold1),}
+  \KeywordTok{sf_polygon}\NormalTok{(fold2)}
+\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{scbi_spatialBlock <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}
-  \DataTypeTok{speciesData =}\NormalTok{ scbi_growth_df, }\DataTypeTok{k =} \DecValTok{2}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{,}
-  \CommentTok{# Note new arguments:}
-  \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ scbi_cv_grid}
+\NormalTok{SpatialBlock_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}
+  \DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =} \DecValTok{2}\NormalTok{, }\DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi,}
+  \DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}
 \NormalTok{)}
 
 \CommentTok{# Add foldID to each tree}
-\NormalTok{scbi_growth_df <-}\StringTok{ }\NormalTok{scbi_growth_df }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ scbi_spatialBlock}\OperatorTok{$}\NormalTok{foldID)}
+\NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ SpatialBlock_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
 
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ scbi_growth_df, }
-               \KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer)) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ scbi_cv_grid, }\DataTypeTok{fill =} \StringTok{"transparent"}\NormalTok{)}
+\StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ blocks_scbi, }\DataTypeTok{fill =} \StringTok{"transparent"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -686,23 +670,23 @@ trees}\label{define-focal-versus-competitor-trees}}
 
 Next we define \texttt{focal\_vs\_comp} data frames which connects each
 focal tree in the \texttt{growth\_df} data frames to the trees in its
-competitive neighborhood range as defined by the \texttt{max\_dist}
+competitive neighborhood range as defined by the \texttt{comp\_dist}
 constant. So for example, if \texttt{growth\_df} consisted of two focal
-trees with two and three neighbors with \texttt{max\_dist} respectively,
-\texttt{focal\_vs\_comp} would be a data frame of 5 rows connecting each
-focal tree to it's competitors. The \texttt{create\_focal\_vs\_comp()}
-function makes this connection taking as inputs the \texttt{growth\_df}
-data frame; the \texttt{max\_dist} constant defining competitive range;
-\texttt{cv\_grid\_sf}, giving the cross validation grid; and the
-\texttt{id} variable.
+trees with two and three neighbors with \texttt{comp\_dist}
+respectively, \texttt{focal\_vs\_comp} would be a data frame of 5 rows
+connecting each focal tree to it's competitors. The
+\texttt{create\_focal\_vs\_comp()} function makes this connection taking
+as inputs the \texttt{growth\_df} data frame; the \texttt{comp\_dist}
+constant defining competitive range; \texttt{cv\_grid\_sf}, giving the
+cross validation grid; and the \texttt{id} variable.
 
 \hypertarget{big-woods-3}{%
 \subsubsection{Big Woods}\label{big-woods-3}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{bw_growth_df }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(max_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ bw_cv_grid, }\DataTypeTok{id =} \StringTok{"treeID"}\NormalTok{)}
+\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{growth_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ blocks_bw, }\DataTypeTok{id =} \StringTok{"treeID"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -713,8 +697,8 @@ TODO: Figure out how to show this data frame's contents.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{scbi_growth_df }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(max_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ scbi_cv_grid, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
+\NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -782,8 +766,8 @@ posterior distributions.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior_param_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{fit_bayesian_model}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
+\NormalTok{comp_bayes_lm_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -795,9 +779,8 @@ growth data frame.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{predictions <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{predict_bayesian_model}\NormalTok{(}\DataTypeTok{posterior_param =}\NormalTok{ posterior_param_bw) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{right_join}\NormalTok{(bw_growth_df, }\DataTypeTok{by =} \KeywordTok{c}\NormalTok{(}\StringTok{"focal_ID"}\NormalTok{ =}\StringTok{ "treeID"}\NormalTok{))}
+\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_bw, focal_vs_comp_bw))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -807,8 +790,8 @@ fitted values of growth.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{predictions }\OperatorTok{%>%}
-\StringTok{  }\NormalTok{yardstick}\OperatorTok{::}\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
 \CommentTok{## [1] 0.148145}
 \end{Highlighting}
@@ -828,23 +811,22 @@ interactions.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior_param_bw_shuffle <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{fit_bayesian_model}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{)}
+\NormalTok{comp_bayes_lm_bw_shuffle <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{predictions_shuffle <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{predict_bayesian_model}\NormalTok{(}\DataTypeTok{posterior_param =}\NormalTok{ posterior_param_bw_shuffle) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{right_join}\NormalTok{(bw_growth_df, }\DataTypeTok{by =} \KeywordTok{c}\NormalTok{(}\StringTok{"focal_ID"}\NormalTok{ =}\StringTok{ "treeID"}\NormalTok{))}
+\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat_shuffle =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_bw_shuffle, focal_vs_comp_bw))}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{predictions_shuffle }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat_shuffle) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
 \CommentTok{## [1] 0.1505383}
 \end{Highlighting}
@@ -867,25 +849,24 @@ look for spatial patterns.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior_param_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{fit_bayesian_model}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{FALSE}\NormalTok{)}
+\NormalTok{comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{scbi_growth_df_noCV <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{predict_bayesian_model}\NormalTok{(}\DataTypeTok{posterior_param =}\NormalTok{ posterior_param_scbi) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{right_join}\NormalTok{(scbi_growth_df, }\DataTypeTok{by =} \KeywordTok{c}\NormalTok{(}\StringTok{"focal_ID"}\NormalTok{ =}\StringTok{ "stemID"}\NormalTok{))}
+\NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, focal_vs_comp_scbi))}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{scbi_growth_df_noCV }\OperatorTok{%>%}
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\CommentTok{## [1] 0.1280644}
+\CommentTok{## [1] 0.1281398}
 \end{Highlighting}
 \end{Shaded}
 
@@ -940,11 +921,10 @@ results yield an estimate that is closer to the truth. See
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{cv_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{max_dist =}\NormalTok{ max_dist, }\DataTypeTok{cv_grid =}\NormalTok{ bw_cv_grid) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{right_join}\NormalTok{(bw_growth_df, }\DataTypeTok{by =} \KeywordTok{c}\NormalTok{(}\StringTok{"focal_ID"}\NormalTok{ =}\StringTok{ "treeID"}\NormalTok{))}
+\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{cv_grid =}\NormalTok{ blocks_bw)}
 
-\NormalTok{cv_bw }\OperatorTok{%>%}
+\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
 \CommentTok{## [1] 0.1532316}
@@ -959,14 +939,13 @@ SCBI model fit without cross-validation.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{cv_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{max_dist =}\NormalTok{ max_dist, }\DataTypeTok{cv_grid =}\NormalTok{ scbi_cv_grid) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{right_join}\NormalTok{(scbi_growth_df, }\DataTypeTok{by =} \KeywordTok{c}\NormalTok{(}\StringTok{"focal_ID"}\NormalTok{ =}\StringTok{ "treeID"}\NormalTok{))}
+\NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{cv_grid =}\NormalTok{ blocks_scbi)}
 
-\NormalTok{cv_scbi }\OperatorTok{%>%}
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\CommentTok{## [1] 0.1494775}
+\CommentTok{## [1] 0.144608}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1003,13 +982,12 @@ with no permutation shuffling with the grouping variable as family.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{bw_growth_df }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =}\NormalTok{ family) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{max_dist =}\NormalTok{ max_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ bw_cv_grid, }
-                       \DataTypeTok{id =} \StringTok{"treeID"}\NormalTok{)}
+\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{growth_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =}\NormalTok{ family }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ blocks_bw, }\DataTypeTok{id =} \StringTok{"treeID"}\NormalTok{)}
 
-\NormalTok{posterior_param_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{fit_bayesian_model}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{FALSE}\NormalTok{)}
+\NormalTok{comp_bayes_lm_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1021,11 +999,8 @@ we only plot a subset of the species families.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior_plots_bw <-}\StringTok{ }\KeywordTok{plot_bayesian_model_parameters}\NormalTok{(}
-  \DataTypeTok{posterior_param =}\NormalTok{ posterior_param_bw,}
-  \DataTypeTok{sp_to_plot =} \KeywordTok{c}\NormalTok{(}\StringTok{"cornaceae"}\NormalTok{, }\StringTok{"fagaceae"}\NormalTok{, }\StringTok{"hamamelidaceae"}\NormalTok{, }\StringTok{"juglandaceae"}\NormalTok{, }
+\NormalTok{sp_to_plot <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"cornaceae"}\NormalTok{, }\StringTok{"fagaceae"}\NormalTok{, }\StringTok{"hamamelidaceae"}\NormalTok{, }\StringTok{"juglandaceae"}\NormalTok{, }
                  \StringTok{"lauraceae"}\NormalTok{, }\StringTok{"rosaceae"}\NormalTok{, }\StringTok{"sapindaceae"}\NormalTok{, }\StringTok{"ulmaceae"}\NormalTok{)}
-\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1036,7 +1011,8 @@ each group grows independent of DBH).
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior_plots_bw[[}\StringTok{"beta_0"}\NormalTok{]]}
+\NormalTok{plot1 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_bw, }\DataTypeTok{type =} \StringTok{"intercepts"}\NormalTok{)}
+\NormalTok{plot1}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1054,7 +1030,8 @@ the slope for DBH slope \(\beta_{dbh,i}\) for each group.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior_plots_bw[[}\StringTok{"beta_dbh"}\NormalTok{]]}
+\NormalTok{plot2 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_bw, }\DataTypeTok{type =} \StringTok{"dbh_slopes"}\NormalTok{)}
+\NormalTok{plot2}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1072,7 +1049,8 @@ the competition coefficients \(\lambda\).
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior_plots_bw[[}\StringTok{"lambda"}\NormalTok{]]}
+\NormalTok{plot3 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_bw, }\DataTypeTok{type =} \StringTok{"competition"}\NormalTok{)}
+\NormalTok{plot3}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1094,16 +1072,14 @@ competition coefficients.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior_plots_scbi <-}\StringTok{ }\KeywordTok{plot_bayesian_model_parameters}\NormalTok{(}
-  \DataTypeTok{posterior_param =}\NormalTok{ posterior_param_scbi,}
-  \DataTypeTok{sp_to_plot =} \KeywordTok{c}\NormalTok{(}\StringTok{"quru"}\NormalTok{, }\StringTok{"litu"}\NormalTok{, }\StringTok{"cagl"}\NormalTok{, }\StringTok{"cato"}\NormalTok{)}
-\NormalTok{)}
+\NormalTok{sp_to_plot <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"quru"}\NormalTok{, }\StringTok{"litu"}\NormalTok{, }\StringTok{"cagl"}\NormalTok{, }\StringTok{"cato"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{posterior_plots_scbi[[}\StringTok{"lambda"}\NormalTok{]]}
+\NormalTok{plot3 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_bw, }\DataTypeTok{type =} \StringTok{"competition"}\NormalTok{)}
+\NormalTok{plot3}
 \end{Highlighting}
 \end{Shaded}
 
