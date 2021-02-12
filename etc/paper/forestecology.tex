@@ -80,8 +80,8 @@
 
 \if0\blind
 {
-  \title{\bf \texttt{forestecology} package for modeling interspecies competition
-between trees}
+  \title{\bf The \texttt{forestecology} R package for modeling interspecies
+competition between trees}
 
   \author{
         Albert Y. Kim \thanks{Albert Y. Kim is Assistant Professor, Statistical \& Data Sciences,
@@ -102,8 +102,8 @@ Smith College, Northampton, MA 01063 (e-mail:
   \bigskip
   \bigskip
   \begin{center}
-    {\LARGE\bf \texttt{forestecology} package for modeling interspecies competition
-between trees}
+    {\LARGE\bf The \texttt{forestecology} R package for modeling interspecies
+competition between trees}
   \end{center}
   \medskip
 } \fi
@@ -123,74 +123,45 @@ Move abstract below here after completed.
 \linenumbers
 
 \hypertarget{abstract-350-words}{%
-\section{Abstract (350 words)}\label{abstract-350-words}}
+\section*{Abstract (350 words)}\label{abstract-350-words}}
+\addcontentsline{toc}{section}{Abstract (350 words)}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  Set the context for and purpose of the work: The scientific
-  question/problem and the desiderata
-
-  \begin{itemize}
-  \tightlist
-  \item
-    (Eventually) modularly fitting models for interspecific competition
-    and assessing them using spatial crossvalidation
-  \item
-    Leverage ForestGEO protocols providing standardization
-  \end{itemize}
+  When modeling growth of trees forest ecologists often incorporate the
+  effect of interspecies competition. Many such models are based on a
+  neighborhood effect assumption whereby all trees within a fixed
+  distance of all focal trees are considered competitors. Methods are
+  needed to evaluate the effect of interspecies competition and to
+  assess their quality.
 \item
-  Indicate the approach and the methods: Use tidyverse, simple features,
-  and tidymodels packages.
-
-  \begin{itemize}
-  \tightlist
-  \item
-    tidyverse: as stated in tidy tools manifesto: standadized data
-    structures, functional programming with pipe, designed for humans
-  \item
-    sf: tidyverse-friendly package that makes wrangling and visualizing
-    spatial data much easier
-  \item
-    tidymodels: given our spatial-crossvalidation, use tidymodels
-    framework is a collection of packages for modeling and machine
-    learning using tidyverse principles
-  \item
-    Dave: hmm, I think here we might need to mention the methods we
-    implement. Something like, the package provides functions to
-    specific a linear, bayesian neighborhood competition model of
-    growth, then fit the model, and compare competing models with
-    spatiall cross validation. Or somethign like that.
-  \end{itemize}
+  We present the \texttt{forestecology} package providing methods for
+  both 1) evaluating the out-of-sample performance of our model using
+  spatial-crossvaliation and 2) testing a null hypothesis of of no
+  impact of competitor species' identity on the growth of trees using a
+  permutation test. We implement a class and methods using R's S3
+  object-oriented system, for a specific linear, Bayesian neighborhood
+  competition model of tree growth.
 \item
-  Outline the main results: We replicate from scratch the figure in
-  PLOSOne paper using Big Woods data, conduct similar analysis for SCBI
-  data.
-
-  \begin{itemize}
-  \tightlist
-  \item
-    Code would've been way more complicated in base.
-  \item
-    We don't have to worry about how the component functions work, only
-    that sequence/converyor belt is correct and output is correct.
-  \item
-    Scientist is abstracted away from ugly programming details.
-  \end{itemize}
+  We demonstrate the package's functions using data from the Smithsonian
+  Conservation Biology Institute's large forest dynamics plot, part of
+  the ForestGEO network of reseach sites. Given ForestGEO's data
+  collection protocols and data formatting standards, the package
+  cross-compatibility of code. We show both that 1) competitor species
+  identity matters and 2) that not spatially cross-validating leads to
+  error estimates that are overly optimistic.
 \item
-  Identify the conclusions and wider implications:
-
-  \begin{itemize}
-  \tightlist
-  \item
-    New scientific conclusions from SCBI data
-  \item
-    Modularly switch out our bayesian lm() functions to anything you
-    want.
-  \item
-    this can serve as blue print for other modeling situations.
-  \end{itemize}
+  The package follows \texttt{tidyverse}-like structure whereby
+  verb-named functions can be modularly ``piped'' in sequence to
+  intuitively display the sequence of steps of analysis from start to
+  finish. Additionally, most inputs/outputs of functions assume an are
+  of \texttt{sf} class from the simple features package, thereby
+  facilitating all wrangling and visualization of geospatial data.
+  Lastly, even though our package is currently limited to one specific
+  model, the package is setup such that it can be easily extended to
+  other models.
 \end{enumerate}
 
 \hypertarget{introduction}{%
@@ -211,42 +182,66 @@ could easily be modified to work with data from other forest plots,
 e.g.~the US Forest Service Forest Inventory and Analysis plots
 \citet{smith_forest_2002}.
 
+The \texttt{forestecology} is designed with ``tidy'' data principles in
+mind as \citet{wickham_welcome_2019}.
+
+Given that our data is of geo-spatial nature, we represent our data
+using the ``simple features'' \texttt{sf} package class of objects
+\citet{pebesma_simple_2018} whereby. While previously the \texttt{sp}
+package serves such purposes \citet{pebesma_sp_2005}, the \texttt{sf}
+package is designed to interface with the \texttt{tidyverse} suite of
+packages.
+
 \hypertarget{example}{%
 \section{Example}\label{example}}
 
-We demonstrate the \texttt{forestecology} package's features on two data
-sets, both based on inventory censuses of two sites from the Smithsonian
-Institution's ForestGEO international network of 72 long‐term forest
-dynamics research sites \citet{andersonteixeira_ctfs-forestgeo_2015}.
-First, the Michigan Big Woods Forest Dynamics Plot located at the Edwin
-S. George Reserve in Pinckney, MI, USA. The 23 ha plot is situated in
-mature oak-hickory forest. The canopy is dominated by white oak
-(\emph{Quercus alba}), northern red oak (\emph{Q. rubra}), black oak
-(\emph{Q. velutina}), shagbark hickory (\emph{Carya ovata}) and pignut
-hickory (\emph{C. glabra}) \citet{allen_michigan_2020}. In the example
-below, we will preface any data frames from this plot in with
-\texttt{bw\_}.
-
-Second, the Smithsonian Conservation Biology Institute (SCBI) large
-forest dynamics plot, located at the Smithsonian's National Zoo and
-Conservation Biology Institute in Front Royal, VA, USA. The 25.6 ha (640
-x 400 m) plot is located at the intersection of three of the major
-physiographic provinces of the eastern US: the Blue Ridge, Ridge and
-Valley, and Piedmont provinces and is adjacent to the northern end of
-Shenandoah National Park. The forest type is typical mature secondary
-eastern mixed deciduous forest, with a canopy dominated by tulip poplar
+We demonstrate the \texttt{forestecology} package's features on the
+Smithsonian Conservation Biology Institute (SCBI) large forest dynamics
+plot, located at the Smithsonian's National Zoo and Conservation Biology
+Institute in Front Royal, VA, USA. The 25.6 ha (640 x 400 m) plot is
+located at the intersection of three of the major physiographic
+provinces of the eastern US: the Blue Ridge, Ridge and Valley, and
+Piedmont provinces and is adjacent to the northern end of Shenandoah
+National Park. The forest type is typical mature secondary eastern mixed
+deciduous forest, with a canopy dominated by tulip poplar
 (\emph{Liriodendron tulipifera}), oaks (\emph{Quercus} spp.), and
 hickories (\emph{Carya} spp.), and an understory composed mainly of
 spicebush (\emph{Lindera benzoin}), paw-paw (\emph{Asimina triloba}),
 American hornbeam (\emph{Carpinus caroliniana}), and witch hazel
-(\emph{Hamamelis virginiana}) \citet{bourg_initial_2013}. In the example
-below, we will preface any data frames from this plot in with
-\texttt{scbi\_}.
+(\emph{Hamamelis virginiana}) \citet{bourg_initial_2013}.
 
-The code that generates Figures are included in the supplementary
-materials.
+A high-level overview of the steps of our analysis pipeline is as
+follows:
 
-We load all the necessary packages.
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Compute the growth of trees based on census data
+\item
+  Add spatial information:
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Define buffer region trees.
+  \item
+    Add spatial cross-validation block information.
+  \end{enumerate}
+\item
+  Compute focal versus competitor tree information.
+\item
+  Fit model and make predictions.
+\item
+  Additionally: Evaluate model performance using spatial
+  cross-validation.
+\item
+  Additionally: Evaluate the effect of competitor species identity using
+  permutation tests.
+\end{enumerate}
+
+We load all necessary packages.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -254,161 +249,141 @@ We load all the necessary packages.
 \KeywordTok{library}\NormalTok{(lubridate)}
 \KeywordTok{library}\NormalTok{(sf)}
 \KeywordTok{library}\NormalTok{(forestecology)}
-\KeywordTok{library}\NormalTok{(blockCV)}
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{preprocess-census-data}{%
-\subsection{Preprocess census data}\label{preprocess-census-data}}
+\hypertarget{compute-the-growth-of-trees-based-on-census-data}{%
+\subsection{Compute the growth of trees based on census
+data}\label{compute-the-growth-of-trees-based-on-census-data}}
 
-We start by preprocessing the census data for both sites. While
-ForestGEO data protocols ensure a high degree of standardization between
-site, minor variations still exist
-\citet{andersonteixeira_ctfs-forestgeo_2015}. While the Big Woods data
-comes pre-loaded in the \texttt{forestecology} package, we load the SCBI
-data as they are saved in .csv files in the SCBI-ForestGEO-Data
-repository on GitHub
-\citet{gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020}. In both
-cases, we load the census data as R as ``tibble'' data frames thereby
-ensuring a standardized input/output format that can be used across all
-\texttt{tidyverse} packages \citet{wickham_welcome_2019}.
+The first step in the our analysis sequence is to compute the growth of
+trees using data from two censuses. The \texttt{compute\_growth()}
+function computes growth assuming census data that follows ForestGEO
+standards. Despite such standards, minor variations will still exist
+between sites thereby necessitating some data wrangling and checking.
+For example, the SCBI site records all dbh's in millimeters, whereas the
+Michigan Big Woods site records them in centimeters
+\citet{andersonteixeira_ctfs-forestgeo_2015}
+\citet{allen_michigan_2020}. The data format of other sites may be such
+that our \texttt{compute\_growth()} function doesn't work at all.
+However, in the end all that matters is that the growth of all trees is
+saved in a data frame of class \texttt{sf} whereby the geolocation of
+each tree is presented in a \texttt{geometry} variable of type
+\texttt{\textless{}POINT\textgreater{}} and at a minimum the data
+contains the following variables: a variable uniquely identifying each
+tree-stem, \texttt{sp} of type \texttt{fct} factor identifying species,
+\texttt{dbh1} and \texttt{dbh2} of type \texttt{dbl} quantifying the dbh
+at earlier and later census, and \texttt{growth} of type \texttt{dbl}
+double quantifying the average annual growth in centimeters.
 
-Furthermore, we ensure that the different variables have the correct
-names, types (\texttt{dbl}, \texttt{data}, \texttt{factor}).
-
-\hypertarget{big-woods}{%
-\subsubsection{Big Woods}\label{big-woods}}
-
-We load census data from 2008 and 2014 saved in the package, then merge
-species data (genus, species, linnean classification, family, etc).
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{census_}\DecValTok{2008}\NormalTok{_bw <-}\StringTok{ }\NormalTok{census_}\DecValTok{2008}\NormalTok{_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{left_join}\NormalTok{(species_bw, }\DataTypeTok{by =} \StringTok{"sp"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\KeywordTok{c}\NormalTok{(genus, species, latin))}
-\end{Highlighting}
-\end{Shaded}
-
-\hypertarget{scbi-data}{%
-\subsubsection{SCBI}\label{scbi-data}}
-
-We load census data from 2008 and 2014 from \texttt{.csv} files saved
-from GitHub on November 20, 2020. Furthermore, we perform two additional
-pre-processing steps. First, in order to speed up computation for
-purposes of this example, we only consider a 9 ha subsection of the 25.6
-ha of the SCBI site: \texttt{gx} from 0--300 instead of 0--400 and
-\texttt{gy} from 300--600 instead of 0--640. Second, in order to
-standardize comparisons between Big Woods and SCBI, we convert the units
-of dbh from mm to cm. \footnote{A rule of thumb to ascertain if dbh is
-  in mm or cm is to verify if the smallest non-zero and non-missing
-  measurement is 1 or 10. If the former, then cm. If the later, then mm.
-  This is because ForestGEO protocols state that only trees with dbh
-  greater or equal to 1cm should be included in censuses. }
+We load both 2008 and 2014 SCBI census data \texttt{.csv} files as they
+existed on GitHub on November 20, 2020. After selecting only relevant
+variables, we perform a few additional data wrangling steps: convert the
+variable with the date of measurement to be of type \texttt{date},
+convert dbh to be in centimeters\footnote{A rule of thumb to determine
+  the units of dbh is check if the smallest non-zero and non-missing
+  measurement is 1 or 10. If the former, then centimeters. If the later,
+  then millimeters. This is because ForestGEO protocols state that only
+  trees with dbh greater or equal to 1cm should be included in censuses.},
+convert the \texttt{sp} variable containing species information from
+type \texttt{chr} character to \texttt{fct} factor (we will discuss the
+need for this in Section \ref{spatial-cross-validation}). Furthermore,
+in order to speed up computation for purposes of this examplt, we only
+consider a 9 ha subsection of the 25.6 ha of the SCBI site: \texttt{gx}
+from 0--300 instead of 0--400 and \texttt{gy} from 300--600 instead of
+0--640.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{census_}\DecValTok{2013}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(treeID, stemID, sp, ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =}\NormalTok{ ExactDate }\OperatorTok{%>%}\StringTok{ }\KeywordTok{mdy}\NormalTok{(),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}
+    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{,}
+    \DataTypeTok{sp =} \KeywordTok{factor}\NormalTok{(sp)}
 \NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{dbh =}\NormalTok{ dbh }\OperatorTok{/}\StringTok{ }\DecValTok{10}\NormalTok{)}
+\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
 \NormalTok{census_}\DecValTok{2018}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem3.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(treeID, stemID, sp, ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =}\NormalTok{ ExactDate }\OperatorTok{%>%}\StringTok{ }\KeywordTok{mdy}\NormalTok{(),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}
+    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{,}
+    \DataTypeTok{sp =} \KeywordTok{factor}\NormalTok{(sp)}
 \NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{dbh =}\NormalTok{ dbh }\OperatorTok{/}\StringTok{ }\DecValTok{10}\NormalTok{)}
+\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{compute-annual-growth}{%
-\subsection{Compute annual growth}\label{compute-annual-growth}}
-
-MERGE THIS SUBSECTION with previous?
-
-For each plot we then compute average annual growth between the two
-censuses using the \texttt{compute\_growth()} function. This function
-takes the two census data frames as well as a character indicating which
-variable in both data frames uniquely identifies each stem. This
-function returns a single data frame that includes a numerical variable
-\texttt{growth} reflecting the average annual dbh growth (in cm) of all
-trees alive at both time points. Furthermore, variables that (in theory)
-remain unchanged between censuses appear only once, such as location
-variables \texttt{gx} and \texttt{gy}; as well as species-related
-variables. Variables that should change between censuses are suffixed
-with \texttt{1} and \texttt{2} indicating the earlier and later
-censuses, such as \texttt{dbh1/dbh2} and \texttt{codes1/codes2}. Here
-the resulting data frames are named with some variation of
-\texttt{growth\_df}.
-
-After computing the average annual growth for each tree, we ensure to
-convert all variables denote species from type character to factors;
-this is to ensure that issues of rare species being accounted for in
-both training and test sets in our upcoming cross-validation step (see
-Section REF)
-
-\hypertarget{big-woods-1}{%
-\subsubsection{Big Woods}\label{big-woods-1}}
-
-In the case of Big Woods data, we first remove all trees that were
-re-sprouts in the later (2014) census. Additionally, we have included
-two classification of tree species: \texttt{species} and
-\texttt{family}. To illustrate model comparison, we test competition
-models in which individuals are grouped by species and by family.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{growth_bw <-}
-\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
-    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2008}\NormalTok{_bw }\OperatorTok{%>%}\StringTok{ }
-\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{to_any_case}\NormalTok{(sp) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()),}
-    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2014}\NormalTok{_bw }\OperatorTok{%>%}\StringTok{ }
-\StringTok{      }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{to_any_case}\NormalTok{(sp) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()),}
-    \DataTypeTok{id =} \StringTok{"treeID"}
-\NormalTok{  )}
-\end{Highlighting}
-\end{Shaded}
-
-\hypertarget{scbi}{%
-\subsubsection{SCBI}\label{scbi}}
+These two data frames are then used as the two primary arguments to the
+\texttt{compute\_growth()} function, along with the \texttt{id} argument
+whereby the user specifies the name of the variable that uniquely
+identifies each tree-stem under consideration (note this does not
+include resprouts in the later census):
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{growth_scbi <-}
 \StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
-    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }
-\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{to_any_case}\NormalTok{(sp) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()),}
-    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }
-\StringTok{      }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{      }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{to_any_case}\NormalTok{(sp) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()),}
+    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi,}
+    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)),}
     \DataTypeTok{id =} \StringTok{"stemID"}
 \NormalTok{  )}
+\NormalTok{growth_scbi}
+\CommentTok{## Simple feature collection with 7954 features and 8 fields}
+\CommentTok{## geometry type:  POINT}
+\CommentTok{## dimension:      XY}
+\CommentTok{## bbox:           xmin: 0.2 ymin: 300 xmax: 299.9 ymax: 600}
+\CommentTok{## CRS:            NA}
+\CommentTok{## # A tibble: 7,954 x 9}
+\CommentTok{##    stemID sp     dbh1 codes1 status  dbh2 codes2  growth     geometry}
+\CommentTok{##     <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>    <dbl>      <POINT>}
+\CommentTok{##  1      4 nysy  13.6  M      A       14.2 M       0.103  (14.2 428.5)}
+\CommentTok{##  2      5 havi   8.8  M      A        9.6 M;P     0.150   (9.4 436.4)}
+\CommentTok{##  3      6 havi   3.25 NULL   A        4   M       0.140     (1.3 434)}
+\CommentTok{##  4     77 qual  65.2  M      A       66   M       0.141  (34.7 307.2)}
+\CommentTok{##  5     79 tiam  47.7  M      A       46.8 M      -0.161    (40 381.1)}
+\CommentTok{##  6     80 caca   5.15 M      A        6.5 M       0.253  (38.7 421.7)}
+\CommentTok{##  7     96 libe   2.3  J;M    A        3.7 M       0.262      (60 310)}
+\CommentTok{##  8    100 caca   5.09 NULL   A       NA   DN     NA      (52.5 476.3)}
+\CommentTok{##  9    101 litu  65.4  M      A       68.4 M       0.552  (47.1 567.3)}
+\CommentTok{## 10    102 astr   1.99 NULL   A        2.5 M       0.0954 (40.8 575.5)}
+\CommentTok{## # ... with 7,944 more rows}
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{comparison}{%
-\subsubsection{Comparison}\label{comparison}}
+The output \texttt{growth\_scbi} is a single data frame of class
+\texttt{sf} that includes a numerical \texttt{growth} reflecting the
+average annual growth in dbh (in cm) for all trees that were alive at
+both time points as well a \texttt{geometry} variable encoding each
+tree's geolocation. Furthermore, variables that (in theory) remain
+unchanged between censuses appear only once, such as location variables
+\texttt{gx} and \texttt{gy}; as well as species-related variables.
+Variables that should change between censuses are suffixed with
+\texttt{1} and \texttt{2} indicating the earlier and later censuses,
+such as \texttt{dbh1/dbh2} and \texttt{codes1/codes2}.
 
-DAVE: I THINK THIS FIGURE IS UNNEEDED. COULD BE REMOVED FOR SPACE
-REASONS. Figure \ref{fig:growth-histogram} displays histograms comparing
-the distribution of average annual growth at both sites. Observe that
-average annual growth appears higher at the Big Woods site.
+Given that \texttt{growth\_scbi} is of class \texttt{sf}, it can be
+easily plotted in \texttt{ggplot2} using the \texttt{geom\_sf()}
+geometry as seen in Figure \ref{fig:scbi-trees}.
+
+TODO: Rescale points in this plot:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ growth)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{scale_size}\NormalTok{(}\DataTypeTok{breaks =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.01}\NormalTok{, }\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{), }\DataTypeTok{range =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
 
 \begin{figure}
 
-{\centering \includegraphics[width=1\linewidth]{Figures/growth-histogram-1} 
+{\centering \includegraphics[width=0.66\linewidth]{Figures/scbi-trees-1} 
 
 }
 
-\caption{Distribution of average annual growth in DBH for both sites.}\label{fig:growth-histogram}
+\caption{Growth of trees at SCBI.}\label{fig:scbi-trees}
 \end{figure}
 
 \hypertarget{spatial-information}{%
@@ -476,8 +451,8 @@ the Big Woods example below we will use the \texttt{blockCV} R package
 that has implemented spatial cross-validation while for the SCBI we will
 do this manually \citet{valavi_blockcv_2019}
 
-\hypertarget{big-woods-2}{%
-\subsubsection{Big Woods}\label{big-woods-2}}
+\hypertarget{big-woods}{%
+\subsubsection{Big Woods}\label{big-woods}}
 
 First, we indicate which trees are part of the buffer. This necessitates
 information about the study region boundary. In this case, we use a
@@ -582,8 +557,8 @@ Separately, we save the spatial cross-validation grid as an
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{scbi-1}{%
-\subsubsection{SCBI}\label{scbi-1}}
+\hypertarget{scbi}{%
+\subsubsection{SCBI}\label{scbi}}
 
 First, we indicate which trees are part of the buffer. In this case
 however we manually define the study region boundary based on the
@@ -680,8 +655,8 @@ as inputs the \texttt{growth\_df} data frame; the \texttt{comp\_dist}
 constant defining competitive range; \texttt{cv\_grid\_sf}, giving the
 cross validation grid; and the \texttt{id} variable.
 
-\hypertarget{big-woods-3}{%
-\subsubsection{Big Woods}\label{big-woods-3}}
+\hypertarget{big-woods-1}{%
+\subsubsection{Big Woods}\label{big-woods-1}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -692,8 +667,8 @@ cross validation grid; and the \texttt{id} variable.
 
 TODO: Figure out how to show this data frame's contents.
 
-\hypertarget{scbi-2}{%
-\subsubsection{SCBI}\label{scbi-2}}
+\hypertarget{scbi-1}{%
+\subsubsection{SCBI}\label{scbi-1}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -745,8 +720,8 @@ These \(\widehat{y}\) can then be compared to the observed \(y\) dbh's
 to compute the root mean-square error, a measure of a model's predictive
 error which has the same units as the observed data \(y\).
 
-\hypertarget{big-woods-4}{%
-\subsubsection{Big Woods}\label{big-woods-4}}
+\hypertarget{big-woods-2}{%
+\subsubsection{Big Woods}\label{big-woods-2}}
 
 For the Michigan Big Woods data we present two use cases of the model
 fitting and prediction scheme. The first use case is the simplest where
@@ -839,8 +814,8 @@ identity does matter for competitive interactions. In
 times to construct a full permutation distribution to show that this
 difference is robust to resampling variation.
 
-\hypertarget{scbi-3}{%
-\subsubsection{SCBI}\label{scbi-3}}
+\hypertarget{scbi-2}{%
+\subsubsection{SCBI}\label{scbi-2}}
 
 In the case of the SCBI data, we once again perform the same model
 fitting and computing of fitted growths as with the Big Woods data, but
@@ -891,9 +866,9 @@ In Figures \ref{fig:scbi-model-residuals} and
 \caption{Spatial distribution of residuals for model applied to SCBI data.}\label{fig:scbi-model-residuals-2}
 \end{figure}
 
-\hypertarget{run-spatial-cross-validation}{%
+\hypertarget{spatial-cross-validation}{%
 \subsection{Run spatial
-cross-validation}\label{run-spatial-cross-validation}}
+cross-validation}\label{spatial-cross-validation}}
 
 The model fits and predictions in Section \ref{model-fit-predict} all
 suffer from a common failing: they use the same data to both fit the
@@ -909,8 +884,8 @@ function at its core uses the same model fitting implemented in the
 test data. Recall that the spatial blocking scheme wass encoded in
 Section \ref{spatial-information}.
 
-\hypertarget{big-woods-5}{%
-\subsubsection{Big Woods}\label{big-woods-5}}
+\hypertarget{big-woods-3}{%
+\subsubsection{Big Woods}\label{big-woods-3}}
 
 Applying this spatially cross-validated model fit yields an RMSE is
 higher than that when the model is fit without cross validation. In
@@ -931,8 +906,8 @@ results yield an estimate that is closer to the truth. See
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{scbi-4}{%
-\subsubsection{SCBI}\label{scbi-4}}
+\hypertarget{scbi-3}{%
+\subsubsection{SCBI}\label{scbi-3}}
 
 Observe once again that this RMSE is much higher than that for the above
 SCBI model fit without cross-validation.
@@ -969,8 +944,8 @@ interest. So to display these parameters, as we care about them, we have
 to sample from the baseline distribution and from the comparison one to
 get the posterior distribution of interest.
 
-\hypertarget{big-woods-6}{%
-\subsubsection{Big Woods}\label{big-woods-6}}
+\hypertarget{big-woods-4}{%
+\subsubsection{Big Woods}\label{big-woods-4}}
 
 Here we re-run the model fit to the Big Woods data from Section
 \ref{model-fit-predict}, but this time use ``family'' as the group for
@@ -1063,8 +1038,8 @@ the competition coefficients \(\lambda\).
 \caption{Posterior distribution of lambda's for Big Woods.}\label{fig:bw-posterior-viz-lambda}
 \end{figure}
 
-\hypertarget{scbi-5}{%
-\subsubsection{SCBI}\label{scbi-5}}
+\hypertarget{scbi-4}{%
+\subsubsection{SCBI}\label{scbi-4}}
 
 We revisit the posterior parameters for the SCBI from Section
 \{model-fit-predict\}, but this time only focus on the \(\lambda\)

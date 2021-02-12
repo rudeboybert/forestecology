@@ -31,8 +31,14 @@ header-includes:
 \linenumbers
 
 ```{r setup, include = FALSE, cache = FALSE}
+# Internally used packages
+library(viridis)
+library(knitr)
+library(ggplot2)
+library(here)
+
 # knitr settings
-knitr::opts_chunk$set(
+opts_chunk$set(
   # Code output:
   warning = FALSE,
   message = FALSE,
@@ -51,34 +57,22 @@ knitr::opts_chunk$set(
   # tidy = FALSE
 )
 
-# Internally used packages
-library(knitr)
-library(ggplot2)
-library(viridis)
-
 # Random number generator seed value
 set.seed(76)
 
 # Set ggplot defaults output:
-if (!knitr::is_html_output()) {
+if (!is_html_output()) {
   # Grey theme:
-  theme_set(theme_light())
+  ggplot2::theme_set(theme_light())
   # Color scheme
-  # TODO: REVERT THIS
-  # scale_colour_discrete <- scale_colour_viridis_d
+  scale_colour_discrete <- scale_colour_viridis_d
 }
 
 # Set output width
 options(width = 70)
 ```
 
-# Abstract (350 words)
-
-1. Set the context for and purpose of the work: 
-1. Indicate the approach and the methods: 
-1. Outline the main results: 
-1. Identify the conclusions and wider implications
-
+# Abstract (350 words) {-}
 
 1. When modeling growth of trees forest ecologists often incorporate the effect of interspecies competition. Many such models are based on a neighborhood effect assumption whereby all trees within a fixed distance of all focal trees are considered competitors. Methods are needed to evaluate the effect of interspecies competition and to assess their quality. 
 1. We present the `forestecology` package providing methods for both 1) evaluating the out-of-sample performance of our model using spatial-crossvaliation and 2) testing a null hypothesis of of no impact of competitor species' identity on the growth of trees using a permutation test. We implement a class and methods using R's S3 object-oriented system, for a specific linear, Bayesian neighborhood competition model of tree growth. 
@@ -93,120 +87,89 @@ options(width = 70)
 Repeat-censused forest plots offer excellent data to test neighborhood models of tree competition @allen_permutation_2020 @canham_neighborhood_2006 @uriarte_spatially_2004. Here we describe an R package, `forestecology`, to do that. This package implements the methods in @allen_permutation_2020. It provides: a convenient way to specify and fit models of tree growth based on neighborhood competition; a spatial cross validation method to test and compare model fits @roberts_cross-validation_2017; and an ANOVA-like method to assess whether the competitor identity matters in these models. The model is written to work with ForestGEO plot data @andersonteixeira_ctfs-forestgeo_2015, but we envision that it could easily be modified to work with data from other forest plots, e.g. the US Forest Service Forest Inventory and Analysis plots @smith_forest_2002.
 
 
+
+The `forestecology` is designed with "tidy" data principles in mind as @wickham_welcome_2019.
+
+Given that our data is of geo-spatial nature, we represent our data using the "simple features" `sf` package class of objects @pebesma_simple_2018 whereby. While previously the `sp` package serves such purposes @pebesma_sp_2005, the `sf` package is designed to interface with the `tidyverse` suite of packages.
+
+
+
+
 # Example
 
-We demonstrate the `forestecology` package's features on two data sets, both based on inventory censuses of two sites from the Smithsonian Institution’s ForestGEO international network of 72 long‐term forest dynamics research sites @andersonteixeira_ctfs-forestgeo_2015. First, the Michigan Big Woods Forest Dynamics Plot located at the Edwin S. George Reserve in Pinckney, MI, USA. The 23 ha plot is situated in mature oak-hickory forest. The canopy is dominated by white oak (*Quercus alba*), northern red oak (*Q. rubra*), black oak (*Q. velutina*), shagbark hickory (*Carya ovata*) and pignut hickory (*C. glabra*) @allen_michigan_2020. In the example below, we will preface any data frames from this plot in with `bw_`.
+We demonstrate the `forestecology` package's features on the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot, located at the Smithsonian's National Zoo and Conservation Biology Institute in Front Royal, VA, USA. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US: the Blue Ridge, Ridge and Valley, and Piedmont provinces and is adjacent to the northern end of Shenandoah National Park. The forest type is typical mature secondary eastern mixed deciduous forest, with a canopy dominated by tulip poplar (*Liriodendron tulipifera*), oaks (*Quercus* spp.), and hickories (*Carya* spp.), and an understory composed mainly of spicebush (*Lindera benzoin*), paw-paw (*Asimina triloba*), American hornbeam (*Carpinus caroliniana*), and witch hazel (*Hamamelis virginiana*) @bourg_initial_2013. 
 
-Second, the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot, located at the Smithsonian's National Zoo and Conservation Biology Institute in Front Royal, VA, USA. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US: the Blue Ridge, Ridge and Valley, and Piedmont provinces and is adjacent to the northern end of Shenandoah National Park. The forest type is typical mature secondary eastern mixed deciduous forest, with a canopy dominated by tulip poplar (*Liriodendron tulipifera*), oaks (*Quercus* spp.), and hickories (*Carya* spp.), and an understory composed mainly of spicebush (*Lindera benzoin*), paw-paw (*Asimina triloba*), American hornbeam (*Carpinus caroliniana*), and witch hazel (*Hamamelis virginiana*) @bourg_initial_2013. In the example below, we will preface any data frames from this plot in with `scbi_`.
+A high-level overview of the steps of our analysis pipeline is as follows:
 
-The code that generates Figures are included in the supplementary materials. 
+1. Compute the growth of trees based on census data
+1. Add spatial information:
+    1. Define buffer region trees.
+    1. Add spatial cross-validation block information.
+1. Compute focal versus competitor tree information.
+1. Fit model and make predictions.
+1. Additionally: Evaluate model performance using spatial cross-validation.
+1. Additionally: Evaluate the effect of competitor species identity using permutation tests.
 
 
-We load all the necessary packages.
+We load all necessary packages.
 
 ```{r load-packages}
 library(tidyverse)
 library(lubridate)
 library(sf)
 library(forestecology)
-library(blockCV)
 ```
 
-## Preprocess census data 
+## Compute the growth of trees based on census data
 
-We start by preprocessing the census data for both sites. While ForestGEO data protocols ensure a high degree of standardization between site, minor variations still exist @andersonteixeira_ctfs-forestgeo_2015. While the Big Woods data comes pre-loaded in the `forestecology` package, we load the SCBI data as they are saved in .csv files in the SCBI-ForestGEO-Data repository on GitHub @gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020.  In both cases, we load the census data as R as "tibble" data frames thereby ensuring a standardized input/output format that can be used across all `tidyverse` packages @wickham_welcome_2019. 
+The first step in the our analysis sequence is to compute the growth of trees using data from two censuses. The `compute_growth()` function computes growth assuming census data that follows ForestGEO standards. Despite such standards, minor variations will still exist between sites thereby necessitating some data wrangling and checking. For example, the SCBI site records all dbh's in millimeters, whereas the Michigan Big Woods site records them in centimeters @andersonteixeira_ctfs-forestgeo_2015 @allen_michigan_2020. The data format of other sites may be such that our `compute_growth()` function doesn't work at all. However, in the end all that matters is that the growth of all trees is saved in a data frame of class `sf` whereby the geolocation of each tree is presented in a `geometry` variable of type `<POINT>` and at a minimum the data contains the following variables: a variable uniquely identifying each tree-stem, `sp` of type `fct` factor identifying species, `dbh1` and `dbh2` of type `dbl` quantifying the dbh at earlier and later census, and `growth` of type `dbl` double quantifying the average annual growth in centimeters. 
 
-Furthermore, we ensure that the different variables have the correct names, types (`dbl`, `data`, `factor`). 
-
-### Big Woods
-
-We load census data from 2008 and 2014 saved in the package, then merge species data (genus, species, linnean classification, family, etc). 
-
-```{r bw-load-data}
-census_2008_bw <- census_2008_bw %>%
-  left_join(species_bw, by = "sp") %>%
-  select(-c(genus, species, latin))
-```
-
-### SCBI {#scbi-data}
-
-We load census data from 2008 and 2014 from `.csv` files saved from GitHub on November 20, 2020. Furthermore, we perform two additional pre-processing steps. First, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from  300--600 instead of 0--640. Second, in order to standardize comparisons between Big Woods and SCBI, we convert the units of dbh from mm to cm. ^[A rule of thumb to ascertain if dbh is in mm or cm is to verify if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then cm. If the later, then mm. This is because ForestGEO protocols state that only trees with dbh greater or equal to 1cm should be included in censuses. ]
+We load both 2008 and 2014 SCBI census data `.csv` files as they existed on GitHub on November 20, 2020. After selecting only relevant variables, we perform a few additional data wrangling steps: convert the variable with the date of measurement to be of type `date`, convert dbh to be in centimeters^[A rule of thumb to determine the units of dbh is check if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then centimeters. If the later, then millimeters. This is because ForestGEO protocols state that only trees with dbh greater or equal to 1cm should be included in censuses.], convert the `sp` variable containing species information from type `chr` character to `fct` factor (we will discuss the need for this in Section \ref{spatial-cross-validation}). Furthermore, in order to speed up computation for purposes of this examplt, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from 300--600 instead of 0--640.
 
 ```{r scbi-load-data}
 census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
-  select(treeID, stemID, sp, ExactDate, gx, gy, dbh, codes, status) %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
-    date = ExactDate %>% mdy(),
-    dbh = as.numeric(dbh)
+    date = mdy(date),
+    dbh = as.numeric(dbh)/10,
+    sp = factor(sp)
   ) %>%
-  filter(gx < 300, between(gy, 300, 600)) %>% 
-  mutate(dbh = dbh / 10)
+  filter(gx < 300, between(gy, 300, 600))
 
 census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
-  select(treeID, stemID, sp, ExactDate, gx, gy, dbh, codes, status) %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
-    date = ExactDate %>% mdy(),
-    dbh = as.numeric(dbh)
+    date = mdy(date),
+    dbh = as.numeric(dbh)/10,
+    sp = factor(sp)
   ) %>%
-  filter(gx < 300, between(gy, 300, 600)) %>% 
-  mutate(dbh = dbh / 10)
+  filter(gx < 300, between(gy, 300, 600))
 ```
 
-
-
-## Compute annual growth
-
-MERGE THIS SUBSECTION with previous?
-
-For each plot we then compute average annual growth between the two censuses using the `compute_growth()` function. This function takes the two census data frames as well as a character indicating which variable in both data frames uniquely identifies each stem. This function returns a single data frame that includes a numerical variable `growth` reflecting the average annual dbh growth (in cm) of all trees alive at both time points. Furthermore, variables that (in theory) remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. Here the resulting data frames are named with some variation of `growth_df`.
-
-After computing the average annual growth for each tree, we ensure to convert all variables denote species from type character to factors; this is to ensure that issues of rare species being accounted for in both training and test sets in our upcoming cross-validation step (see Section REF)
-
-### Big Woods
-
-In the case of Big Woods data, we first remove all trees that were re-sprouts in the later (2014) census. Additionally, we have included two classification of tree species: `species` and `family`. To illustrate model comparison, we test competition models in which individuals are grouped by species and by family.
-
-```{r bw-compute-growth}
-growth_bw <-
-  compute_growth(
-    census_1 = census_2008_bw %>% 
-      mutate(sp = to_any_case(sp) %>% factor()),
-    census_2 = census_2014_bw %>% 
-      filter(!str_detect(codes, "R")) %>% 
-      mutate(sp = to_any_case(sp) %>% factor()),
-    id = "treeID"
-  )
-```
-
-### SCBI
+These two data frames are then used as the two primary arguments to the `compute_growth()` function, along with the `id` argument whereby the user specifies the name of the variable that uniquely identifies each tree-stem under consideration (note this does not include resprouts in the later census):
 
 ```{r scbi-compute-growth}
 growth_scbi <-
   compute_growth(
-    census_1 = census_2013_scbi %>% 
-      mutate(sp = to_any_case(sp) %>% factor()),
-    census_2 = census_2018_scbi %>% 
-      filter(!str_detect(codes, "R")) %>% 
-      mutate(sp = to_any_case(sp) %>% factor()),
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
     id = "stemID"
   )
+growth_scbi
 ```
 
-### Comparison
+The output `growth_scbi` is a single data frame of class `sf` that includes a numerical `growth` reflecting the average annual growth in dbh (in cm) for all trees that were alive at both time points as well a `geometry` variable encoding each tree's geolocation. Furthermore, variables that (in theory) remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. 
 
-DAVE: I THINK THIS FIGURE IS UNNEEDED. COULD BE REMOVED FOR SPACE REASONS. Figure \ref{fig:growth-histogram} displays histograms comparing the distribution of average annual growth at both sites. Observe that average annual growth appears higher at the Big Woods site.
+Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2` using the `geom_sf()` geometry as seen in Figure \ref{fig:scbi-trees}.
 
-```{r growth-histogram, out.width="100%", fig.cap="Distribution of average annual growth in DBH for both sites.", echo = FALSE}
-# Both Big Woods & SCBI
-bind_rows(
-  growth_bw %>% st_drop_geometry() %>% select(growth) %>% mutate(Site = "Big Woods"),
-  growth_scbi %>% st_drop_geometry() %>% select(growth) %>% mutate(Site = "SCBI")
-) %>% 
-  ggplot(aes(x = growth, y = ..density.., fill = Site)) +
-  geom_histogram(alpha = 0.5, position = "identity", binwidth = 0.05) +
-  labs(x = "Average annual growth in dbh (cm per yr)") +
-  coord_cartesian(xlim = c(-0.5, 1))
+TODO: Rescale points in this plot:
+
+```{r scbi-trees, out.width="66%", fig.cap="Growth of trees at SCBI."}
+ggplot() +
+  geom_sf(data = growth_scbi, aes(size = growth)) + 
+  scale_size(breaks = c(0.01, 0.1, 1), range = c(0.1, 1))
 ```
+
 
 
 
@@ -489,7 +452,7 @@ focal_vs_comp_scbi %>%
 ```
 
 
-## Run spatial cross-validation
+## Run spatial cross-validation {#spatial-cross-validation}
 
 The model fits and predictions in Section \ref{model-fit-predict} all suffer from a common failing: they use the same data to both fit the model and to assess the model's performance using the RMSE. As argued by @roberts_cross-validation_2017, this can lead to overly optimistic assessments of model quality as the models can be overfit, in particular in situations where spatial-autocorrelation is present. To mitigate the effects of such overfitting, we use a spatially block cross-validation algorithm implemented in the `run_cv()`. This function at its core uses the same model fitting implemented in the `fit_bayesian_model()` function, however trains the model on $k-1$ spatial folds of the train and returns fitted values for the test data. Recall that the spatial blocking scheme wass encoded in Section \ref{spatial-information}.
 
