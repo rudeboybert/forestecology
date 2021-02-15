@@ -126,11 +126,11 @@ comp_dist <- 1
 
 # Add buffer variable to growth data frame
 growth_ex <- growth_ex %>%
-  add_buffer_variable(direction = "in", size = comp_dist, region = study_region_ex)
+  add_buffer_variable(size = comp_dist, region = study_region_ex)
 
 # Optional: Create sf representation of buffer region
 buffer_region <- study_region_ex %>% 
-  compute_buffer_region(direction = "in", size = comp_dist)
+  compute_buffer_region(size = comp_dist)
 ```
 
 In the visualization below, the solid line represents the boundary of

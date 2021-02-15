@@ -9,7 +9,7 @@ compute_buffer_region(region, direction = "in", size)
 \arguments{
 \item{region}{An \code{sf} polygon object of region to be buffered}
 
-\item{direction}{"in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.}
+\item{direction}{"in" for buffers that are contained within \code{region} (default), "out" for buffers that contain \code{region}.}
 
 \item{size}{Distance to determine which neighboring trees to a focal tree are competitors.}
 }
