@@ -66,7 +66,8 @@ compute_buffer_region <- function(region, direction = "in", size) {
 #' Identify trees in the buffer region
 #'
 #' @param growth_df \code{sf} data frame
-#' @param size Distance to determine which neighboring trees to a focal tree are competitors.
+#' @param size Distance to determine which neighboring trees to a focal tree are
+#' competitors. The units are assumed to be the same as the `geometry` variables in \code{growth_df}.
 #' @inheritParams compute_buffer_region
 #'
 #' @return The same \code{growth_df} data frame but with a new boolean
