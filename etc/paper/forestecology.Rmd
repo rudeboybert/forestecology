@@ -107,6 +107,7 @@ A high-level overview of the steps of our analysis pipeline is as follows:
     1. Add spatial cross-validation block information.
 1. Compute focal versus competitor tree information.
 1. Fit model and make predictions.
+1. Visualize model results.
 1. Additionally: Evaluate model performance using spatial cross-validation.
 1. Additionally: Evaluate the effect of competitor species identity using permutation tests.
 
@@ -174,6 +175,11 @@ ggplot() +
 
 
 ## Add spatial information {#spatial-information}
+
+The next step in the our analysis sequence is to add additional spatial information to our main data frame: defining a buffer region of trees as well as adding spatial cross-validation block information.
+
+HEY BERT PICK IT UP HERE
+
 
 We now encode spatial information to the `growth_df` data frames. First, in order to control for study region edge effects, we add "buffers" to the periphery of the study region (cite Waller?). Our model of interspecific competition relies on a spatial definition of who the competitor trees are for focal trees of interest. Since certain explanatory variables such as basal area are cumulative, we must ensure that all trees being modeled are not biased to have different neighbor structures. This is a particular concern for trees at the boundary of study regions, which will not have the same number of neighbors as trees in the internal part of the study region. 
 
@@ -452,41 +458,7 @@ focal_vs_comp_scbi %>%
 ```
 
 
-## Run spatial cross-validation {#spatial-cross-validation}
-
-The model fits and predictions in Section \ref{model-fit-predict} all suffer from a common failing: they use the same data to both fit the model and to assess the model's performance using the RMSE. As argued by @roberts_cross-validation_2017, this can lead to overly optimistic assessments of model quality as the models can be overfit, in particular in situations where spatial-autocorrelation is present. To mitigate the effects of such overfitting, we use a spatially block cross-validation algorithm implemented in the `run_cv()`. This function at its core uses the same model fitting implemented in the `fit_bayesian_model()` function, however trains the model on $k-1$ spatial folds of the train and returns fitted values for the test data. Recall that the spatial blocking scheme wass encoded in Section \ref{spatial-information}.
-
-### Big Woods
-
-Applying this spatially cross-validated model fit yields an RMSE is higher than that when the model is fit without cross validation. In other words, our model fits in \ref{model-fit-predict} were overly optimistic in the model's fitting power, whereas a cross-validated results yield an estimate that is closer to the truth. See @allen_permutation_2020 for more discussion of this. 
-
-```{r bw-spatial-cv}
-focal_vs_comp_bw <- focal_vs_comp_bw %>%
-  run_cv(comp_dist = comp_dist, cv_grid = blocks_bw)
-
-focal_vs_comp_bw %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
-  pull(.estimate)
-```
-
-
-### SCBI
-
-Observe once again that this RMSE is much higher than that for the above SCBI model fit without cross-validation. 
-
-```{r scbi-spatial-cv}
-focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
-  run_cv(comp_dist = comp_dist, cv_grid = blocks_scbi)
-
-focal_vs_comp_scbi %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
-  pull(.estimate)
-```
-
-
-
-
-## Visualize posterior distributions {#viz-posterior-distributions}
+## Visualize model results {#viz-posterior-distributions}
 
 Lastly, we return to the model fits from Section \ref{model-fit-predict} and present tools to visually explore the posterior distributions of all parameters in our model. There are two main groups of parameters to consider. The $\beta$ coefficients tell us about how fast each species grows and how this depends on DBH while the full matrix of $\lambda$ values describe the competitive effects between pairs of species. There is a rich literature on this matrix (cite). 
 
@@ -551,6 +523,41 @@ plot3
 Add explanation here. 
 
 HEY BERT PICK IT UP HERE
+
+
+
+
+## Run spatial cross-validation {#spatial-cross-validation}
+
+The model fits and predictions in Section \ref{model-fit-predict} all suffer from a common failing: they use the same data to both fit the model and to assess the model's performance using the RMSE. As argued by @roberts_cross-validation_2017, this can lead to overly optimistic assessments of model quality as the models can be overfit, in particular in situations where spatial-autocorrelation is present. To mitigate the effects of such overfitting, we use a spatially block cross-validation algorithm implemented in the `run_cv()`. This function at its core uses the same model fitting implemented in the `fit_bayesian_model()` function, however trains the model on $k-1$ spatial folds of the train and returns fitted values for the test data. Recall that the spatial blocking scheme wass encoded in Section \ref{spatial-information}.
+
+### Big Woods
+
+Applying this spatially cross-validated model fit yields an RMSE is higher than that when the model is fit without cross validation. In other words, our model fits in \ref{model-fit-predict} were overly optimistic in the model's fitting power, whereas a cross-validated results yield an estimate that is closer to the truth. See @allen_permutation_2020 for more discussion of this. 
+
+```{r bw-spatial-cv}
+focal_vs_comp_bw <- focal_vs_comp_bw %>%
+  run_cv(comp_dist = comp_dist, cv_grid = blocks_bw)
+
+focal_vs_comp_bw %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+```
+
+
+### SCBI
+
+Observe once again that this RMSE is much higher than that for the above SCBI model fit without cross-validation. 
+
+```{r scbi-spatial-cv}
+focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
+  run_cv(comp_dist = comp_dist, cv_grid = blocks_scbi)
+
+focal_vs_comp_scbi %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+```
+
 
 
 

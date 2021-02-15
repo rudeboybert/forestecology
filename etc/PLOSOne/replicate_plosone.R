@@ -72,7 +72,7 @@ focal_vs_comp_bw <- growth_bw %>%
 
 # Fit model and make predictions -----------------------------------------------
 # Number of permutation shuffles:
-num_shuffle <- 9
+num_shuffle <- 49
 
 # For all three possible notions of species
 species_notion_vector <- c("trait_group", "family", "sp")
