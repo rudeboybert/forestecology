@@ -27,7 +27,7 @@ growth_bw <-
 
 # Add spatial information -----------------------------------------------------
 comp_dist <- 7.5
-cv_fold_size <- 100
+cv_block_size <- 100
 data(study_region_bw)
 
 ## Add buffer ----
@@ -41,7 +41,7 @@ ggplot() +
 ## Add spatial folds ----
 set.seed(76)
 bw_spatialBlock <- spatialBlock(
-  speciesData = growth_bw, theRange = cv_fold_size, k = 28, xOffset = 0.5,
+  speciesData = growth_bw, theRange = cv_block_size, k = 28, xOffset = 0.5,
   yOffset = 0, verbose = FALSE, showBlocks = FALSE
 )
 growth_bw <- growth_bw %>%
