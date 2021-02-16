@@ -50,7 +50,7 @@ We present an example analysis using toy data pre-loaded into the package where 
 
 1. Compute growth of trees based on census data
 1. Add spatial information
-1. Compute focal versus competitor tree information
+1. Identify all focal and corresponding competitor trees
 1. Fit model and make predictions
 1. Run spatial cross-validation
 

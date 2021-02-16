@@ -36,6 +36,7 @@ library(viridis)
 library(knitr)
 library(ggplot2)
 library(here)
+library(tibble)
 
 # knitr settings
 opts_chunk$set(
@@ -53,8 +54,10 @@ opts_chunk$set(
   fig.show = "hold",
   # Etc:
   collapse = TRUE,
-  comment = "##"
-  # tidy = FALSE
+  comment = "##",
+  # tidy = FALSE,
+  tibble.print_max = 5,
+  tibble.print_min = 5
 )
 
 # Random number generator seed value
@@ -92,6 +95,10 @@ The `forestecology` is designed with "tidy" data principles in mind as @wickham_
 
 Given that our data is of geo-spatial nature, we represent our data using the "simple features" `sf` package class of objects @pebesma_simple_2018 whereby. While previously the `sp` package serves such purposes @pebesma_sp_2005, the `sf` package is designed to interface with the `tidyverse` suite of packages.
 
+## Model
+
+Describe model specifics.
+
 
 
 
@@ -105,9 +112,8 @@ A high-level overview of the steps of our analysis pipeline is as follows:
 1. Add spatial information:
     1. Define buffer region trees.
     1. Add spatial cross-validation block information.
-1. Compute focal versus competitor tree information.
+1. Identify all focal and corresponding competitor trees.
 1. Fit model and make predictions.
-1. Visualize model results.
 1. Additionally: Evaluate model performance using spatial cross-validation.
 1. Additionally: Evaluate the effect of competitor species identity using permutation tests.
 
@@ -126,9 +132,9 @@ library(blockCV)
 
 ## Compute the growth of trees based on census data
 
-The first step in the our analysis sequence is to compute the growth of trees using data from two censuses. The `compute_growth()` function computes growth assuming census data that follows ForestGEO standards. Despite such standards, minor variations will still exist between sites thereby necessitating some data wrangling and checking. For example, the SCBI site records all dbh's in millimeters, whereas the Michigan Big Woods site records them in centimeters @andersonteixeira_ctfs-forestgeo_2015 @allen_michigan_2020. The data format of other sites may be such that our `compute_growth()` function doesn't work at all. However, in the end all that matters is that the growth of all trees is saved in a data frame of class `sf` whereby the geolocation of each tree is presented in a `geometry` variable of type `<POINT>` and at a minimum the data contains the following variables: a variable uniquely identifying each tree-stem, `sp` of type `fct` factor identifying species, `dbh1` and `dbh2` of type `dbl` quantifying the dbh at earlier and later census, and `growth` of type `dbl` double quantifying the average annual growth in centimeters. 
+The first step in the our analysis sequence is to compute the growth of trees using data from two censuses. The `compute_growth()` function computes growth assuming census data that follows ForestGEO standards. Despite such standards, minor variations will still exist between sites thereby necessitating some data wrangling and checking. For example, the SCBI site records all DBH's in millimeters, whereas the Michigan Big Woods site records them in centimeters @andersonteixeira_ctfs-forestgeo_2015 @allen_michigan_2020. The data format of other sites may be such that our `compute_growth()` function doesn't work at all. However, in the end all that matters is that the growth of all trees is saved in a data frame of class `sf` whereby the geolocation of each tree is presented in a `geometry` variable of type `<POINT>` and at a minimum the data contains the following variables: a variable uniquely identifying each tree-stem, `sp` of type `fct` factor identifying species, `dbh1` and `dbh2` of type `dbl` quantifying the DBH at earlier and later census, and `growth` of type `dbl` double quantifying the average annual growth in centimeters. 
 
-We load both 2008 and 2014 SCBI census data `.csv` files as they existed on GitHub on November 20, 2020. After selecting only relevant variables, we perform a few additional data wrangling steps: convert the variable with the date of measurement to be of type `date`, convert dbh to be in centimeters^[A rule of thumb to determine the units of dbh is check if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then centimeters. If the later, then millimeters. This is because ForestGEO protocols state that only trees with dbh greater or equal to 1cm should be included in censuses.], convert the `sp` variable containing species information from type `chr` character to `fct` factor (we will discuss the need for this in Section \ref{spatial-cross-validation}). Furthermore, in order to speed up computation for purposes of this examplt, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from 300--600 instead of 0--640.
+We load both 2008 and 2014 SCBI census data `.csv` files as they existed on GitHub on November 20, 2020. After selecting only relevant variables, we perform a few additional data wrangling steps: convert the variable with the date of measurement to be of type `date`, convert DBH to be in centimeters^[A rule of thumb to determine the units of DBH is check if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then centimeters. If the later, then millimeters. This is because ForestGEO protocols state that only trees with DBH greater or equal to 1cm should be included in censuses.], convert the `sp` variable containing species information from type `chr` character to `fct` factor (we will discuss the need for this in Section \ref{spatial-cross-validation}). Furthermore, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from 300--600 instead of 0--640.
 
 ```{r scbi-load-data}
 census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
@@ -162,7 +168,7 @@ growth_scbi <-
 growth_scbi
 ```
 
-The output `growth_scbi` is a single data frame of class `sf` that includes a numerical `growth` reflecting the average annual growth in dbh (in cm) for all trees that were alive at both time points as well a `geometry` variable encoding each tree's geolocation. Furthermore, variables that (in theory) remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. 
+The output `growth_scbi` is a single data frame of class `sf` that includes a numerical `growth` reflecting the average annual growth in DBH (in cm) for all trees that were alive at both time points as well a `geometry` variable encoding each tree's geolocation. Furthermore, variables that (in theory) remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. 
 
 Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2` using the `geom_sf()` geometry as seen in Figure \ref{fig:scbi-trees}.
 
@@ -220,7 +226,8 @@ Figure \ref{fig:scbi-spatial-information} illustrates the net effect of adding t
 
 ```{r scbi-spatial-information, out.width="66%", fig.cap="Buffer region and cross-validation block information for SCBI data."}
 ggplot() +
-  geom_sf_text(data = growth_scbi, aes(label = foldID, col = buffer), alpha = 0.2) +
+  geom_sf_text(data = growth_scbi, aes(label = foldID, col = buffer), 
+               alpha = 0.2) +
   geom_sf(data = blocks_scbi, fill = "transparent")
 ```
 
@@ -228,37 +235,51 @@ TODO: Do we talk about `add_buffer_variable(direction = "out")` when each fold g
 
 
 
-## Define focal versus competitor trees
+## Identify all focal and corresponding competitor trees
 
-HEY BERT PICK IT UP HERE
-
-Next we define `focal_vs_comp` data frames which connects each focal tree in the `growth_df` data frames to the trees in its competitive neighborhood range as defined by the `comp_dist` constant. So for example, if `growth_df` consisted of two focal trees with two and three neighbors with `comp_dist` respectively, `focal_vs_comp` would be a data frame of 5 rows connecting each focal tree to it's competitors. The `create_focal_vs_comp()` function makes this connection taking as inputs the `growth_df` data frame; the `comp_dist` constant defining competitive range; `cv_grid_sf`, giving the cross validation grid; and the `id` variable.
-
-### Big Woods
-
-```{r bw-focal-vs-comp}
-focal_vs_comp_bw <- growth_bw %>%
-  create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_bw, id = "treeID")
-```
-
-TODO: Figure out how to show this data frame's contents.
-
-
-### SCBI 
+The next step in our analysis sequence is to identify all focal trees and their corresponding competitor trees. The `create_focal_vs_comp()` functions performs these tasks and returns a new data frame of type `sf` containing this information. On top of the previously discussed arguments `comp_dist` defining the competition neighborhood and `id` indicating which variable in the data frame uniquely identifies each tree-stem, this function also requires an `sf` object representation of the spatial cross-validation blocks/folds; in our case, this was manually encoded in the `blocks_scbi` in Section \ref{spatial-information} while in our Appendix we present an example where this was performed using `spatialBlock()` from the `blockCV` package. We present the resulting data frame below with the `foldID` variable omitted for compactness of presentation.
 
 ```{r scbi-focal-vs-comp}
 focal_vs_comp_scbi <- growth_scbi %>%
   create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_scbi, id = "stemID")
+focal_vs_comp_scbi %>% 
+  select(-foldID)
 ```
 
-TODO: Figure out how to show this data frame's contents.
+TODO: Below reconcile the number of rows as they off by one from `growth_scbi` pipe `filter(!is.na(growth) & !buffer)`. perhaps by removing NA's in the `growth_scbi` stage.
 
+The resulting data frame `focal_vs_comp_scbi` has `r nrow(focal_vs_comp_scbi)` rows, representing the subset of the `r nrow(growth_scbi)` trees in `growth_scbi` that will be considered as focal trees and thus have their growths modeled. Recall from Section \ref{spatial-information} this consists all trees that are not part of the buffer region in Figure \ref{fig:scbi-spatial-information}. Two new variables `focal_ID` and `focal_sp` related to tree-stem identification and species information. Most notably however is a new variable `comp` which contains information on all competitor trees for a given focal tree saved in list-column format, a feature of the `tidyr` package @tidyr_package. For example, we drill-down on the tree with `focal_ID` equal to 4. It has 20 competitor trees each described by 4 variables as indicated by the fact that `comp` is a `<tibble [20 × 4]>`. 
+
+```{r scbi-focal-vs-comp-2}
+focal_vs_comp_scbi %>% 
+  filter(focal_ID == 4) %>% 
+  select(focal_ID, dbh, comp)
+```
+
+Using the `unnest()` function from the `tidyr` package, we can flatten list-column into regular columns. We observe that for the same focal tree with DBH equal to 13.65cm, we have information on all 20 competitor trees whose `dist` distance to the focal tree is less than or equal to `r comp_dist`, including their unique tree-stem ID number, their species, and their basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ where $DBH$ is the value from the earlier census in cm. Saving our focal versus competitor information in list-column minimizes redundancy since we do not repeat information on the focal tree 20 times. 
+
+```{r, eval = FALSE}
+focal_vs_comp_scbi %>% 
+  filter(focal_ID == 4) %>% 
+  select(focal_ID, dbh, comp) %>% 
+  unnest(cols = "comp")
+```
+```{r scbi-focal-vs-comp-3, echo = FALSE}
+# Not sure why we need to do things this way:
+focal_vs_comp_scbi %>% 
+  filter(focal_ID == 4) %>% 
+  select(focal_ID, dbh, comp) %>% 
+  unnest(cols = "comp") %>% 
+  print(n = 5)
+```
 
 
 
 ## Fit model and make predictions {#model-fit-predict}
 
-Next we fit the following linear model to the dbh of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
+HEY BERT PICK IT UP HERE
+
+Next we fit the following linear model to the DBH of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
 
 $$
 \newcommand{\dbh}{\text{DBH}}
@@ -273,7 +294,7 @@ We estimate the model's parameters using Bayesian linear regression implemented 
 
 For this linear model's case, there exists a closed form solution as described here. As such, the `fit_bayesian_model()` function using matrix algebra to obtain all parameter estimates, rather than computationally expensive Monte Carlo approximations. The inputs to this function are a `focal_vs_comp` data frame, `prior_param` a list of priors, and a boolean flag `run_shuffle` on whether or not to run competitor-species identity permutations which we will demonstrate below on the Michigan Big Woods data. This function returns the posterior means of all parameters.
 
-Using these posterior means, we then use the posterior predictive distribution to obtain fitted/predicted values $\widehat{y}$ of the dbh for each focal tree using the `predict_bayesian_model()`. These $\widehat{y}$ can then be compared to the observed $y$ dbh's to compute the root mean-square error, a measure of a model's predictive error which has the same units as the observed data $y$.
+Using these posterior means, we then use the posterior predictive distribution to obtain fitted/predicted values $\widehat{y}$ of the DBH for each focal tree using the `predict_bayesian_model()`. These $\widehat{y}$ can then be compared to the observed $y$ DBH's to compute the root mean-square error, a measure of a model's predictive error which has the same units as the observed data $y$.
 
 ### Big Woods 
 
@@ -281,21 +302,21 @@ For the Michigan Big Woods data we present two use cases of the model fitting an
 
 For the first use case, we fit the linear model specified in Equation XXX to our data frame of type `focal_vs_comp`. This input/outputs of the `fit_bayesian_model()` function are lists of the prior/posterior means of parameters of the linear regression specified in XXX. Generally speaking, there are two classes of regression parameters: $\beta$ main effects and $\lambda$ competitive effects. In the upcoming Section \ref{viz-posterior-distributions}, we will present code visualizing this posterior distributions.
 
-```{r bw-model-fit}
+```{r bw-model-fit, eval=FALSE}
 comp_bayes_lm_bw <- focal_vs_comp_bw %>%
   comp_bayes_lm(prior_param = NULL)
 ```
 
 This output of posterior parameters for the specified competition model are then used along with the posterior predictive distribution encoded in `predict_bayesian_model()` to return predicted growths for each individual tree. We join these predicted growths to the original growth data frame. 
 
-```{r bw-model-predict}
+```{r bw-model-predict, eval=FALSE}
 focal_vs_comp_bw <- focal_vs_comp_bw %>%
   mutate(growth_hat = predict(comp_bayes_lm_bw, focal_vs_comp_bw))
 ```
 
 We then use the `rmse()` function from the `yardstick` package to obtain the root mean squared error of the observed versus fitted values of growth. 
 
-```{r bw-model-rmse}
+```{r bw-model-rmse, eval=FALSE}
 focal_vs_comp_bw %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
@@ -303,17 +324,17 @@ focal_vs_comp_bw %>%
 
 The second use case is near identical to the first, but with a small change in the code to test whether the identity of the competitor matters. By adding a `run_shuffle = TRUE` argument to `fit_bayesian_model()`, for each focal tree its competitor trees' species identity will be "shuffled" randomly much like in a permutation test. By shuffling these species labels we are effectively fitting the model under a null model that competitor species identity does not matter. If the "shuffled" RMSE's are consistently lower than the unshuffled RMSE corresponding to the observed data, then we have evidence to suggest that competitor identity matters to competitive interactions.
 
-```{r bw-model-shuffle-fit}
+```{r bw-model-shuffle-fit, eval=FALSE}
 comp_bayes_lm_bw_shuffle <- focal_vs_comp_bw %>%
   comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
 ```
 
-```{r bw-model-shuffle-predict}
+```{r bw-model-shuffle-predict, eval=FALSE}
 focal_vs_comp_bw <- focal_vs_comp_bw %>%
   mutate(growth_hat_shuffle = predict(comp_bayes_lm_bw_shuffle, focal_vs_comp_bw))
 ```
 
-```{r bw-model-shuffle-rmse}
+```{r bw-model-shuffle-rmse, eval=FALSE}
 focal_vs_comp_bw %>%
   rmse(truth = growth, estimate = growth_hat_shuffle) %>%
   pull(.estimate)
@@ -325,17 +346,17 @@ The RMSE is fact lower for the non-shuffled version, indicative of a better mode
 
 In the case of the SCBI data, we once again perform the same model fitting and computing of fitted growths as with the Big Woods data, but this time we map the residuals of the observed minus fitted values to look for spatial patterns. 
 
-```{r scbi-model-fit}
+```{r scbi-model-fit, eval=FALSE}
 comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
   comp_bayes_lm(prior_param = NULL)
 ```
 
-```{r scbi-model-predict}
+```{r scbi-model-predict, eval=FALSE}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
   mutate(growth_hat = predict(comp_bayes_lm_scbi, focal_vs_comp_scbi))
 ```
 
-```{r scbi-model-rmse}
+```{r scbi-model-rmse, eval=FALSE}
 focal_vs_comp_scbi %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
@@ -343,19 +364,19 @@ focal_vs_comp_scbi %>%
 
 In Figures \ref{fig:scbi-model-residuals} and \ref{fig:scbi-model-residuals-2} we present the residuals. 
 
-```{r scbi-model-residuals, out.width="100%", fig.cap="Predicted versus observed growth.", echo = FALSE}
+```{r scbi-model-residuals, out.width="100%", fig.cap="Predicted versus observed growth.", echo = FALSE, eval=FALSE}
 ggplot(focal_vs_comp_scbi, aes(x = growth, y = growth_hat)) +
   geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
   stat_smooth(method = "lm") +
   geom_abline(slope = 1, intercept = 0) +
   coord_fixed() +
   labs(
-    x = "Observed growth in dbh", y = "Predicted growth in dbh",
+    x = "Observed growth in DBH", y = "Predicted growth in DBH",
     title = "Predicted vs Observed Growth"
   )
 ```
 
-```{r scbi-model-residuals-2, out.width="80%", fig.cap="Spatial distribution of residuals for model applied to SCBI data.", echo = FALSE}
+```{r scbi-model-residuals-2, out.width="80%", fig.cap="Spatial distribution of residuals for model applied to SCBI data.", echo = FALSE, eval=FALSE}
 focal_vs_comp_scbi %>%
   st_as_sf() %>%
   # TODO: Need to investigate missingness
@@ -389,7 +410,7 @@ DO WE NEED TO DESCRIBE MECHANICS? Because of the structure of the `bw_fit_model`
 
 Here we re-run the model fit to the Big Woods data from Section \ref{model-fit-predict}, but this time use "family" as the group for comparison which has. This makes the posterior distributions easier to follow. Also, surprisingly, grouping by family performed just as well as grouping by species @allen_permutation_2020. First we re-run `create_focal_vs_comp()` and `fit_bayesian_model()` with no permutation shuffling with the grouping variable as family.
 
-```{r bw-posterior-viz-0}
+```{r bw-posterior-viz-0, eval=FALSE}
 focal_vs_comp_bw <- growth_bw %>%
   mutate(sp = family %>% factor()) %>%
   create_focal_vs_comp(comp_dist = comp_dist, cv_grid_sf = blocks_bw, id = "treeID")
@@ -400,28 +421,28 @@ comp_bayes_lm_bw <- focal_vs_comp_bw %>%
 
 Now the posterior parameter outputs of `fit_bayesian_model()` are passed to `plot_bayesian_model_parameters()` to generate visualizations of the posterior parameters. These visualizations are displayed in Figure 5 of @allen_permutation_2020. For simplicity we only plot a subset of the species families. 
 
-```{r bw-posterior-viz-1}
+```{r bw-posterior-viz-1, eval=FALSE}
 sp_to_plot <- c("cornaceae", "fagaceae", "hamamelidaceae", "juglandaceae", 
                  "lauraceae", "rosaceae", "sapindaceae", "ulmaceae")
 ```
 
 The output is a list with three plots stored. Figure \ref{fig:bw-posterior-viz-beta0} The element `beta_0` gives the baseline growth intercept $\beta_0$, i.e., how fast an individual of each group grows independent of DBH).
 
-```{r bw-posterior-viz-beta0, out.width="100%", fig.cap="Posterior distribution of beta0."}
+```{r bw-posterior-viz-beta0, out.width="100%", fig.cap="Posterior distribution of beta0.", eval=FALSE}
 plot1 <- autoplot(comp_bayes_lm_bw, type = "intercepts")
 plot1
 ```
 
 Figure \ref{fig:bw-posterior-viz-beta-dbh} Next `beta_dbh` gives the slope for DBH slope $\beta_{dbh,i}$ for each group.
 
-```{r bw-posterior-viz-beta-dbh, out.width="100%", fig.cap="Posterior distribution of betadbh."}
+```{r bw-posterior-viz-beta-dbh, out.width="100%", fig.cap="Posterior distribution of betadbh.", eval=FALSE}
 plot2 <- autoplot(comp_bayes_lm_bw, type = "dbh_slopes")
 plot2
 ```
 
 Finally Figure \ref{fig:bw-posterior-viz-lambda} `lambda` gives the competition coefficients $\lambda$.
 
-```{r bw-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda's for Big Woods."}
+```{r bw-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda's for Big Woods.", eval=FALSE}
 plot3 <- autoplot(comp_bayes_lm_bw, type = "competition")
 plot3
 ```
@@ -431,11 +452,11 @@ plot3
 
 We revisit the posterior parameters for the SCBI from Section {model-fit-predict}, but this time only focus on the $\lambda$ competition coefficients. 
 
-```{r scbi-posterior-viz-1}
+```{r scbi-posterior-viz-1, eval=FALSE}
 sp_to_plot <- c("quru", "litu", "cagl", "cato")
 ```
 
-```{r scbi-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda's for SCBI."}
+```{r scbi-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda's for SCBI.", eval=FALSE}
 plot3 <- autoplot(comp_bayes_lm_bw, type = "competition")
 plot3
 ```
@@ -455,7 +476,7 @@ The model fits and predictions in Section \ref{model-fit-predict} all suffer fro
 
 Applying this spatially cross-validated model fit yields an RMSE is higher than that when the model is fit without cross validation. In other words, our model fits in \ref{model-fit-predict} were overly optimistic in the model's fitting power, whereas a cross-validated results yield an estimate that is closer to the truth. See @allen_permutation_2020 for more discussion of this. 
 
-```{r bw-spatial-cv}
+```{r bw-spatial-cv, eval=FALSE}
 focal_vs_comp_bw <- focal_vs_comp_bw %>%
   run_cv(comp_dist = comp_dist, cv_grid = blocks_bw)
 
@@ -469,7 +490,7 @@ focal_vs_comp_bw %>%
 
 Observe once again that this RMSE is much higher than that for the above SCBI model fit without cross-validation. 
 
-```{r scbi-spatial-cv}
+```{r scbi-spatial-cv, eval=FALSE}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
   run_cv(comp_dist = comp_dist, cv_grid = blocks_scbi)
 

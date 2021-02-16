@@ -192,6 +192,11 @@ package serves such purposes \citet{pebesma_sp_2005}, the \texttt{sf}
 package is designed to interface with the \texttt{tidyverse} suite of
 packages.
 
+\hypertarget{model}{%
+\subsection{Model}\label{model}}
+
+Describe model specifics.
+
 \hypertarget{example}{%
 \section{Example}\label{example}}
 
@@ -230,11 +235,9 @@ follows:
     Add spatial cross-validation block information.
   \end{enumerate}
 \item
-  Compute focal versus competitor tree information.
+  Identify all focal and corresponding competitor trees.
 \item
   Fit model and make predictions.
-\item
-  Visualize model results.
 \item
   Additionally: Evaluate model performance using spatial
   cross-validation.
@@ -264,7 +267,7 @@ trees using data from two censuses. The \texttt{compute\_growth()}
 function computes growth assuming census data that follows ForestGEO
 standards. Despite such standards, minor variations will still exist
 between sites thereby necessitating some data wrangling and checking.
-For example, the SCBI site records all dbh's in millimeters, whereas the
+For example, the SCBI site records all DBH's in millimeters, whereas the
 Michigan Big Woods site records them in centimeters
 \citet{andersonteixeira_ctfs-forestgeo_2015}
 \citet{allen_michigan_2020}. The data format of other sites may be such
@@ -275,7 +278,7 @@ each tree is presented in a \texttt{geometry} variable of type
 \texttt{\textless{}POINT\textgreater{}} and at a minimum the data
 contains the following variables: a variable uniquely identifying each
 tree-stem, \texttt{sp} of type \texttt{fct} factor identifying species,
-\texttt{dbh1} and \texttt{dbh2} of type \texttt{dbl} quantifying the dbh
+\texttt{dbh1} and \texttt{dbh2} of type \texttt{dbl} quantifying the DBH
 at earlier and later census, and \texttt{growth} of type \texttt{dbl}
 double quantifying the average annual growth in centimeters.
 
@@ -283,15 +286,15 @@ We load both 2008 and 2014 SCBI census data \texttt{.csv} files as they
 existed on GitHub on November 20, 2020. After selecting only relevant
 variables, we perform a few additional data wrangling steps: convert the
 variable with the date of measurement to be of type \texttt{date},
-convert dbh to be in centimeters\footnote{A rule of thumb to determine
-  the units of dbh is check if the smallest non-zero and non-missing
+convert DBH to be in centimeters\footnote{A rule of thumb to determine
+  the units of DBH is check if the smallest non-zero and non-missing
   measurement is 1 or 10. If the former, then centimeters. If the later,
   then millimeters. This is because ForestGEO protocols state that only
-  trees with dbh greater or equal to 1cm should be included in censuses.},
+  trees with DBH greater or equal to 1cm should be included in censuses.},
 convert the \texttt{sp} variable containing species information from
 type \texttt{chr} character to \texttt{fct} factor (we will discuss the
 need for this in Section \ref{spatial-cross-validation}). Furthermore,
-in order to speed up computation for purposes of this examplt, we only
+in order to speed up computation for purposes of this example, we only
 consider a 9 ha subsection of the 25.6 ha of the SCBI site: \texttt{gx}
 from 0--300 instead of 0--400 and \texttt{gy} from 300--600 instead of
 0--640.
@@ -339,25 +342,20 @@ include resprouts in the later census):
 \CommentTok{## bbox:           xmin: 0.2 ymin: 300 xmax: 299.9 ymax: 600}
 \CommentTok{## CRS:            NA}
 \CommentTok{## # A tibble: 7,954 x 9}
-\CommentTok{##    stemID sp     dbh1 codes1 status  dbh2 codes2  growth     geometry}
-\CommentTok{##     <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>    <dbl>      <POINT>}
-\CommentTok{##  1      4 nysy  13.6  M      A       14.2 M       0.103  (14.2 428.5)}
-\CommentTok{##  2      5 havi   8.8  M      A        9.6 M;P     0.150   (9.4 436.4)}
-\CommentTok{##  3      6 havi   3.25 NULL   A        4   M       0.140     (1.3 434)}
-\CommentTok{##  4     77 qual  65.2  M      A       66   M       0.141  (34.7 307.2)}
-\CommentTok{##  5     79 tiam  47.7  M      A       46.8 M      -0.161    (40 381.1)}
-\CommentTok{##  6     80 caca   5.15 M      A        6.5 M       0.253  (38.7 421.7)}
-\CommentTok{##  7     96 libe   2.3  J;M    A        3.7 M       0.262      (60 310)}
-\CommentTok{##  8    100 caca   5.09 NULL   A       NA   DN     NA      (52.5 476.3)}
-\CommentTok{##  9    101 litu  65.4  M      A       68.4 M       0.552  (47.1 567.3)}
-\CommentTok{## 10    102 astr   1.99 NULL   A        2.5 M       0.0954 (40.8 575.5)}
-\CommentTok{## # ... with 7,944 more rows}
+\CommentTok{##   stemID sp     dbh1 codes1 status  dbh2 codes2 growth     geometry}
+\CommentTok{##    <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>   <dbl>      <POINT>}
+\CommentTok{## 1      4 nysy  13.6  M      A       14.2 M       0.103 (14.2 428.5)}
+\CommentTok{## 2      5 havi   8.8  M      A        9.6 M;P     0.150  (9.4 436.4)}
+\CommentTok{## 3      6 havi   3.25 NULL   A        4   M       0.140    (1.3 434)}
+\CommentTok{## 4     77 qual  65.2  M      A       66   M       0.141 (34.7 307.2)}
+\CommentTok{## 5     79 tiam  47.7  M      A       46.8 M      -0.161   (40 381.1)}
+\CommentTok{## # ... with 7,949 more rows}
 \end{Highlighting}
 \end{Shaded}
 
 The output \texttt{growth\_scbi} is a single data frame of class
 \texttt{sf} that includes a numerical \texttt{growth} reflecting the
-average annual growth in dbh (in cm) for all trees that were alive at
+average annual growth in DBH (in cm) for all trees that were alive at
 both time points as well a \texttt{geometry} variable encoding each
 tree's geolocation. Furthermore, variables that (in theory) remain
 unchanged between censuses appear only once, such as location variables
@@ -463,10 +461,7 @@ function given a specified \texttt{cv\_block\_size}.\}
 \NormalTok{fold1 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \NormalTok{fold2 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
-\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
-  \KeywordTok{sf_polygon}\NormalTok{(fold1),}
-  \KeywordTok{sf_polygon}\NormalTok{(fold2)}
-\NormalTok{) }\OperatorTok{%>%}
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}\KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2)) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
 
 \CommentTok{# Associate each observation to a fold}
@@ -492,7 +487,8 @@ thus is a focal tree whose growth is of modeled interest).
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer), }\DataTypeTok{alpha =} \FloatTok{0.2}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer), }
+               \DataTypeTok{alpha =} \FloatTok{0.2}\NormalTok{) }\OperatorTok{+}
 \StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ blocks_scbi, }\DataTypeTok{fill =} \StringTok{"transparent"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -510,52 +506,112 @@ TODO: Do we talk about
 \texttt{add\_buffer\_variable(direction\ =\ "out")} when each fold gets
 its turn being the training data?
 
-\hypertarget{define-focal-versus-competitor-trees}{%
-\subsection{Define focal versus competitor
-trees}\label{define-focal-versus-competitor-trees}}
+\hypertarget{identify-all-focal-and-corresponding-competitor-trees}{%
+\subsection{Identify all focal and corresponding competitor
+trees}\label{identify-all-focal-and-corresponding-competitor-trees}}
 
-HEY BERT PICK IT UP HERE
-
-Next we define \texttt{focal\_vs\_comp} data frames which connects each
-focal tree in the \texttt{growth\_df} data frames to the trees in its
-competitive neighborhood range as defined by the \texttt{comp\_dist}
-constant. So for example, if \texttt{growth\_df} consisted of two focal
-trees with two and three neighbors with \texttt{comp\_dist}
-respectively, \texttt{focal\_vs\_comp} would be a data frame of 5 rows
-connecting each focal tree to it's competitors. The
-\texttt{create\_focal\_vs\_comp()} function makes this connection taking
-as inputs the \texttt{growth\_df} data frame; the \texttt{comp\_dist}
-constant defining competitive range; \texttt{cv\_grid\_sf}, giving the
-cross validation grid; and the \texttt{id} variable.
-
-\hypertarget{big-woods}{%
-\subsubsection{Big Woods}\label{big-woods}}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{growth_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ blocks_bw, }\DataTypeTok{id =} \StringTok{"treeID"}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-TODO: Figure out how to show this data frame's contents.
-
-\hypertarget{scbi}{%
-\subsubsection{SCBI}\label{scbi}}
+The next step in our analysis sequence is to identify all focal trees
+and their corresponding competitor trees. The
+\texttt{create\_focal\_vs\_comp()} functions performs these tasks and
+returns a new data frame of type \texttt{sf} containing this
+information. On top of the previously discussed arguments
+\texttt{comp\_dist} defining the competition neighborhood and
+\texttt{id} indicating which variable in the data frame uniquely
+identifies each tree-stem, this function also requires an \texttt{sf}
+object representation of the spatial cross-validation blocks/folds; in
+our case, this was manually encoded in the \texttt{blocks\_scbi} in
+Section \ref{spatial-information} while in our Appendix we present an
+example where this was performed using \texttt{spatialBlock()} from the
+\texttt{blockCV} package. We present the resulting data frame below with
+the \texttt{foldID} variable omitted for compactness of presentation.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{foldID)}
+\CommentTok{## # A tibble: 6,296 x 6}
+\CommentTok{##   focal_ID focal_sp   dbh     geometry growth comp             }
+\CommentTok{##      <dbl> <fct>    <dbl>      <POINT>  <dbl> <list>           }
+\CommentTok{## 1        4 nysy     13.6  (14.2 428.5)  0.103 <tibble [20 x 4]>}
+\CommentTok{## 2        5 havi      8.8   (9.4 436.4)  0.150 <tibble [32 x 4]>}
+\CommentTok{## 3       79 tiam     47.7    (40 381.1) -0.161 <tibble [20 x 4]>}
+\CommentTok{## 4       80 caca      5.15 (38.7 421.7)  0.253 <tibble [12 x 4]>}
+\CommentTok{## 5       96 libe      2.3      (60 310)  0.262 <tibble [14 x 4]>}
+\CommentTok{## # ... with 6,291 more rows}
 \end{Highlighting}
 \end{Shaded}
 
-TODO: Figure out how to show this data frame's contents.
+TODO: Below reconcile the number of rows as they off by one from
+\texttt{growth\_scbi} pipe \texttt{filter(!is.na(growth)\ \&\ !buffer)}.
+perhaps by removing NA's in the \texttt{growth\_scbi} stage.
+
+The resulting data frame \texttt{focal\_vs\_comp\_scbi} has 6296 rows,
+representing the subset of the 7954 trees in \texttt{growth\_scbi} that
+will be considered as focal trees and thus have their growths modeled.
+Recall from Section \ref{spatial-information} this consists all trees
+that are not part of the buffer region in Figure
+\ref{fig:scbi-spatial-information}. Two new variables \texttt{focal\_ID}
+and \texttt{focal\_sp} related to tree-stem identification and species
+information. Most notably however is a new variable \texttt{comp} which
+contains information on all competitor trees for a given focal tree
+saved in list-column format, a feature of the \texttt{tidyr} package
+\citet{tidyr_package}. For example, we drill-down on the tree with
+\texttt{focal\_ID} equal to 4. It has 20 competitor trees each described
+by 4 variables as indicated by the fact that \texttt{comp} is a
+\texttt{\textless{}tibble\ {[}20\ ×\ 4{]}\textgreater{}}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{filter}\NormalTok{(focal_ID }\OperatorTok{==}\StringTok{ }\DecValTok{4}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{select}\NormalTok{(focal_ID, dbh, comp)}
+\CommentTok{## # A tibble: 1 x 3}
+\CommentTok{##   focal_ID   dbh comp             }
+\CommentTok{##      <dbl> <dbl> <list>           }
+\CommentTok{## 1        4  13.6 <tibble [20 x 4]>}
+\end{Highlighting}
+\end{Shaded}
+
+Using the \texttt{unnest()} function from the \texttt{tidyr} package, we
+can flatten list-column into regular columns. We observe that for the
+same focal tree with DBH equal to 13.65cm, we have information on all 20
+competitor trees whose \texttt{dist} distance to the focal tree is less
+than or equal to 7.5, including their unique tree-stem ID number, their
+species, and their basal area (in m\(^2\)) calculated as
+\(\frac{\pi \times (\text{DBH/2})^2}{10000}\) where \(DBH\) is the value
+from the earlier census in cm. Saving our focal versus competitor
+information in list-column minimizes redundancy since we do not repeat
+information on the focal tree 20 times.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{filter}\NormalTok{(focal_ID }\OperatorTok{==}\StringTok{ }\DecValTok{4}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{select}\NormalTok{(focal_ID, dbh, comp) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \StringTok{"comp"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 20 x 6
+##   focal_ID   dbh comp_ID  dist comp_sp comp_basal_area
+##      <dbl> <dbl>   <dbl> <dbl> <fct>             <dbl>
+## 1        4  13.6    1836  7.48 tiam            0.0176 
+## 2        4  13.6    1847  2.81 nysy            0.00332
+## 3        4  13.6    1848  1.62 nysy            0.00396
+## 4        4  13.6    1849  2.62 nysy            0.00535
+## 5        4  13.6    1850  2.98 havi            0.00472
+## # ... with 15 more rows
+\end{verbatim}
 
 \hypertarget{model-fit-predict}{%
 \subsection{Fit model and make predictions}\label{model-fit-predict}}
 
-Next we fit the following linear model to the dbh of each focal tree.
+HEY BERT PICK IT UP HERE
+
+Next we fit the following linear model to the DBH of each focal tree.
 Let \(i = 1, \ldots, n_j\) index all \(n_j\) trees of ``focal'' species
 group \(j\); let \(j = 1, \ldots, J\) index all \(J\) focal species
 groups; and let \(k = 1, \ldots, K\) index all \(K\) ``competitor''
@@ -588,13 +644,13 @@ parameters.
 
 Using these posterior means, we then use the posterior predictive
 distribution to obtain fitted/predicted values \(\widehat{y}\) of the
-dbh for each focal tree using the \texttt{predict\_bayesian\_model()}.
-These \(\widehat{y}\) can then be compared to the observed \(y\) dbh's
+DBH for each focal tree using the \texttt{predict\_bayesian\_model()}.
+These \(\widehat{y}\) can then be compared to the observed \(y\) DBH's
 to compute the root mean-square error, a measure of a model's predictive
 error which has the same units as the observed data \(y\).
 
-\hypertarget{big-woods-1}{%
-\subsubsection{Big Woods}\label{big-woods-1}}
+\hypertarget{big-woods}{%
+\subsubsection{Big Woods}\label{big-woods}}
 
 For the Michigan Big Woods data we present two use cases of the model
 fitting and prediction scheme. The first use case is the simplest where
@@ -641,7 +697,6 @@ fitted values of growth.
 \NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\CommentTok{## [1] 0.148145}
 \end{Highlighting}
 \end{Shaded}
 
@@ -676,7 +731,6 @@ interactions.
 \NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat_shuffle) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\CommentTok{## [1] 0.1505383}
 \end{Highlighting}
 \end{Shaded}
 
@@ -687,8 +741,8 @@ identity does matter for competitive interactions. In
 times to construct a full permutation distribution to show that this
 difference is robust to resampling variation.
 
-\hypertarget{scbi-1}{%
-\subsubsection{SCBI}\label{scbi-1}}
+\hypertarget{scbi}{%
+\subsubsection{SCBI}\label{scbi}}
 
 In the case of the SCBI data, we once again perform the same model
 fitting and computing of fitted growths as with the Big Woods data, but
@@ -714,30 +768,11 @@ look for spatial patterns.
 \NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\CommentTok{## [1] 0.1281398}
 \end{Highlighting}
 \end{Shaded}
 
 In Figures \ref{fig:scbi-model-residuals} and
 \ref{fig:scbi-model-residuals-2} we present the residuals.
-
-\begin{figure}
-
-{\centering \includegraphics[width=1\linewidth]{Figures/scbi-model-residuals-1} 
-
-}
-
-\caption{Predicted versus observed growth.}\label{fig:scbi-model-residuals}
-\end{figure}
-
-\begin{figure}
-
-{\centering \includegraphics[width=0.8\linewidth]{Figures/scbi-model-residuals-2-1} 
-
-}
-
-\caption{Spatial distribution of residuals for model applied to SCBI data.}\label{fig:scbi-model-residuals-2}
-\end{figure}
 
 \hypertarget{viz-posterior-distributions}{%
 \subsection{Visualize model results}\label{viz-posterior-distributions}}
@@ -758,8 +793,8 @@ interest. So to display these parameters, as we care about them, we have
 to sample from the baseline distribution and from the comparison one to
 get the posterior distribution of interest.
 
-\hypertarget{big-woods-2}{%
-\subsubsection{Big Woods}\label{big-woods-2}}
+\hypertarget{big-woods-1}{%
+\subsubsection{Big Woods}\label{big-woods-1}}
 
 Here we re-run the model fit to the Big Woods data from Section
 \ref{model-fit-predict}, but this time use ``family'' as the group for
@@ -805,15 +840,6 @@ each group grows independent of DBH).
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}
-
-{\centering \includegraphics[width=1\linewidth]{Figures/bw-posterior-viz-beta0-1} 
-
-}
-
-\caption{Posterior distribution of beta0.}\label{fig:bw-posterior-viz-beta0}
-\end{figure}
-
 Figure \ref{fig:bw-posterior-viz-beta-dbh} Next \texttt{beta\_dbh} gives
 the slope for DBH slope \(\beta_{dbh,i}\) for each group.
 
@@ -823,15 +849,6 @@ the slope for DBH slope \(\beta_{dbh,i}\) for each group.
 \NormalTok{plot2}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{figure}
-
-{\centering \includegraphics[width=1\linewidth]{Figures/bw-posterior-viz-beta-dbh-1} 
-
-}
-
-\caption{Posterior distribution of betadbh.}\label{fig:bw-posterior-viz-beta-dbh}
-\end{figure}
 
 Finally Figure \ref{fig:bw-posterior-viz-lambda} \texttt{lambda} gives
 the competition coefficients \(\lambda\).
@@ -843,17 +860,8 @@ the competition coefficients \(\lambda\).
 \end{Highlighting}
 \end{Shaded}
 
-\begin{figure}
-
-{\centering \includegraphics[width=1\linewidth]{Figures/bw-posterior-viz-lambda-1} 
-
-}
-
-\caption{Posterior distribution of lambda's for Big Woods.}\label{fig:bw-posterior-viz-lambda}
-\end{figure}
-
-\hypertarget{scbi-2}{%
-\subsubsection{SCBI}\label{scbi-2}}
+\hypertarget{scbi-1}{%
+\subsubsection{SCBI}\label{scbi-1}}
 
 We revisit the posterior parameters for the SCBI from Section
 \{model-fit-predict\}, but this time only focus on the \(\lambda\)
@@ -871,15 +879,6 @@ competition coefficients.
 \NormalTok{plot3}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{figure}
-
-{\centering \includegraphics[width=1\linewidth]{Figures/scbi-posterior-viz-lambda-1} 
-
-}
-
-\caption{Posterior distribution of lambda's for SCBI.}\label{fig:scbi-posterior-viz-lambda}
-\end{figure}
 
 Add explanation here.
 
@@ -903,8 +902,8 @@ function at its core uses the same model fitting implemented in the
 test data. Recall that the spatial blocking scheme wass encoded in
 Section \ref{spatial-information}.
 
-\hypertarget{big-woods-3}{%
-\subsubsection{Big Woods}\label{big-woods-3}}
+\hypertarget{big-woods-2}{%
+\subsubsection{Big Woods}\label{big-woods-2}}
 
 Applying this spatially cross-validated model fit yields an RMSE is
 higher than that when the model is fit without cross validation. In
@@ -921,12 +920,11 @@ results yield an estimate that is closer to the truth. See
 \NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\CommentTok{## [1] 0.1532316}
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{scbi-3}{%
-\subsubsection{SCBI}\label{scbi-3}}
+\hypertarget{scbi-2}{%
+\subsubsection{SCBI}\label{scbi-2}}
 
 Observe once again that this RMSE is much higher than that for the above
 SCBI model fit without cross-validation.
@@ -939,7 +937,6 @@ SCBI model fit without cross-validation.
 \NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\CommentTok{## [1] 0.144608}
 \end{Highlighting}
 \end{Shaded}
 

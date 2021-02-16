@@ -47,7 +47,7 @@ package where we will:
 
 1.  Compute growth of trees based on census data
 2.  Add spatial information
-3.  Compute focal versus competitor tree information
+3.  Identify all focal and corresponding competitor trees
 4.  Fit model and make predictions
 5.  Run spatial cross-validation
 
