@@ -193,8 +193,7 @@ print.comp_bayes_lm <- function(x, ...) {
 #'
 #' @param object Output of [comp_bayes_lm()]: A list of
 #'   `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
-#' @inheritParams comp_bayes_lm
-#' @inheritParams create_focal_vs_comp
+#' @param newdata A data frame of type `focal_vs_comp` in which to look for variables with which to predict.
 #' @param ... Currently ignored—only included for consistency with generic.
 #'
 #' @import dplyr
@@ -226,15 +225,15 @@ print.comp_bayes_lm <- function(x, ...) {
 #'   ggplot(aes(growth, growth_hat)) +
 #'   geom_point() +
 #'   geom_abline(slope = 1, intercept = 0)
-predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
+predict.comp_bayes_lm <- function(object, newdata, ...) {
   check_comp_bayes_lm(object)
-  check_focal_vs_comp(focal_vs_comp)
+  check_focal_vs_comp(newdata)
 
   # Create linear regression model formula object
   model_formula <- object$terms
 
   # Create matrices & vectors for Bayesian regression
-  focal_trees <- focal_vs_comp %>%
+  focal_trees <- newdata %>%
     create_bayes_lm_data()
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
