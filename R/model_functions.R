@@ -124,7 +124,7 @@ default_prior_params <- function(X) {
 
 
 
-
+#' @importFrom stringr str_replace_all
 #' @export
 print.comp_bayes_lm <- function(x, ...) {
   cat(
@@ -149,7 +149,7 @@ print.comp_bayes_lm <- function(x, ...) {
     paste0(
       "\n",
       "Model formula:\n",
-      x[[3]] %>% as.character(),
+      x[[3]][2] %>% as.character(), " ~ ", x[[3]][3] %>% as.character() %>% str_replace_all("\n    ", ""),
       "\n"
     )
   )
