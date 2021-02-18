@@ -192,10 +192,42 @@ package serves such purposes \citet{pebesma_sp_2005}, the \texttt{sf}
 package is designed to interface with the \texttt{tidyverse} suite of
 packages.
 
-\hypertarget{model}{%
-\subsection{Model}\label{model}}
+\hypertarget{competition-model}{%
+\subsection{Model for growth of tree}\label{competition-model}}
 
-Describe model specifics.
+While there are a littany of models one can consider, in PLOSOne we
+considered a simple one.
+
+Describe model specifics. Bayesian linear regression model.
+
+Next we fit the following linear model to the DBH of each focal tree.
+Let \(i = 1, \ldots, n_j\) index all \(n_j\) trees of ``focal'' species
+group \(j\); let \(j = 1, \ldots, J\) index all \(J\) focal species
+groups; and let \(k = 1, \ldots, K\) index all \(K\) ``competitor''
+species groups. We modeled the growth in diameter per year \(y_{ij}\)
+(in centimeters per year) of the \(i^{th}\) tree of focal species group
+\(j\) as a linear model \(f\) of the following covariates
+\(\vec{x}_{ij}\)
+
+\[
+\newcommand{\dbh}{\text{DBH}}
+\newcommand{\biomass}{\text{biomass}}
+\newcommand{\BA}{\text{BA}}
+y_{ij} = f(\vec{x}_{ij}) + \epsilon_{ij} = \beta_{0,j} + \beta_{\dbh,j} \cdot \dbh_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot \BA_{ijk} + \epsilon_{ij}
+\]
+
+Link to \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+
+For this linear model's case, there exists a closed form solution as
+described here. As such, the \texttt{fit\_bayesian\_model()} function
+using matrix algebra to obtain all parameter estimates, rather than
+computationally expensive Monte Carlo approximations. The inputs to this
+function are a \texttt{focal\_vs\_comp} data frame,
+\texttt{prior\_param} a list of priors, and a boolean flag
+\texttt{run\_shuffle} on whether or not to run competitor-species
+identity permutations which we will demonstrate below on the Michigan
+Big Woods data. This function returns the posterior means of all
+parameters.
 
 \hypertarget{example}{%
 \section{Example}\label{example}}
@@ -237,13 +269,19 @@ follows:
 \item
   Identify all focal and corresponding competitor trees.
 \item
-  Fit model and make predictions.
+  Fit model, make predictions, and visualize model results
+\end{enumerate}
+
+Additionally,
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
 \item
-  Additionally: Evaluate model performance using spatial
-  cross-validation.
+  Evaluate the effect of competitor species identity using permutation
+  tests.
 \item
-  Additionally: Evaluate the effect of competitor species identity using
-  permutation tests.
+  Evaluate model performance using spatial cross-validation.
 \end{enumerate}
 
 We load all necessary packages.
@@ -255,6 +293,7 @@ We load all necessary packages.
 \KeywordTok{library}\NormalTok{(sf)}
 \KeywordTok{library}\NormalTok{(forestecology)}
 \KeywordTok{library}\NormalTok{(blockCV)}
+\KeywordTok{library}\NormalTok{(patchwork)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -487,8 +526,7 @@ thus is a focal tree whose growth is of modeled interest).
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer), }
-               \DataTypeTok{alpha =} \FloatTok{0.2}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer), }\DataTypeTok{alpha =} \FloatTok{0.2}\NormalTok{) }\OperatorTok{+}
 \StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ blocks_scbi, }\DataTypeTok{fill =} \StringTok{"transparent"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -506,9 +544,9 @@ TODO: Do we talk about
 \texttt{add\_buffer\_variable(direction\ =\ "out")} when each fold gets
 its turn being the training data?
 
-\hypertarget{identify-all-focal-and-corresponding-competitor-trees}{%
+\hypertarget{focal-vs-comp}{%
 \subsection{Identify all focal and corresponding competitor
-trees}\label{identify-all-focal-and-corresponding-competitor-trees}}
+trees}\label{focal-vs-comp}}
 
 The next step in our analysis sequence is to identify all focal trees
 and their corresponding competitor trees. The
@@ -609,145 +647,18 @@ information on the focal tree 20 times.
 \hypertarget{model-fit-predict}{%
 \subsection{Fit model and make predictions}\label{model-fit-predict}}
 
-HEY BERT PICK IT UP HERE
-
-Next we fit the following linear model to the DBH of each focal tree.
-Let \(i = 1, \ldots, n_j\) index all \(n_j\) trees of ``focal'' species
-group \(j\); let \(j = 1, \ldots, J\) index all \(J\) focal species
-groups; and let \(k = 1, \ldots, K\) index all \(K\) ``competitor''
-species groups. We modeled the growth in diameter per year \(y_{ij}\)
-(in centimeters per year) of the \(i^{th}\) tree of focal species group
-\(j\) as a linear model \(f\) of the following covariates
-\(\vec{x}_{ij}\)
-
-\[
-\newcommand{\dbh}{\text{DBH}}
-\newcommand{\biomass}{\text{biomass}}
-\newcommand{\BA}{\text{BA}}
-y_{ij} = f(\vec{x}_{ij}) + \epsilon_{ij} = \beta_{0,j} + \beta_{\dbh,j} \cdot \dbh_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot \BA_{ijk} + \epsilon_{ij}
-\]
-
-We estimate the model's parameters using Bayesian linear regression
-implemented in the \texttt{fit\_bayesian\_model()} function. TODO:
-define all parameters
-
-For this linear model's case, there exists a closed form solution as
-described here. As such, the \texttt{fit\_bayesian\_model()} function
-using matrix algebra to obtain all parameter estimates, rather than
-computationally expensive Monte Carlo approximations. The inputs to this
-function are a \texttt{focal\_vs\_comp} data frame,
-\texttt{prior\_param} a list of priors, and a boolean flag
-\texttt{run\_shuffle} on whether or not to run competitor-species
-identity permutations which we will demonstrate below on the Michigan
-Big Woods data. This function returns the posterior means of all
-parameters.
-
-Using these posterior means, we then use the posterior predictive
-distribution to obtain fitted/predicted values \(\widehat{y}\) of the
-DBH for each focal tree using the \texttt{predict\_bayesian\_model()}.
-These \(\widehat{y}\) can then be compared to the observed \(y\) DBH's
-to compute the root mean-square error, a measure of a model's predictive
-error which has the same units as the observed data \(y\).
-
-\hypertarget{big-woods}{%
-\subsubsection{Big Woods}\label{big-woods}}
-
-For the Michigan Big Woods data we present two use cases of the model
-fitting and prediction scheme. The first use case is the simplest where
-we assess the fit of the model using root mean squared error. The second
-use case then answers the question of whether species competitor
-identity matters using permutation test.
-
-For the first use case, we fit the linear model specified in Equation
-XXX to our data frame of type \texttt{focal\_vs\_comp}. This
-input/outputs of the \texttt{fit\_bayesian\_model()} function are lists
-of the prior/posterior means of parameters of the linear regression
-specified in XXX. Generally speaking, there are two classes of
-regression parameters: \(\beta\) main effects and \(\lambda\)
-competitive effects. In the upcoming Section
-\ref{viz-posterior-distributions}, we will present code visualizing this
-posterior distributions.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{comp_bayes_lm_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-This output of posterior parameters for the specified competition model
-are then used along with the posterior predictive distribution encoded
-in \texttt{predict\_bayesian\_model()} to return predicted growths for
-each individual tree. We join these predicted growths to the original
-growth data frame.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_bw, focal_vs_comp_bw))}
-\end{Highlighting}
-\end{Shaded}
-
-We then use the \texttt{rmse()} function from the \texttt{yardstick}
-package to obtain the root mean squared error of the observed versus
-fitted values of growth.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\end{Highlighting}
-\end{Shaded}
-
-The second use case is near identical to the first, but with a small
-change in the code to test whether the identity of the competitor
-matters. By adding a \texttt{run\_shuffle\ =\ TRUE} argument to
-\texttt{fit\_bayesian\_model()}, for each focal tree its competitor
-trees' species identity will be ``shuffled'' randomly much like in a
-permutation test. By shuffling these species labels we are effectively
-fitting the model under a null model that competitor species identity
-does not matter. If the ``shuffled'' RMSE's are consistently lower than
-the unshuffled RMSE corresponding to the observed data, then we have
-evidence to suggest that competitor identity matters to competitive
-interactions.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{comp_bayes_lm_bw_shuffle <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat_shuffle =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_bw_shuffle, focal_vs_comp_bw))}
-\end{Highlighting}
-\end{Shaded}
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat_shuffle) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\end{Highlighting}
-\end{Shaded}
-
-The RMSE is fact lower for the non-shuffled version, indicative of a
-better model fit. This gives support for the idea that competitor
-identity does matter for competitive interactions. In
-\citet{allen_permutation_2020} we run this shuffle a large number of
-times to construct a full permutation distribution to show that this
-difference is robust to resampling variation.
-
-\hypertarget{scbi}{%
-\subsubsection{SCBI}\label{scbi}}
-
-In the case of the SCBI data, we once again perform the same model
-fitting and computing of fitted growths as with the Big Woods data, but
-this time we map the residuals of the observed minus fitted values to
-look for spatial patterns.
+Now that we've identified all focal and corresponding competitor trees
+and saved this information in a data frame of type
+\texttt{focal\_vs\_comp}, the next step in our analysis sequence is to
+fit a model for the growth of all focal trees. Currently the
+\texttt{forestecology} package can only fit the competition Bayesian
+linear regression model outlined in Section \ref{competition-model}
+using the \texttt{comp\_bayes\_lm()} function. However, any model
+implemented in a function that similarly takes an input data frame of
+type \texttt{focal\_vs\_comp} as an argument can be easily swapped in.
+In the case of our specific competition Bayesian linear regression
+model, we can also specify prior distributions on all parameters of
+interest (here chosen to be the defaults).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -756,136 +667,131 @@ look for spatial patterns.
 \end{Highlighting}
 \end{Shaded}
 
+The returned \texttt{comp\_bayes\_lm\_scbi} output is an object of S3
+class type \texttt{comp\_bayes\_lm} which contains the posterior values
+of all parameters in our competition Bayesian linear regression. This
+class of object includes generic methods implemented for
+\texttt{print()}, \texttt{predict()}, and \texttt{ggplot2::autoplot()}.
+First the generic for \texttt{print()} displays the names of all prior
+\& posterior parameters (accessible via
+\texttt{comp\_bayes\_lm\_scbi\$prior\_params} and
+\texttt{comp\_bayes\_lm\_scbi\$post\_params}) along with the model
+formula:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{comp_bayes_lm_scbi}
+\CommentTok{## Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:}
+\CommentTok{## }
+\CommentTok{##   parameter_type           prior posterior}
+\CommentTok{## 1 Inverse-Gamma on sigma^2 a_0   a_star   }
+\CommentTok{## 2 Inverse-Gamma on sigma^2 b_0   b_star   }
+\CommentTok{## 3 Multivariate t on beta   mu_0  mu_star  }
+\CommentTok{## 4 Multivariate t on beta   V_0   V_star   }
+\CommentTok{## }
+\CommentTok{## Model formula:}
+\CommentTok{## growth ~ sp + dbh + dbh * sp + acne * sp + acpl * sp + acru * sp + acsp * sp + aial * sp + amar * sp + astr * sp + beth * sp + caca * sp + caco * sp + cade * sp + cagl * sp + caovl * sp + casp * sp + cato * sp + ceca * sp + ceoc * sp + chvi * sp + coal * sp + coam * sp + cofl * sp + crpr * sp + crsp * sp + divi * sp + elum * sp + eual * sp + fagr * sp + fram * sp + frni * sp + frpe * sp + frsp * sp + havi * sp + ilve * sp + juci * sp + juni * sp + juvi * sp + libe * sp + litu * sp + loma * sp + nysy * sp + pato * sp + pipu * sp + pist * sp + pivi * sp + ploc * sp + prav * sp + prpe * sp + prse * sp + prsp * sp + qual * sp + quco * sp + qufa * sp + qumi * sp + qupr * sp + quru * sp + qusp * sp + quve * sp + rhpe * sp + romu * sp + rops * sp + rual * sp + rupe * sp + ruph * sp + saal * sp + saca * sp + tiam * sp + ulam * sp + ulru * sp + ulsp * sp + unk * sp + viac * sp + vipr * sp + vire * sp}
+\end{Highlighting}
+\end{Shaded}
+
+Next, the generic for \texttt{predict()} takes as inputs the posterior
+parameter values in \texttt{comp\_bayes\_lm\_scbi} and the predictor
+variables in \texttt{newdata} and outputs a vector of fitted/predicted
+values \(\widehat{y}\) of the DBH for each focal tree (as returned by
+the posterior predictive distribution).
+
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, focal_vs_comp_scbi))}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{newdata =}\NormalTok{ focal_vs_comp_scbi))}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\NormalTok{focal_vs_comp_scbi}
+\CommentTok{## # A tibble: 6,296 x 8}
+\CommentTok{##    focal_ID focal_sp   dbh foldID                  geometry  growth}
+\CommentTok{##       <dbl> <fct>    <dbl> <fct>                    <POINT>   <dbl>}
+\CommentTok{##  1        4 nysy     13.6  1                   (14.2 428.5)  0.103 }
+\CommentTok{##  2        5 havi      8.8  1                    (9.4 436.4)  0.150 }
+\CommentTok{##  3       79 tiam     47.7  1                     (40 381.1) -0.161 }
+\CommentTok{##  4       80 caca      5.15 1                   (38.7 421.7)  0.253 }
+\CommentTok{##  5       96 libe      2.3  1                       (60 310)  0.262 }
+\CommentTok{##  6      101 litu     65.4  1                   (47.1 567.3)  0.552 }
+\CommentTok{##  7      102 astr      1.99 1                   (40.8 575.5)  0.0954}
+\CommentTok{##  8      126 cato     37.4  1                   (60.6 400.2)  0.165 }
+\CommentTok{##  9      127 caca      8.72 1                   (72.7 514.1)  0.0370}
+\CommentTok{## 10      139 astr      1.71 1                   (96.7 315.1)  0.0549}
+\CommentTok{## # ... with 6,286 more rows, and 2 more variables: comp <list>,}
+\CommentTok{## #   growth_hat <dbl>}
+\end{Highlighting}
+\end{Shaded}
+
+We can then compare the observed and fitted/predicted growths to compute
+the root mean squared error of our model fit.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{model_rmse <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
+\NormalTok{model_rmse}
+\CommentTok{## [1] 0.1281398}
 \end{Highlighting}
 \end{Shaded}
 
-In Figures \ref{fig:scbi-model-residuals} and
-\ref{fig:scbi-model-residuals-2} we present the residuals.
-
-\hypertarget{viz-posterior-distributions}{%
-\subsection{Visualize model results}\label{viz-posterior-distributions}}
-
-Lastly, we return to the model fits from Section \ref{model-fit-predict}
-and present tools to visually explore the posterior distributions of all
-parameters in our model. There are two main groups of parameters to
-consider. The \(\beta\) coefficients tell us about how fast each species
-grows and how this depends on DBH while the full matrix of \(\lambda\)
-values describe the competitive effects between pairs of species. There
-is a rich literature on this matrix (cite).
-
-DO WE NEED TO DESCRIBE MECHANICS? Because of the structure of the
-\texttt{bw\_fit\_model} object we cannot simply draw these curves based
-on the posterior distribution. \texttt{bw\_fit\_model()} gives the
-parameters \emph{compared} to a baseline. This is not of direct
-interest. So to display these parameters, as we care about them, we have
-to sample from the baseline distribution and from the comparison one to
-get the posterior distribution of interest.
-
-\hypertarget{big-woods-1}{%
-\subsubsection{Big Woods}\label{big-woods-1}}
-
-Here we re-run the model fit to the Big Woods data from Section
-\ref{model-fit-predict}, but this time use ``family'' as the group for
-comparison which has. This makes the posterior distributions easier to
-follow. Also, surprisingly, grouping by family performed just as well as
-grouping by species \citet{allen_permutation_2020}. First we re-run
-\texttt{create\_focal\_vs\_comp()} and \texttt{fit\_bayesian\_model()}
-with no permutation shuffling with the grouping variable as family.
+Lastly, the generic for \texttt{ggplot2::autoplot()} allows us to
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{growth_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =}\NormalTok{ family }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{()) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ blocks_bw, }\DataTypeTok{id =} \StringTok{"treeID"}\NormalTok{)}
-
-\NormalTok{comp_bayes_lm_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-Now the posterior parameter outputs of \texttt{fit\_bayesian\_model()}
-are passed to \texttt{plot\_bayesian\_model\_parameters()} to generate
-visualizations of the posterior parameters. These visualizations are
-displayed in Figure 5 of \citet{allen_permutation_2020}. For simplicity
-we only plot a subset of the species families.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{sp_to_plot <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"cornaceae"}\NormalTok{, }\StringTok{"fagaceae"}\NormalTok{, }\StringTok{"hamamelidaceae"}\NormalTok{, }\StringTok{"juglandaceae"}\NormalTok{, }
-                 \StringTok{"lauraceae"}\NormalTok{, }\StringTok{"rosaceae"}\NormalTok{, }\StringTok{"sapindaceae"}\NormalTok{, }\StringTok{"ulmaceae"}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
-
-The output is a list with three plots stored. Figure
-\ref{fig:bw-posterior-viz-beta0} The element \texttt{beta\_0} gives the
-baseline growth intercept \(\beta_0\), i.e., how fast an individual of
-each group grows independent of DBH).
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{plot1 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_bw, }\DataTypeTok{type =} \StringTok{"intercepts"}\NormalTok{)}
-\NormalTok{plot1}
-\end{Highlighting}
-\end{Shaded}
-
-Figure \ref{fig:bw-posterior-viz-beta-dbh} Next \texttt{beta\_dbh} gives
-the slope for DBH slope \(\beta_{dbh,i}\) for each group.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{plot2 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_bw, }\DataTypeTok{type =} \StringTok{"dbh_slopes"}\NormalTok{)}
-\NormalTok{plot2}
-\end{Highlighting}
-\end{Shaded}
-
-Finally Figure \ref{fig:bw-posterior-viz-lambda} \texttt{lambda} gives
-the competition coefficients \(\lambda\).
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{plot3 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_bw, }\DataTypeTok{type =} \StringTok{"competition"}\NormalTok{)}
-\NormalTok{plot3}
-\end{Highlighting}
-\end{Shaded}
-
-\hypertarget{scbi-1}{%
-\subsubsection{SCBI}\label{scbi-1}}
-
-We revisit the posterior parameters for the SCBI from Section
-\{model-fit-predict\}, but this time only focus on the \(\lambda\)
-competition coefficients.
-
-\begin{Shaded}
-\begin{Highlighting}[]
+\CommentTok{# Plot posteriors for only a subset of species}
 \NormalTok{sp_to_plot <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"quru"}\NormalTok{, }\StringTok{"litu"}\NormalTok{, }\StringTok{"cagl"}\NormalTok{, }\StringTok{"cato"}\NormalTok{)}
+
+\NormalTok{plot1 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"intercepts"}\NormalTok{, }\DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
+\NormalTok{plot2 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"dbh_slopes"}\NormalTok{, }\DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
+\NormalTok{plot3 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"competition"}\NormalTok{, }\DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
+
+\CommentTok{# Combine plots using patchwork}
+\NormalTok{(plot1 }\OperatorTok{|}\StringTok{ }\NormalTok{plot2) }\OperatorTok{/}\StringTok{ }\NormalTok{plot3}
 \end{Highlighting}
 \end{Shaded}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{plot3 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_bw, }\DataTypeTok{type =} \StringTok{"competition"}\NormalTok{)}
-\NormalTok{plot3}
-\end{Highlighting}
-\end{Shaded}
+\begin{figure}
 
-Add explanation here.
+{\centering \includegraphics[width=1\linewidth]{Figures/scbi-posterior-viz-1} 
+
+}
+
+\caption{Posterior distributions of all parameters for a subset of species.}\label{fig:scbi-posterior-viz}
+\end{figure}
+
+\hypertarget{evaluate-the-effect-of-competitor-species-identity-using-permutation-tests}{%
+\subsection{Evaluate the effect of competitor species identity using
+permutation
+tests}\label{evaluate-the-effect-of-competitor-species-identity-using-permutation-tests}}
 
 HEY BERT PICK IT UP HERE
 
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{)}
+
+\NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
+    \DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{newdata =}\NormalTok{ focal_vs_comp_scbi)}
+\NormalTok{  )}
+
+\NormalTok{model_rmse <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
+\NormalTok{model_rmse}
+\end{Highlighting}
+\end{Shaded}
+
 \hypertarget{spatial-cross-validation}{%
-\subsection{Run spatial
+\subsection{Evaluate model performance using spatial
 cross-validation}\label{spatial-cross-validation}}
 
 The model fits and predictions in Section \ref{model-fit-predict} all
@@ -902,30 +808,6 @@ function at its core uses the same model fitting implemented in the
 test data. Recall that the spatial blocking scheme wass encoded in
 Section \ref{spatial-information}.
 
-\hypertarget{big-woods-2}{%
-\subsubsection{Big Woods}\label{big-woods-2}}
-
-Applying this spatially cross-validated model fit yields an RMSE is
-higher than that when the model is fit without cross validation. In
-other words, our model fits in \ref{model-fit-predict} were overly
-optimistic in the model's fitting power, whereas a cross-validated
-results yield an estimate that is closer to the truth. See
-\citet{allen_permutation_2020} for more discussion of this.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{focal_vs_comp_bw <-}\StringTok{ }\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{cv_grid =}\NormalTok{ blocks_bw)}
-
-\NormalTok{focal_vs_comp_bw }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\end{Highlighting}
-\end{Shaded}
-
-\hypertarget{scbi-2}{%
-\subsubsection{SCBI}\label{scbi-2}}
-
 Observe once again that this RMSE is much higher than that for the above
 SCBI model fit without cross-validation.
 
@@ -937,6 +819,7 @@ SCBI model fit without cross-validation.
 \NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
+\CommentTok{## [1] 0.1446232}
 \end{Highlighting}
 \end{Shaded}
 

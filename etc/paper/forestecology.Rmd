@@ -95,11 +95,26 @@ The `forestecology` is designed with "tidy" data principles in mind as @wickham_
 
 Given that our data is of geo-spatial nature, we represent our data using the "simple features" `sf` package class of objects @pebesma_simple_2018 whereby. While previously the `sp` package serves such purposes @pebesma_sp_2005, the `sf` package is designed to interface with the `tidyverse` suite of packages.
 
-## Model
+## Model for growth of tree {#competition-model}
 
-Describe model specifics.
+While there are a littany of models one can consider, in PLOSOne we considered a simple one. 
 
+Describe model specifics. Bayesian linear regression model. 
 
+Next we fit the following linear model to the DBH of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
+
+$$
+\newcommand{\dbh}{\text{DBH}}
+\newcommand{\biomass}{\text{biomass}}
+\newcommand{\BA}{\text{BA}}
+y_{ij} = f(\vec{x}_{ij}) + \epsilon_{ij} = \beta_{0,j} + \beta_{\dbh,j} \cdot \dbh_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot \BA_{ijk} + \epsilon_{ij}
+$$
+
+<!--where $\beta_{0,j}$ is the diameter-independent growth rate for group $j$; $\dbh_{ij}$ is the diameter at breast height (in centimeters) of the focal tree at the earlier census; $\beta_{\dbh,j}$ is the amount of the growth rate changed depending on diameter for group $j$;  $\BA_{ijk}$ is the sum of the basal area of all trees of competitor species group $k$; $\lambda_{jk}$ is the change in growth for individuals of group $j$ from nearby competitors of group $k$; and $\epsilon_{ij}$ is a random error term distributed $\text{Normal}(0, \sigma^2)$.-->
+
+Link to https://doi.org/10.1371/journal.pone.0229930.s004
+
+For this linear model's case, there exists a closed form solution as described here. As such, the `fit_bayesian_model()` function using matrix algebra to obtain all parameter estimates, rather than computationally expensive Monte Carlo approximations. The inputs to this function are a `focal_vs_comp` data frame, `prior_param` a list of priors, and a boolean flag `run_shuffle` on whether or not to run competitor-species identity permutations which we will demonstrate below on the Michigan Big Woods data. This function returns the posterior means of all parameters.
 
 
 # Example
@@ -113,9 +128,12 @@ A high-level overview of the steps of our analysis pipeline is as follows:
     1. Define buffer region trees.
     1. Add spatial cross-validation block information.
 1. Identify all focal and corresponding competitor trees.
-1. Fit model and make predictions.
-1. Additionally: Evaluate model performance using spatial cross-validation.
-1. Additionally: Evaluate the effect of competitor species identity using permutation tests.
+1. Fit model, make predictions, and visualize model results
+
+Additionally, 
+
+1. Evaluate the effect of competitor species identity using permutation tests.
+1. Evaluate model performance using spatial cross-validation.
 
 
 We load all necessary packages.
@@ -126,6 +144,7 @@ library(lubridate)
 library(sf)
 library(forestecology)
 library(blockCV)
+library(patchwork)
 ```
 
 
@@ -226,8 +245,7 @@ Figure \ref{fig:scbi-spatial-information} illustrates the net effect of adding t
 
 ```{r scbi-spatial-information, out.width="66%", fig.cap="Buffer region and cross-validation block information for SCBI data."}
 ggplot() +
-  geom_sf_text(data = growth_scbi, aes(label = foldID, col = buffer), 
-               alpha = 0.2) +
+  geom_sf_text(data = growth_scbi, aes(label = foldID, col = buffer), alpha = 0.2) +
   geom_sf(data = blocks_scbi, fill = "transparent")
 ```
 
@@ -235,7 +253,7 @@ TODO: Do we talk about `add_buffer_variable(direction = "out")` when each fold g
 
 
 
-## Identify all focal and corresponding competitor trees
+## Identify all focal and corresponding competitor trees {#focal-vs-comp}
 
 The next step in our analysis sequence is to identify all focal trees and their corresponding competitor trees. The `create_focal_vs_comp()` functions performs these tasks and returns a new data frame of type `sf` containing this information. On top of the previously discussed arguments `comp_dist` defining the competition neighborhood and `id` indicating which variable in the data frame uniquely identifies each tree-stem, this function also requires an `sf` object representation of the spatial cross-validation blocks/folds; in our case, this was manually encoded in the `blocks_scbi` in Section \ref{spatial-information} while in our Appendix we present an example where this was performed using `spatialBlock()` from the `blockCV` package. We present the resulting data frame below with the `foldID` variable omitted for compactness of presentation.
 
@@ -277,220 +295,85 @@ focal_vs_comp_scbi %>%
 
 ## Fit model and make predictions {#model-fit-predict}
 
-HEY BERT PICK IT UP HERE
+Now that we've identified all focal and corresponding competitor trees and saved this information in a data frame of type `focal_vs_comp`, the next step in our analysis sequence is to fit a model for the growth of all focal trees. Currently the `forestecology` package can only fit the competition Bayesian linear regression model outlined in Section \ref{competition-model} using the `comp_bayes_lm()` function. However, any model implemented in a function that similarly takes an input data frame of type `focal_vs_comp` as an argument can be easily swapped in. In the case of our specific competition Bayesian linear regression model, we can also specify prior distributions on all parameters of interest (here chosen to be the defaults). 
 
-Next we fit the following linear model to the DBH of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
-
-$$
-\newcommand{\dbh}{\text{DBH}}
-\newcommand{\biomass}{\text{biomass}}
-\newcommand{\BA}{\text{BA}}
-y_{ij} = f(\vec{x}_{ij}) + \epsilon_{ij} = \beta_{0,j} + \beta_{\dbh,j} \cdot \dbh_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot \BA_{ijk} + \epsilon_{ij}
-$$
-
-<!--where $\beta_{0,j}$ is the diameter-independent growth rate for group $j$; $\dbh_{ij}$ is the diameter at breast height (in centimeters) of the focal tree at the earlier census; $\beta_{\dbh,j}$ is the amount of the growth rate changed depending on diameter for group $j$;  $\BA_{ijk}$ is the sum of the basal area of all trees of competitor species group $k$; $\lambda_{jk}$ is the change in growth for individuals of group $j$ from nearby competitors of group $k$; and $\epsilon_{ij}$ is a random error term distributed $\text{Normal}(0, \sigma^2)$.-->
-
-We estimate the model's parameters using Bayesian linear regression implemented in the `fit_bayesian_model()` function. TODO: define all parameters
-
-For this linear model's case, there exists a closed form solution as described here. As such, the `fit_bayesian_model()` function using matrix algebra to obtain all parameter estimates, rather than computationally expensive Monte Carlo approximations. The inputs to this function are a `focal_vs_comp` data frame, `prior_param` a list of priors, and a boolean flag `run_shuffle` on whether or not to run competitor-species identity permutations which we will demonstrate below on the Michigan Big Woods data. This function returns the posterior means of all parameters.
-
-Using these posterior means, we then use the posterior predictive distribution to obtain fitted/predicted values $\widehat{y}$ of the DBH for each focal tree using the `predict_bayesian_model()`. These $\widehat{y}$ can then be compared to the observed $y$ DBH's to compute the root mean-square error, a measure of a model's predictive error which has the same units as the observed data $y$.
-
-### Big Woods 
-
-For the Michigan Big Woods data we present two use cases of the model fitting and prediction scheme. The first use case is the simplest where we assess the fit of the model using root mean squared error. The second use case then answers the question of whether species competitor identity matters using permutation test. 
-
-For the first use case, we fit the linear model specified in Equation XXX to our data frame of type `focal_vs_comp`. This input/outputs of the `fit_bayesian_model()` function are lists of the prior/posterior means of parameters of the linear regression specified in XXX. Generally speaking, there are two classes of regression parameters: $\beta$ main effects and $\lambda$ competitive effects. In the upcoming Section \ref{viz-posterior-distributions}, we will present code visualizing this posterior distributions.
-
-```{r bw-model-fit, eval=FALSE}
-comp_bayes_lm_bw <- focal_vs_comp_bw %>%
-  comp_bayes_lm(prior_param = NULL)
-```
-
-This output of posterior parameters for the specified competition model are then used along with the posterior predictive distribution encoded in `predict_bayesian_model()` to return predicted growths for each individual tree. We join these predicted growths to the original growth data frame. 
-
-```{r bw-model-predict, eval=FALSE}
-focal_vs_comp_bw <- focal_vs_comp_bw %>%
-  mutate(growth_hat = predict(comp_bayes_lm_bw, focal_vs_comp_bw))
-```
-
-We then use the `rmse()` function from the `yardstick` package to obtain the root mean squared error of the observed versus fitted values of growth. 
-
-```{r bw-model-rmse, eval=FALSE}
-focal_vs_comp_bw %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
-  pull(.estimate)
-```
-
-The second use case is near identical to the first, but with a small change in the code to test whether the identity of the competitor matters. By adding a `run_shuffle = TRUE` argument to `fit_bayesian_model()`, for each focal tree its competitor trees' species identity will be "shuffled" randomly much like in a permutation test. By shuffling these species labels we are effectively fitting the model under a null model that competitor species identity does not matter. If the "shuffled" RMSE's are consistently lower than the unshuffled RMSE corresponding to the observed data, then we have evidence to suggest that competitor identity matters to competitive interactions.
-
-```{r bw-model-shuffle-fit, eval=FALSE}
-comp_bayes_lm_bw_shuffle <- focal_vs_comp_bw %>%
-  comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
-```
-
-```{r bw-model-shuffle-predict, eval=FALSE}
-focal_vs_comp_bw <- focal_vs_comp_bw %>%
-  mutate(growth_hat_shuffle = predict(comp_bayes_lm_bw_shuffle, focal_vs_comp_bw))
-```
-
-```{r bw-model-shuffle-rmse, eval=FALSE}
-focal_vs_comp_bw %>%
-  rmse(truth = growth, estimate = growth_hat_shuffle) %>%
-  pull(.estimate)
-```
-
-The RMSE is fact lower for the non-shuffled version, indicative of a better model fit. This gives support for the idea that competitor identity does matter for competitive interactions. In @allen_permutation_2020 we run this shuffle a large number of times to construct a full permutation distribution to show that this difference is robust to resampling variation.
-
-### SCBI 
-
-In the case of the SCBI data, we once again perform the same model fitting and computing of fitted growths as with the Big Woods data, but this time we map the residuals of the observed minus fitted values to look for spatial patterns. 
-
-```{r scbi-model-fit, eval=FALSE}
+```{r scbi-model-fit}
 comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
   comp_bayes_lm(prior_param = NULL)
 ```
 
-```{r scbi-model-predict, eval=FALSE}
-focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
-  mutate(growth_hat = predict(comp_bayes_lm_scbi, focal_vs_comp_scbi))
+The returned `comp_bayes_lm_scbi` output is an object of S3 class type `comp_bayes_lm` which contains the posterior values of all parameters in our competition Bayesian linear regression. This class of object includes generic methods implemented for `print()`, `predict()`, and `ggplot2::autoplot()`. First the generic for `print()` displays the names of all prior & posterior parameters (accessible via `comp_bayes_lm_scbi$prior_params` and `comp_bayes_lm_scbi$post_params`) along with the model formula:
+
+```{r}
+comp_bayes_lm_scbi
 ```
 
-```{r scbi-model-rmse, eval=FALSE}
-focal_vs_comp_scbi %>%
+Next, the generic for `predict()` takes as inputs the posterior parameter values in `comp_bayes_lm_scbi` and the predictor variables in `newdata` and outputs a vector of fitted/predicted values $\widehat{y}$ of the DBH for each focal tree (as returned by the posterior predictive distribution).
+
+```{r scbi-model-predict}
+focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
+  mutate(growth_hat = predict(comp_bayes_lm_scbi, newdata = focal_vs_comp_scbi))
+```
+```{r}
+focal_vs_comp_scbi
+```
+
+We can then compare the observed and fitted/predicted growths to compute the root mean squared error of our model fit. 
+
+```{r scbi-model-rmse}
+model_rmse <- focal_vs_comp_scbi %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
+model_rmse
 ```
 
-In Figures \ref{fig:scbi-model-residuals} and \ref{fig:scbi-model-residuals-2} we present the residuals. 
+Lastly, the generic for `ggplot2::autoplot()` allows us to 
 
-```{r scbi-model-residuals, out.width="100%", fig.cap="Predicted versus observed growth.", echo = FALSE, eval=FALSE}
-ggplot(focal_vs_comp_scbi, aes(x = growth, y = growth_hat)) +
-  geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
-  stat_smooth(method = "lm") +
-  geom_abline(slope = 1, intercept = 0) +
-  coord_fixed() +
-  labs(
-    x = "Observed growth in DBH", y = "Predicted growth in DBH",
-    title = "Predicted vs Observed Growth"
-  )
-```
-
-```{r scbi-model-residuals-2, out.width="80%", fig.cap="Spatial distribution of residuals for model applied to SCBI data.", echo = FALSE, eval=FALSE}
-focal_vs_comp_scbi %>%
-  st_as_sf() %>%
-  # TODO: Need to investigate missingness
-  filter(!is.na(growth_hat)) %>%
-  mutate(
-    error = growth - growth_hat,
-    error_bin = cut_number(error, n = 5),
-    error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
-  ) %>%
-  ggplot() +
-  geom_sf(aes(col = error_compress), size = 1) +
-  theme_bw() +
-  scale_color_gradient2(
-    low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf",
-    name = expression(paste("Residual (cm ", y^{-1}, ")")),
-    breaks = seq(from = -0.75, to = 0.75, by = 0.25),
-    labels = c("< -0.75", "-0.5", "0.25", "0", "0.25", "0.5", "> 0.75")
-  ) +
-  labs(x = "Meter", y = "Meter")
-```
-
-
-## Visualize model results {#viz-posterior-distributions}
-
-Lastly, we return to the model fits from Section \ref{model-fit-predict} and present tools to visually explore the posterior distributions of all parameters in our model. There are two main groups of parameters to consider. The $\beta$ coefficients tell us about how fast each species grows and how this depends on DBH while the full matrix of $\lambda$ values describe the competitive effects between pairs of species. There is a rich literature on this matrix (cite). 
-
-DO WE NEED TO DESCRIBE MECHANICS? Because of the structure of the `bw_fit_model` object we cannot simply draw these curves based on the posterior distribution. `bw_fit_model()` gives the parameters *compared* to a baseline. This is not of direct interest. So to display these parameters, as we care about them, we have to sample from the baseline distribution and from the comparison one to get the posterior distribution of interest. 
-
-
-### Big Woods 
-
-Here we re-run the model fit to the Big Woods data from Section \ref{model-fit-predict}, but this time use "family" as the group for comparison which has. This makes the posterior distributions easier to follow. Also, surprisingly, grouping by family performed just as well as grouping by species @allen_permutation_2020. First we re-run `create_focal_vs_comp()` and `fit_bayesian_model()` with no permutation shuffling with the grouping variable as family.
-
-```{r bw-posterior-viz-0, eval=FALSE}
-focal_vs_comp_bw <- growth_bw %>%
-  mutate(sp = family %>% factor()) %>%
-  create_focal_vs_comp(comp_dist = comp_dist, cv_grid_sf = blocks_bw, id = "treeID")
-
-comp_bayes_lm_bw <- focal_vs_comp_bw %>%
-  comp_bayes_lm(prior_param = NULL)
-```
-
-Now the posterior parameter outputs of `fit_bayesian_model()` are passed to `plot_bayesian_model_parameters()` to generate visualizations of the posterior parameters. These visualizations are displayed in Figure 5 of @allen_permutation_2020. For simplicity we only plot a subset of the species families. 
-
-```{r bw-posterior-viz-1, eval=FALSE}
-sp_to_plot <- c("cornaceae", "fagaceae", "hamamelidaceae", "juglandaceae", 
-                 "lauraceae", "rosaceae", "sapindaceae", "ulmaceae")
-```
-
-The output is a list with three plots stored. Figure \ref{fig:bw-posterior-viz-beta0} The element `beta_0` gives the baseline growth intercept $\beta_0$, i.e., how fast an individual of each group grows independent of DBH).
-
-```{r bw-posterior-viz-beta0, out.width="100%", fig.cap="Posterior distribution of beta0.", eval=FALSE}
-plot1 <- autoplot(comp_bayes_lm_bw, type = "intercepts")
-plot1
-```
-
-Figure \ref{fig:bw-posterior-viz-beta-dbh} Next `beta_dbh` gives the slope for DBH slope $\beta_{dbh,i}$ for each group.
-
-```{r bw-posterior-viz-beta-dbh, out.width="100%", fig.cap="Posterior distribution of betadbh.", eval=FALSE}
-plot2 <- autoplot(comp_bayes_lm_bw, type = "dbh_slopes")
-plot2
-```
-
-Finally Figure \ref{fig:bw-posterior-viz-lambda} `lambda` gives the competition coefficients $\lambda$.
-
-```{r bw-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda's for Big Woods.", eval=FALSE}
-plot3 <- autoplot(comp_bayes_lm_bw, type = "competition")
-plot3
-```
-
-
-### SCBI
-
-We revisit the posterior parameters for the SCBI from Section {model-fit-predict}, but this time only focus on the $\lambda$ competition coefficients. 
-
-```{r scbi-posterior-viz-1, eval=FALSE}
+```{r scbi-posterior-viz, out.width="100%", fig.cap="Posterior distributions of all parameters for a subset of species."}
+# Plot posteriors for only a subset of species
 sp_to_plot <- c("quru", "litu", "cagl", "cato")
+
+plot1 <- autoplot(comp_bayes_lm_scbi, type = "intercepts", sp_to_plot = sp_to_plot)
+plot2 <- autoplot(comp_bayes_lm_scbi, type = "dbh_slopes", sp_to_plot = sp_to_plot)
+plot3 <- autoplot(comp_bayes_lm_scbi, type = "competition", sp_to_plot = sp_to_plot)
+
+# Combine plots using patchwork
+(plot1 | plot2) / plot3
 ```
 
-```{r scbi-posterior-viz-lambda, out.width="100%", fig.cap="Posterior distribution of lambda's for SCBI.", eval=FALSE}
-plot3 <- autoplot(comp_bayes_lm_bw, type = "competition")
-plot3
-```
 
-Add explanation here. 
+
+
+## Evaluate the effect of competitor species identity using permutation tests
 
 HEY BERT PICK IT UP HERE
 
 
+```{r scbi-permutation-model-fit, eval = FALSE}
+comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
+  comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
 
+focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
+  mutate(
+    growth_hat = predict(comp_bayes_lm_scbi, newdata = focal_vs_comp_scbi)
+  )
 
-## Run spatial cross-validation {#spatial-cross-validation}
-
-The model fits and predictions in Section \ref{model-fit-predict} all suffer from a common failing: they use the same data to both fit the model and to assess the model's performance using the RMSE. As argued by @roberts_cross-validation_2017, this can lead to overly optimistic assessments of model quality as the models can be overfit, in particular in situations where spatial-autocorrelation is present. To mitigate the effects of such overfitting, we use a spatially block cross-validation algorithm implemented in the `run_cv()`. This function at its core uses the same model fitting implemented in the `fit_bayesian_model()` function, however trains the model on $k-1$ spatial folds of the train and returns fitted values for the test data. Recall that the spatial blocking scheme wass encoded in Section \ref{spatial-information}.
-
-### Big Woods
-
-Applying this spatially cross-validated model fit yields an RMSE is higher than that when the model is fit without cross validation. In other words, our model fits in \ref{model-fit-predict} were overly optimistic in the model's fitting power, whereas a cross-validated results yield an estimate that is closer to the truth. See @allen_permutation_2020 for more discussion of this. 
-
-```{r bw-spatial-cv, eval=FALSE}
-focal_vs_comp_bw <- focal_vs_comp_bw %>%
-  run_cv(comp_dist = comp_dist, cv_grid = blocks_bw)
-
-focal_vs_comp_bw %>%
+model_rmse <- focal_vs_comp_scbi %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
+model_rmse
 ```
 
 
-### SCBI
+## Evaluate model performance using spatial cross-validation {#spatial-cross-validation}
+
+
+
+The model fits and predictions in Section \ref{model-fit-predict} all suffer from a common failing: they use the same data to both fit the model and to assess the model's performance using the RMSE. As argued by @roberts_cross-validation_2017, this can lead to overly optimistic assessments of model quality as the models can be overfit, in particular in situations where spatial-autocorrelation is present. To mitigate the effects of such overfitting, we use a spatially block cross-validation algorithm implemented in the `run_cv()`. This function at its core uses the same model fitting implemented in the `fit_bayesian_model()` function, however trains the model on $k-1$ spatial folds of the train and returns fitted values for the test data. Recall that the spatial blocking scheme wass encoded in Section \ref{spatial-information}.
 
 Observe once again that this RMSE is much higher than that for the above SCBI model fit without cross-validation. 
 
-```{r scbi-spatial-cv, eval=FALSE}
+```{r scbi-spatial-cv, eval=TRUE}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
   run_cv(comp_dist = comp_dist, cv_grid = blocks_scbi)
 
