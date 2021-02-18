@@ -197,7 +197,7 @@ Furthermore, we can apply a `predict()` method to the resulting `comp_bayes_lm` 
 
 ```{r}
 focal_vs_comp_ex <- focal_vs_comp_ex %>%
-  mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
+  mutate(growth_hat = predict(comp_bayes_lm_ex, newdata = focal_vs_comp_ex))
 focal_vs_comp_ex
 ```
 

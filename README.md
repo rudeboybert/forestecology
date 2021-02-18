@@ -272,13 +272,7 @@ comp_bayes_lm_ex
 #> 4 Multivariate t on beta   V_0   V_star   
 #> 
 #> Model formula:
-#> ~
-#>  
-#> Model formula:
-#> growth
-#>  
-#> Model formula:
-#> sp + dbh + dbh * sp + american_beech * sp + sugar_maple * sp
+#> growth ~ sp + dbh + dbh * sp + american_beech * sp + sugar_maple * sp
 
 # Posterior distributions (plots combined with patchwork pkg)
 p1 <- autoplot(comp_bayes_lm_ex, type = "intercepts")
@@ -295,7 +289,7 @@ We append these `growth_hat` values to our `focal_vs_comp` data frame.
 
 ``` r
 focal_vs_comp_ex <- focal_vs_comp_ex %>%
-  mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
+  mutate(growth_hat = predict(comp_bayes_lm_ex, newdata = focal_vs_comp_ex))
 focal_vs_comp_ex
 #> # A tibble: 6 x 8
 #>   focal_ID focal_sp   dbh foldID                  geometry growth comp 
