@@ -121,16 +121,16 @@ For this linear model's case, there exists a closed form solution as described h
 
 We demonstrate the `forestecology` package's features on the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot, located at the Smithsonian's National Zoo and Conservation Biology Institute in Front Royal, VA, USA. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US: the Blue Ridge, Ridge and Valley, and Piedmont provinces and is adjacent to the northern end of Shenandoah National Park. The forest type is typical mature secondary eastern mixed deciduous forest, with a canopy dominated by tulip poplar (*Liriodendron tulipifera*), oaks (*Quercus* spp.), and hickories (*Carya* spp.), and an understory composed mainly of spicebush (*Lindera benzoin*), paw-paw (*Asimina triloba*), American hornbeam (*Carpinus caroliniana*), and witch hazel (*Hamamelis virginiana*) @bourg_initial_2013. 
 
-A high-level overview of the steps of our analysis pipeline is as follows:
+There are four steps in our modeling pipeline:
 
-1. Compute the growth of trees based on census data
+1. Compute the growth of trees based on census data.
 1. Add spatial information:
     1. Define buffer region trees.
     1. Add spatial cross-validation block information.
 1. Identify all focal and corresponding competitor trees.
-1. Fit model, make predictions, and visualize model results
+1. Fit model and make predictions.
 
-Additionally, 
+Using these four steps, we can address the two following questions of ecological interest:
 
 1. Evaluate the effect of competitor species identity using permutation tests.
 1. Evaluate model performance using spatial cross-validation.
@@ -193,7 +193,7 @@ Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2`
 
 TODO: Rescale points in this plot:
 
-```{r scbi-trees, out.width="66%", fig.cap="Growth of trees at SCBI."}
+```{r scbi-trees, out.width="66%", fig.cap="Compute growth of trees based on census data from the Smithsonian Conservation Biology Institute (SCBI)."}
 ggplot() +
   geom_sf(data = growth_scbi, aes(size = growth)) + 
   scale_size(breaks = c(0.01, 0.1, 1), range = c(0.1, 1))
@@ -225,15 +225,20 @@ The second element of spatial information are blocks corresponding to folds of a
 
 ```{r}
 # Manually define spatial blocks to act as folds
-fold1 <- rbind(c(0, 300), c(150, 300), c(150, 600), c(0, 600))
-fold2 <- rbind(c(150, 300), c(300, 300), c(300, 600), c(150, 600))
+fold1 <- rbind(c(0, 300), c(150, 300), c(150, 450), c(0, 450))
+fold2 <- rbind(c(150, 300), c(300, 300), c(300, 450), c(150, 450))
+fold3 <- rbind(c(0, 450), c(150, 450), c(150, 600), c(0, 600))
+fold4 <- rbind(c(150, 450), c(300, 450), c(300, 600), c(150, 600))
+n_fold <- 4
 
-blocks_scbi <- bind_rows(sf_polygon(fold1), sf_polygon(fold2)) %>%
-  mutate(folds = c(1, 2) %>% factor())
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3), sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
 
 # Associate each observation to a fold
 SpatialBlock_scbi <- spatialBlock(
-  speciesData = growth_scbi, k = 2, selection = "systematic", 
+  speciesData = growth_scbi, k = n_fold, selection = "systematic", 
   blocks = blocks_scbi, showBlocks = FALSE, verbose = FALSE
 )
 
@@ -243,13 +248,12 @@ growth_scbi <- growth_scbi %>%
 
 Figure \ref{fig:scbi-spatial-information} illustrates the net effect of adding these two elements of information to the `growth_scbi` data frame. The location of each tree is marked with an integer indicating which fold it belongs to, where the folds are marked with solid lines. The color of each digit indicates whether the tree is part of the buffer region (and thus will only be considered as a competitor tree in our model) or is part of the interior of the study region (and thus is a focal tree whose growth is of modeled interest).
 
-```{r scbi-spatial-information, out.width="66%", fig.cap="Buffer region and cross-validation block information for SCBI data."}
+```{r scbi-spatial-information, out.width="66%", fig.cap="Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). All trees in the interior of the study region will be the focal trees whose growth will modeled."}
 ggplot() +
-  geom_sf_text(data = growth_scbi, aes(label = foldID, col = buffer), alpha = 0.2) +
+  geom_sf_text(data = growth_scbi, aes(label = foldID, col = buffer)) +
   geom_sf(data = blocks_scbi, fill = "transparent")
 ```
 
-TODO: Do we talk about `add_buffer_variable(direction = "out")` when each fold gets its turn being the training data?
 
 
 
@@ -290,6 +294,29 @@ focal_vs_comp_scbi %>%
   unnest(cols = "comp") %>% 
   print(n = 5)
 ```
+```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Identify all focal and corresponding competitor trees: All 20 competitor trees of focal tree 4."}
+comp_radius <- growth_scbi %>% 
+  filter(stemID == 4) %>% 
+  st_buffer(dist = comp_dist)
+
+comp_radius_box <- growth_scbi %>% 
+  filter(stemID == 4) %>% 
+  st_buffer(dist = comp_dist + 10) %>% 
+  st_bbox() %>% 
+  st_as_sfc() %>% 
+  st_intersects(growth_scbi, ., sparse = FALSE)
+
+growth_scbi_subset <- growth_scbi %>% 
+  mutate(inside = comp_radius_box) %>% 
+  filter(inside)
+
+ggplot() +
+  geom_sf(data = growth_scbi_subset, aes(col = sp, size = dbh1)) +
+  geom_sf(data = comp_radius, linetype = "dashed", alpha = 0, inherit.aes = FALSE) +
+  coord_sf(xlim = st_bbox(comp_radius)[c("xmin", "xmax")], ylim = st_bbox(comp_radius)[c("ymin", "ymax")]) +
+  geom_sf_text(data = growth_scbi %>% filter(stemID == 4), aes(label = stemID), size = 12) +
+  labs(size = "DBH at first census", col = "species")
+```
 
 
 
@@ -329,9 +356,9 @@ model_rmse
 
 Lastly, the generic for `ggplot2::autoplot()` allows us to 
 
-```{r scbi-posterior-viz, out.width="100%", fig.cap="Posterior distributions of all parameters for a subset of species."}
+```{r scbi-posterior-viz, out.width="100%", fig.cap="Fit model: Posterior distributions of all parameters for three species."}
 # Plot posteriors for only a subset of species
-sp_to_plot <- c("quru", "litu", "cagl", "cato")
+sp_to_plot <- c("litu", "quru", "cagl")
 
 plot1 <- autoplot(comp_bayes_lm_scbi, type = "intercepts", sp_to_plot = sp_to_plot)
 plot2 <- autoplot(comp_bayes_lm_scbi, type = "dbh_slopes", sp_to_plot = sp_to_plot)
@@ -341,7 +368,7 @@ plot3 <- autoplot(comp_bayes_lm_scbi, type = "competition", sp_to_plot = sp_to_p
 (plot1 | plot2) / plot3
 ```
 
-
+TODO: Discuss meaning of results.
 
 
 ## Evaluate the effect of competitor species identity using permutation tests
@@ -367,16 +394,20 @@ model_rmse
 
 ## Evaluate model performance using spatial cross-validation {#spatial-cross-validation}
 
+TODO: Do we talk about `add_buffer_variable(direction = "out")` when each fold gets its turn being the training data?
 
 
 The model fits and predictions in Section \ref{model-fit-predict} all suffer from a common failing: they use the same data to both fit the model and to assess the model's performance using the RMSE. As argued by @roberts_cross-validation_2017, this can lead to overly optimistic assessments of model quality as the models can be overfit, in particular in situations where spatial-autocorrelation is present. To mitigate the effects of such overfitting, we use a spatially block cross-validation algorithm implemented in the `run_cv()`. This function at its core uses the same model fitting implemented in the `fit_bayesian_model()` function, however trains the model on $k-1$ spatial folds of the train and returns fitted values for the test data. Recall that the spatial blocking scheme wass encoded in Section \ref{spatial-information}.
 
 Observe once again that this RMSE is much higher than that for the above SCBI model fit without cross-validation. 
 
-```{r scbi-spatial-cv, eval=TRUE}
+```{r scbi-spatial-cv}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
   run_cv(comp_dist = comp_dist, cv_grid = blocks_scbi)
+```
 
+
+```{r}
 focal_vs_comp_scbi %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)

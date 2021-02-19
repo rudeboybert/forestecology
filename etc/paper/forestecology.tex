@@ -247,14 +247,13 @@ spicebush (\emph{Lindera benzoin}), paw-paw (\emph{Asimina triloba}),
 American hornbeam (\emph{Carpinus caroliniana}), and witch hazel
 (\emph{Hamamelis virginiana}) \citet{bourg_initial_2013}.
 
-A high-level overview of the steps of our analysis pipeline is as
-follows:
+There are four steps in our modeling pipeline:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  Compute the growth of trees based on census data
+  Compute the growth of trees based on census data.
 \item
   Add spatial information:
 
@@ -269,10 +268,11 @@ follows:
 \item
   Identify all focal and corresponding competitor trees.
 \item
-  Fit model, make predictions, and visualize model results
+  Fit model and make predictions.
 \end{enumerate}
 
-Additionally,
+Using these four steps, we can address the two following questions of
+ecological interest:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -381,14 +381,19 @@ include resprouts in the later census):
 \CommentTok{## bbox:           xmin: 0.2 ymin: 300 xmax: 299.9 ymax: 600}
 \CommentTok{## CRS:            NA}
 \CommentTok{## # A tibble: 7,954 x 9}
-\CommentTok{##   stemID sp     dbh1 codes1 status  dbh2 codes2 growth     geometry}
-\CommentTok{##    <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>   <dbl>      <POINT>}
-\CommentTok{## 1      4 nysy  13.6  M      A       14.2 M       0.103 (14.2 428.5)}
-\CommentTok{## 2      5 havi   8.8  M      A        9.6 M;P     0.150  (9.4 436.4)}
-\CommentTok{## 3      6 havi   3.25 NULL   A        4   M       0.140    (1.3 434)}
-\CommentTok{## 4     77 qual  65.2  M      A       66   M       0.141 (34.7 307.2)}
-\CommentTok{## 5     79 tiam  47.7  M      A       46.8 M      -0.161   (40 381.1)}
-\CommentTok{## # ... with 7,949 more rows}
+\CommentTok{##    stemID sp     dbh1 codes1 status  dbh2 codes2  growth     geometry}
+\CommentTok{##     <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>    <dbl>      <POINT>}
+\CommentTok{##  1      4 nysy  13.6  M      A       14.2 M       0.103  (14.2 428.5)}
+\CommentTok{##  2      5 havi   8.8  M      A        9.6 M;P     0.150   (9.4 436.4)}
+\CommentTok{##  3      6 havi   3.25 NULL   A        4   M       0.140     (1.3 434)}
+\CommentTok{##  4     77 qual  65.2  M      A       66   M       0.141  (34.7 307.2)}
+\CommentTok{##  5     79 tiam  47.7  M      A       46.8 M      -0.161    (40 381.1)}
+\CommentTok{##  6     80 caca   5.15 M      A        6.5 M       0.253  (38.7 421.7)}
+\CommentTok{##  7     96 libe   2.3  J;M    A        3.7 M       0.262      (60 310)}
+\CommentTok{##  8    100 caca   5.09 NULL   A       NA   DN     NA      (52.5 476.3)}
+\CommentTok{##  9    101 litu  65.4  M      A       68.4 M       0.552  (47.1 567.3)}
+\CommentTok{## 10    102 astr   1.99 NULL   A        2.5 M       0.0954 (40.8 575.5)}
+\CommentTok{## # ... with 7,944 more rows}
 \end{Highlighting}
 \end{Shaded}
 
@@ -423,7 +428,7 @@ TODO: Rescale points in this plot:
 
 }
 
-\caption{Growth of trees at SCBI.}\label{fig:scbi-trees}
+\caption{Compute growth of trees based on census data from the Smithsonian Conservation Biology Institute (SCBI).}\label{fig:scbi-trees}
 \end{figure}
 
 \hypertarget{spatial-information}{%
@@ -497,15 +502,20 @@ function given a specified \texttt{cv\_block\_size}.\}
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{# Manually define spatial blocks to act as folds}
-\NormalTok{fold1 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{600}\NormalTok{))}
-\NormalTok{fold2 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\NormalTok{fold1 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{450}\NormalTok{))}
+\NormalTok{fold2 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{))}
+\NormalTok{fold3 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\NormalTok{fold4 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\NormalTok{n_fold <-}\StringTok{ }\DecValTok{4}
 
-\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}\KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2)) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
+  \KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3), }\KeywordTok{sf_polygon}\NormalTok{(fold4)}
+\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
 
 \CommentTok{# Associate each observation to a fold}
 \NormalTok{SpatialBlock_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}
-  \DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =} \DecValTok{2}\NormalTok{, }\DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }
+  \DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }\DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }
   \DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}
 \NormalTok{)}
 
@@ -526,7 +536,7 @@ thus is a focal tree whose growth is of modeled interest).
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer), }\DataTypeTok{alpha =} \FloatTok{0.2}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer)) }\OperatorTok{+}
 \StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ blocks_scbi, }\DataTypeTok{fill =} \StringTok{"transparent"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
@@ -537,12 +547,8 @@ thus is a focal tree whose growth is of modeled interest).
 
 }
 
-\caption{Buffer region and cross-validation block information for SCBI data.}\label{fig:scbi-spatial-information}
+\caption{Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). All trees in the interior of the study region will be the focal trees whose growth will modeled.}\label{fig:scbi-spatial-information}
 \end{figure}
-
-TODO: Do we talk about
-\texttt{add\_buffer\_variable(direction\ =\ "out")} when each fold gets
-its turn being the training data?
 
 \hypertarget{focal-vs-comp}{%
 \subsection{Identify all focal and corresponding competitor
@@ -570,14 +576,19 @@ the \texttt{foldID} variable omitted for compactness of presentation.
 \NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
 \StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{foldID)}
 \CommentTok{## # A tibble: 6,296 x 6}
-\CommentTok{##   focal_ID focal_sp   dbh     geometry growth comp             }
-\CommentTok{##      <dbl> <fct>    <dbl>      <POINT>  <dbl> <list>           }
-\CommentTok{## 1        4 nysy     13.6  (14.2 428.5)  0.103 <tibble [20 x 4]>}
-\CommentTok{## 2        5 havi      8.8   (9.4 436.4)  0.150 <tibble [32 x 4]>}
-\CommentTok{## 3       79 tiam     47.7    (40 381.1) -0.161 <tibble [20 x 4]>}
-\CommentTok{## 4       80 caca      5.15 (38.7 421.7)  0.253 <tibble [12 x 4]>}
-\CommentTok{## 5       96 libe      2.3      (60 310)  0.262 <tibble [14 x 4]>}
-\CommentTok{## # ... with 6,291 more rows}
+\CommentTok{##    focal_ID focal_sp   dbh     geometry  growth comp             }
+\CommentTok{##       <dbl> <fct>    <dbl>      <POINT>   <dbl> <list>           }
+\CommentTok{##  1        4 nysy     13.6  (14.2 428.5)  0.103  <tibble [20 x 4]>}
+\CommentTok{##  2        5 havi      8.8   (9.4 436.4)  0.150  <tibble [32 x 4]>}
+\CommentTok{##  3       79 tiam     47.7    (40 381.1) -0.161  <tibble [20 x 4]>}
+\CommentTok{##  4       80 caca      5.15 (38.7 421.7)  0.253  <tibble [12 x 4]>}
+\CommentTok{##  5       96 libe      2.3      (60 310)  0.262  <tibble [14 x 4]>}
+\CommentTok{##  6      101 litu     65.4  (47.1 567.3)  0.552  <tibble [19 x 4]>}
+\CommentTok{##  7      102 astr      1.99 (40.8 575.5)  0.0954 <tibble [44 x 4]>}
+\CommentTok{##  8      126 cato     37.4  (60.6 400.2)  0.165  <tibble [16 x 4]>}
+\CommentTok{##  9      127 caca      8.72 (72.7 514.1)  0.0370 <tibble [14 x 4]>}
+\CommentTok{## 10      139 astr      1.71 (96.7 315.1)  0.0549 <tibble [48 x 4]>}
+\CommentTok{## # ... with 6,286 more rows}
 \end{Highlighting}
 \end{Shaded}
 
@@ -643,6 +654,15 @@ information on the focal tree 20 times.
 ## 5        4  13.6    1850  2.98 havi            0.00472
 ## # ... with 15 more rows
 \end{verbatim}
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.66\linewidth]{Figures/scbi-focal-vs-comp-map-1} 
+
+}
+
+\caption{Identify all focal and corresponding competitor trees: All 20 competitor trees of focal tree 4.}\label{fig:scbi-focal-vs-comp-map}
+\end{figure}
 
 \hypertarget{model-fit-predict}{%
 \subsection{Fit model and make predictions}\label{model-fit-predict}}
@@ -718,10 +738,10 @@ the posterior predictive distribution).
 \CommentTok{##  3       79 tiam     47.7  1                     (40 381.1) -0.161 }
 \CommentTok{##  4       80 caca      5.15 1                   (38.7 421.7)  0.253 }
 \CommentTok{##  5       96 libe      2.3  1                       (60 310)  0.262 }
-\CommentTok{##  6      101 litu     65.4  1                   (47.1 567.3)  0.552 }
-\CommentTok{##  7      102 astr      1.99 1                   (40.8 575.5)  0.0954}
+\CommentTok{##  6      101 litu     65.4  3                   (47.1 567.3)  0.552 }
+\CommentTok{##  7      102 astr      1.99 3                   (40.8 575.5)  0.0954}
 \CommentTok{##  8      126 cato     37.4  1                   (60.6 400.2)  0.165 }
-\CommentTok{##  9      127 caca      8.72 1                   (72.7 514.1)  0.0370}
+\CommentTok{##  9      127 caca      8.72 3                   (72.7 514.1)  0.0370}
 \CommentTok{## 10      139 astr      1.71 1                   (96.7 315.1)  0.0549}
 \CommentTok{## # ... with 6,286 more rows, and 2 more variables: comp <list>,}
 \CommentTok{## #   growth_hat <dbl>}
@@ -746,7 +766,7 @@ Lastly, the generic for \texttt{ggplot2::autoplot()} allows us to
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{# Plot posteriors for only a subset of species}
-\NormalTok{sp_to_plot <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"quru"}\NormalTok{, }\StringTok{"litu"}\NormalTok{, }\StringTok{"cagl"}\NormalTok{, }\StringTok{"cato"}\NormalTok{)}
+\NormalTok{sp_to_plot <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"litu"}\NormalTok{, }\StringTok{"quru"}\NormalTok{, }\StringTok{"cagl"}\NormalTok{)}
 
 \NormalTok{plot1 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"intercepts"}\NormalTok{, }\DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
 \NormalTok{plot2 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"dbh_slopes"}\NormalTok{, }\DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
@@ -763,8 +783,10 @@ Lastly, the generic for \texttt{ggplot2::autoplot()} allows us to
 
 }
 
-\caption{Posterior distributions of all parameters for a subset of species.}\label{fig:scbi-posterior-viz}
+\caption{Fit model: Posterior distributions of all parameters for three species.}\label{fig:scbi-posterior-viz}
 \end{figure}
+
+TODO: Discuss meaning of results.
 
 \hypertarget{evaluate-the-effect-of-competitor-species-identity-using-permutation-tests}{%
 \subsection{Evaluate the effect of competitor species identity using
@@ -794,6 +816,10 @@ HEY BERT PICK IT UP HERE
 \subsection{Evaluate model performance using spatial
 cross-validation}\label{spatial-cross-validation}}
 
+TODO: Do we talk about
+\texttt{add\_buffer\_variable(direction\ =\ "out")} when each fold gets
+its turn being the training data?
+
 The model fits and predictions in Section \ref{model-fit-predict} all
 suffer from a common failing: they use the same data to both fit the
 model and to assess the model's performance using the RMSE. As argued by
@@ -815,11 +841,15 @@ SCBI model fit without cross-validation.
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{cv_grid =}\NormalTok{ blocks_scbi)}
+\end{Highlighting}
+\end{Shaded}
 
+\begin{Shaded}
+\begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-\CommentTok{## [1] 0.1446232}
+\CommentTok{## [1] 0.1402209}
 \end{Highlighting}
 \end{Shaded}
 
