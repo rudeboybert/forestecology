@@ -177,7 +177,8 @@ intercepts_plot <- function(beta_lambda_posterior_df, sp_to_plot,
       x = expression(paste(beta[0], " (cm ", y^{
         -1
       }, ")")),
-      y = "species"
+      y = "species",
+      title = "Intercept"
     )
 }
 
@@ -217,7 +218,8 @@ dbh_slopes_plot <- function(beta_lambda_posterior_df, sp_to_plot,
       x = expression(paste(beta[DBH], " (", y^{
         -1
       }, ")")),
-      y = "species"
+      y = "species",
+      title = "Slope for DBH"
     )
 }
 
