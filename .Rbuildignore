@@ -3,17 +3,10 @@
 ^\.github$
 ^LICENSE\.md$
 ^CODE_OF_CONDUCT\.md$
+^data-raw$
 
 ^README\.Rmd$
 ^README\.md$
 ^README_cache$
 
-^forestecology\.Rcheck$
-^forestecology.*\.tar\.gz$
-^forestecology.*\.tgz$
-
-^data-raw$
-^README_cache$
-^etc$
-
-vignettes/forestecology_cache/
+^paper$
