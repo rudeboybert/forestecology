@@ -446,7 +446,7 @@ The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r if
 
 # Acknowledgments
 
-
+Sophie Li for her feedback on package interface. 
 
 
 
