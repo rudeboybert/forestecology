@@ -1,12 +1,11 @@
 ---
-title: "The `forestecology` R package for modeling interspecies competition between trees"
+title: "The forestecology R package for fitting and assessing models of interspecies competition on the growth of trees"
 
 # to produce blinded version set to 1 and change blinded <- TRUE on line 54 below
 blinded: 0
 
 authors: 
 - name: Albert Y. Kim 
-  thanks: "Albert Y. Kim is Assistant Professor, Statistical & Data Sciences, Smith College, Northampton, MA 01063 (e-mail: akim04@smith.edu)."
   affiliation: Program in Statistical & Data Sciences, Smith College
   
 - name: David Allen
@@ -16,10 +15,14 @@ authors:
   affiliation: Mathematics Department, Reed College
 
 abstract: 
-- "Move abstract below here after completed."
+- |
+  | 1. When modeling growth of trees forest ecologists often incorporate the effect of interspecies competition. Many such models are based on a neighborhood effect assumption whereby all trees within a fixed distance of all focal trees are considered competitors. Methods are needed to evaluate the effect of interspecies competition and to assess their quality. 
+  | 2. We present the `forestecology` package providing methods for both 1) evaluating the out-of-sample performance of our model using spatial-crossvaliation and 2) testing a null hypothesis of of no impact of competitor species' identity on the growth of trees using a permutation test. We implement a class and methods using R's S3 object-oriented system, for a specific linear, Bayesian neighborhood competition model of tree growth. 
+  | 3. We demonstrate the package's functions using data from the Smithsonian Conservation Biology Institute's large forest dynamics plot, part of the ForestGEO network of reseach sites. Given ForestGEO's data collection protocols and data formatting standards, the package cross-compatibility of code. We show both that 1) competitor species identity matters and 2) that not spatially cross-validating leads to error estimates that are overly optimistic. 
+  | 4. The package follows `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence to intuitively display the sequence of steps of analysis from start to finish. Additionally, most inputs/outputs of functions assume an are of `sf` class from the simple features package, thereby facilitating all wrangling and visualization of geospatial data. Lastly, even though our package is currently limited to one specific model, the package is setup such that it can be easily extended to other models.  
 
 keywords:
-- forest ecology, competition, R, Rstats, tidyverse, sf, cross-validation, 
+- forest ecology, competition, R, Rstats, tidyverse, sf, cross-validation, spatial statistics
 
 bibliography: paper.bib
 output: rticles::asa_article
@@ -75,15 +78,6 @@ if (!is_html_output()) {
 options(width = 70)
 ```
 
-# Abstract (350 words) {-}
-
-1. When modeling growth of trees forest ecologists often incorporate the effect of interspecies competition. Many such models are based on a neighborhood effect assumption whereby all trees within a fixed distance of all focal trees are considered competitors. Methods are needed to evaluate the effect of interspecies competition and to assess their quality. 
-1. We present the `forestecology` package providing methods for both 1) evaluating the out-of-sample performance of our model using spatial-crossvaliation and 2) testing a null hypothesis of of no impact of competitor species' identity on the growth of trees using a permutation test. We implement a class and methods using R's S3 object-oriented system, for a specific linear, Bayesian neighborhood competition model of tree growth. 
-1. We demonstrate the package's functions using data from the Smithsonian Conservation Biology Institute's large forest dynamics plot, part of the ForestGEO network of reseach sites. Given ForestGEO's data collection protocols and data formatting standards, the package cross-compatibility of code. We show both that 1) competitor species identity matters and 2) that not spatially cross-validating leads to error estimates that are overly optimistic. 
-1. The package follows `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence to intuitively display the sequence of steps of analysis from start to finish. Additionally, most inputs/outputs of functions assume an are of `sf` class from the simple features package, thereby facilitating all wrangling and visualization of geospatial data. Lastly, even though our package is currently limited to one specific model, the package is setup such that it can be easily extended to other models. 
-
-
-
 
 # Introduction
 
@@ -123,18 +117,19 @@ We demonstrate the `forestecology` package's features on the Smithsonian Conserv
 
 There are four steps in our modeling pipeline:
 
-1. Compute the growth of trees based on census data.
-1. Add spatial information:
+- Step 1: Compute the growth of trees based on census data.
+- Step 2: Add spatial information:
     1. Define buffer region trees.
     1. Add spatial cross-validation block information.
-1. Identify all focal and corresponding competitor trees.
-1. Fit model and make predictions.
+- Step 3: Identify all focal and corresponding competitor trees.
+- Step 4: Fit model, as well as:
+    1. Compute fitted/predicted values.
+    1. Visualize posterior distributions.
 
 Using these four steps, we can address the two following questions of ecological interest:
 
 1. Evaluate the effect of competitor species identity using permutation tests.
 1. Evaluate model performance using spatial cross-validation.
-
 
 We load all necessary packages.
 
@@ -149,7 +144,7 @@ library(patchwork)
 
 
 
-## Compute the growth of trees based on census data
+## Step 1: Compute the growth of trees based on census data
 
 The first step in the our analysis sequence is to compute the growth of trees using data from two censuses. The `compute_growth()` function computes growth assuming census data that follows ForestGEO standards. Despite such standards, minor variations will still exist between sites thereby necessitating some data wrangling and checking. For example, the SCBI site records all DBH's in millimeters, whereas the Michigan Big Woods site records them in centimeters @andersonteixeira_ctfs-forestgeo_2015 @allen_michigan_2020. The data format of other sites may be such that our `compute_growth()` function doesn't work at all. However, in the end all that matters is that the growth of all trees is saved in a data frame of class `sf` whereby the geolocation of each tree is presented in a `geometry` variable of type `<POINT>` and at a minimum the data contains the following variables: a variable uniquely identifying each tree-stem, `sp` of type `fct` factor identifying species, `dbh1` and `dbh2` of type `dbl` quantifying the DBH at earlier and later census, and `growth` of type `dbl` double quantifying the average annual growth in centimeters. 
 
@@ -193,7 +188,7 @@ Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2`
 
 TODO: Rescale points in this plot:
 
-```{r scbi-trees, out.width="66%", fig.cap="Compute growth of trees based on census data from the Smithsonian Conservation Biology Institute (SCBI)."}
+```{r scbi-trees, out.width="66%", fig.cap="Step 1 - Compute growth of trees based on census data: All trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot."}
 ggplot() +
   geom_sf(data = growth_scbi, aes(size = growth)) + 
   scale_size(breaks = c(0.01, 0.1, 1), range = c(0.1, 1))
@@ -201,7 +196,7 @@ ggplot() +
 
 
 
-## Add spatial information {#spatial-information}
+## Step 2: Add spatial information {#spatial-information}
 
 The next step in our analysis sequence is to add spatial information to our main `growth_scbi` data frame. The first element of spatial information we add is a "buffer region" to the periphery of the study region. Since some of our model's explanatory variables such as competitor basal area are cumulative, we must ensure that all trees being modeled are not biased to have different neighbor structures. This is of particular concern for trees at the boundary of study regions, which will not have the same number of neighbors that act as competitors as trees in the internal part of the study region. In order to account for such edge effects only trees who are not part of this buffer region, i.e. are part of the interior of the study region, will have their growths modeled @waller_applied_2004.
 
@@ -248,16 +243,16 @@ growth_scbi <- growth_scbi %>%
 
 Figure \ref{fig:scbi-spatial-information} illustrates the net effect of adding these two elements of information to the `growth_scbi` data frame. The location of each tree is marked with an integer indicating which fold it belongs to, where the folds are marked with solid lines. The color of each digit indicates whether the tree is part of the buffer region (and thus will only be considered as a competitor tree in our model) or is part of the interior of the study region (and thus is a focal tree whose growth is of modeled interest).
 
-```{r scbi-spatial-information, out.width="66%", fig.cap="Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). All trees in the interior of the study region will be the focal trees whose growth will modeled."}
+```{r scbi-spatial-information, out.width="66%", fig.cap="Step 2 - Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). All trees in the interior of the study region will be the focal trees whose growth will modeled."}
 ggplot() +
-  geom_sf_text(data = growth_scbi, aes(label = foldID, col = buffer)) +
-  geom_sf(data = blocks_scbi, fill = "transparent")
+  geom_sf(data = blocks_scbi, fill = "transparent", linetype = "dashed") +
+  geom_sf_text(data = growth_scbi %>% sample_n(1000), aes(label = foldID, col = buffer))
 ```
 
 
 
 
-## Identify all focal and corresponding competitor trees {#focal-vs-comp}
+## Step 3: Identify all focal and corresponding competitor trees {#focal-vs-comp}
 
 The next step in our analysis sequence is to identify all focal trees and their corresponding competitor trees. The `create_focal_vs_comp()` functions performs these tasks and returns a new data frame of type `sf` containing this information. On top of the previously discussed arguments `comp_dist` defining the competition neighborhood and `id` indicating which variable in the data frame uniquely identifies each tree-stem, this function also requires an `sf` object representation of the spatial cross-validation blocks/folds; in our case, this was manually encoded in the `blocks_scbi` in Section \ref{spatial-information} while in our Appendix we present an example where this was performed using `spatialBlock()` from the `blockCV` package. We present the resulting data frame below with the `foldID` variable omitted for compactness of presentation.
 
@@ -278,7 +273,7 @@ focal_vs_comp_scbi %>%
   select(focal_ID, dbh, comp)
 ```
 
-Using the `unnest()` function from the `tidyr` package, we can flatten list-column into regular columns. We observe that for the same focal tree with DBH equal to 13.65cm, we have information on all 20 competitor trees whose `dist` distance to the focal tree is less than or equal to `r comp_dist`, including their unique tree-stem ID number, their species, and their basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ where $DBH$ is the value from the earlier census in cm. Saving our focal versus competitor information in list-column minimizes redundancy since we do not repeat information on the focal tree 20 times. 
+Using the `unnest()` function from the `tidyr` package, we can flatten list-column into regular columns. We observe that for the same focal tree with DBH equal to 13.65cm, we have information on all 20 competitor trees whose `dist` distance to the focal tree is less than or equal to `r comp_dist`, including their unique tree-stem ID number, their species, and their basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ where $DBH$ is the value from the earlier census in cm. Saving our focal versus competitor information in list-column minimizes redundancy since we do not repeat information on the focal tree 20 times. The spatial distribution of these trees is visualized in Figure \ref{fig:scbi-focal-vs-comp-map}: the dashed circle extends `r comp_dist` m away from the focal tree while all 20 competitor trees are within this circle. 
 
 ```{r, eval = FALSE}
 focal_vs_comp_scbi %>% 
@@ -294,7 +289,7 @@ focal_vs_comp_scbi %>%
   unnest(cols = "comp") %>% 
   print(n = 5)
 ```
-```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Identify all focal and corresponding competitor trees: All 20 competitor trees of focal tree 4."}
+```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Step 3 - Identify all focal and corresponding competitor trees: All 20 competitor trees of focal tree 4."}
 comp_radius <- growth_scbi %>% 
   filter(stemID == 4) %>% 
   st_buffer(dist = comp_dist)
@@ -320,7 +315,7 @@ ggplot() +
 
 
 
-## Fit model and make predictions {#model-fit-predict}
+## Step 4: Fit model {#model-fit-predict}
 
 Now that we've identified all focal and corresponding competitor trees and saved this information in a data frame of type `focal_vs_comp`, the next step in our analysis sequence is to fit a model for the growth of all focal trees. Currently the `forestecology` package can only fit the competition Bayesian linear regression model outlined in Section \ref{competition-model} using the `comp_bayes_lm()` function. However, any model implemented in a function that similarly takes an input data frame of type `focal_vs_comp` as an argument can be easily swapped in. In the case of our specific competition Bayesian linear regression model, we can also specify prior distributions on all parameters of interest (here chosen to be the defaults). 
 
@@ -354,9 +349,9 @@ model_rmse <- focal_vs_comp_scbi %>%
 model_rmse
 ```
 
-Lastly, the generic for `ggplot2::autoplot()` allows us to 
+Lastly, the generic for `ggplot2::autoplot()` allows us to plot the posterior distribution of all parameters in Figure \ref{fig:scbi-posterior-viz}. 
 
-```{r scbi-posterior-viz, out.width="100%", fig.cap="Fit model: Posterior distributions of all parameters for three species."}
+```{r scbi-posterior-viz, out.width="100%", fig.cap= "Step 4 - Fit model: Posterior distributions of all parameters for three species."}
 # Plot posteriors for only a subset of species
 sp_to_plot <- c("litu", "quru", "cagl")
 
@@ -373,52 +368,79 @@ TODO: Discuss meaning of results.
 
 ## Evaluate the effect of competitor species identity using permutation tests
 
-HEY BERT PICK IT UP HERE
+We use the four steps of our analysis sequence we answer the first of our two questions: does competitor species identity matter when modeling the growth of focal trees? We answer this via a permutation test: Under a null hypothesis where competitor species identity does not matter we can permute this variable within each focal tree, compute the RMSE (the test statistic of interest), repeat this process several times to construct a null distribution of RMSE, and compare the observed RMSE to assess significance. Going back to our example in Section \ref{focal-vs-comp} inspecting all 20 competitor trees to focal tree with `focal_ID` 4, the permutation test involves randomly resampling the `comp_sp` variable with replacement, leaving all other competitor variables intact. The resampling with replacement is nested within each focal tree in order to preserve the neighborhood structure of our competitor model. To run the permutation test, we use the same code as in Section \ref{model-fit-predict}, but adding a `run_shuffle = TRUE` argument to `comp_bayes_lm()`.
 
-
-```{r scbi-permutation-model-fit, eval = FALSE}
-comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
+```{r scbi-permutation-model-fit}
+comp_bayes_lm_scbi_shuffle <- focal_vs_comp_scbi %>%
   comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
 
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
-  mutate(
-    growth_hat = predict(comp_bayes_lm_scbi, newdata = focal_vs_comp_scbi)
-  )
+  mutate(growth_hat_shuffle = predict(comp_bayes_lm_scbi_shuffle, newdata = focal_vs_comp_scbi))
 
-model_rmse <- focal_vs_comp_scbi %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
+model_rmse_shuffle <- focal_vs_comp_scbi %>%
+  rmse(truth = growth, estimate = growth_hat_shuffle) %>%
   pull(.estimate)
-model_rmse
+model_rmse_shuffle
 ```
+
+The resulting RMSE of `r model_rmse_shuffle` based on the permutation test is `r ifelse(model_rmse_shuffle < model_rmse, "smaller", "larger")` than the earlier RMSE of `r model_rmse`, suggesting that models that do incorporate competitor species identity better fit the data. We conduct a fuller simulation in Section below.  
 
 
 ## Evaluate model performance using spatial cross-validation {#spatial-cross-validation}
 
-TODO: Do we talk about `add_buffer_variable(direction = "out")` when each fold gets its turn being the training data?
+Using the four steps of our analysis sequence again, we answer the second of our two questions: how can we obtain an accurate estimate of model performance/error?  The model fits and predictions in Section \ref{model-fit-predict} all suffer from a common failing: they use the same data to both fit the model and to assess the model's performance using the RMSE. As argued by @roberts_cross-validation_2017, this can lead to overly optimistic assessments of model quality as the models can be overfit, in particular in situations where spatial-autocorrelation is present. To mitigate the effects of such overfitting, we use a spatially block cross-validation algorithm.
 
+To this end, we use the `foldID` variable defined in Section \ref{spatial-information} whereby all focal trees are assigned to one of `r n_fold` spatially contiguous blocks that act as folds in our cross-validation routine. Figure \ref{fig:scbi-spatial-cross-validation-schematic} presents a schematic illustrating this scheme for fold 1 as the test set and folds 2, 3, and 4 as the training sets. We fit the model to all focal trees in the training set, apply the model to all focal trees in the test set to compute fitted/predicted values, and compute the RMSE of the observed versus predicted growths. We repeat this procedure 3 more times with each of the three remaining folds acting as the test set. Furthermore, in order to maintain spatial independence between the test and training set, a buffer that extend outwards from the boundary of the test set is computed; all trees falling within this buffer will not be part of the training set. 
 
-The model fits and predictions in Section \ref{model-fit-predict} all suffer from a common failing: they use the same data to both fit the model and to assess the model's performance using the RMSE. As argued by @roberts_cross-validation_2017, this can lead to overly optimistic assessments of model quality as the models can be overfit, in particular in situations where spatial-autocorrelation is present. To mitigate the effects of such overfitting, we use a spatially block cross-validation algorithm implemented in the `run_cv()`. This function at its core uses the same model fitting implemented in the `fit_bayesian_model()` function, however trains the model on $k-1$ spatial folds of the train and returns fitted values for the test data. Recall that the spatial blocking scheme wass encoded in Section \ref{spatial-information}.
+```{r scbi-spatial-cross-validation-schematic, out.width="66%", fig.cap= "Schematic of spatial cross-validation: Using the k = 1 fold as the test set, assigning each focal tree to training set, test set, and buffer.", echo = FALSE}
+fold_number <- 1
 
-Observe once again that this RMSE is much higher than that for the above SCBI model fit without cross-validation. 
+test_fold_buffer <-  blocks_scbi %>% 
+  filter(folds == fold_number)
+                                              
+test_vs_train <- focal_vs_comp_scbi %>% 
+  st_as_sf() %>% 
+  add_buffer_variable(
+    direction = "out", size = comp_dist, region = test_fold_buffer
+  ) %>% 
+  mutate(
+    fold = case_when(
+      foldID == fold_number ~ "test",
+      foldID != fold_number & buffer ~ "training",
+      foldID != fold_number & !buffer ~ "buffer"
+    ),
+    fold = factor(fold, levels = c("test", "buffer", "training"))
+  )
+
+ggplot() +
+  geom_sf(data = test_fold_buffer, col = "red", fill = "transparent") +
+  geom_sf(data = blocks_scbi, fill = "transparent", linetype = "dashed") +
+  geom_sf_text(data = test_vs_train %>% st_as_sf() %>% sample_n(1000), aes(label = foldID, col = fold))
+```
+
+This algorithm is implemented in the `run_cv()` function, which acts as a wrapper function to the `comp_bayes_lm()` function that fits the model and the `predict()` generic that returns fitted values. 
 
 ```{r scbi-spatial-cv}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
   run_cv(comp_dist = comp_dist, cv_grid = blocks_scbi)
 ```
 
+Observe once again that this RMSE is much higher than that for the above SCBI model fit without cross-validation. 
 
 ```{r}
-focal_vs_comp_scbi %>%
+model_rmse_cv <- focal_vs_comp_scbi %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
+model_rmse_cv
 ```
 
-
+The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r ifelse(model_rmse_cv > model_rmse, "larger", "smaller")` than the earlier RMSE of `r model_rmse`, suggesting that models that do not take the inherent spatial autocorrelation of the data into account generate error estimates that are overly optimistic; in our case RMSE's that are too low.  
 
 
 # Discussion
 
-
+- show image of PLOSOne
+- run time considerations
 
 
 
