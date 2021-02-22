@@ -81,7 +81,7 @@
 \if0\blind
 {
   \title{\bf The forestecology R package for fitting and assessing models of
-interspecies competition on the growth of trees}
+interspecies competitive effects on the growth of trees}
 
   \author{
         Albert Y. Kim \\
@@ -101,41 +101,40 @@ interspecies competition on the growth of trees}
   \bigskip
   \begin{center}
     {\LARGE\bf The forestecology R package for fitting and assessing models of
-interspecies competition on the growth of trees}
+interspecies competitive effects on the growth of trees}
   \end{center}
   \medskip
 } \fi
 
 \bigskip
 \begin{abstract}
-1. When modeling growth of trees forest ecologists often incorporate the
-effect of interspecies competition. Many such models are based on a
-neighborhood effect assumption whereby all trees within a fixed distance
-of all focal trees are considered competitors. Methods are needed to
-evaluate the effect of interspecies competition and to assess their
-quality.\\
+1. Many models for the growth of trees that incorporate the effect of
+interspecies competition are based on a neighborhood effect assumption
+whereby all trees within a fixed distance of all focal trees are
+considered competitors. Methods and tools are needed to quantify this
+competitive effect and assess the quality of all resulting models\\
 2. We present the \texttt{forestecology} package providing methods for
-both 1) evaluating the out-of-sample performance of our model using
-spatial-crossvaliation and 2) testing a null hypothesis of of no impact
-of competitor species' identity on the growth of trees using a
-permutation test. We implement a class and methods using R's S3
-object-oriented system, for a specific linear, Bayesian neighborhood
-competition model of tree growth.\\
-3. We demonstrate the package's functions using data from the
+both 1) evaluating the effect of competitor species identity using
+permutation tests and 2) evaluating model performance using spatial
+cross-validation. Following \citet{allen_permutation_2020}, we implement
+a Bayesian linear regression competition model.\\
+3. We demonstrate the package's functionality using data from the
 Smithsonian Conservation Biology Institute's large forest dynamics plot,
-part of the ForestGEO network of reseach sites. Given ForestGEO's data
-collection protocols and data formatting standards, the package
-cross-compatibility of code. We show both that 1) competitor species
-identity matters and 2) that not spatially cross-validating leads to
-error estimates that are overly optimistic.\\
-4. The package follows \texttt{tidyverse}-like structure whereby
-verb-named functions can be modularly ``piped'' in sequence to
-intuitively display the sequence of steps of analysis from start to
-finish. Additionally, most inputs/outputs of functions assume an are of
-\texttt{sf} class from the simple features package, thereby facilitating
-all wrangling and visualization of geospatial data. Lastly, even though
-our package is currently limited to one specific model, the package is
-setup such that it can be easily extended to other models.
+part of the ForestGEO global network of reseach sites. Given ForestGEO's
+data collection protocols and data formatting standards, the package was
+designed with cross-site compatibility in mind. We demonstrate that both
+1) competitor species identity matters and 2) that not spatially
+cross-validating leads to error estimates that are overly optimistic.\\
+4. The package features 1) \texttt{tidyverse}-like structure whereby
+verb-named functions can be modularly ``piped'' in sequence, 2)
+functions with standardized inputs/outputs of simple features
+\texttt{sf} package class, and 3) R S3 object-oriented implementation of
+the Bayesian linear regression model. These three facts allow for clear
+articulation of all the steps in the sequence of analysis and easy
+wrangling and visualization of the geospatial forestry data.
+Furthermore, while the package only has Bayesian linear regression
+implemented, the package was designed with extensibility to other
+methods in mind.
 \end{abstract}
 
 \noindent%
@@ -216,76 +215,70 @@ parameters.
 \hypertarget{example}{%
 \section{Example}\label{example}}
 
-We demonstrate the \texttt{forestecology} package's features on the
-Smithsonian Conservation Biology Institute (SCBI) large forest dynamics
-plot, located at the Smithsonian's National Zoo and Conservation Biology
-Institute in Front Royal, VA, USA. The 25.6 ha (640 x 400 m) plot is
-located at the intersection of three of the major physiographic
-provinces of the eastern US: the Blue Ridge, Ridge and Valley, and
-Piedmont provinces and is adjacent to the northern end of Shenandoah
-National Park. The forest type is typical mature secondary eastern mixed
-deciduous forest, with a canopy dominated by tulip poplar
+We demonstrate the \texttt{forestecology} package's functionality on
+data from the Smithsonian Conservation Biology Institute (SCBI) large
+forest dynamics plot, located at the Smithsonian's National Zoo and
+Conservation Biology Institute in Front Royal, VA, USA. The 25.6 ha (640
+x 400 m) plot is located at the intersection of three of the major
+physiographic provinces of the eastern US: the Blue Ridge, Ridge and
+Valley, and Piedmont provinces and is adjacent to the northern end of
+Shenandoah National Park. The forest type is typical mature secondary
+eastern mixed deciduous forest, with a canopy dominated by tulip poplar
 (\emph{Liriodendron tulipifera}), oaks (\emph{Quercus} spp.), and
 hickories (\emph{Carya} spp.), and an understory composed mainly of
 spicebush (\emph{Lindera benzoin}), paw-paw (\emph{Asimina triloba}),
 American hornbeam (\emph{Carpinus caroliniana}), and witch hazel
 (\emph{Hamamelis virginiana}) \citet{bourg_initial_2013}.
 
-There are four steps in our modeling pipeline:
-
-\begin{itemize}
-\tightlist
-\item
-  Step 1: Compute the growth of trees based on census data.
-\item
-  Step 2: Add spatial information:
-
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \tightlist
-  \item
-    Define buffer region trees.
-  \item
-    Add spatial cross-validation block information.
-  \end{enumerate}
-\item
-  Step 3: Identify all focal and corresponding competitor trees.
-\item
-  Step 4: Fit model, as well as:
-
-  \begin{enumerate}
-  \def\labelenumi{\arabic{enumi}.}
-  \tightlist
-  \item
-    Compute fitted/predicted values.
-  \item
-    Visualize posterior distributions.
-  \end{enumerate}
-\end{itemize}
-
-Using these four steps, we can address the two following questions of
-ecological interest:
+The \texttt{forestecology} package attempts has the following two
+ecological goals: 1) to evaluate the effect of competitor species
+identity using permutation tests and 2) to evaluate model performance
+using spatial cross-validation. To achieve these two goals, we outline a
+basic analysis sequence comprising of these four main steps:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  Evaluate the effect of competitor species identity using permutation
-  tests.
+  Compute the growth of trees based on census data.
 \item
-  Evaluate model performance using spatial cross-validation.
+  Add spatial information:
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Define a buffer region of trees.
+  \item
+    Add spatial cross-validation block information.
+  \end{enumerate}
+\item
+  Identify all focal trees and their competitors.
+\item
+  Apply model, which includes:
+
+  \begin{enumerate}
+  \def\labelenumii{\arabic{enumii}.}
+  \tightlist
+  \item
+    Fit model.
+  \item
+    Compute fitted/predicted values.
+  \item
+    Visualize posterior distributions.
+  \end{enumerate}
 \end{enumerate}
 
-We load all necessary packages.
+We start by loading all necessary packages.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{library}\NormalTok{(tidyverse)}
 \KeywordTok{library}\NormalTok{(lubridate)}
 \KeywordTok{library}\NormalTok{(sf)}
+\KeywordTok{library}\NormalTok{(patchwork)}
 \KeywordTok{library}\NormalTok{(forestecology)}
 \KeywordTok{library}\NormalTok{(blockCV)}
-\KeywordTok{library}\NormalTok{(patchwork)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -295,40 +288,34 @@ data}\label{step-1-compute-the-growth-of-trees-based-on-census-data}}
 
 The first step in the our analysis sequence is to compute the growth of
 trees using data from two censuses. The \texttt{compute\_growth()}
-function computes growth assuming census data that follows ForestGEO
-standards. Despite such standards, minor variations will still exist
-between sites thereby necessitating some data wrangling and checking.
-For example, the SCBI site records all DBH's in millimeters, whereas the
-Michigan Big Woods site records them in centimeters
+function computes growth assuming census data that roughly follows
+ForestGEO standards. Despite such standards, minor variations will still
+exist between sites, thereby necessitating some data wrangling and
+checking. For example, the SCBI site records all DBH's in millimeters,
+whereas the Michigan Big Woods site records them in centimeters
 \citet{andersonteixeira_ctfs-forestgeo_2015}
-\citet{allen_michigan_2020}. The data format of other sites may be such
-that our \texttt{compute\_growth()} function doesn't work at all.
-However, in the end all that matters is that the growth of all trees is
-saved in a data frame of class \texttt{sf} whereby the geolocation of
-each tree is presented in a \texttt{geometry} variable of type
-\texttt{\textless{}POINT\textgreater{}} and at a minimum the data
-contains the following variables: a variable uniquely identifying each
-tree-stem, \texttt{sp} of type \texttt{fct} factor identifying species,
-\texttt{dbh1} and \texttt{dbh2} of type \texttt{dbl} quantifying the DBH
-at earlier and later census, and \texttt{growth} of type \texttt{dbl}
-double quantifying the average annual growth in centimeters.
+\citet{allen_michigan_2020}.
 
 We load both 2008 and 2014 SCBI census data \texttt{.csv} files as they
-existed on GitHub on November 20, 2020. After selecting only relevant
-variables, we perform a few additional data wrangling steps: convert the
-variable with the date of measurement to be of type \texttt{date},
-convert DBH to be in centimeters\footnote{A rule of thumb to determine
-  the units of DBH is check if the smallest non-zero and non-missing
-  measurement is 1 or 10. If the former, then centimeters. If the later,
-  then millimeters. This is because ForestGEO protocols state that only
-  trees with DBH greater or equal to 1cm should be included in censuses.},
-convert the \texttt{sp} variable containing species information from
-type \texttt{chr} character to \texttt{fct} factor (we will discuss the
-need for this in Section \ref{spatial-cross-validation}). Furthermore,
-in order to speed up computation for purposes of this example, we only
-consider a 9 ha subsection of the 25.6 ha of the SCBI site: \texttt{gx}
-from 0--300 instead of 0--400 and \texttt{gy} from 300--600 instead of
-0--640.
+existed on GitHub on November 20, 2020. After selecting only the
+relevant variables, we perform a few additional data wrangling steps:
+convert the character variable with the date of measurement to be of
+explicit type \texttt{date}, convert DBH to be in centimeters\footnote{A
+  rule of thumb to determine the units of DBH is to check if the
+  smallest non-zero and non-missing measurement is 1 or 10. If the
+  former, then centimeters. If the later, then millimeters. This is
+  because ForestGEO protocols state that only trees with DBH greater or
+  equal to 1cm should be included in censuses.}, convert the \texttt{sp}
+variable containing species information from type \texttt{chr} character
+to \texttt{fct} factor.\footnote{In our spatial cross-validation
+  algorithm in Section \ref{spatial-cross-validation} issues can occur
+  when rare species do not occur in the training set, but then are
+  encountered in the test set. This risk is mitigated by representing
+  \texttt{sp} as a factor variable, which has a complete list of all
+  levels of the categorical variable.}Furthermore, in order to speed up
+computation for purposes of this example, we only consider a 9 ha
+subsection of the 25.6 ha of the SCBI site: \texttt{gx} from 0--300
+instead of 0--400 and \texttt{gy} from 300--600 instead of 0--640.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -352,11 +339,11 @@ from 0--300 instead of 0--400 and \texttt{gy} from 300--600 instead of
 \end{Highlighting}
 \end{Shaded}
 
-These two data frames are then used as the two primary arguments to the
+These two data frames are then used as arguments to the
 \texttt{compute\_growth()} function, along with the \texttt{id} argument
-whereby the user specifies the name of the variable that uniquely
-identifies each tree-stem under consideration (note this does not
-include resprouts in the later census):
+that specifies the variable that uniquely identifies each tree-stem.
+Note furthermore that we discard all resprouts in the later census
+(those with \texttt{code\ ==\ R}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -390,24 +377,31 @@ include resprouts in the later census):
 \end{Shaded}
 
 The output \texttt{growth\_scbi} is a single data frame of class
-\texttt{sf} that includes a numerical \texttt{growth} reflecting the
-average annual growth in DBH (in cm) for all trees that were alive at
-both time points as well a \texttt{geometry} variable encoding each
-tree's geolocation. Furthermore, variables that (in theory) remain
-unchanged between censuses appear only once, such as location variables
-\texttt{gx} and \texttt{gy}; as well as species-related variables.
-Variables that should change between censuses are suffixed with
-\texttt{1} and \texttt{2} indicating the earlier and later censuses,
-such as \texttt{dbh1/dbh2} and \texttt{codes1/codes2}.
+\texttt{sf} that includes \texttt{growth}, the average annual growth in
+DBH (in cm) for all trees that were alive at both time points, as well a
+\texttt{geometry} variable encoding each tree's geolocation.
+Furthermore, the variables that should remain unchanged between censuses
+appear only once, such as location variables \texttt{gx} and
+\texttt{gy}; as well as species-related variables. Variables that should
+change between censuses are suffixed with \texttt{1} and \texttt{2}
+indicating the earlier and later censuses, such as \texttt{dbh1/dbh2}
+and \texttt{codes1/codes2}.
+
+The data format of other sites may be such that our
+\texttt{compute\_growth()} function doesn't work at all. However, in the
+end all that matters is that the growth of all trees is saved in a data
+frame of class \texttt{sf} whereby the geolocation of each tree is
+presented in a \texttt{geometry} variable of type
+\texttt{\textless{}POINT\textgreater{}} and at a minimum the data
+contains the variables above.
 
 Given that \texttt{growth\_scbi} is of class \texttt{sf}, it can be
 easily plotted in \texttt{ggplot2} using the \texttt{geom\_sf()}
 geometry as seen in Figure \ref{fig:scbi-trees}.
 
-TODO: Rescale points in this plot:
-
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{# }\AlertTok{TODO}\CommentTok{: Rescale points in this plot}
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
 \StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ growth)) }\OperatorTok{+}\StringTok{ }
 \StringTok{  }\KeywordTok{scale_size}\NormalTok{(}\DataTypeTok{breaks =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.01}\NormalTok{, }\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{), }\DataTypeTok{range =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
@@ -420,7 +414,7 @@ TODO: Rescale points in this plot:
 
 }
 
-\caption{Step 1 - Compute growth of trees based on census data: All trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot.}\label{fig:scbi-trees}
+\caption{Compute growth of trees based on census data: Map with growth of all trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot.}\label{fig:scbi-trees}
 \end{figure}
 
 \hypertarget{spatial-information}{%
@@ -429,31 +423,30 @@ TODO: Rescale points in this plot:
 The next step in our analysis sequence is to add spatial information to
 our main \texttt{growth\_scbi} data frame. The first element of spatial
 information we add is a ``buffer region'' to the periphery of the study
-region. Since some of our model's explanatory variables such as
-competitor basal area are cumulative, we must ensure that all trees
-being modeled are not biased to have different neighbor structures. This
-is of particular concern for trees at the boundary of study regions,
-which will not have the same number of neighbors that act as competitors
-as trees in the internal part of the study region. In order to account
-for such edge effects only trees who are not part of this buffer region,
-i.e.~are part of the interior of the study region, will have their
-growths modeled \citet{waller_applied_2004}.
+region. Since some of our model's explanatory variables are cumulative
+(such as competitor basal area), we must ensure that all trees being
+modeled are not biased to have different neighbor structures. This is of
+concern for trees at the boundary of study regions, which will not have
+the same number of neighbors as trees in the internal part of the study
+region. In order to account for such edge effects, only trees that are
+not part of this buffer region, i.e.~are part of the interior of the
+study region, will have their growths modeled
+\citet{waller_applied_2004}.
 
 Our model of interspecific competition relies on a spatial definition of
 who the competitor trees are for focal trees of interest: all trees
 within a distance \texttt{comp\_dist} of a focal tree are considered its
 competitors (assuming the same units as the \texttt{gx} and \texttt{gy}
-location variables). In our case we set this value below at 7.5m, a
-value informed by \citet{canham_neighborhood_2004}
+location variables). In our case we set this value at 7.5m, a value
+informed by \citet{canham_neighborhood_2004}
 \citet{uriarte_spatially_2004} \citet{canham_neighborhood_2006}. Using
 this value along with a manually constructed \texttt{sf} object
 representation of the study region's boundary, we apply the
 \texttt{add\_buffer\_variable()} to our \texttt{growth\_scbi} data frame
 to add a \texttt{buffer} boolean variable: all trees who have
 \texttt{buffer} set to \texttt{FALSE} will be our focal trees whose
-growths are modeled, whereas those with \texttt{buffer} set to
-\texttt{TRUE} will only be considered as competitor trees whose growth
-will not be modeled.
+growths are modeled, whereas those with \texttt{TRUE} will only be
+considered as competitor trees whose growth will not be modeled.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -472,33 +465,34 @@ will not be modeled.
 \end{Shaded}
 
 The second element of spatial information are blocks corresponding to
-folds of a spatial cross-validation algorithm used to estimate model
-error. Conventional cross-validation algorithms assign observations to
-folds by randomly resampling individual observations. However,
-underlying this algorithm is an assumption that the observations are
-independent. In the case of forest census data, observations exhibit
-spatial autocorrelation. This spatial dependence is incorporated into
-the cross-validation algorithm by randomly resampling spatial blocks of
-trees \citet{roberts_cross-validation_2017}
-\citet{pohjankukka_estimating_2017}. We therefore associate each
-observed tree to one of \(k\) spatial folds. In the example below, we
-first manually define two folds that partition the study region as an
-\texttt{sf} object. We then use the output of the
+folds of a spatial cross-validation algorithm used to estimate
+out-of-sample model error. Conventional cross-validation algorithms
+assign observations to folds by randomly resampling individual
+observations. However, an assumption that the observations are
+independent underlies any cross-validation algorithm. In the case of
+forest census data, observations exhibit spatial autocorrelation. We
+therefore incorporate this spatial dependence into the cross-validation
+algorithm by randomly resampling spatial blocks of trees
+\citet{roberts_cross-validation_2017}
+\citet{pohjankukka_estimating_2017}.
+
+In the example below, we first manually define four folds that partition
+the study region as an \texttt{sf} object. We then use the output of the
 \texttt{spatialBlock()} function from the \texttt{blockCV} package to
 associate each tree in \texttt{growth\_scbi} to the correct fold (saved
-in the \texttt{foldID} variable) \citet{valavi_blockcv_2019}.
-\textbackslash footnote\{In the Appendix we present an example where the
-folds themselves are also created using the \texttt{spatialBlock()}
-function given a specified \texttt{cv\_block\_size}.\}
+in the \texttt{foldID} variable) \citet{valavi_blockcv_2019}. \footnote{In
+  the Appendix we present an example where the folds themselves are also
+  created using the \texttt{spatialBlock()} function given a specified
+  \texttt{cv\_block\_size}.}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{# Manually define spatial blocks to act as folds}
+\NormalTok{n_fold <-}\StringTok{ }\DecValTok{4}
 \NormalTok{fold1 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{450}\NormalTok{))}
 \NormalTok{fold2 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{))}
 \NormalTok{fold3 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \NormalTok{fold4 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{))}
-\NormalTok{n_fold <-}\StringTok{ }\DecValTok{4}
 
 \NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
   \KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3), }\KeywordTok{sf_polygon}\NormalTok{(fold4)}
@@ -539,7 +533,7 @@ thus is a focal tree whose growth is of modeled interest).
 
 }
 
-\caption{Step 2 - Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). All trees in the interior of the study region will be the focal trees whose growth will modeled.}\label{fig:scbi-spatial-information}
+\caption{Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). All trees in the interior of the study region (i.e. not part of buffer) will be the focal trees whose growth will be modeled.}\label{fig:scbi-spatial-information}
 \end{figure}
 
 \hypertarget{focal-vs-comp}{%
@@ -549,20 +543,21 @@ trees}\label{focal-vs-comp}}
 The next step in our analysis sequence is to identify all focal trees
 and their corresponding competitor trees. The
 \texttt{create\_focal\_vs\_comp()} functions performs these tasks and
-returns a new data frame of type \texttt{sf} containing this
-information. On top of the previously discussed arguments
-\texttt{comp\_dist} defining the competition neighborhood and
-\texttt{id} indicating which variable in the data frame uniquely
-identifies each tree-stem, this function also requires an \texttt{sf}
-object representation of the spatial cross-validation blocks/folds; in
-our case, this was manually encoded in the \texttt{blocks\_scbi} in
-Section \ref{spatial-information} while in our Appendix we present an
-example where this was performed using \texttt{spatialBlock()} from the
+returns a new data frame of type \texttt{sf}. On top of the previous
+arguments \texttt{comp\_dist} defining the competition neighborhood and
+\texttt{id} indicating which variable uniquely identifies each
+tree-stem, this function also requires an \texttt{sf} object
+representation of the spatial cross-validation blocks/folds; in our
+case, this was manually encoded in the \texttt{blocks\_scbi} in Section
+\ref{spatial-information} while in our Appendix we present an example
+where this was performed using \texttt{spatialBlock()} from the
 \texttt{blockCV} package. We present the resulting data frame below with
 the \texttt{foldID} variable omitted for compactness of presentation.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{# }\AlertTok{TODO}\CommentTok{: Below reconcile the number of rows as they off by one from growth_scbi %>% }
+\CommentTok{# filter(!is.na(growth) & !buffer). Perhaps by removing NA's in the growth_scbi stage?}
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
 \NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
@@ -584,23 +579,16 @@ the \texttt{foldID} variable omitted for compactness of presentation.
 \end{Highlighting}
 \end{Shaded}
 
-TODO: Below reconcile the number of rows as they off by one from
-\texttt{growth\_scbi} pipe \texttt{filter(!is.na(growth)\ \&\ !buffer)}.
-perhaps by removing NA's in the \texttt{growth\_scbi} stage.
-
 The resulting data frame \texttt{focal\_vs\_comp\_scbi} has 6296 rows,
 representing the subset of the 7954 trees in \texttt{growth\_scbi} that
-will be considered as focal trees and thus have their growths modeled.
-Recall from Section \ref{spatial-information} this consists all trees
-that are not part of the buffer region in Figure
-\ref{fig:scbi-spatial-information}. Two new variables \texttt{focal\_ID}
-and \texttt{focal\_sp} related to tree-stem identification and species
+will be considered as focal trees. Two new variables \texttt{focal\_ID}
+and \texttt{focal\_sp} relate to tree-stem identification and species
 information. Most notably however is a new variable \texttt{comp} which
-contains information on all competitor trees for a given focal tree
-saved in list-column format, a feature of the \texttt{tidyr} package
+contains information on all competitor trees for a given focal tree,
+saved in \texttt{tidyr} package list-column format
 \citet{tidyr_package}. For example, we drill-down on the tree with
-\texttt{focal\_ID} equal to 4. It has 20 competitor trees each described
-by 4 variables as indicated by the fact that \texttt{comp} is a
+\texttt{focal\_ID} 4, which has 20 competitor trees each described by 4
+variables as indicated by the fact that \texttt{comp} is a
 \texttt{\textless{}tibble\ {[}20\ ×\ 4{]}\textgreater{}}.
 
 \begin{Shaded}
@@ -615,19 +603,30 @@ by 4 variables as indicated by the fact that \texttt{comp} is a
 \end{Highlighting}
 \end{Shaded}
 
+The spatial distribution of these trees is visualized in Figure
+\ref{fig:scbi-focal-vs-comp-map}: the dashed circle extends 7.5 m away
+from the focal tree while all 20 competitor trees are within this
+circle.
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.66\linewidth]{Figures/scbi-focal-vs-comp-map-1} 
+
+}
+
+\caption{Identify all focal and corresponding competitor trees: All 20 competitor trees of focal tree 4.}\label{fig:scbi-focal-vs-comp-map}
+\end{figure}
+
 Using the \texttt{unnest()} function from the \texttt{tidyr} package, we
 can flatten list-column into regular columns. We observe that for the
-same focal tree with DBH equal to 13.65cm, we have information on all 20
-competitor trees whose \texttt{dist} distance to the focal tree is less
-than or equal to 7.5, including their unique tree-stem ID number, their
-species, and their basal area (in m\(^2\)) calculated as
-\(\frac{\pi \times (\text{DBH/2})^2}{10000}\) where \(DBH\) is the value
-from the earlier census in cm. Saving our focal versus competitor
-information in list-column minimizes redundancy since we do not repeat
-information on the focal tree 20 times. The spatial distribution of
-these trees is visualized in Figure \ref{fig:scbi-focal-vs-comp-map}:
-the dashed circle extends 7.5 m away from the focal tree while all 20
-competitor trees are within this circle.
+same focal tree, we have information on all 20 competitor trees whose
+\texttt{dist} distance to the focal tree is \(\leq\) 7.5: their unique
+tree-stem ID number, their species, and their basal area (in m\(^2\))
+calculated as \(\frac{\pi \times (\text{DBH/2})^2}{10000}\) where
+\(DBH\) is the value from the earlier of the two censuses in cm. Saving
+our focal versus competitor information in list-column minimizes
+redundancy since we do not repeat information on the focal tree 20
+times.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -650,33 +649,25 @@ competitor trees are within this circle.
 ## # ... with 15 more rows
 \end{verbatim}
 
-\begin{figure}
-
-{\centering \includegraphics[width=0.66\linewidth]{Figures/scbi-focal-vs-comp-map-1} 
-
-}
-
-\caption{Step 3 - Identify all focal and corresponding competitor trees: All 20 competitor trees of focal tree 4.}\label{fig:scbi-focal-vs-comp-map}
-\end{figure}
-
 \hypertarget{model-fit-predict}{%
 \subsection{Step 4: Fit model}\label{model-fit-predict}}
 
 Now that we've identified all focal and corresponding competitor trees
 and saved this information in a data frame of type
-\texttt{focal\_vs\_comp}, the next step in our analysis sequence is to
+\texttt{focal\_vs\_comp}, the final step in our analysis sequence is to
 fit a model for the growth of all focal trees. Currently the
 \texttt{forestecology} package can only fit the competition Bayesian
 linear regression model outlined in Section \ref{competition-model}
 using the \texttt{comp\_bayes\_lm()} function. However, any model
 implemented in a function that similarly takes an input data frame of
 type \texttt{focal\_vs\_comp} as an argument can be easily swapped in.
-In the case of our specific competition Bayesian linear regression
-model, we can also specify prior distributions on all parameters of
-interest (here chosen to be the defaults).
+For our specific competition Bayesian linear regression model, we also
+specify prior distributions on all parameters of interest (here chosen
+to be the defaults as specified in \texttt{?comp\_bayes\_lm}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\CommentTok{# }\AlertTok{TODO}\CommentTok{: Add information about default priors in ?comp_bayes_lm()}
 \NormalTok{comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
 \end{Highlighting}
@@ -688,10 +679,7 @@ of all parameters in our competition Bayesian linear regression. This
 class of object includes generic methods implemented for
 \texttt{print()}, \texttt{predict()}, and \texttt{ggplot2::autoplot()}.
 First the generic for \texttt{print()} displays the names of all prior
-\& posterior parameters (accessible via
-\texttt{comp\_bayes\_lm\_scbi\$prior\_params} and
-\texttt{comp\_bayes\_lm\_scbi\$post\_params}) along with the model
-formula:
+\& posterior parameters along with the model formula:
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -712,8 +700,8 @@ formula:
 Next, the generic for \texttt{predict()} takes as inputs the posterior
 parameter values in \texttt{comp\_bayes\_lm\_scbi} and the predictor
 variables in \texttt{newdata} and outputs a vector of fitted/predicted
-values \(\widehat{y}\) of the DBH for each focal tree (as returned by
-the posterior predictive distribution).
+values \(\widehat{y}\) of the DBH for each focal tree computed from the
+posterior predictive distribution.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -743,8 +731,8 @@ the posterior predictive distribution).
 \end{Highlighting}
 \end{Shaded}
 
-We can then compare the observed and fitted/predicted growths to compute
-the root mean squared error of our model fit.
+We then compare the observed and fitted/predicted growths to compute the
+root mean squared error (RMSE) of our model fit.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -758,7 +746,8 @@ the root mean squared error of our model fit.
 
 Lastly, the generic for \texttt{ggplot2::autoplot()} allows us to plot
 the posterior distribution of all parameters in Figure
-\ref{fig:scbi-posterior-viz}.
+\ref{fig:scbi-posterior-viz} (for compactness we only show posteriors
+for 3 species).
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -780,7 +769,7 @@ the posterior distribution of all parameters in Figure
 
 }
 
-\caption{Step 4 - Fit model: Posterior distributions of all parameters for three species.}\label{fig:scbi-posterior-viz}
+\caption{Fit model: Posterior distributions of all parameters for three species.}\label{fig:scbi-posterior-viz}
 \end{figure}
 
 TODO: Discuss meaning of results.
@@ -790,22 +779,22 @@ TODO: Discuss meaning of results.
 permutation
 tests}\label{evaluate-the-effect-of-competitor-species-identity-using-permutation-tests}}
 
-We use the four steps of our analysis sequence we answer the first of
-our two questions: does competitor species identity matter when modeling
-the growth of focal trees? We answer this via a permutation test: Under
-a null hypothesis where competitor species identity does not matter we
-can permute this variable within each focal tree, compute the RMSE (the
-test statistic of interest), repeat this process several times to
-construct a null distribution of RMSE, and compare the observed RMSE to
-assess significance. Going back to our example in Section
-\ref{focal-vs-comp} inspecting all 20 competitor trees to focal tree
-with \texttt{focal\_ID} 4, the permutation test involves randomly
-resampling the \texttt{comp\_sp} variable with replacement, leaving all
-other competitor variables intact. The resampling with replacement is
+In order to evaluate the effect of competitor species identity, we use
+the four steps of our analysis sequence answer along with a permutation
+test: Under a null hypothesis where competitor species identity does not
+matter, we can permute/shuffle this variable within each focal tree,
+compute the RMSE (the test statistic of interest), repeat this process
+several times to construct a null distribution of the RMSE, and compare
+it to the observed RMSE to assess significance. Going back to our
+example in Section \ref{focal-vs-comp} of focal tree with
+\texttt{focal\_ID} 4 and its 20 competitors, the permutation test
+randomly resamples the \texttt{comp\_sp} variable with replacement,
+leaving all other variables intact. The resampling with replacement is
 nested within each focal tree in order to preserve the neighborhood
-structure of our competitor model. To run the permutation test, we use
-the same code as in Section \ref{model-fit-predict}, but adding a
-\texttt{run\_shuffle\ =\ TRUE} argument to \texttt{comp\_bayes\_lm()}.
+structure of our competition model. To run the permutation test, we use
+the same\texttt{comp\_bayes\_lm()} function as in Section
+\ref{model-fit-predict}, but with a \texttt{run\_shuffle\ =\ TRUE}
+argument.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -819,11 +808,11 @@ the same code as in Section \ref{model-fit-predict}, but adding a
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat_shuffle) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
 \NormalTok{model_rmse_shuffle}
-\CommentTok{## [1] 0.131693}
+\CommentTok{## [1] 0.131083}
 \end{Highlighting}
 \end{Shaded}
 
-The resulting RMSE of 0.131693 based on the permutation test is larger
+The resulting RMSE of 0.131083 based on the permutation test is larger
 than the earlier RMSE of 0.1281398, suggesting that models that do
 incorporate competitor species identity better fit the data. We conduct
 a fuller simulation in Section below.
@@ -832,31 +821,32 @@ a fuller simulation in Section below.
 \subsection{Evaluate model performance using spatial
 cross-validation}\label{spatial-cross-validation}}
 
-Using the four steps of our analysis sequence again, we answer the
-second of our two questions: how can we obtain an accurate estimate of
-model performance/error? The model fits and predictions in Section
-\ref{model-fit-predict} all suffer from a common failing: they use the
-same data to both fit the model and to assess the model's performance
-using the RMSE. As argued by \citet{roberts_cross-validation_2017}, this
-can lead to overly optimistic assessments of model quality as the models
-can be overfit, in particular in situations where
-spatial-autocorrelation is present. To mitigate the effects of such
-overfitting, we use a spatially block cross-validation algorithm.
+We answer the second of our two questions: how can we obtain an accurate
+estimate of model performance/error? The model fits and predictions in
+Section \ref{model-fit-predict} all suffer from a common failing: they
+use the same data to both fit the model and to assess the model's
+performance using the RMSE. As argued by
+\citet{roberts_cross-validation_2017}, this can lead to overly
+optimistic assessments of model quality as the models can be overfit, in
+particular in situations where spatial-autocorrelation is present. To
+mitigate the effects of such overfitting, we use a spatially block
+cross-validation algorithm.
 
 To this end, we use the \texttt{foldID} variable defined in Section
 \ref{spatial-information} whereby all focal trees are assigned to one of
 4 spatially contiguous blocks that act as folds in our cross-validation
 routine. Figure \ref{fig:scbi-spatial-cross-validation-schematic}
-presents a schematic illustrating this scheme for fold 1 as the test set
-and folds 2, 3, and 4 as the training sets. We fit the model to all
-focal trees in the training set, apply the model to all focal trees in
-the test set to compute fitted/predicted values, and compute the RMSE of
-the observed versus predicted growths. We repeat this procedure 3 more
-times with each of the three remaining folds acting as the test set.
+presents a schematic illustrating this scheme for fold 1 (bottom-left)
+as the test set and folds 2, 3, and 4 as the training sets. We fit the
+model to all focal trees in the training set, apply the model to all
+focal trees in the test set to compute fitted/predicted values, and
+compute the RMSE of the observed versus predicted growths. We repeat
+this procedure 3 more times with each of the three remaining folds
+acting as the test set and then average all four resulting RMSE's.
 Furthermore, in order to maintain spatial independence between the test
 and training set, a buffer that extend outwards from the boundary of the
-test set is computed; all trees falling within this buffer will not be
-part of the training set.
+test set is computed; all trees falling within this buffer are excluded
+from the training set.
 
 \begin{figure}
 
@@ -868,9 +858,10 @@ part of the training set.
 \end{figure}
 
 This algorithm is implemented in the \texttt{run\_cv()} function, which
-acts as a wrapper function to the \texttt{comp\_bayes\_lm()} function
-that fits the model and the \texttt{predict()} generic that returns
-fitted values.
+is a wrapper function to the \texttt{comp\_bayes\_lm()} function that
+fits the model and the \texttt{predict()} generic that returns
+fitted/predicted values. We compare these values to the observed growth
+values to again compute our RMSE.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -878,9 +869,6 @@ fitted values.
 \StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{cv_grid =}\NormalTok{ blocks_scbi)}
 \end{Highlighting}
 \end{Shaded}
-
-Observe once again that this RMSE is much higher than that for the above
-SCBI model fit without cross-validation.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -904,13 +892,15 @@ RMSE's that are too low.
 \begin{itemize}
 \tightlist
 \item
-  show image of PLOSOne
+  Run full simulation on SCBI data
 \item
   run time considerations
 \end{itemize}
 
 \hypertarget{acknowledgments}{%
 \section{Acknowledgments}\label{acknowledgments}}
+
+Sophie Li for her feedback on package interface.
 
 \bibliographystyle{agsm}
 \bibliography{paper.bib}
