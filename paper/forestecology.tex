@@ -163,7 +163,8 @@ these models. The model is written to work with ForestGEO plot data
 \citet{andersonteixeira_ctfs-forestgeo_2015}, but we envision that it
 could easily be modified to work with data from other forest plots,
 e.g.~the US Forest Service Forest Inventory and Analysis plots
-\citet{smith_forest_2002}.
+\citet{smith_forest_2002}. Or more generally to model interactions of
+any community of mapped sessile organisms.
 
 The \texttt{forestecology} is designed with ``tidy'' data principles in
 mind as \citet{wickham_welcome_2019}.
@@ -216,20 +217,21 @@ parameters.
 We demonstrate the \texttt{forestecology} package's functionality on
 data from the Smithsonian Conservation Biology Institute (SCBI) large
 forest dynamics plot, located at the Smithsonian's National Zoo and
-Conservation Biology Institute in Front Royal, VA, USA. The 25.6 ha (640
-x 400 m) plot is located at the intersection of three of the major
-physiographic provinces of the eastern US: the Blue Ridge, Ridge and
-Valley, and Piedmont provinces and is adjacent to the northern end of
-Shenandoah National Park. The forest type is typical mature secondary
-eastern mixed deciduous forest, with a canopy dominated by tulip poplar
-(\emph{Liriodendron tulipifera}), oaks (\emph{Quercus} spp.), and
-hickories (\emph{Carya} spp.), and an understory composed mainly of
-spicebush (\emph{Lindera benzoin}), paw-paw (\emph{Asimina triloba}),
-American hornbeam (\emph{Carpinus caroliniana}), and witch hazel
-(\emph{Hamamelis virginiana}) \citet{bourg_initial_2013}.
+Conservation Biology Institute in Front Royal, VA, USA
+\citet{bourg_initial_2013}. The 25.6 ha (640 x 400 m) plot is located at
+the intersection of three of the major physiographic provinces of the
+eastern US: the Blue Ridge, Ridge and Valley, and Piedmont provinces and
+is adjacent to the northern end of Shenandoah National Park. The forest
+type is typical mature secondary eastern mixed deciduous forest, with a
+canopy dominated by tulip poplar (\emph{Liriodendron tulipifera}), oaks
+(\emph{Quercus} spp.), and hickories (\emph{Carya} spp.), and an
+understory composed mainly of spicebush (\emph{Lindera benzoin}),
+paw-paw (\emph{Asimina triloba}), American hornbeam (\emph{Carpinus
+caroliniana}), and witch hazel (\emph{Hamamelis virginiana})
+\citet{bourg_initial_2013}.
 
 The \texttt{forestecology} package has the following ecological goals:
-1) to evaluate the effect of competitor species identity using
+1) to evaluate the effect of competitor species identity on using
 permutation tests and 2) to evaluate model performance using spatial
 cross-validation. To achieve these goals, we outline a basic analysis
 sequence comprising of these four main steps:
@@ -238,7 +240,7 @@ sequence comprising of these four main steps:
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  Compute the growth of trees based on census data.
+  Compute the growth of stems based on two censuses.
 \item
   Add spatial information:
 
@@ -286,10 +288,11 @@ data}\label{step-1-compute-the-growth-of-trees-based-on-census-data}}
 
 The first step in the our analysis sequence is to compute the growth of
 trees using data from two censuses. The \texttt{compute\_growth()}
-function computes growth assuming census data that roughly follows
-ForestGEO standards. Despite such standards, minor variations will still
-exist between sites, thereby necessitating some data wrangling and
-checking. For example, the SCBI site records all DBH's in millimeters
+function computes average annual growth assuming census data that
+roughly follows ForestGEO standards. Despite such standards, minor
+variations will still exist between sites, thereby necessitating some
+data wrangling and checking. For example, the SCBI site records all
+diameters at breast height (DBH) in millimeters
 \citet{bourg_initial_2013}, whereas the Michigan Big Woods site records
 them in centimeters \citet{allen_michigan_2020}.
 
@@ -309,7 +312,7 @@ to \texttt{fct} factor.\footnote{In our spatial cross-validation
   when rare species do not occur in the training set, but then are
   encountered in the test set. This risk is mitigated by representing
   \texttt{sp} as a factor variable, which has a complete list of all
-  levels of the categorical variable.}Furthermore, in order to speed up
+  levels of the categorical variable.} Furthermore, in order to speed up
 computation for purposes of this example, we only consider a 9 ha
 subsection of the 25.6 ha of the SCBI site: \texttt{gx} from 0--300
 instead of 0--400 and \texttt{gy} from 300--600 instead of 0--640.
@@ -340,7 +343,8 @@ These two data frames are then used as arguments to the
 \texttt{compute\_growth()} function, along with the \texttt{id} argument
 that specifies the variable that uniquely identifies each tree-stem.
 Note furthermore that we discard all resprouts in the later census
-(those with \texttt{code\ ==\ R}).
+(those with \texttt{code\ ==\ R}), since we are only interested in the
+diameter growth of surviving, and not resprouted, stems.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -375,22 +379,24 @@ Note furthermore that we discard all resprouts in the later census
 
 The output \texttt{growth\_scbi} is a single data frame of class
 \texttt{sf} that includes \texttt{growth}, the average annual growth in
-DBH (in cm) for all trees that were alive at both time points, as well a
-\texttt{geometry} variable encoding each tree's geolocation.
-Furthermore, the variables that should remain unchanged between censuses
-appear only once, such as location variables \texttt{gx} and
-\texttt{gy}; as well as species-related variables. Variables that should
-change between censuses are suffixed with \texttt{1} and \texttt{2}
-indicating the earlier and later censuses, such as \texttt{dbh1/dbh2}
-and \texttt{codes1/codes2}.
+DBH (cm y\textsuperscript{-1}) for all stems that were alive at both
+time points, as well a \texttt{geometry} variable encoding each tree's
+geolocation. Furthermore, the variables that should remain unchanged
+between censuses appear only once, such as location variables
+\texttt{gx} and \texttt{gy}; as well as species-related variables.
+Variables that should change between censuses are suffixed with
+\texttt{1} and \texttt{2} indicating the earlier and later censuses,
+such as \texttt{dbh1/dbh2} and \texttt{codes1/codes2}.
 
 The data format of other sites may be such that our
 \texttt{compute\_growth()} function doesn't work at all. However, in the
-end all that matters is that the growth of all trees is saved in a data
+end all that matters is that the growth of all stems is saved in a data
 frame of class \texttt{sf} whereby the geolocation of each tree is
 presented in a \texttt{geometry} variable of type
 \texttt{\textless{}POINT\textgreater{}} and at a minimum the data
-contains the variables above.
+contains the variables above (DAVE NOTE: THis isn't exaclty clear to me
+what variables above means. Maybe list all the variables needed. Do they
+have to have exact names?)
 
 Given that \texttt{growth\_scbi} is of class \texttt{sf}, it can be
 easily plotted in \texttt{ggplot2} using the \texttt{geom\_sf()}
@@ -417,17 +423,17 @@ geometry as seen in Figure \ref{fig:scbi-trees}.
 \hypertarget{spatial-information}{%
 \subsection{Step 2: Add spatial information}\label{spatial-information}}
 
-The next step in our analysis sequence is to add spatial information to
-our main \texttt{growth\_scbi} data frame. The first element of spatial
-information we add is a ``buffer region'' to the periphery of the study
-region. Since some of our model's explanatory variables are cumulative
-(such as competitor basal area), we must ensure that all trees being
-modeled are not biased to have different neighbor structures. This is of
-concern for trees at the boundary of study regions, which will not have
-the same number of neighbors as trees in the internal part of the study
-region. In order to account for such edge effects, only trees that are
+The next step in our analysis sequence is to add additional spatial
+information to our main \texttt{growth\_scbi} data frame. The first
+element of spatial information we add is a ``buffer region'' to the
+periphery of the study region. Since some of our model's explanatory
+variables are cumulative (such as competitor basal area), we must ensure
+that all trees being modeled are not biased to have different neighbor
+structures. This is of concern for trees at the boundary of study
+regions, for which all neighbors will not be included in the censused
+stems. In order to account for such edge effects, only trees that are
 not part of this buffer region, i.e.~are part of the interior of the
-study region, will have their growths modeled
+study region, will have their growth modeled
 \citet{waller_applied_2004}.
 
 Our model of interspecific competition relies on a spatial definition of
@@ -442,8 +448,8 @@ representation of the study region's boundary, we apply the
 \texttt{add\_buffer\_variable()} to our \texttt{growth\_scbi} data frame
 to add a \texttt{buffer} boolean variable: all trees who have
 \texttt{buffer} set to \texttt{FALSE} will be our focal trees whose
-growths are modeled, whereas those with \texttt{TRUE} will only be
-considered as competitor trees whose growth will not be modeled.
+growth will be modeled, whereas those with \texttt{TRUE} will only be
+considered as competitor trees whose growth will not.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -471,7 +477,11 @@ forest census data, observations exhibit spatial autocorrelation. We
 therefore incorporate this spatial dependence into the cross-validation
 algorithm by randomly resampling spatial blocks of trees
 \citet{roberts_cross-validation_2017}
-\citet{pohjankukka_estimating_2017}.
+\citet{pohjankukka_estimating_2017}. (DAVE NOTE: I don't want to change
+somethign I don't understand, but ``randomly resampling'' seems wrong to
+me. I don't see anything random about our block structure. Seems to me
+like ``incorpoate this spatial dependence into the cross-validation
+algorithm with our spatial blocks of trees.'')
 
 In the example below, we first manually define four folds that partition
 the study region as an \texttt{sf} object. We then use the output of the
@@ -481,6 +491,12 @@ in the \texttt{foldID} variable) \citet{valavi_blockcv_2019}. \footnote{In
   the Appendix we present an example where the folds themselves are also
   created using the \texttt{spatialBlock()} function given a specified
   \texttt{cv\_block\_size}.}
+
+DAVE NOTE::there are a couple of places where you convert to factor.
+Earlier with \texttt{sp} and then twice in the code block below. ANy
+reason we can't just do this ``under the hood'' in the package code?
+Also any reason with swtiched from undercase with underscores to
+\texttt{SpatialBlock\_scbi} in the naming?
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -729,15 +745,18 @@ posterior predictive distribution.
 \end{Shaded}
 
 We then compare the observed and fitted/predicted growths to compute the
-root mean squared error (RMSE) of our model fit.
+root mean squared error (RMSE) of our model fit. DAVE NOTE: I rounded
+all the RMSEs, in ecology convention to not show WAY more digits than
+resolution of hte measurement.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{model_rmse <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
+\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{round}\NormalTok{(}\DecValTok{3}\NormalTok{)}
 \NormalTok{model_rmse}
-\CommentTok{## [1] 0.1281398}
+\CommentTok{## [1] 0.128}
 \end{Highlighting}
 \end{Shaded}
 
@@ -769,7 +788,21 @@ for 3 species).
 \caption{Fit model: Posterior distributions of all parameters for three species.}\label{fig:scbi-posterior-viz}
 \end{figure}
 
-TODO: Discuss meaning of results.
+These plots give the posterior distributions of parameters from equation
+1 (DAVE NOTE:SOrry couldn't figure out how to make equation references
+work). For many pacakge users they will be of interest because they give
+insight into the species-specific competitive interactions. Setting
+\texttt{type\ =\ "intercepts"} gives posterior distributions for
+\(\beta_{0,j}\) and \texttt{type\ =\ "dbh\_slopes"} for
+\(\beta_{dbh,j}\). These give species specific growth independent of
+competition. The values of more interest are plotted with
+\texttt{type\ =\ \textquotesingle{}competition\textquotesingle{}} which
+gives the posterior distribution for \(\lambda_{j,k}\) species-specific
+competition coefficients (i.e., the \(\lambda\)-matrix). Negative values
+indicate a competitor species which slows the growth of a focal species.
+Here, for example, we see that tulip trees (\texttt{litu}) have a strong
+negative effect on the growth of conspecifics but relatively little
+effect on neighbors of the other two species.
 
 \hypertarget{evaluate-the-effect-of-competitor-species-identity-using-permutation-tests}{%
 \subsection{Evaluate the effect of competitor species identity using
@@ -803,16 +836,17 @@ argument.
 
 \NormalTok{model_rmse_shuffle <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat_shuffle) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
+\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{round}\NormalTok{(}\DecValTok{3}\NormalTok{)}
 \NormalTok{model_rmse_shuffle}
-\CommentTok{## [1] 0.131083}
+\CommentTok{## [1] 0.131}
 \end{Highlighting}
 \end{Shaded}
 
-The resulting RMSE of 0.131083 based on the permutation test is larger
-than the earlier RMSE of 0.1281398, suggesting that models that do
-incorporate competitor species identity better fit the data. We conduct
-a fuller simulation in Section below.
+The resulting RMSE of 0.131 based on the permutation test is larger than
+the earlier RMSE of 0.128, suggesting that models that do incorporate
+competitor species identity better fit the data. We conduct an analysis
+of the full SCBI plot in Section below.
 
 \hypertarget{spatial-cross-validation}{%
 \subsection{Evaluate model performance using spatial
@@ -841,9 +875,12 @@ compute the RMSE of the observed versus predicted growths. We repeat
 this procedure 3 more times with each of the three remaining folds
 acting as the test set and then average all four resulting RMSE's.
 Furthermore, in order to maintain spatial independence between the test
-and training set, a buffer that extend outwards from the boundary of the
-test set is computed; all trees falling within this buffer are excluded
-from the training set.
+and training set, a fold buffer that extend outwards from the boundary
+of the test set is computed; all trees falling within this fold buffer
+are excluded from the training set. DAVE NOTE: I repalced ``buffer''
+with ``fold buffer'' just to keep clear that this is different than our
+global buffer. But if you think that distinction is not necessary feel
+free to switch back!
 
 \begin{figure}
 
@@ -851,7 +888,7 @@ from the training set.
 
 }
 
-\caption{Schematic of spatial cross-validation: Using the k = 1 fold as the test set, assigning each focal tree to training set, test set, and buffer.}\label{fig:scbi-spatial-cross-validation-schematic}
+\caption{Schematic of spatial cross-validation: Using the k = 1 fold as the test set, assigning each focal tree to training set, test set, and fold buffer.}\label{fig:scbi-spatial-cross-validation-schematic}
 \end{figure}
 
 This algorithm is implemented in the \texttt{run\_cv()} function, which
@@ -871,17 +908,18 @@ values to again compute our RMSE.
 \begin{Highlighting}[]
 \NormalTok{model_rmse_cv <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
+\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{round}\NormalTok{(}\DecValTok{3}\NormalTok{)}
 \NormalTok{model_rmse_cv}
-\CommentTok{## [1] 0.1402209}
+\CommentTok{## [1] 0.14}
 \end{Highlighting}
 \end{Shaded}
 
-The resulting RMSE of 0.1402209 computed using cross-validation is
-larger than the earlier RMSE of 0.1281398, suggesting that models that
-do not take the inherent spatial autocorrelation of the data into
-account generate error estimates that are overly optimistic; in our case
-RMSE's that are too low.
+The resulting RMSE of 0.14 computed using cross-validation is larger
+than the earlier RMSE of 0.128, suggesting that models that do not take
+the inherent spatial autocorrelation of the data into account generate
+error estimates that are overly optimistic; in our case RMSE's that are
+too low.
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
