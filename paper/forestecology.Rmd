@@ -91,11 +91,9 @@ Given that our data is of geo-spatial nature, we represent our data using the "s
 
 ## Model for growth of tree {#competition-model}
 
-While there are a littany of models one can consider, in PLOSOne we considered a simple one. 
+While there are a litany of models one can consider, in @allen_permutation_2020 we considered a simple one. 
 
-Describe model specifics. Bayesian linear regression model. 
-
-Next we fit the following linear model to the DBH of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
+We fit the following linear model to the DBH of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
 
 $$
 \newcommand{\dbh}{\text{DBH}}
