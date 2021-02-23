@@ -178,13 +178,11 @@ packages.
 \hypertarget{competition-model}{%
 \subsection{Model for growth of tree}\label{competition-model}}
 
-While there are a littany of models one can consider, in PLOSOne we
-considered a simple one.
+While there are a litany of models one can consider, in
+\citet{allen_permutation_2020} we considered a simple one.
 
-Describe model specifics. Bayesian linear regression model.
-
-Next we fit the following linear model to the DBH of each focal tree.
-Let \(i = 1, \ldots, n_j\) index all \(n_j\) trees of ``focal'' species
+We fit the following linear model to the DBH of each focal tree. Let
+\(i = 1, \ldots, n_j\) index all \(n_j\) trees of ``focal'' species
 group \(j\); let \(j = 1, \ldots, J\) index all \(J\) focal species
 groups; and let \(k = 1, \ldots, K\) index all \(K\) ``competitor''
 species groups. We modeled the growth in diameter per year \(y_{ij}\)
@@ -230,11 +228,11 @@ spicebush (\emph{Lindera benzoin}), paw-paw (\emph{Asimina triloba}),
 American hornbeam (\emph{Carpinus caroliniana}), and witch hazel
 (\emph{Hamamelis virginiana}) \citet{bourg_initial_2013}.
 
-The \texttt{forestecology} package attempts has the following two
-ecological goals: 1) to evaluate the effect of competitor species
-identity using permutation tests and 2) to evaluate model performance
-using spatial cross-validation. To achieve these two goals, we outline a
-basic analysis sequence comprising of these four main steps:
+The \texttt{forestecology} package has the following ecological goals:
+1) to evaluate the effect of competitor species identity using
+permutation tests and 2) to evaluate model performance using spatial
+cross-validation. To achieve these goals, we outline a basic analysis
+sequence comprising of these four main steps:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -291,10 +289,9 @@ trees using data from two censuses. The \texttt{compute\_growth()}
 function computes growth assuming census data that roughly follows
 ForestGEO standards. Despite such standards, minor variations will still
 exist between sites, thereby necessitating some data wrangling and
-checking. For example, the SCBI site records all DBH's in millimeters,
-whereas the Michigan Big Woods site records them in centimeters
-\citet{andersonteixeira_ctfs-forestgeo_2015}
-\citet{allen_michigan_2020}.
+checking. For example, the SCBI site records all DBH's in millimeters
+\citet{bourg_initial_2013}, whereas the Michigan Big Woods site records
+them in centimeters \citet{allen_michigan_2020}.
 
 We load both 2008 and 2014 SCBI census data \texttt{.csv} files as they
 existed on GitHub on November 20, 2020. After selecting only the
