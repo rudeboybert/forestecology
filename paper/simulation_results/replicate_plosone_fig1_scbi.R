@@ -14,8 +14,7 @@ census_2013_scbi <- here("paper/scbi.stem2.csv") %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
     date = mdy(date),
-    dbh = as.numeric(dbh)/10,
-    sp = factor(sp)
+    dbh = as.numeric(dbh)/10
   ) %>%
   filter(gx < 300, between(gy, 300, 600))
 
@@ -24,8 +23,7 @@ census_2018_scbi <- here("paper/scbi.stem3.csv") %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
     date = mdy(date),
-    dbh = as.numeric(dbh)/10,
-    sp = factor(sp)
+    dbh = as.numeric(dbh)/10
   ) %>%
   filter(gx < 300, between(gy, 300, 600))
 

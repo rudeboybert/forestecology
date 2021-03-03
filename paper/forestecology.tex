@@ -357,16 +357,9 @@ explicit type \texttt{date}, convert DBH to be in centimeters\footnote{A
   smallest non-zero and non-missing measurement is 1 or 10. If the
   former, then centimeters. If the later, then millimeters. This is
   because ForestGEO protocols state that only trees with DBH greater or
-  equal to 1cm should be included in censuses.}, convert the \texttt{sp}
-variable containing species information from type \texttt{chr} character
-to \texttt{fct} factor.\footnote{In our spatial cross-validation
-  algorithm in Section \ref{spatial-cross-validation} issues can occur
-  when rare species do not occur in the training set, but then are
-  encountered in the test set. This risk is mitigated by representing
-  \texttt{sp} as a factor variable, which has a complete list of all
-  levels of the categorical variable.} Furthermore, in order to speed up
-computation for purposes of this example, we only consider a 9 ha
-subsection of the 25.6 ha of the SCBI site: \texttt{gx} from 0--300
+  equal to 1cm should be included in censuses.} Furthermore, in order to
+speed up computation for purposes of this example, we only consider a 9
+ha subsection of the 25.6 ha of the SCBI site: \texttt{gx} from 0--300
 instead of 0--400 and \texttt{gy} from 300--600 instead of 0--640.
 
 \begin{Shaded}
@@ -375,8 +368,7 @@ instead of 0--400 and \texttt{gy} from 300--600 instead of 0--640.
 \StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}
     \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{,}
-    \DataTypeTok{sp =} \KeywordTok{factor}\NormalTok{(sp)}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
 \NormalTok{  ) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
@@ -384,8 +376,7 @@ instead of 0--400 and \texttt{gy} from 300--600 instead of 0--640.
 \StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}
     \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{,}
-    \DataTypeTok{sp =} \KeywordTok{factor}\NormalTok{(sp)}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
 \NormalTok{  ) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \end{Highlighting}
@@ -439,8 +430,16 @@ Site data that does not align with this convention will need to be
 transformed for use with the \texttt{compute\_growth()} function.
 However, in the end, all that matters is that the growth of all stems is
 saved in a data frame of class \texttt{sf} and, at a minimum, the data
-contains the variables above. TODO: enumerate what these variables are
-and say if they need exact names
+contains the variables above. Lastly, the species variable \texttt{sp}
+is automatically converted to a factor\footnote{In our spatial
+  cross-validation algorithm in Section \ref{spatial-cross-validation}
+  issues can occur when rare species do not occur in the training set,
+  but then are encountered in the test set. This risk is mitigated by
+  representing \texttt{sp} as a factor variable, which has a complete
+  list of all levels of the categorical variable.}.
+
+TODO: enumerate what these variables are and say if they need exact
+names
 
 Given that \texttt{growth\_scbi} is of class \texttt{sf}, it can be
 easily plotted in \texttt{ggplot2} using the \texttt{geom\_sf()}
@@ -606,7 +605,7 @@ compactness of presentation.
 \CommentTok{# }\AlertTok{TODO}\CommentTok{: Below reconcile the number of rows as they off by one from growth_scbi %>% }
 \CommentTok{# filter(!is.na(growth) & !buffer). Perhaps by removing NA's in the growth_scbi stage?}
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{cv_grid_sf =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
+\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
 \NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
 \StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{foldID)}
 \CommentTok{## # A tibble: 6,296 x 6}

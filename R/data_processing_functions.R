@@ -39,14 +39,14 @@ compute_growth <- function(census_1, census_2, id) {
   check_inherits(id, "character")
 
   purrr::map2(
-    c(id, "sp", "gx", "gy", "date", "codes", "dbh"),
-    c("numeric", "factor", "numeric", "numeric", "Date", "character", "numeric"),
+    c(id, "gx", "gy", "date", "codes", "dbh"),
+    c("numeric", "numeric", "numeric", "Date", "character", "numeric"),
     check_column,
     census_1
   )
   purrr::map2(
-    c(id, "sp", "gx", "gy", "date", "codes", "dbh"),
-    c("numeric", "factor", "numeric", "numeric", "Date", "character", "numeric"),
+    c(id, "gx", "gy", "date", "codes", "dbh"),
+    c("numeric", "numeric", "numeric", "Date", "character", "numeric"),
     check_column,
     census_2
   )
@@ -74,7 +74,9 @@ compute_growth <- function(census_1, census_2, id) {
       n_days = difftime(date2, date1),
       n_days = as.numeric(n_days),
       n_years = n_days / 365.25,
-      growth = (dbh2 - dbh1) / n_years
+      growth = (dbh2 - dbh1) / n_years,
+      # Convert species to factor:
+      sp = factor(sp)
     ) %>%
     select(-c(n_days, n_years, date1, date2)) %>%
     st_as_sf(coords = c("gx", "gy"))

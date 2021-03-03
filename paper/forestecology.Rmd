@@ -157,15 +157,14 @@ library(blockCV)
 
 The first step in the our analysis sequence is to compute the growth of trees using data from two censuses. The `compute_growth()` function computes average annual growth assuming census data that roughly follows ForestGEO standards. Despite such standards, minor variations will still exist between sites, thereby necessitating some data wrangling and checking. For example, the SCBI site records all diameters at breast height (DBH) in millimeters [@bourg_initial_2013], whereas the Michigan Big Woods site records them in centimeters [@allen_michigan_2020].
 
-We load both 2008 and 2014 SCBI census data `.csv` files as they existed on GitHub on November 20, 2020. After selecting only the relevant variables, we perform a few additional data wrangling steps: convert the character variable with the date of measurement to be of explicit type `date`, convert DBH to be in centimeters^[A rule of thumb to determine the units of DBH is to check if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then centimeters. If the later, then millimeters. This is because ForestGEO protocols state that only trees with DBH greater or equal to 1cm should be included in censuses.], convert the `sp` variable containing species information from type `chr` character to `fct` factor.^[In our spatial cross-validation algorithm in Section \ref{spatial-cross-validation} issues can occur when rare species do not occur in the training set, but then are encountered in the test set. This risk is mitigated by representing `sp` as a factor variable, which has a complete list of all levels of the categorical variable.] Furthermore, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from 300--600 instead of 0--640.
+We load both 2008 and 2014 SCBI census data `.csv` files as they existed on GitHub on November 20, 2020. After selecting only the relevant variables, we perform a few additional data wrangling steps: convert the character variable with the date of measurement to be of explicit type `date`, convert DBH to be in centimeters^[A rule of thumb to determine the units of DBH is to check if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then centimeters. If the later, then millimeters. This is because ForestGEO protocols state that only trees with DBH greater or equal to 1cm should be included in censuses.] Furthermore, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from 300--600 instead of 0--640.
 
 ```{r scbi-load-data}
 census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
     date = mdy(date),
-    dbh = as.numeric(dbh)/10,
-    sp = factor(sp)
+    dbh = as.numeric(dbh)/10
   ) %>%
   filter(gx < 300, between(gy, 300, 600))
 
@@ -173,8 +172,7 @@ census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
     date = mdy(date),
-    dbh = as.numeric(dbh)/10,
-    sp = factor(sp)
+    dbh = as.numeric(dbh)/10
   ) %>%
   filter(gx < 300, between(gy, 300, 600))
 ```
@@ -191,7 +189,10 @@ growth_scbi <-
 growth_scbi
 ```
 
-The output `growth_scbi` is a single data frame of class `sf` that includes variables `growth`, the average annual growth in DBH (cm y^-1^) for all stems that were alive at both time points, and `geometry`, the `sf` package's encoding of geolocations of type `<POINT>`. Furthermore, the variables that should remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. Site data that does not align with this convention will need to be transformed for use with the `compute_growth()` function. However, in the end, all that matters is that the growth of all stems is saved in a data frame of class `sf` and, at a minimum, the data contains the variables above. TODO: enumerate what these variables are and say if they need exact names
+The output `growth_scbi` is a single data frame of class `sf` that includes variables `growth`, the average annual growth in DBH (cm y^-1^) for all stems that were alive at both time points, and `geometry`, the `sf` package's encoding of geolocations of type `<POINT>`. Furthermore, the variables that should remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. Site data that does not align with this convention will need to be transformed for use with the `compute_growth()` function. However, in the end, all that matters is that the growth of all stems is saved in a data frame of class `sf` and, at a minimum, the data contains the variables above. Lastly, the species variable `sp` is automatically converted to a factor^[In our spatial cross-validation algorithm in Section \ref{spatial-cross-validation} issues can occur when rare species do not occur in the training set, but then are encountered in the test set. This risk is mitigated by representing `sp` as a factor variable, which has a complete list of all levels of the categorical variable.].
+
+
+TODO: enumerate what these variables are and say if they need exact names
 
 Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2` using the `geom_sf()` geometry as seen in Figure \ref{fig:scbi-trees}.
 

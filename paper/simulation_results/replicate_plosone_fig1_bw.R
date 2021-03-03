@@ -16,10 +16,10 @@ census_2008_bw <- census_2008_bw %>%
 growth_bw <-
   compute_growth(
     census_1 = census_2008_bw %>%
-      mutate(sp = to_any_case(sp) %>% factor()),
+      mutate(sp = to_any_case(sp)),
     census_2 = census_2014_bw %>%
       filter(!str_detect(codes, "R")) %>%
-      mutate(sp = to_any_case(sp) %>% factor()),
+      mutate(sp = to_any_case(sp)),
     id = "treeID"
   )
 
@@ -94,7 +94,7 @@ for(i in 1:length(species_notion_vector)){
 
   # Focal vs comp main dataframe for analysis
   focal_vs_comp_bw <- growth_bw %>%
-    mutate(sp = .data[[species_notion_vector[i]]] %>% factor()) %>%
+    mutate(sp = .data[[species_notion_vector[i]]]) %>%
     create_focal_vs_comp(comp_dist, blocks = blocks_bw, id = "treeID")
 
 
