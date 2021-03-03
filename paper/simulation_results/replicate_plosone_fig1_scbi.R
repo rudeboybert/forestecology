@@ -91,7 +91,7 @@ observed_RMSE <- 0
 observed_RMSE_CV <- 0
 shuffle_RMSE <- vector("list", 1)
 shuffle_RMSE_CV <- vector("list", 1)
-filename <- here("paper/plosone_results/") %>%
+filename <- here("paper/simulation_results/") %>%
   str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles_scbi")
 
 

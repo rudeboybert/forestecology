@@ -84,7 +84,7 @@ observed_RMSE_CV <- rep(0, length(species_notion_vector))
 shuffle_RMSE <- vector("list", length(species_notion_vector))
 shuffle_RMSE_CV <- vector("list", length(species_notion_vector))
 filename <- here("etc/PLOSOne/") %>%
-  str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles")
+  str_c(format(Sys.time(), "%Y-%m-%d"), "_bw_", num_shuffle, "_shuffles")
 
 # Run all simulations
 for(i in 1:length(species_notion_vector)){
