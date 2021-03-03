@@ -11,7 +11,10 @@
 #' @param focal_vs_comp data frame from [create_focal_vs_comp()]
 #' @param run_shuffle boolean as to whether to run permutation test shuffle of
 #'   competitor tree species within a particular focal_ID
-#' @param prior_param A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters
+#' @param prior_param A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters.
+#'   Defaults to `a_0 = 250`, `b_0 = 250`, `mu_0` a vector of zeros of
+#'   length \eqn{p + 1}, `V_0` an identity matrix of dimension \eqn{(p + 1) x (p
+#'   + 1)}
 #'
 #' @import dplyr
 #' @importFrom stats model.matrix
