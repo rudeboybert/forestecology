@@ -85,33 +85,48 @@ options(
 
 # Introduction
 
-Repeat-censused forest plots offer excellent data to test neighborhood models of tree competition @allen_permutation_2020 @canham_neighborhood_2006 @uriarte_spatially_2004. Here we describe an R package, `forestecology`, to do that. This package implements the methods in @allen_permutation_2020. It provides: a convenient way to specify and fit models of tree growth based on neighborhood competition; a spatial cross validation method to test and compare model fits @roberts_cross-validation_2017; and an ANOVA-like method to assess whether the competitor identity matters in these models. The model is written to work with ForestGEO plot data @andersonteixeira_ctfs-forestgeo_2015, but we envision that it could easily be modified to work with data from other forest plots, e.g. the US Forest Service Forest Inventory and Analysis plots @smith_forest_2002. Or more generally to model interactions of any community of mapped sessile organisms.
+BERT: Dave could you write a few sentences (and add references where appropriate) starting with the big picture of modeling tree growth, zooming in to neighhorhood models, and then connecting to the "@allen_permutation_2020 considers the following model" I write below?
 
-The `forestecology` is designed with "tidy" data principles in mind as @wickham_welcome_2019.
+Repeat-censused forest plots offer excellent data to test neighborhood models of the effect of competition on the growth of trees @canham_neighborhood_2006 @uriarte_spatially_2004.
 
-Given that our data is of geo-spatial nature, we represent our data using the "simple features" `sf` package class of objects @pebesma_simple_2018 whereby. While previously the `sp` package serves such purposes @pebesma_sp_2005, the `sf` package is designed to interface with the `tidyverse` suite of packages.
 
-## Model for growth of tree {#competition-model}
 
-While there are a litany of models one can consider, in @allen_permutation_2020 we considered a simple one. 
 
-We fit the following linear model to the DBH of each focal tree. Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We modeled the growth in diameter per year $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the following covariates $\vec{x}_{ij}$
+
+
+
+@allen_permutation_2020 considers the following model: Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We model the average annual growth in diameter $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the covariates $\vec{x}_{ij}$
 
 \begin{equation}
 \label{eq:model}
 y_{ij} = f(\vec{x}_{ij}) + \epsilon_{ij} = \beta_{0,j} + \beta_{\text{dbh},j} \cdot \text{dbh}_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot \text{BA}_{ijk} + \epsilon_{ij}
 \end{equation} 
 
-<!--where $\beta_{0,j}$ is the diameter-independent growth rate for group $j$; $\dbh_{ij}$ is the diameter at breast height (in centimeters) of the focal tree at the earlier census; $\beta_{\dbh,j}$ is the amount of the growth rate changed depending on diameter for group $j$;  $\BA_{ijk}$ is the sum of the basal area of all trees of competitor species group $k$; $\lambda_{jk}$ is the change in growth for individuals of group $j$ from nearby competitors of group $k$; and $\epsilon_{ij}$ is a random error term distributed $\text{Normal}(0, \sigma^2)$.-->
+where $\beta_{0,j}$ is the diameter-independent growth rate for group $j$; $\text{dbh}_{ij}$ is the diameter at breast height (in centimeters) of the focal tree at the earlier census; $\beta_{\text{dbh},j}$ is the amount of the growth rate changed depending on diameter for group $j$;  $\text{BA}_{ijk}$ is the sum of the basal area of all trees of competitor species group $k$; $\lambda_{jk}$ is the change in growth for individuals of group $j$ from nearby competitors of group $k$; and $\epsilon_{ij}$ is a random error term distributed $\text{Normal}(0, \sigma^2)$. They estimate all parameters via Bayesian linear regression while exploiting Normal/Inverse Gamma conjugacy to derive closed-form solutions to all posterior distributions via linear algebra^[See S1 Appendix of @allen_permutation_2020, available at https://doi.org/10.1371/journal.pone.0229930.s004]. These closed-form solutions for the posterior distributions are in contrast to approximations of all posteriors via computationally expensive Markov Chain Monte Carlo algorithms.
 
-Link to https://doi.org/10.1371/journal.pone.0229930.s004
+In order to evaluate whether competitor species identity matters, @allen_permutation_2020 run a permutation test where under the null hypothesis the species identity of all competitors of a focal tree can be permuted/shuffled:
 
-For this linear model's case, there exists a closed form solution as described here. As such, the `fit_bayesian_model()` function using matrix algebra to obtain all parameter estimates, rather than computationally expensive Monte Carlo approximations. The inputs to this function are a `focal_vs_comp` data frame, `prior_param` a list of priors, and a boolean flag `run_shuffle` on whether or not to run competitor-species identity permutations which we will demonstrate below on the Michigan Big Woods data. This function returns the posterior means of all parameters.
+\begin{eqnarray}
+\label{eq:permutation-hypothesis-test}
+&&H_0: \lambda_{jk} = \lambda_{j} \mbox{ for all } k = 1, \ldots, K\\
+\text{vs.}&&H_A: \text{at least one } \lambda_{jk} \mbox{ is different}
+\end{eqnarray}
+
+where the null hypothesis $H_0$ reflects a hypothesis of no species grouping-specific effects of competition while the alternative hypothesis $H_A$ reflects a hypothesis of species grouping-specific effects of competition. Furthermore, in order to account for the spatial autocorrelation inherent to forest data in their estimates of out-of-sample model error, @allen_permutation_2020 use spatial cross-validation. Estimates of model error that do not account for this spatial dependency tend to underestiamte the true model error [@roberts_cross-validation_2017].
+
+We introduce the `forestecology` R package providing methods and data for forest ecology model fitting and assessment, available on CRAN (https://cran.r-project.org/web/packages/forestecology/index.html) with the corresponding source code available on GitHub (https://github.com/rudeboybert/forestecology). The package implements all aspects of the model in Equation \ref{eq:model}: model fitting and generating fitted/predicted values, evaluating the effect of competitor species identity using permutation tests, and evaluating model performance using spatial cross-validation. 
+
+The package designed with "tidy" design principles in mind [@wickham_welcome_2019]. Much like many of the `tidyverse` component packages, `forestecology` is designed with verb-named functions that can be modularly composed in sequence using the pipe `%>%` operator [@bache_pipe_2020]. As we articulate in Section \ref{casestudy}, these functions delineate the key steps in our analysis sequence. Furthermore, the inputs and outputs of nearly all of our functions use the same "simple features for R" data structures as implemented in the `sf` package for standardized support for spatial vector data [@pebesma_simple_2018]. The `sf` package is a `tidyverse`-friendly evolution of the `sp` package of classes and methods for spatial data in R [@pebesma_sp_2005]. As such, wrangling and visualization spatial data such as ours becomes much easier.
+
+Currently the package only implements the Bayesian linear regression model of tree growth based on neighborhood competition detailed in Equation \ref{eq:model}. As we demonstrate in Section \ref{model-fit-predict} however, the fitting of this model is self-contained in a single function `comp_bayes_lm()`. This function returns an object of S3 class type `comp_bayes_lm` with generic methods implemented for `print()` to inspect the output, `predict()` to generate fitted/predicted values, and `ggplot2::autoplot()` to visualize all results. Therefore the package can be modularly extended to fit other models as long as they are coded into a function similar type as `comp_bayes_lm()` as has equivalent generic methods implemented.
+
+We present a case-study of the `forestecology` package's use on data from the Smithsonian Conservation Biology Institute's (SCBI) large forest dynamics plot in Front Royal, Virginia, USA in Section \ref{casestudy}, which is part of the ForestGEO global network of research sites [@bourg_initial_2013, @andersonteixeira_ctfs-forestgeo_2015]. The package is designed with ForestGEO plot data in mind, but we envision that it could easily be modified to work with data from other forest plots, e.g. the US Forest Service Forest Inventory and Analysis plots or more generally to model interactions of any community of mapped sessile organisms [@smith_forest_2002].
 
 
-# Example
 
-We demonstrate the `forestecology` package's functionality on data from the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot, located at the Smithsonian's National Zoo and Conservation Biology Institute in Front Royal, VA, USA @bourg_initial_2013. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US---the Blue Ridge, Ridge and Valley, and Piedmont provinces---and is adjacent to the northern end of Shenandoah National Park. The forest type is typical mature secondary eastern mixed deciduous forest, with a canopy dominated by tulip poplar (*Liriodendron tulipifera*), oaks (*Quercus* spp.), and hickories (*Carya* spp.), and an understory composed mainly of spicebush (*Lindera benzoin*), paw-paw (*Asimina triloba*), American hornbeam (*Carpinus caroliniana*), and witch hazel (*Hamamelis virginiana*) @bourg_initial_2013. 
+# forestecology workflow: a case study {#casestudy}
+
+We demonstrate the `forestecology` package's functionality on data from the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot, located at the Smithsonian's National Zoo and Conservation Biology Institute in Front Royal, VA, USA [@bourg_initial_2013]. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US---the Blue Ridge, Ridge and Valley, and Piedmont provinces---and is adjacent to the northern end of Shenandoah National Park. The forest type is typical mature secondary eastern mixed deciduous forest, with a canopy dominated by tulip poplar (*Liriodendron tulipifera*), oaks (*Quercus* spp.), and hickories (*Carya* spp.), and an understory composed mainly of spicebush (*Lindera benzoin*), paw-paw (*Asimina triloba*), American hornbeam (*Carpinus caroliniana*), and witch hazel (*Hamamelis virginiana*) [@bourg_initial_2013]. 
 
 The `forestecology` package has the following ecological goals: 1) to evaluate the effect of competitor species identity using permutation tests and 2) to evaluate model performance using spatial cross-validation. To achieve these goals, we outline a basic analysis sequence comprising of these four main steps:
 
@@ -140,7 +155,7 @@ library(blockCV)
 
 ## Step 1: Compute the growth of trees based on census data
 
-The first step in the our analysis sequence is to compute the growth of trees using data from two censuses. The `compute_growth()` function computes average annual growth assuming census data that roughly follows ForestGEO standards. Despite such standards, minor variations will still exist between sites, thereby necessitating some data wrangling and checking. For example, the SCBI site records all diameters at breast height (DBH) in millimeters @bourg_initial_2013, whereas the Michigan Big Woods site records them in centimeters @allen_michigan_2020.
+The first step in the our analysis sequence is to compute the growth of trees using data from two censuses. The `compute_growth()` function computes average annual growth assuming census data that roughly follows ForestGEO standards. Despite such standards, minor variations will still exist between sites, thereby necessitating some data wrangling and checking. For example, the SCBI site records all diameters at breast height (DBH) in millimeters [@bourg_initial_2013], whereas the Michigan Big Woods site records them in centimeters [@allen_michigan_2020].
 
 We load both 2008 and 2014 SCBI census data `.csv` files as they existed on GitHub on November 20, 2020. After selecting only the relevant variables, we perform a few additional data wrangling steps: convert the character variable with the date of measurement to be of explicit type `date`, convert DBH to be in centimeters^[A rule of thumb to determine the units of DBH is to check if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then centimeters. If the later, then millimeters. This is because ForestGEO protocols state that only trees with DBH greater or equal to 1cm should be included in censuses.], convert the `sp` variable containing species information from type `chr` character to `fct` factor.^[In our spatial cross-validation algorithm in Section \ref{spatial-cross-validation} issues can occur when rare species do not occur in the training set, but then are encountered in the test set. This risk is mitigated by representing `sp` as a factor variable, which has a complete list of all levels of the categorical variable.] Furthermore, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from 300--600 instead of 0--640.
 
@@ -191,9 +206,9 @@ ggplot() +
 
 ## Step 2: Add spatial information {#spatial-information}
 
-The next step in our analysis sequence is to add additional spatial information to our main `growth_scbi` data frame. The first element of spatial information we add is a "buffer region" to the periphery of the study region. Since some of our model's explanatory variables are cumulative (such as competitor basal area), we must ensure that all trees being modeled are not biased to have different neighbor structures. This is of concern for trees at the boundary of study regions, for which all neighbors will not be included in the censused stems. In order to account for such edge effects, only trees that are not part of this buffer region, i.e. are part of the interior of the study region, will have their growth modeled @waller_applied_2004.
+The next step in our analysis sequence is to add additional spatial information to our main `growth_scbi` data frame. The first element of spatial information we add is a "buffer region" to the periphery of the study region. Since some of our model's explanatory variables are cumulative (such as competitor basal area), we must ensure that all trees being modeled are not biased to have different neighbor structures. This is of concern for trees at the boundary of study regions, for which all neighbors will not be included in the censused stems. In order to account for such edge effects, only trees that are not part of this buffer region, i.e. are part of the interior of the study region, will have their growth modeled [@waller_applied_2004].
 
-Our model of interspecific competition relies on a spatial definition of who the competitor trees are for focal trees of interest: all trees within a distance `comp_dist` of a focal tree are considered its competitors (assuming the same units as the `gx` and `gy` location variables). In our case we set this value at 7.5m, a value informed by @canham_neighborhood_2004 @uriarte_spatially_2004 @canham_neighborhood_2006. Using this value along with a manually constructed `sf` object representation of the study region's boundary via its vertices, we apply the `add_buffer_variable()` to our `growth_scbi` data frame to add a `buffer` boolean variable: all trees who have `buffer` set to `FALSE` will be our focal trees whose growth will be modeled, whereas those with `TRUE` will only be considered as competitor trees whose growth will not. 
+Our model of interspecific competition relies on a spatial definition of who the competitor trees are for focal trees of interest: all trees within a distance `comp_dist` of a focal tree are considered its competitors (assuming the same units as the `gx` and `gy` location variables). In our case we set this value at 7.5m, a value informed by other studies [@canham_neighborhood_2004, @uriarte_spatially_2004, @canham_neighborhood_2006]. Using this value along with a manually constructed `sf` object representation of the study region's boundary via its vertices, we apply the `add_buffer_variable()` to our `growth_scbi` data frame to add a `buffer` boolean variable: all trees who have `buffer` set to `FALSE` will be our focal trees whose growth will be modeled, whereas those with `TRUE` will only be considered as competitor trees whose growth will not. 
 
 ```{r}
 # Define buffer region using competitive distance range
@@ -209,9 +224,8 @@ growth_scbi <- growth_scbi %>%
   add_buffer_variable(size = comp_dist, region = study_region_scbi)
 ```
 
-The second element of spatial information are blocks corresponding to folds of a spatial cross-validation algorithm used to estimate out-of-sample model error. Conventional cross-validation algorithms assign observations to folds by randomly resampling individual observations. However, many of these algorithms assume that the observations are independent of each other. In the case of forest census data, observations exhibit spatial autocorrelation. We therefore incorporate this spatial dependence into the cross-validation algorithm with our spatial blocks of trees. @roberts_cross-validation_2017 @pohjankukka_estimating_2017.
-
-In the example below, we first manually define four folds that partition the study region as an `sf` object. We then use the output of the `spatialBlock()` function from the `blockCV` package to associate each tree in `growth_scbi` to the correct fold (saved in the `foldID` variable) @valavi_blockcv_2019. ^[In the Appendix we present an example where the folds themselves are also created using the `spatialBlock()` function given a specified `cv_block_size`.] 
+The second element of spatial information are blocks corresponding to folds of a spatial cross-validation algorithm used to estimate out-of-sample model error. Conventional cross-validation algorithms assign observations to folds by randomly resampling individual observations. However, many of these algorithms assume that the observations are independent of each other. In the case of forest census data, observations exhibit spatial autocorrelation. We therefore incorporate this spatial dependence into the cross-validation algorithm with our spatial blocks of trees [@roberts_cross-validation_2017 @pohjankukka_estimating_2017]
+In the example below, we first manually define four folds that partition the study region as an `sf` object. We then use the output of the `spatialBlock()` function from the `blockCV` package to associate each tree in `growth_scbi` to the correct fold (saved in the `foldID` variable) [@valavi_blockcv_2019]. ^[In the Appendix we present an example where the folds themselves are also created using the `spatialBlock()` function given a specified `cv_block_size`.] 
 
 ```{r}
 # Manually define spatial blocks to act as folds
@@ -260,7 +274,7 @@ focal_vs_comp_scbi %>%
   select(-foldID)
 ```
 
-The resulting data frame `focal_vs_comp_scbi` has `r nrow(focal_vs_comp_scbi)` rows, representing the subset of the `r nrow(growth_scbi)` trees in `growth_scbi` that will be considered as focal trees. Two new variables `focal_ID` and `focal_sp` relate to tree-stem identification and species information. Most notably however is a new variable `comp` which contains information on all competitor trees for a given focal tree, saved in `tidyr` package list-column format @tidyr_package. For example, we drill-down on the tree with `focal_ID` 4, which has 20 competitor trees each described by 4 variables as indicated by the fact that `comp` is a `tibble [20 × 4]`. 
+The resulting data frame `focal_vs_comp_scbi` has `r nrow(focal_vs_comp_scbi)` rows, representing the subset of the `r nrow(growth_scbi)` trees in `growth_scbi` that will be considered as focal trees. Two new variables `focal_ID` and `focal_sp` relate to tree-stem identification and species information. Most notably however is a new variable `comp` which contains information on all competitor trees for a given focal tree, saved in `tidyr` package list-column format [@tidyr_package]. For example, we drill-down on the tree with `focal_ID` 4, which has 20 competitor trees each described by 4 variables as indicated by the fact that `comp` is a `tibble [20 × 4]`. 
 
 ```{r scbi-focal-vs-comp-2}
 focal_vs_comp_scbi %>% 
@@ -445,7 +459,7 @@ The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r if
 
 # Acknowledgments
 
-Sophie Li for her feedback on package interface. 
+The authors thank Ryan Giordano and Jonathan Che for their help with the statistical methodology and Sophie Li for their feedback on package interface. 
 
 
 
