@@ -1,6 +1,6 @@
 Package: forestecology
 Type: Package
-Title: Methods and Data for Forest Ecology Model Assessment and Selection
+Title: Methods and Data for Forest Ecology Model Fitting and Assessment
 Version: 0.1.0.9004
 Authors@R: c(
     person(given = "Albert Y.", family = "Kim", email = "albert.ys.kim@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-306X")),
@@ -8,10 +8,12 @@ Authors@R: c(
     person(given = "Simon", family = "Couch", email = "simonpatrickcouch@gmail.com", role = "aut", comment = c(ORCID = "0000-0001-5676-5107"))
     )
 Maintainer: Albert Y. Kim <albert.ys.kim@gmail.com>
-Description: Code for assessing and selecting models for predicting the growth 
-    of trees. In particular spatial cross-validation for estimation of 
-    out-of-sample prediction error, permutation methods for testing the 
-    significance of competitor species, and Bayesian linear regression.
+Description: Code for fitting and assessing models for the growth of trees. In 
+    particular for the Bayesian neighborhood competition linear regression model 
+    of Allen (2020): methods for model fitting and generating fitted/predicted 
+    values, evaluating the effect of competitor species identity using 
+    permutation tests, and evaluating model performance using spatial 
+    cross-validation. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
