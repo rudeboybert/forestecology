@@ -90,7 +90,7 @@ observed_RMSE_CV <- 0
 shuffle_RMSE <- vector("list", 1)
 shuffle_RMSE_CV <- vector("list", 1)
 filename <- here("paper/simulation_results/") %>%
-  str_c(format(Sys.time(), "%Y-%m-%d"), "_model_comp_tbl_", num_shuffle, "_shuffles_scbi")
+  str_c(format(Sys.time(), "%Y-%m-%d"), "_scbi_", num_shuffle, "_shuffles")
 
 
 # Run all simulations
@@ -156,7 +156,6 @@ clock <- toc(quiet = TRUE)
 run_time <- clock$toc - clock$tic
 
 model_comp_tbl <- tibble(
-  species_notion = species_notion_vector,
   run_time = run_time,
   observed_RMSE = observed_RMSE,
   observed_RMSE_CV = observed_RMSE_CV,
@@ -173,17 +172,10 @@ save(model_comp_tbl, file = filename %>% str_c(".RData"))
 str_c(filename, ".RData") %>% load()
 
 model_comp <- bind_rows(
-  model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
-  model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
+  model_comp_tbl %>% select(run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
+  model_comp_tbl %>% select(run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
 ) %>%
-  gather(type, RMSE, -c(species_notion, run_time, CV)) %>%
-  mutate(
-    species_notion = case_when(
-      species_notion == "trait_group" ~ "1. Trait-based (6): lambda = 6 x 6",
-      species_notion == "family" ~ "2. Phylogenetic family (20): lambda = 20 x 20",
-      species_notion == "sp" ~ "3. Actual species (36): lambda = 36 x 36"
-    )
-  )
+  gather(type, RMSE, -c(run_time, CV))
 
 model_comp_observed <- model_comp %>%
   filter(type == "observed") %>%
@@ -199,7 +191,6 @@ cv_plot <- ggplot() +
     fill = "Cross-validated?",
     x = expression(paste("RMSE (cm ", y^{-1}, ")"))
   ) +
-  facet_wrap(~species_notion, ncol = 1) +
   scale_color_viridis(discrete = TRUE, option = "D")+
   scale_fill_viridis(discrete = TRUE) +
   theme_light()
