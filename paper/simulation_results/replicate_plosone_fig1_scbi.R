@@ -113,7 +113,7 @@ observed_RMSE <- focal_vs_comp_scbi %>%
 
 # 2. Compute observed test statistic: RMSE with cross-validation ----
 observed_RMSE_CV <- focal_vs_comp_scbi %>%
-  run_cv(comp_dist = comp_dist, cv_grid = blocks_scbi) %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi) %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 
@@ -142,7 +142,7 @@ shuffle_RMSE_CV <- numeric(length = num_shuffle)
 for(j in 1:num_shuffle){
   # Compute and save RMSE
   shuffle_RMSE_CV[j] <- focal_vs_comp_scbi %>%
-    run_cv(comp_dist = comp_dist, cv_grid = blocks_scbi, run_shuffle = TRUE) %>%
+    run_cv(comp_dist = comp_dist, blocks = blocks_scbi, run_shuffle = TRUE) %>%
     rmse(truth = growth, estimate = growth_hat) %>%
     pull(.estimate)
 

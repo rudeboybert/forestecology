@@ -112,7 +112,7 @@ for(i in 1:length(species_notion_vector)){
 
   # 2. Compute observed test statistic: RMSE with cross-validation ----
   observed_RMSE_CV[i] <- focal_vs_comp_bw %>%
-    run_cv(comp_dist = comp_dist, cv_grid = blocks_bw) %>%
+    run_cv(comp_dist = comp_dist, blocks = blocks_bw) %>%
     rmse(truth = growth, estimate = growth_hat) %>%
     pull(.estimate)
 
@@ -141,7 +141,7 @@ for(i in 1:length(species_notion_vector)){
   for(j in 1:num_shuffle){
     # Compute and save RMSE
     shuffle_RMSE_CV[[i]][j] <- focal_vs_comp_bw %>%
-      run_cv(comp_dist = comp_dist, cv_grid = blocks_bw, run_shuffle = TRUE) %>%
+      run_cv(comp_dist = comp_dist, blocks = blocks_bw, run_shuffle = TRUE) %>%
       rmse(truth = growth, estimate = growth_hat) %>%
       pull(.estimate)
 

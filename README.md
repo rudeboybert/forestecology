@@ -325,7 +325,7 @@ separate and independent data.
 
 ``` r
 focal_vs_comp_ex <- focal_vs_comp_ex %>%
-  run_cv(comp_dist = comp_dist, cv_grid = blocks_ex)
+  run_cv(comp_dist = comp_dist, blocks = blocks_ex)
 ```
 
 Note the increase in RMSE, reflecting the fact that our original

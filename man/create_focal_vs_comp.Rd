@@ -79,7 +79,7 @@ growth_toy \%>\%
 # Load in growth_df with spatial data
 # See ?growth_ex for attaching spatial data to growth_df
 data(growth_spatial_ex)
-# Load in cv_grid
+# Load in blocks
 data(blocks_ex)
 
 focal_vs_comp_ex <- growth_spatial_ex \%>\%

@@ -73,7 +73,7 @@ test_that("readme code works", {
   expect_true(
     check_inherits(
       focal_vs_comp_ex %>%
-        run_cv(comp_dist = comp_dist, cv_grid = blocks_ex) %>%
+        run_cv(comp_dist = comp_dist, blocks = blocks_ex) %>%
         right_join(growth_ex, by = c("focal_ID" = "ID")),
       "data.frame"
     )
@@ -89,7 +89,7 @@ test_that("readme code works", {
   )
 
   focal_vs_comp_ex <- focal_vs_comp_ex %>%
-    run_cv(comp_dist = comp_dist, cv_grid = blocks_ex)
+    run_cv(comp_dist = comp_dist, blocks = blocks_ex)
 
   expect_equal(
     focal_vs_comp_ex %>%

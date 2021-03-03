@@ -262,7 +262,6 @@ predict.comp_bayes_lm <- function(object, newdata, ...) {
 #'
 #' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
-#' @param cv_grid \code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}
 #'
 #' @import dplyr
 #' @import sf
@@ -280,12 +279,12 @@ predict.comp_bayes_lm <- function(object, newdata, ...) {
 #' run_cv(
 #'   focal_vs_comp_ex,
 #'   comp_dist = 1,
-#'   cv_grid = blocks_ex
+#'   blocks = blocks_ex
 #' )
-run_cv <- function(focal_vs_comp, comp_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
+run_cv <- function(focal_vs_comp, comp_dist, blocks, prior_param = NULL, run_shuffle = FALSE) {
   check_focal_vs_comp(focal_vs_comp)
   check_inherits(comp_dist, "numeric")
-  check_inherits(cv_grid, "sf")
+  check_inherits(blocks, "sf")
   if (!is.null(prior_param)) {
     check_prior_params(prior_param)
   }
@@ -302,14 +301,14 @@ run_cv <- function(focal_vs_comp, comp_dist, cv_grid, prior_param = NULL, run_sh
     fit_one_fold,
     focal_vs_comp,
     comp_dist,
-    cv_grid,
+    blocks,
     prior_param,
     run_shuffle
   )
 }
 
 fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
-                         cv_grid, prior_param, run_shuffle) {
+                         blocks, prior_param, run_shuffle) {
   # Define test set and "full" training set (we will remove buffer region below)
   test <- focal_vs_comp %>%
     filter(foldID == fold)
@@ -322,7 +321,7 @@ fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
   }
 
   # Define sf object of boundary of test fold
-  test_fold_boundary <- cv_grid %>%
+  test_fold_boundary <- blocks %>%
     subset(folds == fold) %>%
     st_bbox() %>%
     st_as_sfc()

@@ -410,7 +410,7 @@ To this end, we use the `foldID` variable defined in Section \ref{spatial-inform
 ```{r scbi-spatial-cross-validation-schematic, out.width="66%", fig.cap= "Schematic of spatial cross-validation: Using the k = 1 fold as the test set, assigning each focal tree to training set, test set, and fold buffer.", echo = FALSE}
 fold_number <- 1
 
-test_fold_buffer <-  blocks_scbi %>% 
+test_fold_buffer <- blocks_scbi %>% 
   filter(folds == fold_number)
                                               
 test_vs_train <- focal_vs_comp_scbi %>% 
@@ -437,7 +437,7 @@ This algorithm is implemented in the `run_cv()` function, which is a wrapper fun
 
 ```{r scbi-spatial-cv}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
-  run_cv(comp_dist = comp_dist, cv_grid = blocks_scbi)
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
 ```
 ```{r}
 model_rmse_cv <- focal_vs_comp_scbi %>%

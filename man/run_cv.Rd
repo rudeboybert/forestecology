@@ -7,7 +7,7 @@
 run_cv(
   focal_vs_comp,
   comp_dist,
-  cv_grid,
+  blocks,
   prior_param = NULL,
   run_shuffle = FALSE
 )
@@ -17,7 +17,7 @@ run_cv(
 
 \item{comp_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
 
-\item{cv_grid}{\code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}}
+\item{blocks}{An sf object of a \code{blockCV} block output}
 
 \item{prior_param}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters.
 Defaults to \code{a_0 = 250}, \code{b_0 = 250}, \code{mu_0} a vector of zeros of
@@ -40,7 +40,7 @@ focal-competitor data frame, it appends a column with predicted growth values.
 run_cv(
   focal_vs_comp_ex,
   comp_dist = 1,
-  cv_grid = blocks_ex
+  blocks = blocks_ex
 )
 }
 \seealso{
