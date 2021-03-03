@@ -280,7 +280,7 @@ predict.comp_bayes_lm <- function(object, newdata, ...) {
 #' run_cv(
 #'   focal_vs_comp_ex,
 #'   comp_dist = 1,
-#'   cv_grid = cv_grid_sf_ex
+#'   cv_grid = blocks_ex
 #' )
 run_cv <- function(focal_vs_comp, comp_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
   check_focal_vs_comp(focal_vs_comp)

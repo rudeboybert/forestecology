@@ -40,7 +40,7 @@ focal-competitor data frame, it appends a column with predicted growth values.
 run_cv(
   focal_vs_comp_ex,
   comp_dist = 1,
-  cv_grid = cv_grid_sf_ex
+  cv_grid = blocks_ex
 )
 }
 \seealso{

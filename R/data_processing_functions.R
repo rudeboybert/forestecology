@@ -89,7 +89,7 @@ compute_growth <- function(census_1, census_2, id) {
 #' Create focal versus competitor trees data frame
 #'
 #' @param growth_df A [compute_growth()] output converted to \code{sf} object
-#' @param cv_grid_sf An sf object of a \code{blockCV} block output
+#' @param blocks An sf object of a \code{blockCV} block output
 #' @param comp_dist Distance to determine which neighboring trees to a focal tree are competitors.
 #' @param id A character string of the variable name in \code{growth_df} uniquely identifying each tree
 #'
@@ -155,21 +155,21 @@ compute_growth <- function(census_1, census_2, id) {
 #'
 #' # Return corresponding data frame
 #' growth_toy %>%
-#'   create_focal_vs_comp(comp_dist = 1.5, cv_grid_sf = SpatialBlock_ex, id = "ID")
+#'   create_focal_vs_comp(comp_dist = 1.5, blocks = SpatialBlock_ex, id = "ID")
 #'
 #' # Load in growth_df with spatial data
 #' # See ?growth_ex for attaching spatial data to growth_df
 #' data(growth_spatial_ex)
 #' # Load in cv_grid
-#' data(cv_grid_sf_ex)
+#' data(blocks_ex)
 #'
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
-#'   create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
-create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
+#'   create_focal_vs_comp(comp_dist = 1, blocks = blocks_ex, id = "ID")
+create_focal_vs_comp <- function(growth_df, comp_dist, blocks, id) {
   # 0. Check inputs
   check_inherits(growth_df, "data.frame")
   check_inherits(comp_dist, "numeric")
-  check_inherits(cv_grid_sf, "sf")
+  check_inherits(blocks, "sf")
   check_inherits(id, "character")
 
   if (!id %in% colnames(growth_df)) {
@@ -216,7 +216,7 @@ create_focal_vs_comp <- function(growth_df, comp_dist, cv_grid_sf, id) {
 
   for (i in 1:length(all_folds)) {
     # Identify this fold's boundary
-    fold_boundary <- cv_grid_sf %>%
+    fold_boundary <- blocks %>%
       filter(folds == all_folds[i])
 
     # Identify focal trees in this fold

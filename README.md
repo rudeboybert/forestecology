@@ -206,7 +206,7 @@ competitor multiple times.
 
 ``` r
 focal_vs_comp_ex <- growth_ex %>%
-  create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_ex, id = "ID")
+  create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
 focal_vs_comp_ex
 #> # A tibble: 6 x 7
 #>   focal_ID focal_sp         dbh foldID    geometry growth comp            

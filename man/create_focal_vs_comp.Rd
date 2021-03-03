@@ -4,14 +4,14 @@
 \alias{create_focal_vs_comp}
 \title{Create focal versus competitor trees data frame}
 \usage{
-create_focal_vs_comp(growth_df, comp_dist, cv_grid_sf, id)
+create_focal_vs_comp(growth_df, comp_dist, blocks, id)
 }
 \arguments{
 \item{growth_df}{A \code{\link[=compute_growth]{compute_growth()}} output converted to \code{sf} object}
 
 \item{comp_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
 
-\item{cv_grid_sf}{An sf object of a \code{blockCV} block output}
+\item{blocks}{An sf object of a \code{blockCV} block output}
 
 \item{id}{A character string of the variable name in \code{growth_df} uniquely identifying each tree}
 }
@@ -74,16 +74,16 @@ ggplot() +
 
 # Return corresponding data frame
 growth_toy \%>\%
-  create_focal_vs_comp(comp_dist = 1.5, cv_grid_sf = SpatialBlock_ex, id = "ID")
+  create_focal_vs_comp(comp_dist = 1.5, blocks = SpatialBlock_ex, id = "ID")
 
 # Load in growth_df with spatial data
 # See ?growth_ex for attaching spatial data to growth_df
 data(growth_spatial_ex)
 # Load in cv_grid
-data(cv_grid_sf_ex)
+data(blocks_ex)
 
 focal_vs_comp_ex <- growth_spatial_ex \%>\%
-  create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+  create_focal_vs_comp(comp_dist = 1, blocks = blocks_ex, id = "ID")
 }
 \seealso{
 Other data processing functions: 

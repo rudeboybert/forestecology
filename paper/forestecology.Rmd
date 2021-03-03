@@ -269,7 +269,7 @@ The next step in our analysis sequence is to identify all focal trees and their 
 # TODO: Below reconcile the number of rows as they off by one from growth_scbi %>% 
 # filter(!is.na(growth) & !buffer). Perhaps by removing NA's in the growth_scbi stage?
 focal_vs_comp_scbi <- growth_scbi %>%
-  create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_scbi, id = "stemID")
+  create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID")
 focal_vs_comp_scbi %>% 
   select(-foldID)
 ```

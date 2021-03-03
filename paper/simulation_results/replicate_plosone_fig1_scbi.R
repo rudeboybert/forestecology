@@ -76,7 +76,7 @@ growth_scbi <- growth_scbi %>%
 
 # Compute focal versus competitor tree information -----------------------------
 focal_vs_comp_scbi <- growth_scbi %>%
-  create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_scbi, id = "stemID")
+  create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID")
 
 
 

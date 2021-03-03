@@ -66,7 +66,7 @@ blocks_bw <- bw_spatialBlock$blocks %>%
 
 # Compute focal versus competitor tree information -----------------------------
 focal_vs_comp_bw <- growth_bw %>%
-  create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_bw, id = "treeID")
+  create_focal_vs_comp(comp_dist, blocks = blocks_bw, id = "treeID")
 
 
 
@@ -95,7 +95,7 @@ for(i in 1:length(species_notion_vector)){
   # Focal vs comp main dataframe for analysis
   focal_vs_comp_bw <- growth_bw %>%
     mutate(sp = .data[[species_notion_vector[i]]] %>% factor()) %>%
-    create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_bw, id = "treeID")
+    create_focal_vs_comp(comp_dist, blocks = blocks_bw, id = "treeID")
 
 
   # 1. Compute observed test statistic: RMSE with no cross-validation ----

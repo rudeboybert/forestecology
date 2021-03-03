@@ -214,7 +214,7 @@
 #'
 #' # Create the focal versus comp data frame
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
-#'   create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+#'   create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
 "growth_spatial_ex"
 
 
@@ -242,13 +242,13 @@
 #'
 #' comp_dist <- 1
 #'
-#' ggplot(cv_grid_sf_ex) +
+#' ggplot(blocks_ex) +
 #'   geom_sf() +
 #'   geom_sf(data = growth_spatial_ex)
 #'
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
-#'   create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
-"cv_grid_sf_ex"
+#'   create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
+"blocks_ex"
 
 
 
