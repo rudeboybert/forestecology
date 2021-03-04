@@ -7,7 +7,8 @@ blinded: 0
 authors: 
 - name: Albert Y. Kim 
   affiliation: Program in Statistical & Data Sciences, Smith College
-  
+  thanks: "Assistant Professor, Statistical & Data Sciences, Smith College, Northampton, MA 01063 (e-mail: akim04@smith.edu)."
+    
 - name: David N. Allen
   affiliation: Biology Department, Middlebury College
   
@@ -22,9 +23,7 @@ abstract:
   | 4. The package features 1) `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence, 2) functions with standardized inputs/outputs of simple features `sf` package class, and 3) an S3 object-oriented implementation of the Bayesian linear regression model. These three facts allow for clear articulation of all the steps in the sequence of analysis and easy wrangling and visualization of the geospatial forestry data. Furthermore, while the package only has Bayesian linear regression implemented, the package was designed with extensibility to other methods in mind.  
 
 keywords:
-- forest ecology, competition, R, Rstats, tidyverse, sf, cross-validation, spatial statistics
-
-spacing: double
+- forest ecology, inter-species competition, tree growth, R, Rstats, tidyverse, sf, cross-validation, spatial statistics
 
 bibliography: paper.bib
 output: rticles::asa_article
@@ -60,7 +59,9 @@ opts_chunk$set(
   fig.show = "hold",
   # Etc:
   collapse = TRUE,
-  comment = "##"
+  comment = "##",
+  tidy.opts = list(width.cutoff=72),
+  tidy = TRUE
 )
 
 # Random number generator seed value
@@ -76,15 +77,18 @@ if (!is_html_output()) {
 
 # Set output width
 options(
-  width = 70, 
+  width = 72, 
   # Decimal precision
   digits = 3, 
   # Number of rows for tibble printing
-  tibble.print_max = 5, tibble.print_min = 5
+  tibble.print_max = 5, 
+  tibble.print_min = 5
 )
 ```
 
 \doublespacing
+
+
 
 # Introduction
 
@@ -157,11 +161,11 @@ library(blockCV)
 
 
 
-## Step 1: Compute the growth of trees based on census data
+## Step 1: Compute the growth of trees based on census data {compute-growth}
 
 The first step in the our analysis sequence is to compute the growth of trees using data from two censuses. The `compute_growth()` function computes average annual growth assuming census data that roughly follows ForestGEO standards. Despite such standards, minor variations will still exist between sites, thereby necessitating some data wrangling and checking. For example, the SCBI site records all diameters at breast height (DBH) in millimeters [@bourg_initial_2013], whereas the Michigan Big Woods site records them in centimeters [@allen_michigan_2020].
 
-We load both 2008 and 2014 SCBI census data `.csv` files as they existed on GitHub on November 20, 2020. After selecting only the relevant variables, we perform a few additional data wrangling steps: convert the character variable with the date of measurement to be of explicit type `date`, convert DBH to be in centimeters^[A rule of thumb to determine the units of DBH is to check if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then centimeters. If the later, then millimeters. This is because ForestGEO protocols state that only trees with DBH greater or equal to 1cm should be included in censuses.] Furthermore, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from 300--600 instead of 0--640.
+We load both 2008 and 2014 SCBI census data `.csv` files as they existed on GitHub on November 20, 2020 [@gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020]. After selecting only the relevant variables, we perform a few additional data wrangling steps: convert the character variable with the date of measurement to be of explicit type `date`, convert DBH to be in centimeters^[A rule of thumb to determine the units of DBH is to check if the smallest non-zero and non-missing measurement is 1 or 10. If the former, then centimeters. If the later, then millimeters. This is because ForestGEO protocols state that only trees with DBH greater or equal to 1cm should be included in censuses.] Furthermore, in order to speed up computation for purposes of this example, we only consider a 9 ha subsection of the 25.6 ha of the SCBI site: `gx` from 0--300 instead of 0--400 and `gy` from 300--600 instead of 0--640.
 
 ```{r scbi-load-data}
 census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
@@ -228,7 +232,7 @@ growth_scbi <- growth_scbi %>%
 ```
 
 The second element of spatial information are blocks corresponding to folds of a spatial cross-validation algorithm used to estimate out-of-sample model error. Conventional cross-validation algorithms assign observations to folds by randomly resampling individual observations. However, many of these algorithms assume that the observations are independent of each other. In the case of forest census data, observations exhibit spatial autocorrelation. We therefore incorporate this spatial dependence into the cross-validation algorithm with our spatial blocks of trees [@roberts_cross-validation_2017 @pohjankukka_estimating_2017]
-In the example below, we first manually define four folds that partition the study region as an `sf` object. We then use the output of the `spatialBlock()` function from the `blockCV` package to associate each tree in `growth_scbi` to the correct fold (saved in the `foldID` variable) [@valavi_blockcv_2019]. ^[In the Appendix we present an example where the folds themselves are also created using the `spatialBlock()` function given a specified `cv_block_size`.] 
+In the example below, we first manually define four folds that partition the study region as an `sf` object. We then use the output of the `spatialBlock()` function from the `blockCV` package to associate each tree in `growth_scbi` to the correct fold (saved in the `foldID` variable) [@valavi_blockcv_2019]. ^[In the Supporting Information we present an example where the folds themselves are also created using the `spatialBlock()` function given a specified `cv_block_size`.] 
 
 ```{r}
 # Manually define spatial blocks to act as folds
@@ -266,7 +270,7 @@ ggplot() +
 
 ## Step 3: Identify all focal and corresponding competitor trees {#focal-vs-comp}
 
-The next step in our analysis sequence is to identify all focal trees and their corresponding competitor trees. More specifically, it identifies all trees that are not part of the buffer region, have a valid `growth` measurement, and have at least one neighbor within `r comp_dist` of it.  The `create_focal_vs_comp()` functions performs these tasks and returns a new data frame of type `sf`. On top of the previous arguments `comp_dist` defining the competition neighborhood and `id` indicating which variable uniquely identifies each tree-stem, this function also requires an `sf` object representation of the spatial cross-validation blocks/folds. In this example, the blocks were manually encoded in `blocks_scbi` by specifying it's vertices in Section \ref{spatial-information}^[We present an alternative method for defining spatial cross-validation blocks is using the `spatialBlock()` function from the `blockCV` package in the Appendix]. We present the resulting data frame below with the `foldID` variable omitted for compactness of presentation.
+The next step in our analysis sequence is to identify all focal trees and their corresponding competitor trees. More specifically, it identifies all trees that are not part of the buffer region, have a valid `growth` measurement, and have at least one neighbor within `r comp_dist` of it.  The `create_focal_vs_comp()` functions performs these tasks and returns a new data frame of type `sf`. On top of the previous arguments `comp_dist` defining the competition neighborhood and `id` indicating which variable uniquely identifies each tree-stem, this function also requires an `sf` object representation of the spatial cross-validation blocks/folds. In this example, the blocks were manually encoded in `blocks_scbi` by specifying it's vertices in Section \ref{spatial-information}^[We present an alternative method for defining spatial cross-validation blocks is using the `spatialBlock()` function from the `blockCV` package in the Supporting Information.]. We present the resulting data frame below with the `foldID` variable omitted for compactness of presentation.
 
 ```{r scbi-focal-vs-comp}
 focal_vs_comp_scbi <- growth_scbi %>%
@@ -404,7 +408,7 @@ model_rmse_shuffle <- focal_vs_comp_scbi %>%
 model_rmse_shuffle
 ```
 
-The resulting RMSE of `r model_rmse_shuffle` based on the permutation test is `r ifelse(model_rmse_shuffle < model_rmse, "smaller", "larger")` than the earlier RMSE of `r model_rmse`, suggesting that models that do incorporate competitor species identity better fit the data. We conduct an analysis of the full SCBI plot in Section below.  
+The resulting RMSE of `r model_rmse_shuffle` based on the permutation test is `r ifelse(model_rmse_shuffle < model_rmse, "smaller", "larger")` than the earlier RMSE of `r model_rmse`, suggesting that models that do incorporate competitor species identity better fit the data. We conduct an analysis of the full SCBI plot in Section \ref{results} below.  
 
 
 ## Evaluate model performance using spatial cross-validation {#spatial-cross-validation}
@@ -452,8 +456,17 @@ model_rmse_cv <- focal_vs_comp_scbi %>%
 model_rmse_cv
 ```
 
-The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r ifelse(model_rmse_cv > model_rmse, "larger", "smaller")` than the earlier RMSE of `r model_rmse`, suggesting that models that do not take the inherent spatial autocorrelation of the data into account generate error estimates that are overly optimistic; in our case RMSE's that are too low.  
+The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r ifelse(model_rmse_cv > model_rmse, "larger", "smaller")` than the earlier RMSE of `r model_rmse`, suggesting that models that do not take the inherent spatial autocorrelation of the data into account generate error estimates that are overly optimistic; in our case RMSE's that are too low. We conduct an analysis of the full SCBI plot in Section \ref{results} below.  
 
+
+
+# Results {#results}
+
+Figure \ref{fig:scbi-simulation}
+
+```{r scbi-simulation, out.width="100%", fig.cap="Root mean squared error of models for standard, permuted, and spatial cross-validated error estimates.", echo = FALSE}
+include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.png")
+```
 
 
 # Discussion
@@ -479,9 +492,7 @@ A.Y.K. and D.N.A. conceived the ideas and coded most of the package in the early
 
 # Data accessibility
 
-We intend to archive all data and code on GitHub at the following repository https://github.com/rudeboybert/forestecology. This repository will be versioned and archived on Zenodo upon acceptance. 
-
-
+We intend to archive all data and source code for the `forestecology` package as well as this manuscript on GitHub at https://github.com/rudeboybert/forestecology. This repository will be versioned and archived on Zenodo upon acceptance. The 2008 and 2014 Smithsonian Conservation Biology Institute census data loaded in Section \ref{compute-growth} and saved in `scbi.stem2.csv` and `scbi.stem3.csv` are available on GitHub at https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/tree/master/tree_main_census/data/census-csv-files and have been versioned and archived on Zenodo at https://doi.org/10.5281/zenodo.2649301 [@gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020].
 
 # References
 

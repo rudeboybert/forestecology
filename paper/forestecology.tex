@@ -85,7 +85,9 @@
 interspecies competitive effects on the growth of trees}
 
   \author{
-        Albert Y. Kim \\
+        Albert Y. Kim \thanks{Assistant Professor, Statistical \& Data Sciences, Smith College,
+Northampton, MA 01063 (e-mail:
+\href{mailto:akim04@smith.edu}{\nolinkurl{akim04@smith.edu}}).} \\
     Program in Statistical \& Data Sciences, Smith College\\
      and \\     David N. Allen \\
     Biology Department, Middlebury College\\
@@ -139,8 +141,8 @@ methods in mind.
 \end{abstract}
 
 \noindent%
-{\it Keywords:} forest ecology, competition, R, Rstats, tidyverse, sf, cross-validation,
-spatial statistics
+{\it Keywords:} forest ecology, inter-species competition, tree growth, R, Rstats,
+tidyverse, sf, cross-validation, spatial statistics
 \vfill
 
 \newpage
@@ -335,9 +337,9 @@ We start by loading all necessary packages.
 \end{Highlighting}
 \end{Shaded}
 
-\hypertarget{step-1-compute-the-growth-of-trees-based-on-census-data}{%
-\subsection{Step 1: Compute the growth of trees based on census
-data}\label{step-1-compute-the-growth-of-trees-based-on-census-data}}
+\hypertarget{step-1-compute-the-growth-of-trees-based-on-census-data-compute-growth}{%
+\subsection{Step 1: Compute the growth of trees based on census data
+\{compute-growth\}}\label{step-1-compute-the-growth-of-trees-based-on-census-data-compute-growth}}
 
 The first step in the our analysis sequence is to compute the growth of
 trees using data from two censuses. The \texttt{compute\_growth()}
@@ -350,17 +352,18 @@ diameters at breast height (DBH) in millimeters
 them in centimeters \citep{allen_michigan_2020}.
 
 We load both 2008 and 2014 SCBI census data \texttt{.csv} files as they
-existed on GitHub on November 20, 2020. After selecting only the
-relevant variables, we perform a few additional data wrangling steps:
-convert the character variable with the date of measurement to be of
-explicit type \texttt{date}, convert DBH to be in centimeters\footnote{A
-  rule of thumb to determine the units of DBH is to check if the
-  smallest non-zero and non-missing measurement is 1 or 10. If the
-  former, then centimeters. If the later, then millimeters. This is
-  because ForestGEO protocols state that only trees with DBH greater or
-  equal to 1cm should be included in censuses.} Furthermore, in order to
-speed up computation for purposes of this example, we only consider a 9
-ha subsection of the 25.6 ha of the SCBI site: \texttt{gx} from 0--300
+existed on GitHub on November 20, 2020
+\citep{gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020}. After
+selecting only the relevant variables, we perform a few additional data
+wrangling steps: convert the character variable with the date of
+measurement to be of explicit type \texttt{date}, convert DBH to be in
+centimeters\footnote{A rule of thumb to determine the units of DBH is to
+  check if the smallest non-zero and non-missing measurement is 1 or 10.
+  If the former, then centimeters. If the later, then millimeters. This
+  is because ForestGEO protocols state that only trees with DBH greater
+  or equal to 1cm should be included in censuses.} Furthermore, in order
+to speed up computation for purposes of this example, we only consider a
+9 ha subsection of the 25.6 ha of the SCBI site: \texttt{gx} from 0--300
 instead of 0--400 and \texttt{gy} from 300--600 instead of 0--640.
 
 \begin{Shaded}
@@ -405,14 +408,14 @@ diameter growth of surviving, and not resprouted, stems.
 \CommentTok{## bbox:           xmin: 0.2 ymin: 300 xmax: 300 ymax: 600}
 \CommentTok{## CRS:            NA}
 \CommentTok{## # A tibble: 7,954 x 9}
-\CommentTok{##   stemID sp     dbh1 codes1 status  dbh2 codes2 growth   geometry}
-\CommentTok{##    <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>   <dbl>    <POINT>}
-\CommentTok{## 1      4 nysy  13.6  M      A       14.2 M       0.103 (14.2 428)}
-\CommentTok{## 2      5 havi   8.8  M      A        9.6 M;P     0.150  (9.4 436)}
-\CommentTok{## 3      6 havi   3.25 NULL   A        4   M       0.140  (1.3 434)}
-\CommentTok{## 4     77 qual  65.2  M      A       66   M       0.141 (34.7 307)}
-\CommentTok{## 5     79 tiam  47.7  M      A       46.8 M      -0.161   (40 381)}
-\CommentTok{## # ... with 7,949 more rows}
+\CommentTok{##   stemID sp     dbh1 codes1 status  dbh2 codes2 growth}
+\CommentTok{##    <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>   <dbl>}
+\CommentTok{## 1      4 nysy  13.6  M      A       14.2 M       0.103}
+\CommentTok{## 2      5 havi   8.8  M      A        9.6 M;P     0.150}
+\CommentTok{## 3      6 havi   3.25 NULL   A        4   M       0.140}
+\CommentTok{## 4     77 qual  65.2  M      A       66   M       0.141}
+\CommentTok{## 5     79 tiam  47.7  M      A       46.8 M      -0.161}
+\CommentTok{## # ... with 7,949 more rows, and 1 more variable: geometry <POINT>}
 \end{Highlighting}
 \end{Shaded}
 
@@ -526,9 +529,9 @@ the study region as an \texttt{sf} object. We then use the output of the
 \texttt{spatialBlock()} function from the \texttt{blockCV} package to
 associate each tree in \texttt{growth\_scbi} to the correct fold (saved
 in the \texttt{foldID} variable) \citep{valavi_blockcv_2019}. \footnote{In
-  the Appendix we present an example where the folds themselves are also
-  created using the \texttt{spatialBlock()} function given a specified
-  \texttt{cv\_block\_size}.}
+  the Supporting Information we present an example where the folds
+  themselves are also created using the \texttt{spatialBlock()} function
+  given a specified \texttt{cv\_block\_size}.}
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -600,8 +603,9 @@ by specifying it's vertices in Section
 \ref{spatial-information}\footnote{We present an alternative method for
   defining spatial cross-validation blocks is using the
   \texttt{spatialBlock()} function from the \texttt{blockCV} package in
-  the Appendix}. We present the resulting data frame below with the
-\texttt{foldID} variable omitted for compactness of presentation.
+  the Supporting Information.}. We present the resulting data frame
+below with the \texttt{foldID} variable omitted for compactness of
+presentation.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -731,7 +735,7 @@ First the generic for \texttt{print()} displays the names of all prior
 \CommentTok{## 4 Multivariate t on beta   V_0   V_star   }
 \CommentTok{## }
 \CommentTok{## Model formula:}
-\CommentTok{## growth ~ sp + dbh + dbh * sp + acne * sp + acpl * sp + acru * sp + acsp * sp + aial * sp + amar * sp + astr * sp + beth * sp + caca * sp + caco * sp + cade * sp + cagl * sp + caovl * sp + casp * sp + cato * sp + ceca * sp + ceoc * sp + chvi * sp + coal * sp + coam * sp + cofl * sp + crpr * sp + crsp * sp + divi * sp + elum * sp + eual * sp + fagr * sp + fram * sp + frni * sp + frpe * sp + frsp * sp + havi * sp + ilve * sp + juci * sp + juni * sp + juvi * sp + libe * sp + litu * sp + loma * sp + nysy * sp + pato * sp + pipu * sp + pist * sp + pivi * sp + ploc * sp + prav * sp + prpe * sp + prse * sp + prsp * sp + qual * sp + quco * sp + qufa * sp + qumi * sp + qupr * sp + quru * sp + qusp * sp + quve * sp + rhpe * sp + romu * sp + rops * sp + rual * sp + rupe * sp + ruph * sp + saal * sp + saca * sp + tiam * sp + ulam * sp + ulru * sp + ulsp * sp + unk * sp + viac * sp + vipr * sp + vire * sp}
+\CommentTok{## growth ~ sp + dbh + dbh * sp + acne * sp + acru * sp + amar * sp + astr * sp + caca * sp + caco * sp + cade * sp + cagl * sp + caovl * sp + cato * sp + ceca * sp + ceoc * sp + chvi * sp + cofl * sp + crpr * sp + crsp * sp + divi * sp + elum * sp + fagr * sp + fram * sp + frni * sp + frpe * sp + havi * sp + ilve * sp + juci * sp + juni * sp + libe * sp + litu * sp + nysy * sp + pist * sp + pivi * sp + ploc * sp + prav * sp + prse * sp + qual * sp + quco * sp + qufa * sp + qumi * sp + qupr * sp + quru * sp + quve * sp + rops * sp + saal * sp + saca * sp + tiam * sp + ulam * sp + ulru * sp + unk * sp + vipr * sp}
 \end{Highlighting}
 \end{Shaded}
 
@@ -752,15 +756,14 @@ posterior predictive distribution.
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi}
 \CommentTok{## # A tibble: 6,296 x 8}
-\CommentTok{##   focal_ID focal_sp   dbh foldID   geometry growth}
-\CommentTok{##      <dbl> <fct>    <dbl> <fct>     <POINT>  <dbl>}
-\CommentTok{## 1        4 nysy     13.6  1      (14.2 428)  0.103}
-\CommentTok{## 2        5 havi      8.8  1       (9.4 436)  0.150}
-\CommentTok{## 3       79 tiam     47.7  1        (40 381) -0.161}
-\CommentTok{## 4       80 caca      5.15 1      (38.7 422)  0.253}
-\CommentTok{## 5       96 libe      2.3  1        (60 310)  0.262}
-\CommentTok{## # ... with 6,291 more rows, and 2 more variables: comp <list>,}
-\CommentTok{## #   growth_hat <dbl>}
+\CommentTok{##   focal_ID focal_sp   dbh foldID   geometry growth comp             }
+\CommentTok{##      <dbl> <fct>    <dbl> <fct>     <POINT>  <dbl> <list>           }
+\CommentTok{## 1        4 nysy     13.6  1      (14.2 428)  0.103 <tibble [20 x 4]>}
+\CommentTok{## 2        5 havi      8.8  1       (9.4 436)  0.150 <tibble [32 x 4]>}
+\CommentTok{## 3       79 tiam     47.7  1        (40 381) -0.161 <tibble [20 x 4]>}
+\CommentTok{## 4       80 caca      5.15 1      (38.7 422)  0.253 <tibble [12 x 4]>}
+\CommentTok{## 5       96 libe      2.3  1        (60 310)  0.262 <tibble [14 x 4]>}
+\CommentTok{## # ... with 6,291 more rows, and 1 more variable: growth_hat <dbl>}
 \end{Highlighting}
 \end{Shaded}
 
@@ -865,7 +868,7 @@ argument.
 The resulting RMSE of 0.131 based on the permutation test is larger than
 the earlier RMSE of 0.128, suggesting that models that do incorporate
 competitor species identity better fit the data. We conduct an analysis
-of the full SCBI plot in Section below.
+of the full SCBI plot in Section \ref{results} below.
 
 \hypertarget{spatial-cross-validation}{%
 \subsection{Evaluate model performance using spatial
@@ -934,7 +937,22 @@ The resulting RMSE of 0.14 computed using cross-validation is larger
 than the earlier RMSE of 0.128, suggesting that models that do not take
 the inherent spatial autocorrelation of the data into account generate
 error estimates that are overly optimistic; in our case RMSE's that are
-too low.
+too low. We conduct an analysis of the full SCBI plot in Section
+\ref{results} below.
+
+\hypertarget{results}{%
+\section{Results}\label{results}}
+
+Figure \ref{fig:scbi-simulation}
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{simulation_results/2021-03-03_scbi_49_shuffles} 
+
+}
+
+\caption{Root mean squared error of models for standard, permuted, and spatial cross-validated error estimates.}\label{fig:scbi-simulation}
+\end{figure}
 
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
@@ -969,9 +987,17 @@ drafts and gave final approval for publication.
 \hypertarget{data-accessibility}{%
 \section{Data accessibility}\label{data-accessibility}}
 
-We intend to archive all data and code on GitHub at the following
-repository \url{https://github.com/rudeboybert/forestecology}. This
-repository will be versioned and archived on Zenodo upon acceptance.
+We intend to archive all data and source code for the
+\texttt{forestecology} package as well as this manuscript on GitHub at
+\url{https://github.com/rudeboybert/forestecology}. This repository will
+be versioned and archived on Zenodo upon acceptance. The 2008 and 2014
+Smithsonian Conservation Biology Institute census data loaded in Section
+\ref{compute-growth} and saved in \texttt{scbi.stem2.csv} and
+\texttt{scbi.stem3.csv} are available on GitHub at
+\url{https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/tree/master/tree_main_census/data/census-csv-files}
+and have been versioned and archived on Zenodo at
+\url{https://doi.org/10.5281/zenodo.2649301}
+\citep{gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020}.
 
 \bibliographystyle{agsm}
 \bibliography{paper.bib}
