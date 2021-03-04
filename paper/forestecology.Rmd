@@ -1,17 +1,14 @@
 ---
-title: "The forestecology R package for fitting and assessing models of interspecies competitive effects on the growth of trees"
+title: The forestecology R package for fitting and assessing models of interspecies competitive effects on the growth of trees
 
-# to produce blinded version set to 1 and change blinded <- TRUE on line 54 below
 blinded: 0
 
 authors: 
 - name: Albert Y. Kim 
   affiliation: Program in Statistical & Data Sciences, Smith College
   thanks: "Assistant Professor, Statistical & Data Sciences, Smith College, Northampton, MA 01063 (e-mail: akim04@smith.edu)."
-    
 - name: David N. Allen
   affiliation: Biology Department, Middlebury College
-  
 - name: Simon P. Couch
   affiliation: Mathematics Department, Reed College
 
@@ -23,14 +20,19 @@ abstract:
   | 4. The package features 1) `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence, 2) functions with standardized inputs/outputs of simple features `sf` package class, and 3) an S3 object-oriented implementation of the Bayesian linear regression model. These three facts allow for clear articulation of all the steps in the sequence of analysis and easy wrangling and visualization of the geospatial forestry data. Furthermore, while the package only has Bayesian linear regression implemented, the package was designed with extensibility to other methods in mind.  
 
 keywords:
-- forest ecology, inter-species competition, tree growth, R, Rstats, tidyverse, sf, cross-validation, spatial statistics
+- forest ecology, competition, tree growth, R, tidyverse, sf, cross-validation, spatial statistics
 
 bibliography: paper.bib
 output: rticles::asa_article
 link-citations: yes
 header-includes:
-- \usepackage{xcolor, soul, xspace, float, subfig, lineno, setspace}
+- \usepackage{xcolor, soul, xspace, float, subfig, lineno, setspace, fancyhdr}
+# Add line numbers:
 - \linenumbers
+# Add running header:
+- \pagestyle{fancy}
+- \fancyhead[LO,LE]{forestecology R package}
+- \renewcommand{\sectionmark}[1]{\markright{#1}{}}
 ---
 
 
@@ -87,7 +89,6 @@ options(
 ```
 
 \doublespacing
-
 
 
 # Introduction
@@ -473,8 +474,6 @@ include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.png")
 
 The `forestecology` package provides
 
-- Run full simulation on SCBI data
-- run time considerations
 
 
 
@@ -486,13 +485,15 @@ The authors thank Ryan Giordano and Jonathan Che for their help with the statist
 
 # Author's contributions
 
-A.Y.K. and D.N.A. conceived the ideas and coded most of the package in the early design stages. A.Y.K. led the writing of the manuscript. S.P.C. refactored much of the package's code in the later design stages to align with R and "tidy" programming best practices [@wickham_welcome_2019]. All authors contributed critically to the drafts and gave final approval for publication.
+AYK and DNA conceived the ideas and coded most of the package in the early design stages. AYK led the writing of the manuscript. SPC refactored much of the package's code in the later design stages to align with R and "tidy" programming best practices [@wickham_welcome_2019]. All authors contributed critically to the drafts and gave final approval for publication.
 
 
 
 # Data accessibility
 
 We intend to archive all data and source code for the `forestecology` package as well as this manuscript on GitHub at https://github.com/rudeboybert/forestecology. This repository will be versioned and archived on Zenodo upon acceptance. The 2008 and 2014 Smithsonian Conservation Biology Institute census data loaded in Section \ref{compute-growth} and saved in `scbi.stem2.csv` and `scbi.stem3.csv` are available on GitHub at https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/tree/master/tree_main_census/data/census-csv-files and have been versioned and archived on Zenodo at https://doi.org/10.5281/zenodo.2649301 [@gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020].
+
+
 
 # References
 

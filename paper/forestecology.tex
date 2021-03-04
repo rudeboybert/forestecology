@@ -67,8 +67,11 @@
 
 % Pandoc citation processing
 
-\usepackage{xcolor, soul, xspace, float, subfig, lineno, setspace}
+\usepackage{xcolor, soul, xspace, float, subfig, lineno, setspace, fancyhdr}
 \linenumbers
+\pagestyle{fancy}
+\fancyhead[LO,LE]{forestecology R package}
+\renewcommand{\sectionmark}[1]{\markright{#1}{}}
 
 \begin{document}
 
@@ -141,8 +144,8 @@ methods in mind.
 \end{abstract}
 
 \noindent%
-{\it Keywords:} forest ecology, inter-species competition, tree growth, R, Rstats,
-tidyverse, sf, cross-validation, spatial statistics
+{\it Keywords:} forest ecology, competition, tree growth, R, tidyverse, sf,
+cross-validation, spatial statistics
 \vfill
 
 \newpage
@@ -959,14 +962,6 @@ Figure \ref{fig:scbi-simulation}
 
 The \texttt{forestecology} package provides
 
-\begin{itemize}
-\tightlist
-\item
-  Run full simulation on SCBI data
-\item
-  run time considerations
-\end{itemize}
-
 \hypertarget{acknowledgments}{%
 \section{Acknowledgments}\label{acknowledgments}}
 
@@ -977,10 +972,10 @@ interface. The authors declare no conflicts of interest.
 \hypertarget{authors-contributions}{%
 \section{Author's contributions}\label{authors-contributions}}
 
-A.Y.K. and D.N.A. conceived the ideas and coded most of the package in
-the early design stages. A.Y.K. led the writing of the manuscript.
-S.P.C. refactored much of the package's code in the later design stages
-to align with R and ``tidy'' programming best practices
+AYK and DNA conceived the ideas and coded most of the package in the
+early design stages. AYK led the writing of the manuscript. SPC
+refactored much of the package's code in the later design stages to
+align with R and ``tidy'' programming best practices
 \citep{wickham_welcome_2019}. All authors contributed critically to the
 drafts and gave final approval for publication.
 
