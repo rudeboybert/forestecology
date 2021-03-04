@@ -67,7 +67,8 @@
 
 % Pandoc citation processing
 
-\usepackage{xcolor, soul, xspace, float, subfig, lineno}
+\usepackage{xcolor, soul, xspace, float, subfig, lineno, setspace}
+\linenumbers
 
 \begin{document}
 
@@ -86,7 +87,7 @@ interspecies competitive effects on the growth of trees}
   \author{
         Albert Y. Kim \\
     Program in Statistical \& Data Sciences, Smith College\\
-     and \\     David Allen \\
+     and \\     David N. Allen \\
     Biology Department, Middlebury College\\
      and \\     Simon P. Couch \\
     Mathematics Department, Reed College\\
@@ -145,7 +146,7 @@ spatial statistics
 \newpage
 \spacingset{1.45} % DON'T change the spacing!
 
-\linenumbers
+\doublespacing
 
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
@@ -420,37 +421,37 @@ The output \texttt{growth\_scbi} is a single data frame of class
 growth in DBH (cm y\textsuperscript{-1}) for all stems that were alive
 at both time points, and \texttt{geometry}, the \texttt{sf} package's
 encoding of geolocations of type
-\texttt{\textless{}POINT\textgreater{}}. Furthermore, the variables that
+\texttt{\textless{}POINT\textgreater{}}. In addition the species
+variable \texttt{sp} is converted to a factor if it wasn't already by
+\texttt{compute\_growth()}.\footnote{In our spatial cross-validation
+  algorithm in Section \ref{spatial-cross-validation} issues can occur
+  when rare species do not occur in the training set, but then are
+  encountered in the test set. This risk is mitigated by representing
+  \texttt{sp} as a factor variable, which has a complete list of all
+  levels of the categorical variable.} Furthermore, the variables that
 should remain unchanged between censuses appear only once, such as
 location variables \texttt{gx} and \texttt{gy}; as well as
 species-related variables. Variables that should change between censuses
 are suffixed with \texttt{1} and \texttt{2} indicating the earlier and
 later censuses, such as \texttt{dbh1/dbh2} and \texttt{codes1/codes2}.
+
 Site data that does not align with this convention will need to be
 transformed for use with the \texttt{compute\_growth()} function.
 However, in the end, all that matters is that the growth of all stems is
-saved in a data frame of class \texttt{sf} and, at a minimum, the data
-contains the variables above. Lastly, the species variable \texttt{sp}
-is automatically converted to a factor\footnote{In our spatial
-  cross-validation algorithm in Section \ref{spatial-cross-validation}
-  issues can occur when rare species do not occur in the training set,
-  but then are encountered in the test set. This risk is mitigated by
-  representing \texttt{sp} as a factor variable, which has a complete
-  list of all levels of the categorical variable.}.
-
-TODO: enumerate what these variables are and say if they need exact
-names
+saved in a data frame of class \texttt{sf} and, at a minimum, contains
+the variable uniquely identifying each stem, \texttt{sp}, \texttt{dbh1},
+\texttt{growth}, \texttt{geometry}.
 
 Given that \texttt{growth\_scbi} is of class \texttt{sf}, it can be
 easily plotted in \texttt{ggplot2} using the \texttt{geom\_sf()}
-geometry as seen in Figure \ref{fig:scbi-trees}.
+geometry as seen in Figure \ref{fig:scbi-trees} where we plot a random
+sample of 500 out of the 7954 trees.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# }\AlertTok{TODO}\CommentTok{: Rescale points in this plot}
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ growth)) }\OperatorTok{+}\StringTok{ }
-\StringTok{  }\KeywordTok{scale_size}\NormalTok{(}\DataTypeTok{breaks =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.01}\NormalTok{, }\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{), }\DataTypeTok{range =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{sample_n}\NormalTok{(}\DecValTok{500}\NormalTok{), }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ growth)) }\OperatorTok{+}\StringTok{ }
+\StringTok{  }\KeywordTok{scale_size_binned}\NormalTok{(}\DataTypeTok{limits =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -460,7 +461,7 @@ geometry as seen in Figure \ref{fig:scbi-trees}.
 
 }
 
-\caption{Compute growth of trees based on census data: Map with growth of all trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot.}\label{fig:scbi-trees}
+\caption{Compute growth of trees based on census data: Map with growth of a random sample of 500 trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot.}\label{fig:scbi-trees}
 \end{figure}
 
 \hypertarget{spatial-information}{%
@@ -585,25 +586,25 @@ thus is a focal tree whose growth is of modeled interest).
 trees}\label{focal-vs-comp}}
 
 The next step in our analysis sequence is to identify all focal trees
-and their corresponding competitor trees. The
-\texttt{create\_focal\_vs\_comp()} functions performs these tasks and
-returns a new data frame of type \texttt{sf}. On top of the previous
-arguments \texttt{comp\_dist} defining the competition neighborhood and
-\texttt{id} indicating which variable uniquely identifies each
-tree-stem, this function also requires an \texttt{sf} object
-representation of the spatial cross-validation blocks/folds. In this
-example, the blocks were manually encoded in \texttt{blocks\_scbi} by
-specifying it's vertices in Section \ref{spatial-information}\footnote{We
-  present an alternative method for defining spatial cross-validation
-  blocks is using the \texttt{spatialBlock()} function from the
-  \texttt{blockCV} package in the Appendix}. We present the resulting
-data frame below with the \texttt{foldID} variable omitted for
-compactness of presentation.
+and their corresponding competitor trees. More specifically, it
+identifies all trees that are not part of the buffer region, have a
+valid \texttt{growth} measurement, and have at least one neighbor within
+7.5 of it. The \texttt{create\_focal\_vs\_comp()} functions performs
+these tasks and returns a new data frame of type \texttt{sf}. On top of
+the previous arguments \texttt{comp\_dist} defining the competition
+neighborhood and \texttt{id} indicating which variable uniquely
+identifies each tree-stem, this function also requires an \texttt{sf}
+object representation of the spatial cross-validation blocks/folds. In
+this example, the blocks were manually encoded in \texttt{blocks\_scbi}
+by specifying it's vertices in Section
+\ref{spatial-information}\footnote{We present an alternative method for
+  defining spatial cross-validation blocks is using the
+  \texttt{spatialBlock()} function from the \texttt{blockCV} package in
+  the Appendix}. We present the resulting data frame below with the
+\texttt{foldID} variable omitted for compactness of presentation.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# }\AlertTok{TODO}\CommentTok{: Below reconcile the number of rows as they off by one from growth_scbi %>% }
-\CommentTok{# filter(!is.na(growth) & !buffer). Perhaps by removing NA's in the growth_scbi stage?}
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
 \NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
@@ -675,20 +676,17 @@ times.
 \StringTok{  }\KeywordTok{filter}\NormalTok{(focal_ID }\OperatorTok{==}\StringTok{ }\DecValTok{4}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
 \StringTok{  }\KeywordTok{select}\NormalTok{(focal_ID, dbh, comp) }\OperatorTok{%>%}\StringTok{ }
 \StringTok{  }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \StringTok{"comp"}\NormalTok{)}
+\CommentTok{## # A tibble: 20 x 6}
+\CommentTok{##   focal_ID   dbh comp_ID  dist comp_sp comp_basal_area}
+\CommentTok{##      <dbl> <dbl>   <dbl> <dbl> <fct>             <dbl>}
+\CommentTok{## 1        4  13.6    1836  7.48 tiam            0.0176 }
+\CommentTok{## 2        4  13.6    1847  2.81 nysy            0.00332}
+\CommentTok{## 3        4  13.6    1848  1.62 nysy            0.00396}
+\CommentTok{## 4        4  13.6    1849  2.62 nysy            0.00535}
+\CommentTok{## 5        4  13.6    1850  2.98 havi            0.00472}
+\CommentTok{## # ... with 15 more rows}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{verbatim}
-## # A tibble: 20 x 6
-##   focal_ID   dbh comp_ID  dist comp_sp comp_basal_area
-##      <dbl> <dbl>   <dbl> <dbl> <fct>             <dbl>
-## 1        4  13.6    1836  7.48 tiam            0.0176 
-## 2        4  13.6    1847  2.81 nysy            0.00332
-## 3        4  13.6    1848  1.62 nysy            0.00396
-## 4        4  13.6    1849  2.62 nysy            0.00535
-## 5        4  13.6    1850  2.98 havi            0.00472
-## # ... with 15 more rows
-\end{verbatim}
 
 \hypertarget{model-fit-predict}{%
 \subsection{Step 4: Fit model}\label{model-fit-predict}}
@@ -708,7 +706,6 @@ defaults as specified in \texttt{?comp\_bayes\_lm}).
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{# }\AlertTok{TODO}\CommentTok{: Add information about default priors in ?comp_bayes_lm()}
 \NormalTok{comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
 \end{Highlighting}
@@ -755,13 +752,13 @@ posterior predictive distribution.
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi}
 \CommentTok{## # A tibble: 6,296 x 8}
-\CommentTok{##   focal_ID focal_sp   dbh foldID                  geometry growth}
-\CommentTok{##      <dbl> <fct>    <dbl> <fct>                    <POINT>  <dbl>}
-\CommentTok{## 1        4 nysy     13.6  1                     (14.2 428)  0.103}
-\CommentTok{## 2        5 havi      8.8  1                      (9.4 436)  0.150}
-\CommentTok{## 3       79 tiam     47.7  1                       (40 381) -0.161}
-\CommentTok{## 4       80 caca      5.15 1                     (38.7 422)  0.253}
-\CommentTok{## 5       96 libe      2.3  1                       (60 310)  0.262}
+\CommentTok{##   focal_ID focal_sp   dbh foldID   geometry growth}
+\CommentTok{##      <dbl> <fct>    <dbl> <fct>     <POINT>  <dbl>}
+\CommentTok{## 1        4 nysy     13.6  1      (14.2 428)  0.103}
+\CommentTok{## 2        5 havi      8.8  1       (9.4 436)  0.150}
+\CommentTok{## 3       79 tiam     47.7  1        (40 381) -0.161}
+\CommentTok{## 4       80 caca      5.15 1      (38.7 422)  0.253}
+\CommentTok{## 5       96 libe      2.3  1        (60 310)  0.262}
 \CommentTok{## # ... with 6,291 more rows, and 2 more variables: comp <list>,}
 \CommentTok{## #   growth_hat <dbl>}
 \end{Highlighting}
@@ -919,7 +916,7 @@ values to again compute our RMSE.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{cv_grid =}\NormalTok{ blocks_scbi)}
+\StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -942,6 +939,8 @@ too low.
 \hypertarget{discussion}{%
 \section{Discussion}\label{discussion}}
 
+The \texttt{forestecology} package provides
+
 \begin{itemize}
 \tightlist
 \item
@@ -955,7 +954,24 @@ too low.
 
 The authors thank Ryan Giordano and Jonathan Che for their help with the
 statistical methodology and Sophie Li for their feedback on package
-interface.
+interface. The authors declare no conflicts of interest.
+
+\hypertarget{authors-contributions}{%
+\section{Author's contributions}\label{authors-contributions}}
+
+A.Y.K. and D.N.A. conceived the ideas and coded most of the package in
+the early design stages. A.Y.K. led the writing of the manuscript.
+S.P.C. refactored much of the package's code in the later design stages
+to align with R and ``tidy'' programming best practices
+\citep{wickham_welcome_2019}. All authors contributed critically to the
+drafts and gave final approval for publication.
+
+\hypertarget{data-accessibility}{%
+\section{Data accessibility}\label{data-accessibility}}
+
+We intend to archive all data and code on GitHub at the following
+repository \url{https://github.com/rudeboybert/forestecology}. This
+repository will be versioned and archived on Zenodo upon acceptance.
 
 \bibliographystyle{agsm}
 \bibliography{paper.bib}

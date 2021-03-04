@@ -8,7 +8,7 @@ authors:
 - name: Albert Y. Kim 
   affiliation: Program in Statistical & Data Sciences, Smith College
   
-- name: David Allen
+- name: David N. Allen
   affiliation: Biology Department, Middlebury College
   
 - name: Simon P. Couch
@@ -24,14 +24,17 @@ abstract:
 keywords:
 - forest ecology, competition, R, Rstats, tidyverse, sf, cross-validation, spatial statistics
 
+spacing: double
+
 bibliography: paper.bib
 output: rticles::asa_article
 link-citations: yes
 header-includes:
-- \usepackage{xcolor, soul, xspace, float, subfig, lineno}
+- \usepackage{xcolor, soul, xspace, float, subfig, lineno, setspace}
+- \linenumbers
 ---
 
-\linenumbers
+
 
 ```{r setup, include = FALSE, cache = FALSE}
 # Internally used packages
@@ -81,9 +84,10 @@ options(
 )
 ```
 
-
+\doublespacing
 
 # Introduction
+
 
 BERT: Dave could you write a few sentences (and add references where appropriate) starting with the big picture of modeling tree growth, zooming in to neighhorhood models, and then connecting to the "@allen_permutation_2020 considers the following model" I write below?
 
@@ -189,18 +193,16 @@ growth_scbi <-
 growth_scbi
 ```
 
-The output `growth_scbi` is a single data frame of class `sf` that includes variables `growth`, the average annual growth in DBH (cm y^-1^) for all stems that were alive at both time points, and `geometry`, the `sf` package's encoding of geolocations of type `<POINT>`. Furthermore, the variables that should remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. Site data that does not align with this convention will need to be transformed for use with the `compute_growth()` function. However, in the end, all that matters is that the growth of all stems is saved in a data frame of class `sf` and, at a minimum, the data contains the variables above. Lastly, the species variable `sp` is automatically converted to a factor^[In our spatial cross-validation algorithm in Section \ref{spatial-cross-validation} issues can occur when rare species do not occur in the training set, but then are encountered in the test set. This risk is mitigated by representing `sp` as a factor variable, which has a complete list of all levels of the categorical variable.].
+The output `growth_scbi` is a single data frame of class `sf` that includes variables `growth`, the average annual growth in DBH (cm y^-1^) for all stems that were alive at both time points, and `geometry`, the `sf` package's encoding of geolocations of type `<POINT>`. In addition the species variable `sp` is converted to a factor if it wasn't already by `compute_growth()`.^[In our spatial cross-validation algorithm in Section \ref{spatial-cross-validation} issues can occur when rare species do not occur in the training set, but then are encountered in the test set. This risk is mitigated by representing `sp` as a factor variable, which has a complete list of all levels of the categorical variable.] Furthermore, the variables that should remain unchanged between censuses appear only once, such as location variables `gx` and `gy`; as well as species-related variables. Variables that should change between censuses are suffixed with `1` and `2` indicating the earlier and later censuses, such as `dbh1/dbh2` and `codes1/codes2`. 
 
+Site data that does not align with this convention will need to be transformed for use with the `compute_growth()` function. However, in the end, all that matters is that the growth of all stems is saved in a data frame of class `sf` and, at a minimum, contains the variable uniquely identifying each stem, `sp`, `dbh1`, `growth`, `geometry`.
 
-TODO: enumerate what these variables are and say if they need exact names
+Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2` using the `geom_sf()` geometry as seen in Figure \ref{fig:scbi-trees} where we plot a random sample of 500 out of the `r nrow(growth_scbi)` trees.
 
-Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2` using the `geom_sf()` geometry as seen in Figure \ref{fig:scbi-trees}.
-
-```{r scbi-trees, out.width="66%", fig.cap="Compute growth of trees based on census data: Map with growth of all trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot."}
-# TODO: Rescale points in this plot
+```{r scbi-trees, out.width="66%", fig.cap="Compute growth of trees based on census data: Map with growth of a random sample of 500 trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot."}
 ggplot() +
-  geom_sf(data = growth_scbi, aes(size = growth)) + 
-  scale_size(breaks = c(0.01, 0.1, 1), range = c(0.1, 1))
+  geom_sf(data = growth_scbi %>% sample_n(500), aes(size = growth)) + 
+  scale_size_binned(limits = c(0.1, 1))
 ```
 
 
@@ -264,16 +266,29 @@ ggplot() +
 
 ## Step 3: Identify all focal and corresponding competitor trees {#focal-vs-comp}
 
-The next step in our analysis sequence is to identify all focal trees and their corresponding competitor trees. The `create_focal_vs_comp()` functions performs these tasks and returns a new data frame of type `sf`. On top of the previous arguments `comp_dist` defining the competition neighborhood and `id` indicating which variable uniquely identifies each tree-stem, this function also requires an `sf` object representation of the spatial cross-validation blocks/folds. In this example, the blocks were manually encoded in `blocks_scbi` by specifying it's vertices in Section \ref{spatial-information}^[We present an alternative method for defining spatial cross-validation blocks is using the `spatialBlock()` function from the `blockCV` package in the Appendix]. We present the resulting data frame below with the `foldID` variable omitted for compactness of presentation.
+The next step in our analysis sequence is to identify all focal trees and their corresponding competitor trees. More specifically, it identifies all trees that are not part of the buffer region, have a valid `growth` measurement, and have at least one neighbor within `r comp_dist` of it.  The `create_focal_vs_comp()` functions performs these tasks and returns a new data frame of type `sf`. On top of the previous arguments `comp_dist` defining the competition neighborhood and `id` indicating which variable uniquely identifies each tree-stem, this function also requires an `sf` object representation of the spatial cross-validation blocks/folds. In this example, the blocks were manually encoded in `blocks_scbi` by specifying it's vertices in Section \ref{spatial-information}^[We present an alternative method for defining spatial cross-validation blocks is using the `spatialBlock()` function from the `blockCV` package in the Appendix]. We present the resulting data frame below with the `foldID` variable omitted for compactness of presentation.
 
 ```{r scbi-focal-vs-comp}
-# TODO: Below reconcile the number of rows as they off by one from growth_scbi %>% 
-# filter(!is.na(growth) & !buffer). Perhaps by removing NA's in the growth_scbi stage?
 focal_vs_comp_scbi <- growth_scbi %>%
   create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID")
 focal_vs_comp_scbi %>% 
   select(-foldID)
 ```
+
+```{r, eval = FALSE, echo = FALSE}
+# Internal: after removing trees in buffer and have NA for growth, there is one
+# tree that is not included in focal_vs_comp_scbi b/c it has no neighbors within
+# comp_dist = 7.5m of it
+growth_scbi %>% 
+  filter(!buffer & !is.na(growth)) %>% 
+  filter(!stemID %in% focal_vs_comp_scbi$focal_ID)
+
+growth_scbi %>% 
+  mutate(flag = stemID == 18823) %>% 
+  ggplot() +
+  geom_sf(aes(col = flag))
+```
+
 
 The resulting data frame `focal_vs_comp_scbi` has `r nrow(focal_vs_comp_scbi)` rows, representing the subset of the `r nrow(growth_scbi)` trees in `growth_scbi` that will be considered as focal trees. Two new variables `focal_ID` and `focal_sp` relate to tree-stem identification and species information. Most notably however is a new variable `comp` which contains information on all competitor trees for a given focal tree, saved in `tidyr` package list-column format [@tidyr_package]. For example, we drill-down on the tree with `focal_ID` 4, which has 20 competitor trees each described by 4 variables as indicated by the fact that `comp` is a `tibble [20 × 4]`. 
 
@@ -311,19 +326,11 @@ ggplot() +
 
 Using the `unnest()` function from the `tidyr` package, we can flatten list-column into regular columns. We observe that for the same focal tree, we have information on all 20 competitor trees whose `dist` distance to the focal tree is $\leq$ `r comp_dist`: their unique tree-stem ID number, their species, and their basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ where $DBH$ is the value from the earlier of the two censuses in cm. Saving our focal versus competitor information in list-column minimizes redundancy since we do not repeat information on the focal tree 20 times. 
 
-```{r, eval = FALSE}
+```{r, scbi-focal-vs-comp-3}
 focal_vs_comp_scbi %>% 
   filter(focal_ID == 4) %>% 
   select(focal_ID, dbh, comp) %>% 
   unnest(cols = "comp")
-```
-```{r scbi-focal-vs-comp-3, echo = FALSE}
-# Not sure why we need to do things this way:
-focal_vs_comp_scbi %>% 
-  filter(focal_ID == 4) %>% 
-  select(focal_ID, dbh, comp) %>% 
-  unnest(cols = "comp") %>% 
-  print(n = 5)
 ```
 
 
@@ -334,7 +341,6 @@ focal_vs_comp_scbi %>%
 Now that we've identified all focal and corresponding competitor trees and saved this information in a data frame of type `focal_vs_comp`, the final step in our analysis sequence is to fit a model for the growth of all focal trees. Currently the `forestecology` package can only fit the competition Bayesian linear regression model outlined in Section \ref{competition-model} using the `comp_bayes_lm()` function. However, any model implemented in a function that similarly takes an input data frame of type `focal_vs_comp` as an argument can also be used. For our specific competition Bayesian linear regression model, we also specify prior distributions on all parameters of interest (here chosen to be the defaults as specified in `?comp_bayes_lm`). 
 
 ```{r scbi-model-fit}
-# TODO: Add information about default priors in ?comp_bayes_lm()
 comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
   comp_bayes_lm(prior_param = NULL)
 ```
@@ -449,9 +455,10 @@ model_rmse_cv
 The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r ifelse(model_rmse_cv > model_rmse, "larger", "smaller")` than the earlier RMSE of `r model_rmse`, suggesting that models that do not take the inherent spatial autocorrelation of the data into account generate error estimates that are overly optimistic; in our case RMSE's that are too low.  
 
 
+
 # Discussion
 
-
+The `forestecology` package provides
 
 - Run full simulation on SCBI data
 - run time considerations
@@ -460,7 +467,19 @@ The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r if
 
 # Acknowledgments
 
-The authors thank Ryan Giordano and Jonathan Che for their help with the statistical methodology and Sophie Li for their feedback on package interface. 
+The authors thank Ryan Giordano and Jonathan Che for their help with the statistical methodology and Sophie Li for their feedback on package interface. The authors declare no conflicts of interest.
+
+
+
+# Author's contributions
+
+A.Y.K. and D.N.A. conceived the ideas and coded most of the package in the early design stages. A.Y.K. led the writing of the manuscript. S.P.C. refactored much of the package's code in the later design stages to align with R and "tidy" programming best practices [@wickham_welcome_2019]. All authors contributed critically to the drafts and gave final approval for publication.
+
+
+
+# Data accessibility
+
+We intend to archive all data and code on GitHub at the following repository https://github.com/rudeboybert/forestecology. This repository will be versioned and archived on Zenodo upon acceptance. 
 
 
 
