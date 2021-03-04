@@ -73,7 +73,7 @@ set.seed(76)
 if (!is_html_output()) {
   # Grey theme:
   ggplot2::theme_set(theme_light())
-  # Color scheme
+  # Color scheme:
   # scale_colour_discrete <- scale_colour_viridis_d
 }
 
@@ -244,7 +244,8 @@ fold3 <- rbind(c(0, 450), c(150, 450), c(150, 600), c(0, 600))
 fold4 <- rbind(c(150, 450), c(300, 450), c(300, 600), c(150, 600))
 
 blocks_scbi <- bind_rows(
-  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3), sf_polygon(fold4)
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3), 
+  sf_polygon(fold4)
 ) %>%
   mutate(folds = c(1:n_fold) %>% factor())
 
@@ -263,7 +264,8 @@ Figure \ref{fig:scbi-spatial-information} illustrates the net effect of adding t
 ```{r scbi-spatial-information, out.width="66%", fig.cap="Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). All trees in the interior of the study region (i.e. not part of buffer) will be the focal trees whose growth will be modeled."}
 ggplot() +
   geom_sf(data = blocks_scbi, fill = "transparent", linetype = "dashed") +
-  geom_sf_text(data = growth_scbi %>% sample_n(1000), aes(label = foldID, col = buffer))
+  geom_sf_text(data = growth_scbi %>% sample_n(1000), 
+               aes(label = foldID, col = buffer))
 ```
 
 
@@ -381,9 +383,12 @@ Lastly, the generic for `ggplot2::autoplot()` allows us to plot the posterior di
 # Plot posteriors for only a subset of species
 sp_to_plot <- c("litu", "quru", "cagl")
 
-plot1 <- autoplot(comp_bayes_lm_scbi, type = "intercepts", sp_to_plot = sp_to_plot)
-plot2 <- autoplot(comp_bayes_lm_scbi, type = "dbh_slopes", sp_to_plot = sp_to_plot)
-plot3 <- autoplot(comp_bayes_lm_scbi, type = "competition", sp_to_plot = sp_to_plot)
+plot1 <- autoplot(comp_bayes_lm_scbi, type = "intercepts", 
+                  sp_to_plot = sp_to_plot)
+plot2 <- autoplot(comp_bayes_lm_scbi, type = "dbh_slopes", 
+                  sp_to_plot = sp_to_plot)
+plot3 <- autoplot(comp_bayes_lm_scbi, type = "competition", 
+                  sp_to_plot = sp_to_plot)
 
 # Combine plots using patchwork
 (plot1 | plot2) / plot3
@@ -400,7 +405,10 @@ comp_bayes_lm_scbi_shuffle <- focal_vs_comp_scbi %>%
   comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
 
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
-  mutate(growth_hat_shuffle = predict(comp_bayes_lm_scbi_shuffle, newdata = focal_vs_comp_scbi))
+  mutate(
+    growth_hat_shuffle = predict(comp_bayes_lm_scbi_shuffle, 
+                                 newdata = focal_vs_comp_scbi)
+  )
 ```
 ```{r}
 model_rmse_shuffle <- focal_vs_comp_scbi %>%

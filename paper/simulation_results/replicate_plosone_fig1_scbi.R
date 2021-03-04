@@ -186,7 +186,7 @@ model_comp_shuffle <- model_comp %>%
 
 cv_plot <- ggplot() +
   geom_vline(data = model_comp_observed, aes(xintercept = RMSE, col = CV), linetype = "dashed", show.legend = F) +
-  geom_histogram(data = model_comp_shuffle, aes(x = RMSE, fill = CV), bins = 200) +
+  geom_histogram(data = model_comp_shuffle, aes(x = RMSE, fill = CV), bins = 50) +
   labs(
     fill = "Cross-validated?",
     x = expression(paste("RMSE (cm ", y^{-1}, ")"))
@@ -198,5 +198,5 @@ cv_plot
 
 filename %>%
   str_c(".png") %>%
-  ggsave(plot = cv_plot)
+  ggsave(plot = cv_plot, width = 16/2, height = 9/2)
 
