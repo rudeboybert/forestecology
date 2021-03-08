@@ -1,5 +1,5 @@
 ---
-title: The forestecology R package for fitting and assessing nieghborhood models of the effect of interspecific competition on the growth of trees
+title: The forestecology R package for fitting and assessing neighborhood models of the effect of interspecific competition on the growth of trees
 
 blinded: 0
 
@@ -112,7 +112,7 @@ In order to evaluate whether competitor species identity matters, @allen_permuta
 \text{vs.}&&H_A: \text{at least one } \lambda_{jk} \mbox{ is different}
 \end{eqnarray}
 
-where the null hypothesis $H_0$ reflects a hypothesis of no species grouping-specific effects of competition while the alternative hypothesis $H_A$ reflects a hypothesis of species grouping-specific effects of competition. Furthermore, in order to account for the spatial autocorrelation inherent to forest data in their estimates of out-of-sample model error, @allen_permutation_2020 use spatial cross-validation. Estimates of model error that do not account for this spatial dependency tend to underestiamte the true model error [@roberts_cross-validation_2017].
+where the null hypothesis $H_0$ reflects a hypothesis of no species grouping-specific effects of competition while the alternative hypothesis $H_A$ reflects a hypothesis of species grouping-specific effects of competition. Furthermore, in order to account for the spatial autocorrelation inherent to forest data in their estimates of out-of-sample model error, @allen_permutation_2020 use spatial cross-validation. Estimates of model error that do not account for this spatial dependency tend to underestimate the true model error [@roberts_cross-validation_2017].
 
 We introduce the `forestecology` R package providing methods and data for forest ecology model fitting and assessment, available on CRAN (https://cran.r-project.org/web/packages/forestecology/index.html) with the corresponding source code available on GitHub (https://github.com/rudeboybert/forestecology). The package implements all aspects of the model in Equation \ref{eq:model}: model fitting and generating fitted/predicted values, evaluating the effect of competitor species identity using permutation tests, and evaluating model performance using spatial cross-validation. 
 

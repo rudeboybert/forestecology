@@ -84,7 +84,7 @@
 
 \if0\blind
 {
-  \title{\bf The forestecology R package for fitting and assessing nieghborhood
+  \title{\bf The forestecology R package for fitting and assessing neighborhood
 models of the effect of interspecific competition on the growth of trees}
 
   \author{
@@ -106,7 +106,7 @@ Northampton, MA 01063 (e-mail:
   \bigskip
   \bigskip
   \begin{center}
-    {\LARGE\bf The forestecology R package for fitting and assessing nieghborhood
+    {\LARGE\bf The forestecology R package for fitting and assessing neighborhood
 models of the effect of interspecific competition on the growth of trees}
   \end{center}
   \medskip
@@ -221,7 +221,7 @@ effects of competition. Furthermore, in order to account for the spatial
 autocorrelation inherent to forest data in their estimates of
 out-of-sample model error, \citet{allen_permutation_2020} use spatial
 cross-validation. Estimates of model error that do not account for this
-spatial dependency tend to underestiamte the true model error
+spatial dependency tend to underestimate the true model error
 \citep{roberts_cross-validation_2017}.
 
 We introduce the \texttt{forestecology} R package providing methods and
@@ -416,14 +416,14 @@ diameter growth of surviving, and not resprouted, stems.
 \CommentTok{## bbox:           xmin: 0.2 ymin: 300 xmax: 300 ymax: 600}
 \CommentTok{## CRS:            NA}
 \CommentTok{## # A tibble: 7,954 x 9}
-\CommentTok{##   stemID sp     dbh1 codes1 status  dbh2 codes2 growth   geometry}
-\CommentTok{##    <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>   <dbl>    <POINT>}
-\CommentTok{## 1      4 nysy  13.6  M      A       14.2 M       0.103 (14.2 428)}
-\CommentTok{## 2      5 havi   8.8  M      A        9.6 M;P     0.150  (9.4 436)}
-\CommentTok{## 3      6 havi   3.25 NULL   A        4   M       0.140  (1.3 434)}
-\CommentTok{## 4     77 qual  65.2  M      A       66   M       0.141 (34.7 307)}
-\CommentTok{## 5     79 tiam  47.7  M      A       46.8 M      -0.161   (40 381)}
-\CommentTok{## # ... with 7,949 more rows}
+\CommentTok{##   stemID sp     dbh1 codes1 status  dbh2 codes2 growth}
+\CommentTok{##    <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>   <dbl>}
+\CommentTok{## 1      4 nysy  13.6  M      A       14.2 M       0.103}
+\CommentTok{## 2      5 havi   8.8  M      A        9.6 M;P     0.150}
+\CommentTok{## 3      6 havi   3.25 NULL   A        4   M       0.140}
+\CommentTok{## 4     77 qual  65.2  M      A       66   M       0.141}
+\CommentTok{## 5     79 tiam  47.7  M      A       46.8 M      -0.161}
+\CommentTok{## # ... with 7,949 more rows, and 1 more variable: geometry <POINT>}
 \end{Highlighting}
 \end{Shaded}
 
@@ -766,13 +766,13 @@ posterior predictive distribution.
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi}
 \CommentTok{## # A tibble: 6,296 x 8}
-\CommentTok{##   focal_ID focal_sp   dbh foldID                  geometry growth comp }
-\CommentTok{##      <dbl> <fct>    <dbl> <fct>                    <POINT>  <dbl> <lis>}
-\CommentTok{## 1        4 nysy     13.6  1                     (14.2 428)  0.103 <tib~}
-\CommentTok{## 2        5 havi      8.8  1                      (9.4 436)  0.150 <tib~}
-\CommentTok{## 3       79 tiam     47.7  1                       (40 381) -0.161 <tib~}
-\CommentTok{## 4       80 caca      5.15 1                     (38.7 422)  0.253 <tib~}
-\CommentTok{## 5       96 libe      2.3  1                       (60 310)  0.262 <tib~}
+\CommentTok{##   focal_ID focal_sp   dbh foldID   geometry growth comp             }
+\CommentTok{##      <dbl> <fct>    <dbl> <fct>     <POINT>  <dbl> <list>           }
+\CommentTok{## 1        4 nysy     13.6  1      (14.2 428)  0.103 <tibble [20 x 4]>}
+\CommentTok{## 2        5 havi      8.8  1       (9.4 436)  0.150 <tibble [32 x 4]>}
+\CommentTok{## 3       79 tiam     47.7  1        (40 381) -0.161 <tibble [20 x 4]>}
+\CommentTok{## 4       80 caca      5.15 1      (38.7 422)  0.253 <tibble [12 x 4]>}
+\CommentTok{## 5       96 libe      2.3  1        (60 310)  0.262 <tibble [14 x 4]>}
 \CommentTok{## # ... with 6,291 more rows, and 1 more variable: growth_hat <dbl>}
 \end{Highlighting}
 \end{Shaded}
