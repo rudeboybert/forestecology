@@ -84,8 +84,8 @@
 
 \if0\blind
 {
-  \title{\bf The forestecology R package for fitting and assessing models of
-interspecies competitive effects on the growth of trees}
+  \title{\bf The forestecology R package for fitting and assessing nieghborhood
+models of the effect of interspecific competition on the growth of trees}
 
   \author{
         Albert Y. Kim \thanks{Assistant Professor, Statistical \& Data Sciences, Smith College,
@@ -106,8 +106,8 @@ Northampton, MA 01063 (e-mail:
   \bigskip
   \bigskip
   \begin{center}
-    {\LARGE\bf The forestecology R package for fitting and assessing models of
-interspecies competitive effects on the growth of trees}
+    {\LARGE\bf The forestecology R package for fitting and assessing nieghborhood
+models of the effect of interspecific competition on the growth of trees}
   \end{center}
   \medskip
 } \fi
@@ -127,9 +127,9 @@ regression neighborhood competition model.\\
 Smithsonian Conservation Biology Institute's large forest dynamics plot,
 part of the ForestGEO global network of reseach sites. Given ForestGEO's
 data collection protocols and data formatting standards, the package was
-designed with cross-site compatibility in mind. We demonstrate that both
-i) competitor species identity matters and ii) that not spatially
-cross-validating leads to error estimates that are overly optimistic.\\
+designed with cross-site compatibility in mind. We highlight the
+importance of spatial cross validation when interpreting model
+results.\\
 4. The package features i) \texttt{tidyverse}-like structure whereby
 verb-named functions can be modularly ``piped'' in sequence, ii)
 functions with standardized inputs/outputs of simple features
@@ -144,7 +144,7 @@ methods in mind.
 
 \noindent%
 {\it Keywords:} forest ecology, interspecific competition, neigbhorhood competition,
-tree growth, R, ForestGEO, cross-validation, spatial statistics,
+tree growth, R, ForestGEO, spatial cross validation
 \vfill
 
 \newpage
@@ -155,23 +155,21 @@ tree growth, R, ForestGEO, cross-validation, spatial statistics,
 \hypertarget{introduction}{%
 \section{Introduction}\label{introduction}}
 
-Repeat-censused forest plots offer excellent data to test neighborhood
-models of the effect of competition on the growth of trees
+Repeat-censused forest plots offer excellent opportunities to test
+neighborhood models of the effect of competition on the growth of trees
 (\citet{canham_neighborhood_2004}). Neighborhood models of competition
 have been used to: test whether the species identity of a competitor
 matters (\citet{uriarte_spatially_2004}); measure species-specific
 competition coefficients (\citet{das_effect_2012}
 \citet{tatsumi_estimating_2016}); test competing models to see what
 structures competitive interactions, e.g.~traits or phylogeny
-(\citet{allen_permutation_2020} \citet{uriarte_trait_2010}); and inform
+(\citet{allen_permutation_2020}; \citet{uriarte_trait_2010}); and inform
 selective logging practices (\citet{canham_neighborhood_2006}). Although
 these are well-described methods, no methods are currently available for
 their easy application. Here we address this in an R package. We largely
 follow the methods presented in \citet{allen_permutation_2020}. The
 package is written to model stem radial growth between two censuses
-based on neighborhood competition. It assumes a single large plot using
-the ForestGEO plot data structure as a guide
-(\citet{andersonteixeira_ctfs-forestgeo_2015}).
+based on neighborhood competition.
 
 \citet{allen_permutation_2020} considers the following model: Let
 \(i = 1, \ldots, n_j\) index all \(n_j\) trees of ``focal'' species
@@ -885,8 +883,7 @@ argument.
 
 The resulting RMSE of 0.131 based on the permutation test is larger than
 the earlier RMSE of 0.128, suggesting that models that do incorporate
-competitor species identity better fit the data. We conduct an analysis
-of the full SCBI plot in Section \ref{results} below.
+competitor species identity better fit the data.
 
 \hypertarget{spatial-cross-validation}{%
 \subsection{Evaluate model performance using spatial
@@ -955,21 +952,26 @@ The resulting RMSE of 0.14 computed using cross-validation is larger
 than the earlier RMSE of 0.128, suggesting that models that do not take
 the inherent spatial autocorrelation of the data into account generate
 error estimates that are overly optimistic; in our case RMSE's that are
-too low. We conduct an analysis of the full SCBI plot in Section
-\ref{results} below.
+too low.
 
-\hypertarget{results}{%
-\section{Results}\label{results}}
+\hypertarget{importance-of-spatial-cross-validation}{%
+\section{Importance of spatial cross
+validation}\label{importance-of-spatial-cross-validation}}
 
-Figure \ref{fig:scbi-simulation} highlights the importance of spatial
-cross validating when interpreting results from neighborhood compeition
-models. Without cross-validation the competitor idenity did matter, the
-non-permuted competitor species had a much lower RMSE than the permuted
-one. But once we include the spatial cross validation this improvement
-disaprees. So in this 9 ha subplot of the SCBI plot competitive
-interactions do not depend on the identity of the competitor, which is
-the opposite of what has been observed in other places
-(\citet{allen_permutation_2020} \citet{uriarte_spatially_2004}).
+The \texttt{run\_cv} function also accepts the \texttt{run\_shuffle}
+argument. This permutes the competitor species, as described above, but
+does so when calculating predicted growth with the cross validated
+scheme. Figure \ref{fig:scbi-simulation} compares model performance when
+permuting competitor species and calculating RMSE with and without cross
+validation. Without cross-validation the competitor identity did matter,
+the non-permuted competitor species had a much lower RMSE than the
+permuted one. But once we include the spatial cross validation this
+improvement disappears. So in this 9 ha subplot of the SCBI plot
+competitive interactions do not depend on the identity of the
+competitor, which is the opposite of what has been observed in other
+places (\citet{allen_permutation_2020} \citet{uriarte_spatially_2004}).
+This highlights the importance of cross validation, without it the model
+was overfit.
 
 \begin{figure}
 
@@ -977,7 +979,7 @@ the opposite of what has been observed in other places
 
 }
 
-\caption{Root mean squared error of models for standard, permuted, and spatial cross-validated error estimates.}\label{fig:scbi-simulation}
+\caption{Root mean squared error of models for standard, permuted, and spatial cross-validated error estimates. The dotted lines show non-permuted competitor identity, while the histogras so the RMSE for 49 permutations. The colors indicate whether cross validaton was used.}\label{fig:scbi-simulation}
 \end{figure}
 
 \hypertarget{conclusion}{%
@@ -993,10 +995,9 @@ several small plots are spatially separated, e.g., USFS Forest
 Inventory. In a future version of the package we also hope to make it
 possible to model plant mortality in addition to plant growth. The
 package follows the guidelines for \texttt{tidy} data, \texttt{sf}
-spatial structure., and S3 open-oriented model structure. These make for
-ease of use. We hope that the package will further the use of
-neighborhood competition models to better understand what structures
-plant competition.
+spatial structure, and S3 open-oriented model structure. We hope that
+the package will increase the use of neighborhood competition models to
+better understand what structures plant competition.
 
 \hypertarget{acknowledgments}{%
 \section{Acknowledgments}\label{acknowledgments}}
