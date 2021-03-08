@@ -1,5 +1,5 @@
 ---
-title: The forestecology R package for fitting and assessing models of interspecies competitive effects on the growth of trees
+title: The forestecology R package for fitting and assessing nieghborhood models of the effect of interspecific competition on the growth of trees
 
 blinded: 0
 
@@ -14,13 +14,13 @@ authors:
 
 abstract: 
 - |
-  | 1. Many models for the growth of trees that incorporate interspecies competition are based on a neighborhood effect assumption whereby all trees within a fixed distance of a focal tree are considered competitors. Methods and tools are needed to quantify this competitive effect and assess the quality of all resulting models. 
-  | 2. We present the `forestecology` package providing methods for both 1) evaluating the effect of competitor species identity using permutation tests and 2) evaluating model performance using spatial cross-validation.  Following @allen_permutation_2020, we implement a Bayesian linear regression competition model.
-  | 3. We demonstrate the package's functionality using data from the Smithsonian Conservation Biology Institute's large forest dynamics plot, part of the ForestGEO global network of reseach sites. Given ForestGEO's data collection protocols and data formatting standards, the package was designed with cross-site compatibility in mind. We demonstrate that both 1) competitor species identity matters and 2) that not spatially cross-validating leads to error estimates that are overly optimistic. 
-  | 4. The package features 1) `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence, 2) functions with standardized inputs/outputs of simple features `sf` package class, and 3) an S3 object-oriented implementation of the Bayesian linear regression model. These three facts allow for clear articulation of all the steps in the sequence of analysis and easy wrangling and visualization of the geospatial forestry data. Furthermore, while the package only has Bayesian linear regression implemented, the package was designed with extensibility to other methods in mind.  
+  | 1. Neighborhood competition models are powerful tools to measure the effect of interspecific competition. Statistical methods to ease the application of these models are currently lacking.
+  | 2. We present the `forestecology` package providing methods to i) specify neighborhood competition models, ii) evalulate the effect of competitor species identity using permutation tests, and iii) measure model performance using spatial cross-validation.  Following @allen_permutation_2020, we implement a Bayesian linear regression neighborhood competition model.
+  | 3. We demonstrate the package's functionality using data from the Smithsonian Conservation Biology Institute's large forest dynamics plot, part of the ForestGEO global network of reseach sites. Given ForestGEO's data collection protocols and data formatting standards, the package was designed with cross-site compatibility in mind. We highlight the importance of spatial cross validation when interpreting model results. 
+  | 4. The package features i) `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence, ii) functions with standardized inputs/outputs of simple features `sf` package class, and iii) an S3 object-oriented implementation of the Bayesian linear regression model. These three facts allow for clear articulation of all the steps in the sequence of analysis and easy wrangling and visualization of the geospatial forestry data. Furthermore, while the package only has Bayesian linear regression implemented, the package was designed with extensibility to other methods in mind.  
 
 keywords:
-- forest ecology, competition, tree growth, R, tidyverse, sf, cross-validation, spatial statistics
+- forest ecology, interspecific competition, neigbhorhood competition, tree growth, R, ForestGEO, spatial cross validation
 
 bibliography: paper.bib
 output: rticles::asa_article
@@ -93,16 +93,7 @@ options(
 
 # Introduction
 
-
-BERT: Dave could you write a few sentences (and add references where appropriate) starting with the big picture of modeling tree growth, zooming in to neighhorhood models, and then connecting to the "@allen_permutation_2020 considers the following model" I write below?
-
-Repeat-censused forest plots offer excellent data to test neighborhood models of the effect of competition on the growth of trees @canham_neighborhood_2006 @uriarte_spatially_2004.
-
-
-
-
-
-
+Repeat-censused forest plots offer excellent opportunities to test neighborhood models of the effect of competition on the growth of trees (@canham_neighborhood_2004). Neighborhood models of competition have been used to: test whether the species identity of a competitor matters (@uriarte_spatially_2004); measure species-specific competition coefficients (@das_effect_2012 @tatsumi_estimating_2016); test competing models to see what structures competitive interactions, e.g. traits or phylogeny (@allen_permutation_2020; @uriarte_trait_2010); and inform selective logging practices (@canham_neighborhood_2006). Although these are well-described methods, no methods are currently available for their easy application. Here we address this in an R package. We largely follow the methods presented in @allen_permutation_2020. The package is written to model stem radial growth between two censuses based on neighborhood competition. 
 
 @allen_permutation_2020 considers the following model: Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species group $j$; let $j = 1, \ldots, J$ index all $J$ focal species groups; and let $k = 1, \ldots, K$ index all $K$ "competitor" species groups. We model the average annual growth in diameter $y_{ij}$ (in centimeters per year) of the $i^{th}$ tree of focal species group $j$ as a linear model $f$ of the covariates $\vec{x}_{ij}$
 
@@ -417,7 +408,7 @@ model_rmse_shuffle <- focal_vs_comp_scbi %>%
 model_rmse_shuffle
 ```
 
-The resulting RMSE of `r model_rmse_shuffle` based on the permutation test is `r ifelse(model_rmse_shuffle < model_rmse, "smaller", "larger")` than the earlier RMSE of `r model_rmse`, suggesting that models that do incorporate competitor species identity better fit the data. We conduct an analysis of the full SCBI plot in Section \ref{results} below.  
+The resulting RMSE of `r model_rmse_shuffle` based on the permutation test is `r ifelse(model_rmse_shuffle < model_rmse, "smaller", "larger")` than the earlier RMSE of `r model_rmse`, suggesting that models that do incorporate competitor species identity better fit the data.  
 
 
 ## Evaluate model performance using spatial cross-validation {#spatial-cross-validation}
@@ -465,25 +456,21 @@ model_rmse_cv <- focal_vs_comp_scbi %>%
 model_rmse_cv
 ```
 
-The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r ifelse(model_rmse_cv > model_rmse, "larger", "smaller")` than the earlier RMSE of `r model_rmse`, suggesting that models that do not take the inherent spatial autocorrelation of the data into account generate error estimates that are overly optimistic; in our case RMSE's that are too low. We conduct an analysis of the full SCBI plot in Section \ref{results} below.  
+The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r ifelse(model_rmse_cv > model_rmse, "larger", "smaller")` than the earlier RMSE of `r model_rmse`, suggesting that models that do not take the inherent spatial autocorrelation of the data into account generate error estimates that are overly optimistic; in our case RMSE's that are too low.  
 
 
+# Importance of spatial cross validation
 
-# Results {#results}
+The `run_cv` function also accepts the `run_shuffle` argument. This permutes the competitor species, as described above, but does so when calculating predicted growth with the cross validated scheme. Figure \ref{fig:scbi-simulation} compares model performance when permuting competitor species and calculating RMSE with and without cross validation. Without cross-validation the competitor identity did matter, the non-permuted competitor species had a much lower RMSE than the permuted one. But once we include the spatial cross validation this improvement disappears. So in this 9 ha subplot of the SCBI plot competitive interactions do not depend on the identity of the competitor, which is the opposite of what has been observed in other places (@allen_permutation_2020 @uriarte_spatially_2004). This highlights the importance of cross validation, without it the model was overfit. 
 
-Figure \ref{fig:scbi-simulation}
-
-```{r scbi-simulation, out.width="100%", fig.cap="Root mean squared error of models for standard, permuted, and spatial cross-validated error estimates.", echo = FALSE}
+```{r scbi-simulation, out.width="100%", fig.cap="Root mean squared error of models for standard, permuted, and spatial cross-validated error estimates. The dotted lines show non-permuted competitor identity, while the histogras so the RMSE for 49 permutations. The colors indicate whether cross validaton was used.", echo = FALSE}
 include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.png")
 ```
 
 
-# Discussion
+# Conclusion
 
-The `forestecology` package provides
-
-
-
+The `forestecology` package provides an accessible way to fit and test models of neighborhood competition. Currently it is written to work with data from ForestGEO plots. But it could easily be modified to work on any single large, mapped forest plot in which at least two measurements of each individual have been taken. With a little bit of work the package could also be applied to forest inventory data in which several small plots are spatially separated, e.g., USFS Forest Inventory. In a future version of the package we also hope to make it possible to model plant mortality in addition to plant growth. The package follows the guidelines for `tidy` data, `sf` spatial structure, and S3 open-oriented model structure. We hope that the package will increase the use of neighborhood competition models to better understand what structures plant competition.
 
 # Acknowledgments
 
@@ -493,8 +480,7 @@ The authors thank Ryan Giordano and Jonathan Che for their help with the statist
 
 # Author's contributions
 
-AYK and DNA conceived the ideas and coded most of the package in the early design stages. AYK led the writing of the manuscript. SPC refactored much of the package's code in the later design stages to align with R and "tidy" programming best practices [@wickham_welcome_2019]. All authors contributed critically to the drafts and gave final approval for publication.
-
+AYK and DNA conceived the ideas and coded a draft of the package. AYK wrote an initial manuscript draft. SPC rewrote much of the package's code to align with R and "tidy" best practices [@wickham_welcome_2019]. All authors contributed to subsequent drafts and gave final approval for manuscript.
 
 
 # Data accessibility
