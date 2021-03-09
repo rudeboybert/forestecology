@@ -127,62 +127,34 @@ default_prior_params <- function(X) {
 
 
 
+#' @importFrom stringr str_wrap
 #' @importFrom stringr str_replace_all
 #' @export
-print.comp_bayes_lm <- function(x, ...) {
-  cat(
-    paste0(
-      "Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:\n\n"
-    )
-  )
+print.comp_bayes_lm <- function(x, width = getOption("width"), ...) {
+  "Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:" %>%
+    str_wrap(width = width) %>%
+    cat()
+
+  cat("\n\n")
 
   term_tbl <-
-    utils::capture.output(
-      print(
-        tibble(
-          parameter_type = c(rep("Inverse-Gamma on sigma^2", 2), rep("Multivariate t on beta", 2)),
-          prior = c("a_0", "b_0", "mu_0", "V_0"),
-          posterior = c("a_star", "b_star", "mu_star", "V_star")
-        )
-      )
-    )
-  cat(term_tbl[c(2, 4:length(term_tbl))], sep = "\n")
+    tibble(
+      parameter_type = c(rep("Inverse-Gamma on sigma^2", 2), rep("Multivariate t on beta", 2)),
+      prior = c("a_0", "b_0", "mu_0", "V_0"),
+      posterior = c("a_star", "b_star", "mu_star", "V_star")
+    ) %>%
+    print() %>%
+    utils::capture.output()
+  term_tbl[c(2, 4:length(term_tbl))] %>%
+    cat(sep = "\n")
 
-  cat(
-    paste0(
-      "\n",
-      "Model formula:\n",
-      x[[3]][2] %>% as.character(), " ~ ", x[[3]][3] %>% as.character() %>% str_replace_all("\n    ", ""),
-      "\n"
-    )
-  )
+  cat("\nModel formula:\n")
 
-  # # a and b parameters
-  # term_tbl <-
-  #   utils::capture.output(
-  #     print(
-  #       tibble(
-  #         term = c("a", "b"),
-  #         prior = unlist(unname(x$prior_params[1:2])),
-  #         posterior = unlist(unname(x$post_params[1:2]))
-  #       )
-  #     )
-  #   )
-  # cat(term_tbl[2:length(term_tbl)], sep = "\n\n")
-  #
-  # # mu vector parameter
-  # term_tbl <-
-  #   utils::capture.output(
-  #     print(
-  #       tibble(
-  #         prior = unlist(unname(x$prior_params[3])),
-  #         posterior = unlist(unname(x$post_params[3]))
-  #       )
-  #     )
-  #   )
-  # cat(term_tbl[2:length(term_tbl)], sep = "\n\n")
-  #
-  # # V matrix ???
+  paste0(x[[3]][2] %>% as.character(), " ~ ", x[[3]][3] %>% as.character() %>% str_replace_all("\n    ", "")) %>%
+    str_wrap(width = width) %>%
+    cat()
+
+  cat("\n")
 }
 
 
