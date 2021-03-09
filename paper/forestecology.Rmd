@@ -17,7 +17,7 @@ abstract:
   | 1. Neighborhood competition models are powerful tools to measure the effect of interspecific competition. Statistical methods to ease the application of these models are currently lacking.
   | 2. We present the `forestecology` package providing methods to i) specify neighborhood competition models, ii) evalulate the effect of competitor species identity using permutation tests, and iii) measure model performance using spatial cross-validation.  Following @allen_permutation_2020, we implement a Bayesian linear regression neighborhood competition model.
   | 3. We demonstrate the package's functionality using data from the Smithsonian Conservation Biology Institute's large forest dynamics plot, part of the ForestGEO global network of reseach sites. Given ForestGEO's data collection protocols and data formatting standards, the package was designed with cross-site compatibility in mind. We highlight the importance of spatial cross-validation when interpreting model results. 
-  | 4. The package features i) `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence, ii) functions with standardized inputs/outputs of simple features `sf` package class, and iii) an S3 object-oriented implementation of the Bayesian linear regression model. These three facts allow for clear articulation of all the steps in the sequence of analysis and easy wrangling and visualization of the geospatial forestry data. Furthermore, while the package only has Bayesian linear regression implemented, the package was designed with extensibility to other methods in mind.  
+  | 4. The package features i) `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence, ii) functions with standardized inputs/outputs of simple features `sf` package class, and iii) an S3 object-oriented implementation of the Bayesian linear regression model. These three facts allow for clear articulation of all the steps in the sequence of analysis and easy wrangling and visualization of the geospatial forestry data. Furthermore, while the package only has Bayesian linear regression implemented, the package was designed with extensibility to other methods in mind. 
 
 keywords:
 - forest ecology, interspecific competition, neigbhorhood competition, tree growth, R, ForestGEO, spatial cross-validation
@@ -86,10 +86,6 @@ options(
   tibble.print_max = 5, 
   tibble.print_min = 5
 )
-
-# Resolve conflicts in function names
-filter <- dplyr::filter
-select <- dplyr::select
 ```
 
 \doublespacing
@@ -153,6 +149,10 @@ library(sf)
 library(patchwork)
 library(forestecology)
 library(blockCV)
+
+# Resolve conflicting functions
+filter <- dplyr::filter
+select <- dplyr::select
 ```
 
 
@@ -345,7 +345,6 @@ comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
 
 The returned `comp_bayes_lm_scbi` output is an object of S3 class type `comp_bayes_lm` containing the posterior values of all parameters in our competition Bayesian linear regression. This class of object includes three generic methods. First, the generic for `print()` displays the names of all prior & posterior parameters along with the model formula:
 
-<!--Hack alert. I can't figure out how to ensure output of print stay within 72 character line limit-->
 ```{r}
 comp_bayes_lm_scbi
 ```
