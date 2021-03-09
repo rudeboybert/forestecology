@@ -241,11 +241,8 @@ articulate in Section \ref{casestudy}, these functions delineate the key
 steps in our analysis sequence. Furthermore, the inputs and outputs of
 nearly all of our functions use the same ``simple features for R'' data
 structures as implemented in the \texttt{sf} package for standardized
-support for spatial vector data \citep{pebesma_simple_2018}. The
-\texttt{sf} package is a \texttt{tidyverse}-friendly evolution of the
-\texttt{sp} package of classes and methods for spatial data in R
-\citep{pebesma_sp_2005}. As such, wrangling and visualization spatial
-data such as ours becomes much easier.
+and \texttt{tidyverse}-friendly support for spatial vector data
+\citep{pebesma_simple_2018}
 
 Currently the package only implements the Bayesian linear regression
 model of tree growth based on neighborhood competition detailed in
@@ -259,25 +256,14 @@ other models as long as they are coded into a function similar to
 \texttt{comp\_bayes\_lm()} and has equivalent generic methods
 implemented.
 
-We present a case-study of the \texttt{forestecology} package's use on
-data from the Smithsonian Conservation Biology Institute's (SCBI) large
-forest dynamics plot in Front Royal, Virginia, USA in Section
-\ref{casestudy}, which is part of the ForestGEO global network of
-research sites
-\citep[\citet{andersonteixeira_ctfs-forestgeo_2015}]{bourg_initial_2013}.
-The package is designed with ForestGEO plot data in mind, but we
-envision that it could easily be modified to work with data from other
-forest plots, e.g.~the US Forest Service Forest Inventory and Analysis
-plots or more generally to model interactions of any community of mapped
-sessile organisms \citep{smith_forest_2002}.
-
 \hypertarget{casestudy}{%
 \section{forestecology workflow: a case study}\label{casestudy}}
 
-We demonstrate the \texttt{forestecology} package's functionality on
-data from the Smithsonian Conservation Biology Institute (SCBI) large
-forest dynamics plot, located at the Smithsonian's National Zoo and
-Conservation Biology Institute in Front Royal, VA, USA
+We present a case-study of the \texttt{forestecology} package's
+functionality on data from the Smithsonian Conservation Biology
+Institute (SCBI) large forest dynamics plot in Front Royal, VA, USA,
+which is part of the ForestGEO global network of research sites
+\citep[\citet{andersonteixeira_ctfs-forestgeo_2015}]{bourg_initial_2013}
 \citep{bourg_initial_2013}. The 25.6 ha (640 x 400 m) plot is located at
 the intersection of three of the major physiographic provinces of the
 eastern US---the Blue Ridge, Ridge and Valley, and Piedmont
@@ -427,12 +413,10 @@ variable \texttt{sp} is returned as a factor.\footnote{In our spatial
   issues can occur when rare species do not occur in the training set,
   but then are encountered in the test set. This risk is mitigated by
   representing \texttt{sp} as a factor variable, which has a complete
-  list of all levels of the categorical variable.}
-
-Given that \texttt{growth\_scbi} is of class \texttt{sf}, it can be
-easily plotted in \texttt{ggplot2} using the \texttt{geom\_sf()}
-geometry as seen in Figure \ref{fig:scbi-trees} where we plot a random
-sample of 500 out of the 7954 trees.
+  list of all levels of the categorical variable.} Given that
+\texttt{growth\_scbi} is of class \texttt{sf}, it can be easily plotted
+in \texttt{ggplot2} using the \texttt{geom\_sf()} geometry as seen in
+Figure \ref{fig:scbi-trees}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -515,6 +499,9 @@ associate each tree in \texttt{growth\_scbi} to the correct fold
   Information we present an example where the folds themselves are also
   created automatically using \texttt{spatialBlock()} given a specified
   \texttt{cv\_block\_size}, as opposed to manually as in the example.}
+Figure \ref{fig:scbi-spatial-information} illustrates the net effect of
+adding these two elements of spatial information to
+\texttt{growth\_scbi}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -542,15 +529,6 @@ associate each tree in \texttt{growth\_scbi} to the correct fold
 \end{Highlighting}
 \end{Shaded}
 
-Figure \ref{fig:scbi-spatial-information} illustrates the net effect of
-adding these two elements of spatial information to
-\texttt{growth\_scbi}. The location of each tree is marked with an
-integer indicating its fold, where the folds are marked with solid
-lines. The color of each digit indicates whether the tree is part of the
-buffer region (and thus will only be considered as a competitor tree in
-our model) or is part of the interior of the study region (and thus is a
-focal tree whose growth is of modeled interest).
-
 \begin{Shaded}
 \begin{Highlighting}[]
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
@@ -566,7 +544,7 @@ focal tree whose growth is of modeled interest).
 
 }
 
-\caption{Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). All trees in the interior of the study region (i.e. not part of buffer) will be the focal trees whose growth will be modeled.}\label{fig:scbi-spatial-information}
+\caption{Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). The location of each tree is marked with an integer indicating its fold, with folds delineated with solid lines. The color of each digit indicates whether the tree is part of the buffer region (and thus will only be considered as a competitor tree in our model) or is part of the interior of the study region (and thus is a focal tree whose growth is of modeled interest).}\label{fig:scbi-spatial-information}
 \end{figure}
 
 \hypertarget{focal-vs-comp}{%
@@ -581,24 +559,22 @@ have at least one neighbor within 7.5m.
 \texttt{sf}. On top of previously detailed arguments \texttt{comp\_dist}
 and \texttt{id}, \texttt{create\_focal\_vs\_comp()} also requires an
 \texttt{sf} object representation of the spatial cross-validation
-blocks/folds as seen in Section \ref{spatial-information}. We present
-the resulting data frame below with the \texttt{foldID} variable omitted
-for compactness.
+blocks/folds as seen in Section \ref{spatial-information}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
 \NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{select}\NormalTok{(}\OperatorTok{-}\NormalTok{foldID)}
-\CommentTok{## # A tibble: 6,296 x 6}
-\CommentTok{##   focal_ID focal_sp   dbh   geometry growth comp             }
-\CommentTok{##      <dbl> <fct>    <dbl>    <POINT>  <dbl> <list>           }
-\CommentTok{## 1        4 nysy     13.6  (14.2 428)  0.103 <tibble [20 x 4]>}
-\CommentTok{## 2        5 havi      8.8   (9.4 436)  0.150 <tibble [32 x 4]>}
-\CommentTok{## 3       79 tiam     47.7    (40 381) -0.161 <tibble [20 x 4]>}
-\CommentTok{## 4       80 caca      5.15 (38.7 422)  0.253 <tibble [12 x 4]>}
-\CommentTok{## 5       96 libe      2.3    (60 310)  0.262 <tibble [14 x 4]>}
+\StringTok{  }\KeywordTok{select}\NormalTok{(focal_ID, focal_sp, geometry, growth, comp)}
+\CommentTok{## # A tibble: 6,296 x 5}
+\CommentTok{##   focal_ID focal_sp   geometry growth comp             }
+\CommentTok{##      <dbl> <fct>       <POINT>  <dbl> <list>           }
+\CommentTok{## 1        4 nysy     (14.2 428)  0.103 <tibble [20 x 4]>}
+\CommentTok{## 2        5 havi      (9.4 436)  0.150 <tibble [32 x 4]>}
+\CommentTok{## 3       79 tiam       (40 381) -0.161 <tibble [20 x 4]>}
+\CommentTok{## 4       80 caca     (38.7 422)  0.253 <tibble [12 x 4]>}
+\CommentTok{## 5       96 libe       (60 310)  0.262 <tibble [14 x 4]>}
 \CommentTok{## # ... with 6,291 more rows}
 \end{Highlighting}
 \end{Shaded}
@@ -641,9 +617,7 @@ from the earlier of the two censuses in cm. Saving our focal versus
 competitor information in list-column minimizes redundancy since we do
 not repeat information on the focal tree 20 times. The spatial
 distribution of these trees is visualized in Figure
-\ref{fig:scbi-focal-vs-comp-map}: the dashed circle extends 7.5 m away
-from the focal tree while all 20 competitor trees are within this
-circle.
+\ref{fig:scbi-focal-vs-comp-map}.
 
 \begin{figure}
 
@@ -651,7 +625,7 @@ circle.
 
 }
 
-\caption{Identify all focal and corresponding competitor trees: All 20 competitor trees of focal tree 4.}\label{fig:scbi-focal-vs-comp-map}
+\caption{Identify all focal and corresponding competitor trees: The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle.}\label{fig:scbi-focal-vs-comp-map}
 \end{figure}
 
 \hypertarget{model-fit-predict}{%
@@ -746,8 +720,7 @@ root mean squared error (RMSE) of our model fit.
 
 Lastly, the generic for \texttt{ggplot2::autoplot()} allows us to plot
 the posterior distribution of all parameters in Figure
-\ref{fig:scbi-posterior-viz} (for compactness we include only 3
-species).
+\ref{fig:scbi-posterior-viz}.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -772,7 +745,7 @@ species).
 
 }
 
-\caption{Fit model: Posterior distributions of all parameters for three species.}\label{fig:scbi-posterior-viz}
+\caption{Fit model: Posterior distributions of all parameters. For compactness we include only three species.}\label{fig:scbi-posterior-viz}
 \end{figure}
 
 These plots visualize the posterior distributions of parameters from
@@ -860,13 +833,12 @@ To this end, we use the \texttt{foldID} variable defined in Section
 \ref{spatial-information} whereby all focal trees are assigned to one of
 4 spatially contiguous blocks that act as folds in our cross-validation
 routine. Figure \ref{fig:scbi-spatial-cross-validation-schematic}
-presents a schematic illustrating this scheme for fold 1 (bottom-left)
-as the test set and folds 2--4 as the training set. We fit the model to
-all focal trees in the training set, apply the model to all focal trees
-in the test set to compute fitted/predicted values, and compute the RMSE
-of the observed versus predicted growths. We repeat this procedure 3
-more times with each of the three remaining folds acting as the test set
-and then average all four resulting RMSE's. Furthermore, in order to
+presents a schematic illustrating this scheme. We fit the model to all
+focal trees in the training set, apply the model to all focal trees in
+the test set to compute fitted/predicted values, and compute the RMSE of
+the observed versus predicted growths. We repeat this procedure 3 more
+times with each of the three remaining folds acting as the test set and
+then average all four resulting RMSE's. Furthermore, in order to
 maintain spatial independence between the test and training set, a
 ``fold buffer'' that extend outwards from the boundary of the test set
 is computed; all trees falling within this fold buffer are excluded from
@@ -878,7 +850,7 @@ the training set.
 
 }
 
-\caption{Schematic of spatial cross-validation: Using the k = 1 fold as the test set, assigning each focal tree to training set, test set, and fold buffer.}\label{fig:scbi-spatial-cross-validation-schematic}
+\caption{Schematic of spatial cross-validation: Using the k = 1 fold (bottom-left) as the test set, k = 2 through 4 as the training set, along with a "fold buffer."}\label{fig:scbi-spatial-cross-validation-schematic}
 \end{figure}
 
 This algorithm is implemented in \texttt{run\_cv()}, which is a wrapper
@@ -941,26 +913,25 @@ cross-validation, without it the model was overfit.
 \section{Conclusion}\label{conclusion}}
 
 The \texttt{forestecology} package provides an accessible way to fit and
-test models of neighborhood competition. Currently it is written to work
-with data from ForestGEO plots, but it could easily be modified to work
-on any single large, mapped forest plot in which at least two
-measurements of each individual have been taken. With some data
-wrangling the package could also be applied to forest inventory data in
-which several small plots are spatially separated, e.g., USFS Forest
-Inventory. In future versions of \texttt{forestecology} we also hope to
-make it possible to model plant mortality in addition to plant growth.
-The package follows the guidelines for \texttt{tidy} data, leverages the
-\texttt{sf} package for spatial data, and S3 open-oriented model
-structure. We hope that the package will increase the use of
+test models of neighborhood competition. While the package is designed
+with ForestGEO plot data in mind, we envision that it can be modified to
+work on i) any single large, mapped forest plot in which at least two
+measurements of each individual have been taken, e.g.~the US Forest
+Service Forest Inventory and Analysis plots or ii) more generally to
+model interactions of any community of mapped sessile organisms
+\citep{smith_forest_2002}. In future versions of \texttt{forestecology}
+we also hope to make it possible to model plant mortality in addition to
+plant growth. The package follows the guidelines for \texttt{tidy} data,
+leverages the \texttt{sf} package for spatial data, and S3 open-oriented
+model structure. We hope that the package will increase the use of
 neighborhood competition models to better understand what structures
 plant competition.
 
 \hypertarget{acknowledgments}{%
 \section{Acknowledgments}\label{acknowledgments}}
 
-The authors thank Ryan Giordano and Jonathan Che for their help with the
-statistical methodology and Sophie Li for their feedback on package
-interface. The authors declare no conflicts of interest.
+The authors thank Sophie Li for their feedback on the package interface.
+The authors declare no conflicts of interest.
 
 \hypertarget{authors-contributions}{%
 \section{Author's contributions}\label{authors-contributions}}
@@ -974,14 +945,13 @@ drafts and gave final approval for manuscript.
 \hypertarget{data-accessibility}{%
 \section{Data accessibility}\label{data-accessibility}}
 
-We intend to archive all data and source code for the
-\texttt{forestecology} package as well as this manuscript on GitHub at
-\url{https://github.com/rudeboybert/forestecology}. This repository will
-be versioned and archived on Zenodo upon acceptance. The 2008 and 2014
-Smithsonian Conservation Biology Institute census data loaded in Section
-\ref{compute-growth}are available on GitHub at
+We intend to archive all data and source code for this manuscript on
+GitHub at \url{https://github.com/rudeboybert/forestecology}. This
+repository will be archived on Zenodo upon acceptance. The example
+Smithsonian Conservation Biology Institute census data used are
+available on GitHub at
 \url{https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/tree/master/tree_main_census/data/census-csv-files}
-and are versioned and archived on Zenodo at
+and are archived on Zenodo at
 \url{https://doi.org/10.5281/zenodo.2649301}
 \citep{gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020}.
 

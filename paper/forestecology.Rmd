@@ -193,9 +193,7 @@ growth_scbi <-
 growth_scbi
 ```
 
-The output `growth_scbi` is a single data frame of class `sf` that includes variables `growth`, the average annual growth in DBH (cm $\cdot$ y^-1^) for all stems that were alive at both time points, and `geometry`, the `sf` package's encoding of geolocations of type `<POINT>`. In addition the species variable `sp` is returned as a factor.^[In our spatial cross-validation algorithm in Section \ref{spatial-cross-validation} issues can occur when rare species do not occur in the training set, but then are encountered in the test set. This risk is mitigated by representing `sp` as a factor variable, which has a complete list of all levels of the categorical variable.] 
-
-Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2` using the `geom_sf()` geometry as seen in Figure \ref{fig:scbi-trees} where we plot a random sample of 500 out of the `r nrow(growth_scbi)` trees.
+The output `growth_scbi` is a single data frame of class `sf` that includes variables `growth`, the average annual growth in DBH (cm $\cdot$ y^-1^) for all stems that were alive at both time points, and `geometry`, the `sf` package's encoding of geolocations of type `<POINT>`. In addition the species variable `sp` is returned as a factor.^[In our spatial cross-validation algorithm in Section \ref{spatial-cross-validation} issues can occur when rare species do not occur in the training set, but then are encountered in the test set. This risk is mitigated by representing `sp` as a factor variable, which has a complete list of all levels of the categorical variable.] Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2` using the `geom_sf()` geometry as seen in Figure \ref{fig:scbi-trees}.
 
 ```{r scbi-trees, out.width="66%", fig.cap="Compute growth of trees based on census data: Map with growth of a random sample of 500 trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot."}
 ggplot() +
@@ -300,9 +298,9 @@ focal_vs_comp_scbi %>%
   unnest(cols = "comp")
 ```
 
-We observe that for this focal tree, we have 4 variables of information on its 20 competitor trees: their unique tree-stem ID number, their distance to the focal tree (all $\leq$ `r comp_dist`), their species, and their basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ where $DBH$ is the value from the earlier of the two censuses in cm. Saving our focal versus competitor information in list-column minimizes redundancy since we do not repeat information on the focal tree 20 times. The spatial distribution of these trees is visualized in Figure \ref{fig:scbi-focal-vs-comp-map}: the dashed circle extends `r comp_dist` m away from the focal tree while all 20 competitor trees are within this circle. 
+We observe that for this focal tree, we have 4 variables of information on its 20 competitor trees: their unique tree-stem ID number, their distance to the focal tree (all $\leq$ `r comp_dist`), their species, and their basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ where $DBH$ is the value from the earlier of the two censuses in cm. Saving our focal versus competitor information in list-column minimizes redundancy since we do not repeat information on the focal tree 20 times. The spatial distribution of these trees is visualized in Figure \ref{fig:scbi-focal-vs-comp-map}. 
 
-```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Identify all focal and corresponding competitor trees: All 20 competitor trees of focal tree 4."}
+```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Identify all focal and corresponding competitor trees: The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle."}
 comp_radius <- growth_scbi %>% 
   filter(stemID == 4) %>% 
   st_buffer(dist = comp_dist)
@@ -366,9 +364,9 @@ model_rmse <- focal_vs_comp_scbi %>%
 model_rmse
 ```
 
-Lastly, the generic for `ggplot2::autoplot()` allows us to plot the posterior distribution of all parameters in Figure \ref{fig:scbi-posterior-viz} (for compactness we include only 3 species). 
+Lastly, the generic for `ggplot2::autoplot()` allows us to plot the posterior distribution of all parameters in Figure \ref{fig:scbi-posterior-viz}. 
 
-```{r scbi-posterior-viz, out.width="100%", fig.cap= "Fit model: Posterior distributions of all parameters for three species.", fig.width = 7.5}
+```{r scbi-posterior-viz, out.width="100%", fig.cap= "Fit model: Posterior distributions of all parameters. For compactness we include only three species.", fig.width = 8, fig.height = 6}
 # Plot posteriors for only a subset of species
 sp_to_plot <- c("litu", "quru", "cagl")
 
@@ -416,9 +414,9 @@ The resulting RMSE of `r model_rmse_shuffle` based on the permutation test is `r
 
 We answer the second of our two questions: how can we obtain an accurate estimate of model performance/error?  The model fits and predictions in Section \ref{model-fit-predict} all suffer from a common failing: they use the same data to both fit the model and to assess the model's performance using the RMSE. As argued by @roberts_cross-validation_2017, this can lead to overly optimistic assessments of model quality as the models can be overfit, in particular in situations where spatial-autocorrelation is present. To mitigate the effects of such overfitting, we use a spatially block cross-validation algorithm.
 
-To this end, we use the `foldID` variable defined in Section \ref{spatial-information} whereby all focal trees are assigned to one of `r n_fold` spatially contiguous blocks that act as folds in our cross-validation routine. Figure \ref{fig:scbi-spatial-cross-validation-schematic} presents a schematic illustrating this scheme for fold 1 (bottom-left) as the test set and folds 2--4 as the training set. We fit the model to all focal trees in the training set, apply the model to all focal trees in the test set to compute fitted/predicted values, and compute the RMSE of the observed versus predicted growths. We repeat this procedure 3 more times with each of the three remaining folds acting as the test set and then average all four resulting RMSE's. Furthermore, in order to maintain spatial independence between the test and training set, a "fold buffer" that extend outwards from the boundary of the test set is computed; all trees falling within this fold buffer are excluded from the training set. 
+To this end, we use the `foldID` variable defined in Section \ref{spatial-information} whereby all focal trees are assigned to one of `r n_fold` spatially contiguous blocks that act as folds in our cross-validation routine. Figure \ref{fig:scbi-spatial-cross-validation-schematic} presents a schematic illustrating this scheme. We fit the model to all focal trees in the training set, apply the model to all focal trees in the test set to compute fitted/predicted values, and compute the RMSE of the observed versus predicted growths. We repeat this procedure 3 more times with each of the three remaining folds acting as the test set and then average all four resulting RMSE's. Furthermore, in order to maintain spatial independence between the test and training set, a "fold buffer" that extend outwards from the boundary of the test set is computed; all trees falling within this fold buffer are excluded from the training set. 
 
-```{r scbi-spatial-cross-validation-schematic, out.width="66%", fig.cap= "Schematic of spatial cross-validation: Using the k = 1 fold as the test set, assigning each focal tree to training set, test set, and fold buffer.", echo = FALSE}
+```{r scbi-spatial-cross-validation-schematic, out.width="66%", fig.cap= "Schematic of spatial cross-validation: Using the k = 1 fold (bottom-left) as the test set, k = 2 through 4 as the training set, along with a \"fold buffer.\"", echo = FALSE}
 fold_number <- 1
 
 test_fold_buffer <- blocks_scbi %>% 
@@ -477,7 +475,7 @@ The `forestecology` package provides an accessible way to fit and test models of
 
 # Acknowledgments
 
-The authors thank Ryan Giordano and Jonathan Che for their help with the statistical methodology and Sophie Li for their feedback on package interface. The authors declare no conflicts of interest.
+The authors thank Sophie Li for their feedback on the package interface. The authors declare no conflicts of interest.
 
 
 
@@ -488,7 +486,7 @@ AYK and DNA conceived the ideas and coded a draft of the package. AYK wrote an i
 
 # Data accessibility
 
-We intend to archive all data and source code for the `forestecology` package as well as this manuscript on GitHub at https://github.com/rudeboybert/forestecology. This repository will be versioned and archived on Zenodo upon acceptance. The 2008 and 2014 Smithsonian Conservation Biology Institute census data loaded in Section \ref{compute-growth}are available on GitHub at https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/tree/master/tree_main_census/data/census-csv-files and are versioned and archived on Zenodo at https://doi.org/10.5281/zenodo.2649301 [@gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020].
+We intend to archive all data and source code for this manuscript on GitHub at https://github.com/rudeboybert/forestecology. This repository will be archived on Zenodo upon acceptance. The example Smithsonian Conservation Biology Institute census data used are available on GitHub at https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/tree/master/tree_main_census/data/census-csv-files and are archived on Zenodo at https://doi.org/10.5281/zenodo.2649301 [@gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020].
 
 
 
