@@ -116,17 +116,15 @@ where the null hypothesis $H_0$ reflects a hypothesis of no species grouping-spe
 
 We introduce the `forestecology` R package providing methods and data for forest ecology model fitting and assessment, available on CRAN (https://cran.r-project.org/web/packages/forestecology/index.html) and on GitHub (https://github.com/rudeboybert/forestecology). The package implements all aspects of the model in Equation \ref{eq:model}: model fitting and generating fitted/predicted values, evaluating the effect of competitor species identity using permutation tests, and evaluating model performance using spatial cross-validation. 
 
-The package designed with "tidy" design principles in mind [@wickham_welcome_2019]. Much like many of the `tidyverse` component packages, `forestecology` is designed with verb-named functions that can be modularly composed in sequence using the pipe `%>%` operator [@bache_pipe_2020]. As we articulate in Section \ref{casestudy}, these functions delineate the key steps in our analysis sequence. Furthermore, the inputs and outputs of nearly all of our functions use the same "simple features for R" data structures as implemented in the `sf` package for standardized support for spatial vector data [@pebesma_simple_2018]. The `sf` package is a `tidyverse`-friendly evolution of the `sp` package of classes and methods for spatial data in R [@pebesma_sp_2005]. As such, wrangling and visualization spatial data such as ours becomes much easier.
+The package designed with "tidy" design principles in mind [@wickham_welcome_2019]. Much like many of the `tidyverse` component packages, `forestecology` is designed with verb-named functions that can be modularly composed in sequence using the pipe `%>%` operator [@bache_pipe_2020]. As we articulate in Section \ref{casestudy}, these functions delineate the key steps in our analysis sequence. Furthermore, the inputs and outputs of nearly all of our functions use the same "simple features for R" data structures as implemented in the `sf` package for standardized and `tidyverse`-friendly support for spatial vector data [@pebesma_simple_2018]
 
 Currently the package only implements the Bayesian linear regression model of tree growth based on neighborhood competition detailed in Equation \ref{eq:model}. As we demonstrate in Section \ref{model-fit-predict} however, the fitting of this model is self-contained in a single function `comp_bayes_lm()`. This function returns an object of S3 class type `comp_bayes_lm` with generic methods implemented to print, make predictions using, and plot all results. Therefore the package can be modularly extended to fit other models as long as they are coded into a function similar to `comp_bayes_lm()` and has equivalent generic methods implemented.
-
-We present a case-study of the `forestecology` package's use on data from the Smithsonian Conservation Biology Institute's (SCBI) large forest dynamics plot in Front Royal, Virginia, USA in Section \ref{casestudy}, which is part of the ForestGEO global network of research sites [@bourg_initial_2013, @andersonteixeira_ctfs-forestgeo_2015]. The package is designed with ForestGEO plot data in mind, but we envision that it could easily be modified to work with data from other forest plots, e.g. the US Forest Service Forest Inventory and Analysis plots or more generally to model interactions of any community of mapped sessile organisms [@smith_forest_2002].
 
 
 
 # forestecology workflow: a case study {#casestudy}
 
-We demonstrate the `forestecology` package's functionality on data from the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot, located at the Smithsonian's National Zoo and Conservation Biology Institute in Front Royal, VA, USA [@bourg_initial_2013]. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US---the Blue Ridge, Ridge and Valley, and Piedmont provinces---and is adjacent to the northern end of Shenandoah National Park. 
+We present a case-study of the `forestecology` package's functionality on data from the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot in Front Royal, VA, USA, which is part of the ForestGEO global network of research sites [@bourg_initial_2013, @andersonteixeira_ctfs-forestgeo_2015] [@bourg_initial_2013]. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US---the Blue Ridge, Ridge and Valley, and Piedmont provinces---and is adjacent to the northern end of Shenandoah National Park. 
 
 The `forestecology` package has the following ecological goals: 1) to evaluate the effect of competitor species identity using permutation tests and 2) to evaluate model performance using spatial cross-validation. To achieve these goals, we outline a basic analysis sequence comprising of these four main steps:
 
@@ -230,7 +228,8 @@ growth_scbi <- growth_scbi %>%
 
 The second element of spatial information are blocks corresponding to folds of a spatial cross-validation algorithm used to estimate out-of-sample model error. Conventional cross-validation algorithms assign observations to folds by randomly resampling individual observations. However, many of these algorithms assume that the observations are independent. In the case of forest census data, observations exhibit spatial autocorrelation. We therefore incorporate this spatial dependence into the cross-validation algorithm with our spatial blocks of trees [@roberts_cross-validation_2017 @pohjankukka_estimating_2017].
 
-In the example below, we first manually define four folds that partition the study region as an `sf` object. We then use the output of the `spatialBlock()` function from the `blockCV` package to associate each tree in `growth_scbi` to the correct fold `foldID` [@valavi_blockcv_2019]. ^[In the Supporting Information we present an example where the folds themselves are also created automatically using `spatialBlock()` given a specified `cv_block_size`, as opposed to manually as in the example.] 
+In the example below, we first manually define four folds that partition the study region as an `sf` object. We then use the output of the `spatialBlock()` function from the `blockCV` package to associate each tree in `growth_scbi` to the correct fold `foldID` [@valavi_blockcv_2019]. ^[In the Supporting Information we present an example where the folds themselves are also created automatically using `spatialBlock()` given a specified `cv_block_size`, as opposed to manually as in the example.] Figure \ref{fig:scbi-spatial-information} illustrates the net effect of adding these two elements of spatial information to `growth_scbi`.
+
 
 ```{r}
 # Manually define spatial blocks to act as folds
@@ -256,9 +255,7 @@ growth_scbi <- growth_scbi %>%
   mutate(foldID = spatial_block_scbi$foldID %>% factor())
 ```
 
-Figure \ref{fig:scbi-spatial-information} illustrates the net effect of adding these two elements of spatial information to `growth_scbi`. The location of each tree is marked with an integer indicating its fold, where the folds are marked with solid lines. The color of each digit indicates whether the tree is part of the buffer region (and thus will only be considered as a competitor tree in our model) or is part of the interior of the study region (and thus is a focal tree whose growth is of modeled interest).
-
-```{r scbi-spatial-information, out.width="66%", fig.cap="Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). All trees in the interior of the study region (i.e. not part of buffer) will be the focal trees whose growth will be modeled."}
+```{r scbi-spatial-information, out.width="66%", fig.cap="Add spatial information: Buffer region and spatial cross-validation blocks (1 through 4). The location of each tree is marked with an integer indicating its fold, with folds delineated with solid lines. The color of each digit indicates whether the tree is part of the buffer region (and thus will only be considered as a competitor tree in our model) or is part of the interior of the study region (and thus is a focal tree whose growth is of modeled interest)."}
 ggplot() +
   geom_sf(data = blocks_scbi, fill = "transparent", linetype = "dashed") +
   geom_sf_text(data = growth_scbi %>% sample_n(1000), 
@@ -270,13 +267,13 @@ ggplot() +
 
 ## Step 3: Identify all focal and corresponding competitor trees {#focal-vs-comp}
 
-The next step is to identify all focal trees and their corresponding competitor trees. More specifically, identify all trees that are not part of the buffer region, have a valid `growth` measurement, and have at least one neighbor within `r comp_dist`m. `create_focal_vs_comp()` returns a new data frame of type `sf`. On top of previously detailed arguments `comp_dist` and `id`, `create_focal_vs_comp()` also requires an `sf` object representation of the spatial cross-validation blocks/folds as seen in Section \ref{spatial-information}. We present the resulting data frame below with the `foldID` variable omitted for compactness.
+The next step is to identify all focal trees and their corresponding competitor trees. More specifically, identify all trees that are not part of the buffer region, have a valid `growth` measurement, and have at least one neighbor within `r comp_dist`m. `create_focal_vs_comp()` returns a new data frame of type `sf`. On top of previously detailed arguments `comp_dist` and `id`, `create_focal_vs_comp()` also requires an `sf` object representation of the spatial cross-validation blocks/folds as seen in Section \ref{spatial-information}.
 
 ```{r scbi-focal-vs-comp}
 focal_vs_comp_scbi <- growth_scbi %>%
   create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID")
 focal_vs_comp_scbi %>% 
-  select(-foldID)
+  select(focal_ID, focal_sp, geometry, growth, comp)
 ```
 
 ```{r, eval = FALSE, echo = FALSE}
@@ -371,7 +368,7 @@ model_rmse
 
 Lastly, the generic for `ggplot2::autoplot()` allows us to plot the posterior distribution of all parameters in Figure \ref{fig:scbi-posterior-viz} (for compactness we include only 3 species). 
 
-```{r scbi-posterior-viz, out.width="100%", fig.cap= "Fit model: Posterior distributions of all parameters for three species."}
+```{r scbi-posterior-viz, out.width="100%", fig.cap= "Fit model: Posterior distributions of all parameters for three species.", fig.width = 7.5}
 # Plot posteriors for only a subset of species
 sp_to_plot <- c("litu", "quru", "cagl")
 
@@ -474,7 +471,9 @@ include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.png")
 
 # Conclusion
 
-The `forestecology` package provides an accessible way to fit and test models of neighborhood competition. Currently it is written to work with data from ForestGEO plots, but it could easily be modified to work on any single large, mapped forest plot in which at least two measurements of each individual have been taken. With some data wrangling the package could also be applied to forest inventory data in which several small plots are spatially separated, e.g., USFS Forest Inventory. In future versions of `forestecology` we also hope to make it possible to model plant mortality in addition to plant growth. The package follows the guidelines for `tidy` data, leverages the `sf` package for spatial data, and S3 open-oriented model structure. We hope that the package will increase the use of neighborhood competition models to better understand what structures plant competition.
+The `forestecology` package provides an accessible way to fit and test models of neighborhood competition. While the package is designed with ForestGEO plot data in mind, we envision that it can be modified to work on i) any single large, mapped forest plot in which at least two measurements of each individual have been taken, e.g. the US Forest Service Forest Inventory and Analysis plots or ii) more generally to model interactions of any community of mapped sessile organisms [@smith_forest_2002]. In future versions of `forestecology` we also hope to make it possible to model plant mortality in addition to plant growth. The package follows the guidelines for `tidy` data, leverages the `sf` package for spatial data, and S3 open-oriented model structure. We hope that the package will increase the use of neighborhood competition models to better understand what structures plant competition.
+
+
 
 # Acknowledgments
 
