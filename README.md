@@ -56,8 +56,11 @@ package where we will:
 ``` r
 library(tidyverse)
 library(forestecology)
-library(blockCV)
 library(patchwork)
+library(blockCV)
+
+# Resolve conflicting functions
+filter <- dplyr::filter
 ```
 
 ### Compute growth of trees based on census data
@@ -228,19 +231,19 @@ distance from it.
 focal_vs_comp_ex %>% 
   unnest(cols = "comp")
 #> # A tibble: 11 x 10
-#>    focal_ID focal_sp   dbh foldID                  geometry growth comp_ID  dist
-#>       <dbl> <fct>    <dbl> <fct>                    <POINT>  <dbl>   <dbl> <dbl>
-#>  1        2 america…    20 1                      (1.5 2.5)  0.800       1 0.75 
-#>  2        2 america…    20 1                      (1.5 2.5)  0.800       3 0.354
-#>  3        3 sugar_m…    15 1                    (1.75 2.25)  1.00        2 0.354
-#>  4        4 america…    12 1                        (3 1.5)  0.400       5 0.354
-#>  5        5 sugar_m…    35 1                    (3.25 1.75)  1.40        4 0.354
-#>  6        7 sugar_m…    22 2                        (8 1.5)  0.600       8 0.901
-#>  7        7 sugar_m…    22 2                        (8 1.5)  0.600       9 0.75 
-#>  8        7 sugar_m…    22 2                        (8 1.5)  0.600      10 0.791
-#>  9        9 sugar_m…    42 2                     (8.75 1.5)  1.40        7 0.75 
-#> 10        9 sugar_m…    42 2                     (8.75 1.5)  1.40        8 0.791
-#> 11        9 sugar_m…    42 2                     (8.75 1.5)  1.40       10 0.25 
+#>    focal_ID focal_sp         dbh foldID    geometry growth comp_ID  dist
+#>       <dbl> <fct>          <dbl> <fct>      <POINT>  <dbl>   <dbl> <dbl>
+#>  1        2 american_beech    20 1        (1.5 2.5)  0.800       1 0.75 
+#>  2        2 american_beech    20 1        (1.5 2.5)  0.800       3 0.354
+#>  3        3 sugar_maple       15 1      (1.75 2.25)  1.00        2 0.354
+#>  4        4 american_beech    12 1          (3 1.5)  0.400       5 0.354
+#>  5        5 sugar_maple       35 1      (3.25 1.75)  1.40        4 0.354
+#>  6        7 sugar_maple       22 2          (8 1.5)  0.600       8 0.901
+#>  7        7 sugar_maple       22 2          (8 1.5)  0.600       9 0.75 
+#>  8        7 sugar_maple       22 2          (8 1.5)  0.600      10 0.791
+#>  9        9 sugar_maple       42 2       (8.75 1.5)  1.40        7 0.75 
+#> 10        9 sugar_maple       42 2       (8.75 1.5)  1.40        8 0.791
+#> 11        9 sugar_maple       42 2       (8.75 1.5)  1.40       10 0.25 
 #> # … with 2 more variables: comp_sp <fct>, comp_basal_area <dbl>
 ```
 
@@ -263,7 +266,8 @@ associated with several methods.
 ``` r
 # Print
 comp_bayes_lm_ex
-#> Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:
+#> Bayesian linear regression model parameters with a multivariate Normal
+#> likelihood. See ?comp_bayes_lm for details:
 #> 
 #>   parameter_type           prior posterior
 #> 1 Inverse-Gamma on sigma^2 a_0   a_star   
@@ -292,14 +296,14 @@ focal_vs_comp_ex <- focal_vs_comp_ex %>%
   mutate(growth_hat = predict(comp_bayes_lm_ex, newdata = focal_vs_comp_ex))
 focal_vs_comp_ex
 #> # A tibble: 6 x 8
-#>   focal_ID focal_sp   dbh foldID                  geometry growth comp 
-#>      <dbl> <fct>    <dbl> <fct>                    <POINT>  <dbl> <lis>
-#> 1        2 america…    20 1                      (1.5 2.5)  0.800 <tib…
-#> 2        3 sugar_m…    15 1                    (1.75 2.25)  1.00  <tib…
-#> 3        4 america…    12 1                        (3 1.5)  0.400 <tib…
-#> 4        5 sugar_m…    35 1                    (3.25 1.75)  1.40  <tib…
-#> 5        7 sugar_m…    22 2                        (8 1.5)  0.600 <tib…
-#> 6        9 sugar_m…    42 2                     (8.75 1.5)  1.40  <tib…
+#>   focal_ID focal_sp         dbh foldID    geometry growth comp            
+#>      <dbl> <fct>          <dbl> <fct>      <POINT>  <dbl> <list>          
+#> 1        2 american_beech    20 1        (1.5 2.5)  0.800 <tibble [2 × 4]>
+#> 2        3 sugar_maple       15 1      (1.75 2.25)  1.00  <tibble [1 × 4]>
+#> 3        4 american_beech    12 1          (3 1.5)  0.400 <tibble [1 × 4]>
+#> 4        5 sugar_maple       35 1      (3.25 1.75)  1.40  <tibble [1 × 4]>
+#> 5        7 sugar_maple       22 2          (8 1.5)  0.600 <tibble [3 × 4]>
+#> 6        9 sugar_maple       42 2       (8.75 1.5)  1.40  <tibble [3 × 4]>
 #> # … with 1 more variable: growth_hat <dbl>
 ```
 

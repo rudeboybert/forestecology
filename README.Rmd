@@ -57,8 +57,11 @@ We present an example analysis using toy data pre-loaded into the package where 
 ```{r}
 library(tidyverse)
 library(forestecology)
-library(blockCV)
 library(patchwork)
+library(blockCV)
+
+# Resolve conflicting functions
+filter <- dplyr::filter
 ```
 
 ### Compute growth of trees based on census data
