@@ -4,6 +4,7 @@
 ^LICENSE\.md$
 ^CODE_OF_CONDUCT\.md$
 ^data-raw$
+^cran-comments\.md$
 
 ^README\.Rmd$
 ^README\.md$
