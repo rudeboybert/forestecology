@@ -20,7 +20,7 @@ height, and wood density}
 \source{
 For more information on trait clustering see Allen and Kim 2020 "A permutation
 test and spatial cross-validation approach to assess models of interspecific competition
-between trees." \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
+between trees." \href{https://doi.org/10.1371/journal.pone.0229930}{PLOS One 15: e0229930}.
 }
 \usage{
 species_bw

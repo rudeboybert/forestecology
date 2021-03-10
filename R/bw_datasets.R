@@ -30,7 +30,7 @@
 #'   \item{gx}{x-coordinate meters from reference point}
 #'   \item{gy}{y-coordinate meters from reference point}
 #'   \item{date}{Approximate date the stem was measured}
-#'   \item{codes}{Code for additional informaiton on the stem: M means the main stem
+#'   \item{codes}{Code for additional information on the stem: M means the main stem
 #'   of the individual tree; AL means the stem is alive but leaning or completely fallen
 #'   over; B means the stem is broken and over half the canopy is assumed to be missing;
 #'   and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
@@ -89,7 +89,7 @@
 #'   \item{gx}{x-coordinate meters from reference point}
 #'   \item{gy}{y-coordinate meters from reference point}
 #'   \item{date}{Approximate date the stem was measured}
-#'   \item{codes}{Code for additional informaiton on the stem: M means the main stem
+#'   \item{codes}{Code for additional information on the stem: M means the main stem
 #'   of the individual tree; AL means the stem is alive but leaning or completely fallen
 #'   over; B means the stem is broken and over half the canopy is assumed to be missing;
 #'   and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
@@ -145,7 +145,7 @@
 #'
 #' @source For more information on trait clustering see Allen and Kim 2020 "A permutation
 #' test and spatial cross-validation approach to assess models of interspecific competition
-#' between trees." \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
+#' between trees." \href{https://doi.org/10.1371/journal.pone.0229930}{PLOS One 15: e0229930}.
 #'
 #' @family Big Woods data
 #' @family example data objects
@@ -167,7 +167,7 @@
 
 #' Bigwoods forest study region boundary
 #'
-#' Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
+#' Boundary region for Bigwoods defined in terms of (x,y) vertices of a polygon.
 #'
 #' @format A \code{sf} spatial features polygon
 #'

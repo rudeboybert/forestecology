@@ -299,7 +299,7 @@
 
 #' Example bayesian competition model fit
 #'
-#' @description This object contains an example fitted bayesian competition
+#' @description This object contains an example fitted Bayesian competition
 #' model outputted by [comp_bayes_lm()].
 #'
 #' @format A list subclass containing the following elements:
