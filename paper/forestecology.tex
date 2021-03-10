@@ -118,17 +118,17 @@ models of the effect of interspecific competition on the growth of trees}
 effect of interspecific competition. Statistical methods to ease the
 application of these models are currently lacking.\\
 2. We present the \texttt{forestecology} package providing methods to i)
-specify neighborhood competition models, ii) evalulate the effect of
+specify neighborhood competition models, ii) evaluate the effect of
 competitor species identity using permutation tests, and iii) measure
 model performance using spatial cross-validation. Following
 \citet{allen_permutation_2020}, we implement a Bayesian linear
 regression neighborhood competition model.\\
 3. We demonstrate the package's functionality using data from the
 Smithsonian Conservation Biology Institute's large forest dynamics plot,
-part of the ForestGEO global network of reseach sites. Given ForestGEO's
-data collection protocols and data formatting standards, the package was
-designed with cross-site compatibility in mind. We highlight the
-importance of spatial cross-validation when interpreting model
+part of the ForestGEO global network of research sites. Given
+ForestGEO's data collection protocols and data formatting standards, the
+package was designed with cross-site compatibility in mind. We highlight
+the importance of spatial cross-validation when interpreting model
 results.\\
 4. The package features i) \texttt{tidyverse}-like structure whereby
 verb-named functions can be modularly ``piped'' in sequence, ii)
@@ -136,10 +136,9 @@ functions with standardized inputs/outputs of simple features
 \texttt{sf} package class, and iii) an S3 object-oriented implementation
 of the Bayesian linear regression model. These three facts allow for
 clear articulation of all the steps in the sequence of analysis and easy
-wrangling and visualization of the geospatial forestry data.
-Furthermore, while the package only has Bayesian linear regression
-implemented, the package was designed with extensibility to other
-methods in mind.
+wrangling and visualization of the geospatial data. Furthermore, while
+the package only has Bayesian linear regression implemented, the package
+was designed with extensibility to other methods in mind.
 \end{abstract}
 
 \noindent%
@@ -157,50 +156,50 @@ tree growth, R, ForestGEO, spatial cross-validation
 
 Repeat-censused forest plots offer excellent opportunities to test
 neighborhood models of the effect of competition on the growth of trees
-(\citet{canham_neighborhood_2004}). Neighborhood models of competition
+\citep{canham_neighborhood_2004}. Neighborhood models of competition
 have been used to: test whether the species identity of a competitor
-matters (\citet{uriarte_spatially_2004}); measure species-specific
-competition coefficients (\citet{das_effect_2012}
-\citet{tatsumi_estimating_2016}); test competing models to see what
-structures competitive interactions, e.g.~traits or phylogeny
-(\citet{allen_permutation_2020}; \citet{uriarte_trait_2010}); and inform
-selective logging practices (\citet{canham_neighborhood_2006}). Although
+matters {[}\citet{uriarte_spatially_2004}; measure species-specific
+competition coefficients \citep[
+\citet{tatsumi_estimating_2016}]{das_effect_2012}; test competing models
+to see what structures competitive interactions, e.g.~traits or
+phylogeny \citep{allen_permutation_2020, uriarte_trait_2010}; and inform
+selective logging practices \citep{canham_neighborhood_2006}. Although
 these are well-described methods, few methods are currently available
 for easy application.
 
 We address this shortcoming with the \texttt{forestecology} R package
 providing methods and data for forest ecology model fitting and
 assessment, available on CRAN
-(\url{https://cran.r-project.org/web/packages/forestecology/index.html})
-and on GitHub (\url{https://github.com/rudeboybert/forestecology}). The
-package is written to model stem radial growth between two censuses
-based on neighborhood competition, largely following the methods in
+(\url{https://cran.r-project.org/package=forestecology}) and on GitHub
+(\url{https://github.com/rudeboybert/forestecology}). The package is
+written to model stem diameter growth between two censuses based on
+neighborhood competition, largely following the methods in
 \citet{allen_permutation_2020}.
 
 Let \(i = 1, \ldots, n_j\) index all \(n_j\) trees of ``focal'' species
-group \(j\); let \(j = 1, \ldots, J\) index all \(J\) focal species
-groups; and let \(k = 1, \ldots, K\) index all \(K\) ``competitor''
-species groups. The average annual growth in diameter at breast height
-(DBH) \(y_{ij}\) (in centimeters/year) of the \(i^{th}\) tree of focal
-species group \(j\) is modeled as
+\(j\); let \(j = 1, \ldots, J\) index all \(J\) focal species; and let
+\(k = 1, \ldots, K\) index all \(K\) ``competitor'' species. The average
+annual growth in diameter at breast height (DBH) \(y_{ij}\) (in
+centimeters/year) of the \(i^{th}\) tree of focal species \(j\) is
+modeled as
 
 \begin{equation}
 \label{eq:model}
 y_{ij} = \beta_{0,j} + \beta_{\text{dbh},j} \cdot \text{dbh}_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot \text{BA}_{ijk} + \epsilon_{ij}
 \end{equation}
 
-where \(\beta_{0,j}\) is the diameter-independent growth rate for group
+where \(\beta_{0,j}\) is the diameter-independent growth rate of species
 \(j\); \(\text{dbh}_{ij}\) is the DBH of the focal tree at the earlier
-census for group \(j\) and \(\beta_{\text{dbh},j}\) quantifies its
-corresponding growth rate change; \(\text{BA}_{ijk}\) is the sum of the
-basal area of all trees of competitor species group \(k\) and
-\(\lambda_{jk}\) quantifies the corresponding change in growth for
-individuals of group \(j\) from these competitors; and \(\epsilon_{ij}\)
-is a random error term distributed \(\text{Normal}(0, \sigma^2)\). They
-estimate all parameters via Bayesian linear regression, while exploiting
-Normal/Inverse Gamma conjugacy to derive closed-form solutions to all
-posterior distributions\footnote{See S1 Appendix of
-  \citet{allen_permutation_2020}, available at
+census and \(\beta_{\text{dbh},j}\) the slope of that species's
+diameter-growth relationship; \(\text{BA}_{ijk}\) is the sum of the
+basal area of all trees of competitor species \(k\) and \(\lambda_{jk}\)
+quantifies the corresponding change in growth for individuals of group
+\(j\) from these competitors; and \(\epsilon_{ij}\) is a random error
+term distributed \(\text{Normal}(0, \sigma^2)\).
+\citet{allen_permutation_2020} estimate all parameters via Bayesian
+linear regression, while exploiting Normal/Inverse Gamma conjugacy to
+derive closed-form solutions to all posterior distributions\footnote{See
+  S1 Appendix of \citet{allen_permutation_2020}, available at
   \url{https://doi.org/10.1371/journal.pone.0229930.s004}}. These
 closed-form solutions are not as computationally expensive as
 approximations from Markov Chain Monte Carlo algorithms.
@@ -250,12 +249,11 @@ We present a case-study of \texttt{forestecology}'s functionality on
 data from the Smithsonian Conservation Biology Institute (SCBI) large
 forest dynamics plot in Front Royal, VA, USA, part of the ForestGEO
 global network of research sites
-\citep[\citet{andersonteixeira_ctfs-forestgeo_2015}]{bourg_initial_2013}
-\citep{bourg_initial_2013}. The 25.6 ha (640 x 400 m) plot is located at
-the intersection of three of the major physiographic provinces of the
-eastern US---the Blue Ridge, Ridge and Valley, and Piedmont
-provinces---and is adjacent to the northern end of Shenandoah National
-Park.
+\citep[\citet{andersonteixeira_ctfs-forestgeo_2015}]{bourg_initial_2013}.
+The 25.6 ha (640 x 400 m) plot is located at the intersection of three
+of the major physiographic provinces of the eastern US---the Blue Ridge,
+Ridge and Valley, and Piedmont provinces---and is adjacent to the
+northern end of Shenandoah National Park.
 
 The package has the following goals: to evaluate i) the effect of
 competitor species identity using permutation tests and ii) model
@@ -401,7 +399,8 @@ plotted in \texttt{ggplot2} using \texttt{geom\_sf()} as seen in Figure
 \begin{Highlighting}[]
 \KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
 \StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{sample_n}\NormalTok{(}\DecValTok{500}\NormalTok{), }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ growth)) }\OperatorTok{+}\StringTok{ }
-\StringTok{  }\KeywordTok{scale_size_binned}\NormalTok{(}\DataTypeTok{limits =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\StringTok{  }\KeywordTok{scale_size_binned}\NormalTok{(}\DataTypeTok{limits =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{size =} \KeywordTok{expression}\NormalTok{(}\KeywordTok{paste}\NormalTok{(Growth, }\StringTok{" (cm "}\NormalTok{,y}\OperatorTok{^}\NormalTok{\{}\OperatorTok{-}\DecValTok{1}\NormalTok{\},}\StringTok{')'}\NormalTok{)) )}
 \end{Highlighting}
 \end{Shaded}
 
@@ -586,7 +585,7 @@ information, we flatten the \texttt{comp} list-column for the tree with
 \end{Shaded}
 
 We observe 4 variables describing 20 competitor trees: the unique
-tree-stem ID, the distance to the focal tree (all \(\leq\) 7.5), the
+tree-stem ID, the distance to the focal tree (all \(\leq\) 7.5 m), the
 species, and the basal area (in m\(^2\)) calculated as
 \(\frac{\pi \times (\text{DBH/2})^2}{10000}\) for the DBH in cm from the
 earlier census. Saving competitor information in list-column format
@@ -628,8 +627,7 @@ and posterior parameters and the model formula:
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{comp_bayes_lm_scbi}
-\CommentTok{## Bayesian linear regression model parameters with a multivariate Normal}
-\CommentTok{## likelihood. See ?comp_bayes_lm for details:}
+\CommentTok{## Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:}
 \CommentTok{## }
 \CommentTok{##   parameter_type           prior posterior}
 \CommentTok{## 1 Inverse-Gamma on sigma^2 a_0   a_star   }
@@ -638,15 +636,7 @@ and posterior parameters and the model formula:
 \CommentTok{## 4 Multivariate t on beta   V_0   V_star   }
 \CommentTok{## }
 \CommentTok{## Model formula:}
-\CommentTok{## growth ~ sp + dbh + dbh * sp + acne * sp + acru * sp + amar * sp + astr}
-\CommentTok{## * sp + caca * sp + caco * sp + cade * sp + cagl * sp + caovl * sp + cato}
-\CommentTok{## * sp + ceca * sp + ceoc * sp + chvi * sp + cofl * sp + crpr * sp + crsp}
-\CommentTok{## * sp + divi * sp + elum * sp + fagr * sp + fram * sp + frni * sp + frpe}
-\CommentTok{## * sp + havi * sp + ilve * sp + juci * sp + juni * sp + libe * sp + litu}
-\CommentTok{## * sp + nysy * sp + pist * sp + pivi * sp + ploc * sp + prav * sp + prse}
-\CommentTok{## * sp + qual * sp + quco * sp + qufa * sp + qumi * sp + qupr * sp + quru}
-\CommentTok{## * sp + quve * sp + rops * sp + saal * sp + saca * sp + tiam * sp + ulam}
-\CommentTok{## * sp + ulru * sp + unk * sp + vipr * sp}
+\CommentTok{## growth ~ sp + dbh + dbh * sp + acne * sp + acru * sp + amar * sp + astr * sp + caca * sp + caco * sp + cade * sp + cagl * sp + caovl * sp + cato * sp + ceca * sp + ceoc * sp + chvi * sp + cofl * sp + crpr * sp + crsp * sp + divi * sp + elum * sp + fagr * sp + fram * sp + frni * sp + frpe * sp + havi * sp + ilve * sp + juci * sp + juni * sp + libe * sp + litu * sp + nysy * sp + pist * sp + pivi * sp + ploc * sp + prav * sp + prse * sp + qual * sp + quco * sp + qufa * sp + qumi * sp + qupr * sp + quru * sp + quve * sp + rops * sp + saal * sp + saca * sp + tiam * sp + ulam * sp + ulru * sp + unk * sp + vipr * sp}
 \end{Highlighting}
 \end{Shaded}
 
@@ -728,12 +718,12 @@ species-specific posterior distributions for \(\beta_{0,j}\) and
 \end{figure}
 
 For many users the visualizations of \(\lambda_{j,k}\) will be of
-particular interest as they provide insight into species competitive
-interactions, where negative values indicate a competitor species which
-slows the growth of a focal species. Here, for example, we see that
-tulip poplars (litu) have a strong negative effect on the growth of
-conspecifics but relatively lesser effect on pignut hickory (cagl) and
-red oak (quru) neighbors.
+particular interest as they provide insight into species-specific
+competitive interactions, where negative values indicate a competitor
+species which slows the growth of a focal species. Here, for example, we
+see that tulip poplars (litu) have a strong negative effect on the
+growth of conspecifics but relatively lesser effect on pignut hickory
+(cagl) and red oak (quru) neighbors.
 
 Currently the \texttt{forestecology} package can only fit the
 competition Bayesian linear regression model in Equation \ref{eq:model}.
@@ -861,9 +851,9 @@ cross-validation, this improvement disappears. These results suggest
 that in this 9 ha subplot of the SCBI plot, competitive interactions do
 not depend on the identity of the competitor, which is the opposite of
 what has been observed in other locations \citep[
-\citet{uriarte_spatially_2004}]{allen_permutation_2020}. Furthermore,
-the larger cross-validated RMSE's are indicative of the importance of
-being vigilant against potential model overfitting.
+\citet{uriarte_spatially_2004}]{allen_permutation_2020}. This provides a
+striking example of the importance of cross-validation, as without it
+the over-fit model gives rise to an incorrect conclusion.
 
 \begin{figure}
 
@@ -881,13 +871,13 @@ The \texttt{forestecology} package provides an accessible way to fit and
 test models of neighborhood competition. While the package is designed
 with ForestGEO plot data in mind, we envision that it can be modified to
 work on any single large, mapped forest plot in which at least two
-measurements of each individual have been taken, e.g.~the US Forest
-Service Forest Inventory and Analysis plots. Furthemore, we also
-envision the package being used more generally to model interactions of
-any community of mapped sessile organisms \citep{smith_forest_2002}. In
-future versions of \texttt{forestecology} we also hope to include models
-that account for tree mortality in addition to tree growth. The package
-follows the \texttt{tidy} data design principles, leverages the
+measurements of each individual have been taken. Furthermore, we also
+envision the package being used more generally for inventory
+plot-structure with many spatially separated plots, e.g.~the US Forest
+Service Forest Inventory and Analysis plots \citep{smith_forest_2002}.
+In future versions of \texttt{forestecology} we also hope to include
+models that account for tree mortality in addition to tree growth. The
+package follows the \texttt{tidy} data design principles, leverages the
 \texttt{sf} package for spatial data, and S3 open-oriented model
 implementation structure. We hope that the package will increase the use
 of neighborhood competition models to better understand what structures
