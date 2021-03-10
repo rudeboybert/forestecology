@@ -38,7 +38,10 @@ We present an example analysis using toy data pre-loaded into the package where 
 1. Run spatial cross-validation
 
 ```{r}
-library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(stringr)
 library(forestecology)
 library(patchwork)
 library(blockCV)
