@@ -45,6 +45,7 @@ Imports:
     tibble,
     yardstick,
     blockCV,
-    forcats
+    forcats,
+    patchwork
 Config/testthat/edition: 3
 VignetteBuilder: knitr
