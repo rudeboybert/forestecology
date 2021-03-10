@@ -11,7 +11,7 @@ A \code{sf} spatial features polygon
 study_region_bw
 }
 \description{
-Boundary region for bigwoods defined in terms of (x,y) vertices of a polygon.
+Boundary region for Bigwoods defined in terms of (x,y) vertices of a polygon.
 }
 \examples{
 library(ggplot2)

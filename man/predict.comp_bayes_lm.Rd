@@ -5,7 +5,7 @@
 \title{Make predictions based on fitted Bayesian model}
 \source{
 Closed-form solutions of Bayesian linear
-regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+regression \doi{10.1371/journal.pone.0229930.s004}
 }
 \usage{
 \method{predict}{comp_bayes_lm}(object, newdata, ...)

@@ -22,7 +22,7 @@
 #' @importFrom tidyr spread
 #'
 #' @source Closed-form solutions of Bayesian linear
-#' regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+#' regression \doi{10.1371/journal.pone.0229930.s004}
 #'
 #' @return A list of `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
 #'
@@ -180,7 +180,7 @@ print.comp_bayes_lm <- function(x, width = getOption("width"), ...) {
 #' @family modeling functions
 #'
 #' @source Closed-form solutions of Bayesian linear
-#' regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+#' regression \doi{10.1371/journal.pone.0229930.s004}
 #'
 #' @export
 #'

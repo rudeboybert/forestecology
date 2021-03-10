@@ -17,7 +17,7 @@ value must be combined with \code{treeID}.}
 \item{gx}{x-coordinate meters from reference point}
 \item{gy}{y-coordinate meters from reference point}
 \item{date}{Approximate date the stem was measured}
-\item{codes}{Code for additional informaiton on the stem: M means the main stem
+\item{codes}{Code for additional information on the stem: M means the main stem
 of the individual tree; AL means the stem is alive but leaning or completely fallen
 over; B means the stem is broken and over half the canopy is assumed to be missing;
 and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,

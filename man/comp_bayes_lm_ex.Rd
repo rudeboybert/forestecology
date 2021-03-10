@@ -17,7 +17,7 @@ A list subclass containing the following elements:
 comp_bayes_lm_ex
 }
 \description{
-This object contains an example fitted bayesian competition
+This object contains an example fitted Bayesian competition
 model outputted by \code{\link[=comp_bayes_lm]{comp_bayes_lm()}}.
 }
 \examples{
