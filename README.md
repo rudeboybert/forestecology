@@ -342,5 +342,3 @@ focal_vs_comp_ex %>%
   pull(.estimate)
 #> [1] 0.4068709
 ```
-
-<!--For fuller examples on actual datasets see ___.-->

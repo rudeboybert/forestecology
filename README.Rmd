@@ -229,4 +229,3 @@ focal_vs_comp_ex %>%
   pull(.estimate)
 ```
 
-<!--For fuller examples on actual datasets see ___.-->
