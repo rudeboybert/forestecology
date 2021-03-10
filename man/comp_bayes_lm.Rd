@@ -5,7 +5,7 @@
 \title{Fit Bayesian competition model}
 \source{
 Closed-form solutions of Bayesian linear
-regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+regression \doi{10.1371/journal.pone.0229930.s004}
 }
 \usage{
 comp_bayes_lm(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE)
