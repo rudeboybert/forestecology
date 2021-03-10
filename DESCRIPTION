@@ -46,5 +46,4 @@ Imports:
     yardstick,
     blockCV,
     forcats
-VignetteBuilder: knitr
 Config/testthat/edition: 3
