@@ -47,3 +47,4 @@ Imports:
     blockCV,
     forcats
 Config/testthat/edition: 3
+VignetteBuilder: knitr
