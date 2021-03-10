@@ -108,10 +108,10 @@ compute_growth <- function(census_1, census_2, id) {
 #' @description "Focal versus competitor trees" data frames are the main data
 #'   frame used for analysis. "Focal trees" are all trees that satisfy the
 #'   following criteria
-#' \tabular{l}{
-#'   1. Were alive at both censuses \cr
-#'   2. Were not part of the study region's buffer as computed by [add_buffer_variable()] \cr
-#'   3. Were not a resprout at the second census. Such trees should be coded as
+#' \enumerate{
+#'   \item Were alive at both censuses
+#'   \item Were not part of the study region's buffer as computed by [add_buffer_variable()]
+#'   \item Were not a resprout at the second census. Such trees should be coded as
 #'   `"R"` in the `codes2` variable (OK if a resprout at first census)
 #' }
 #' For each focal tree, "competitor trees" are all trees that (1) were alive at

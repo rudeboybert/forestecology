@@ -26,16 +26,14 @@ we compute the \href{https://en.wikipedia.org/wiki/Basal_area}{basal area}
 "Focal versus competitor trees" data frames are the main data
 frame used for analysis. "Focal trees" are all trees that satisfy the
 following criteria
-\tabular{l}{
 \enumerate{
-\item Were alive at both censuses \cr
-\item Were not part of the study region's buffer as computed by \code{\link[=add_buffer_variable]{add_buffer_variable()}} \cr
+\item Were alive at both censuses
+\item Were not part of the study region's buffer as computed by \code{\link[=add_buffer_variable]{add_buffer_variable()}}
 \item Were not a resprout at the second census. Such trees should be coded as
 \code{"R"} in the \code{codes2} variable (OK if a resprout at first census)
 }
 For each focal tree, "competitor trees" are all trees that (1) were alive at
 the first census and (2) within \code{comp_dist} distance of the focal tree.
-}
 }
 \note{
 In order to speed computation, in particular of distances between all
