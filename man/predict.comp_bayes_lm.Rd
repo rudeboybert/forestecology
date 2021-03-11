@@ -5,16 +5,16 @@
 \title{Make predictions based on fitted Bayesian model}
 \source{
 Closed-form solutions of Bayesian linear
-regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+regression \doi{10.1371/journal.pone.0229930.s004}
 }
 \usage{
-\method{predict}{comp_bayes_lm}(object, focal_vs_comp, ...)
+\method{predict}{comp_bayes_lm}(object, newdata, ...)
 }
 \arguments{
 \item{object}{Output of \code{\link[=comp_bayes_lm]{comp_bayes_lm()}}: A list of
 \verb{\{a_star, b_star, mu_star, V_star\}} posterior hyperparameters}
 
-\item{focal_vs_comp}{data frame from \code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}}
+\item{newdata}{A data frame of type \code{focal_vs_comp} in which to look for variables with which to predict.}
 
 \item{...}{Currently ignored—only included for consistency with generic.}
 }

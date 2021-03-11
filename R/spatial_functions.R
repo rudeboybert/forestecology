@@ -2,7 +2,7 @@
 #'
 #' @inheritParams add_buffer_variable
 #' @param region An \code{sf} polygon object of region to be buffered
-#' @param direction "in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.
+#' @param direction "in" for buffers that are contained within \code{region} (default), "out" for buffers that contain \code{region}.
 #'
 #' @return An \code{sf} polygon object of buffer
 #'
@@ -66,7 +66,8 @@ compute_buffer_region <- function(region, direction = "in", size) {
 #' Identify trees in the buffer region
 #'
 #' @param growth_df \code{sf} data frame
-#' @param size Distance to determine which neighboring trees to a focal tree are competitors.
+#' @param size Distance to determine which neighboring trees to a focal tree are
+#' competitors. The units are assumed to be the same as the `geometry` variables in \code{growth_df}.
 #' @inheritParams compute_buffer_region
 #'
 #' @return The same \code{growth_df} data frame but with a new boolean
@@ -118,7 +119,7 @@ compute_buffer_region <- function(region, direction = "in", size) {
 #'   compute_buffer_region(direction = "in", size = size)
 #' p +
 #'   geom_sf(data = buffer_boundary, col = "red", fill = "transparent")
-add_buffer_variable <- function(growth_df, direction, size, region) {
+add_buffer_variable <- function(growth_df, direction = "in", size, region) {
   buffer_boundary <- region %>%
     compute_buffer_region(direction, size = size)
 

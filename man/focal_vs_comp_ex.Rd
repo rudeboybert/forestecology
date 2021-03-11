@@ -42,12 +42,12 @@ comp_bayes_lm_ex <- focal_vs_comp_ex \%>\%
 \code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}
 
 Other example data objects: 
+\code{\link{blocks_ex}},
 \code{\link{census_1_ex}},
 \code{\link{census_2008_bw}},
 \code{\link{census_2014_bw}},
 \code{\link{census_2_ex}},
 \code{\link{comp_bayes_lm_ex}},
-\code{\link{cv_grid_sf_ex}},
 \code{\link{growth_ex}},
 \code{\link{growth_spatial_ex}},
 \code{\link{growth_toy}},

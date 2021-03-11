@@ -4,14 +4,15 @@
 \alias{add_buffer_variable}
 \title{Identify trees in the buffer region}
 \usage{
-add_buffer_variable(growth_df, direction, size, region)
+add_buffer_variable(growth_df, direction = "in", size, region)
 }
 \arguments{
 \item{growth_df}{\code{sf} data frame}
 
-\item{direction}{"in" for buffers that are contained within \code{region}, "out" for buffers that contain \code{region}.}
+\item{direction}{"in" for buffers that are contained within \code{region} (default), "out" for buffers that contain \code{region}.}
 
-\item{size}{Distance to determine which neighboring trees to a focal tree are competitors.}
+\item{size}{Distance to determine which neighboring trees to a focal tree are
+competitors. The units are assumed to be the same as the \code{geometry} variables in \code{growth_df}.}
 
 \item{region}{An \code{sf} polygon object of region to be buffered}
 }

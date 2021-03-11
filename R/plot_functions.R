@@ -177,7 +177,8 @@ intercepts_plot <- function(beta_lambda_posterior_df, sp_to_plot,
       x = expression(paste(beta[0], " (cm ", y^{
         -1
       }, ")")),
-      y = "species"
+      y = "species",
+      title = "Intercept"
     )
 }
 
@@ -217,7 +218,8 @@ dbh_slopes_plot <- function(beta_lambda_posterior_df, sp_to_plot,
       x = expression(paste(beta[DBH], " (", y^{
         -1
       }, ")")),
-      y = "species"
+      y = "species",
+      title = "Slope for DBH"
     )
 }
 
@@ -294,7 +296,7 @@ competition_plot <- function(beta_lambda_posterior_df, sp_to_plot,
     # theme(panel.spacing.x = unit(0, "cm")) +
     labs(
       x = expression(lambda),
-      y = "Species",
+      y = "species",
       title = "Competitor species in rows, focal species in columns",
       subtitle = str_c("Ex: Top row, second column: competitive effect of", sp_list[1], "on", sp_list[2], sep = " ")
     )

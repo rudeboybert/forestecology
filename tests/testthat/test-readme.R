@@ -46,7 +46,7 @@ test_that("readme code works", {
     mutate(foldID = SpatialBlock_ex$foldID %>% factor())
 
   focal_vs_comp_ex <- growth_ex %>%
-    create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_ex, id = "ID")
+    create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
 
   # Checks each column in focal_vs_comp is of appropriate type
   expect_true(check_inherits(focal_vs_comp_ex, "data.frame"))
@@ -73,7 +73,7 @@ test_that("readme code works", {
   expect_true(
     check_inherits(
       focal_vs_comp_ex %>%
-        run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex) %>%
+        run_cv(comp_dist = comp_dist, blocks = blocks_ex) %>%
         right_join(growth_ex, by = c("focal_ID" = "ID")),
       "data.frame"
     )
@@ -89,7 +89,7 @@ test_that("readme code works", {
   )
 
   focal_vs_comp_ex <- focal_vs_comp_ex %>%
-    run_cv(comp_dist = comp_dist, cv_grid = cv_grid_sf_ex)
+    run_cv(comp_dist = comp_dist, blocks = blocks_ex)
 
   expect_equal(
     focal_vs_comp_ex %>%

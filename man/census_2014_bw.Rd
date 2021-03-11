@@ -17,7 +17,7 @@ value must be combined with \code{treeID}.}
 \item{gx}{x-coordinate meters from reference point}
 \item{gy}{y-coordinate meters from reference point}
 \item{date}{Approximate date the stem was measured}
-\item{codes}{Code for additional informaiton on the stem: M means the main stem
+\item{codes}{Code for additional information on the stem: M means the main stem
 of the individual tree; AL means the stem is alive but leaning or completely fallen
 over; B means the stem is broken and over half the canopy is assumed to be missing;
 and R means the stem was lost, but the tag was moved to another stem greater than DBH cutoff,
@@ -75,11 +75,11 @@ Other Big Woods data:
 \code{\link{study_region_bw}}
 
 Other example data objects: 
+\code{\link{blocks_ex}},
 \code{\link{census_1_ex}},
 \code{\link{census_2008_bw}},
 \code{\link{census_2_ex}},
 \code{\link{comp_bayes_lm_ex}},
-\code{\link{cv_grid_sf_ex}},
 \code{\link{focal_vs_comp_ex}},
 \code{\link{growth_ex}},
 \code{\link{growth_spatial_ex}},

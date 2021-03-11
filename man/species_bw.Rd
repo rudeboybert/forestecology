@@ -20,7 +20,7 @@ height, and wood density}
 \source{
 For more information on trait clustering see Allen and Kim 2020 "A permutation
 test and spatial cross-validation approach to assess models of interspecific competition
-between trees." \href{https://doi.org/10.1371/journal.pone.0229930}{Plos One 15: e0229930}.
+between trees." \doi{10.1371/journal.pone.0229930}{PLOS One 15: e0229930}.
 }
 \usage{
 species_bw
@@ -47,12 +47,12 @@ Other Big Woods data:
 \code{\link{study_region_bw}}
 
 Other example data objects: 
+\code{\link{blocks_ex}},
 \code{\link{census_1_ex}},
 \code{\link{census_2008_bw}},
 \code{\link{census_2014_bw}},
 \code{\link{census_2_ex}},
 \code{\link{comp_bayes_lm_ex}},
-\code{\link{cv_grid_sf_ex}},
 \code{\link{focal_vs_comp_ex}},
 \code{\link{growth_ex}},
 \code{\link{growth_spatial_ex}},

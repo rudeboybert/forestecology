@@ -11,7 +11,10 @@
 #' @param focal_vs_comp data frame from [create_focal_vs_comp()]
 #' @param run_shuffle boolean as to whether to run permutation test shuffle of
 #'   competitor tree species within a particular focal_ID
-#' @param prior_param A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters
+#' @param prior_param A list of `{a_0, b_0, mu_0, V_0}` prior hyperparameters.
+#'   Defaults to `a_0 = 250`, `b_0 = 250`, `mu_0` a vector of zeros of
+#'   length \eqn{p + 1}, `V_0` an identity matrix of dimension \eqn{(p + 1) x (p
+#'   + 1)}
 #'
 #' @import dplyr
 #' @importFrom stats model.matrix
@@ -19,7 +22,7 @@
 #' @importFrom tidyr spread
 #'
 #' @source Closed-form solutions of Bayesian linear
-#' regression \url{https://doi.org/10.1371/journal.pone.0229930.s004)}
+#' regression \doi{10.1371/journal.pone.0229930.s004}
 #'
 #' @return A list of `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
 #'
@@ -124,62 +127,34 @@ default_prior_params <- function(X) {
 
 
 
-
+#' @importFrom stringr str_wrap
+#' @importFrom stringr str_replace_all
 #' @export
-print.comp_bayes_lm <- function(x, ...) {
-  cat(
-    paste0(
-      "Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:\n\n"
-    )
-  )
+print.comp_bayes_lm <- function(x, width = getOption("width"), ...) {
+  "Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:" %>%
+    str_wrap(width = width) %>%
+    cat()
+
+  cat("\n\n")
 
   term_tbl <-
-    utils::capture.output(
-      print(
-        tibble(
-          parameter_type = c(rep("Inverse-Gamma on sigma^2", 2), rep("Multivariate t on beta", 2)),
-          prior = c("a_0", "b_0", "mu_0", "V_0"),
-          posterior = c("a_star", "b_star", "mu_star", "V_star")
-        )
-      )
-    )
-  cat(term_tbl[c(2, 4:length(term_tbl))], sep = "\n")
+    tibble(
+      parameter_type = c(rep("Inverse-Gamma on sigma^2", 2), rep("Multivariate t on beta", 2)),
+      prior = c("a_0", "b_0", "mu_0", "V_0"),
+      posterior = c("a_star", "b_star", "mu_star", "V_star")
+    ) %>%
+    print() %>%
+    utils::capture.output()
+  term_tbl[c(2, 4:length(term_tbl))] %>%
+    cat(sep = "\n")
 
-  cat(
-    paste0(
-      "\n",
-      "Model formula:\n",
-      x[[3]] %>% as.character(),
-      "\n"
-    )
-  )
+  cat("\nModel formula:\n")
 
-  # # a and b parameters
-  # term_tbl <-
-  #   utils::capture.output(
-  #     print(
-  #       tibble(
-  #         term = c("a", "b"),
-  #         prior = unlist(unname(x$prior_params[1:2])),
-  #         posterior = unlist(unname(x$post_params[1:2]))
-  #       )
-  #     )
-  #   )
-  # cat(term_tbl[2:length(term_tbl)], sep = "\n\n")
-  #
-  # # mu vector parameter
-  # term_tbl <-
-  #   utils::capture.output(
-  #     print(
-  #       tibble(
-  #         prior = unlist(unname(x$prior_params[3])),
-  #         posterior = unlist(unname(x$post_params[3]))
-  #       )
-  #     )
-  #   )
-  # cat(term_tbl[2:length(term_tbl)], sep = "\n\n")
-  #
-  # # V matrix ???
+  paste0(x[[3]][2] %>% as.character(), " ~ ", x[[3]][3] %>% as.character() %>% str_replace_all("\n    ", "")) %>%
+    str_wrap(width = width) %>%
+    cat()
+
+  cat("\n")
 }
 
 
@@ -193,8 +168,7 @@ print.comp_bayes_lm <- function(x, ...) {
 #'
 #' @param object Output of [comp_bayes_lm()]: A list of
 #'   `{a_star, b_star, mu_star, V_star}` posterior hyperparameters
-#' @inheritParams comp_bayes_lm
-#' @inheritParams create_focal_vs_comp
+#' @param newdata A data frame of type `focal_vs_comp` in which to look for variables with which to predict.
 #' @param ... Currently ignored—only included for consistency with generic.
 #'
 #' @import dplyr
@@ -206,7 +180,7 @@ print.comp_bayes_lm <- function(x, ...) {
 #' @family modeling functions
 #'
 #' @source Closed-form solutions of Bayesian linear
-#' regression \url{https://doi.org/10.1371/journal.pone.0229930.s004}
+#' regression \doi{10.1371/journal.pone.0229930.s004}
 #'
 #' @export
 #'
@@ -226,15 +200,15 @@ print.comp_bayes_lm <- function(x, ...) {
 #'   ggplot(aes(growth, growth_hat)) +
 #'   geom_point() +
 #'   geom_abline(slope = 1, intercept = 0)
-predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
+predict.comp_bayes_lm <- function(object, newdata, ...) {
   check_comp_bayes_lm(object)
-  check_focal_vs_comp(focal_vs_comp)
+  check_focal_vs_comp(newdata)
 
   # Create linear regression model formula object
   model_formula <- object$terms
 
   # Create matrices & vectors for Bayesian regression
-  focal_trees <- focal_vs_comp %>%
+  focal_trees <- newdata %>%
     create_bayes_lm_data()
   X <- model.matrix(model_formula, data = focal_trees)
   y <- focal_trees %>%
@@ -260,7 +234,6 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 #'
 #' @inheritParams comp_bayes_lm
 #' @inheritParams create_focal_vs_comp
-#' @param cv_grid \code{sf} polygon output from \code{\link[blockCV]{spatialBlock}}
 #'
 #' @import dplyr
 #' @import sf
@@ -278,12 +251,12 @@ predict.comp_bayes_lm <- function(object, focal_vs_comp, ...) {
 #' run_cv(
 #'   focal_vs_comp_ex,
 #'   comp_dist = 1,
-#'   cv_grid = cv_grid_sf_ex
+#'   blocks = blocks_ex
 #' )
-run_cv <- function(focal_vs_comp, comp_dist, cv_grid, prior_param = NULL, run_shuffle = FALSE) {
+run_cv <- function(focal_vs_comp, comp_dist, blocks, prior_param = NULL, run_shuffle = FALSE) {
   check_focal_vs_comp(focal_vs_comp)
   check_inherits(comp_dist, "numeric")
-  check_inherits(cv_grid, "sf")
+  check_inherits(blocks, "sf")
   if (!is.null(prior_param)) {
     check_prior_params(prior_param)
   }
@@ -300,14 +273,14 @@ run_cv <- function(focal_vs_comp, comp_dist, cv_grid, prior_param = NULL, run_sh
     fit_one_fold,
     focal_vs_comp,
     comp_dist,
-    cv_grid,
+    blocks,
     prior_param,
     run_shuffle
   )
 }
 
 fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
-                         cv_grid, prior_param, run_shuffle) {
+                         blocks, prior_param, run_shuffle) {
   # Define test set and "full" training set (we will remove buffer region below)
   test <- focal_vs_comp %>%
     filter(foldID == fold)
@@ -320,7 +293,7 @@ fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
   }
 
   # Define sf object of boundary of test fold
-  test_fold_boundary <- cv_grid %>%
+  test_fold_boundary <- blocks %>%
     subset(folds == fold) %>%
     st_bbox() %>%
     st_as_sfc()

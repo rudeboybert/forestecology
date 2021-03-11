@@ -4,14 +4,14 @@
 \alias{create_focal_vs_comp}
 \title{Create focal versus competitor trees data frame}
 \usage{
-create_focal_vs_comp(growth_df, comp_dist, cv_grid_sf, id)
+create_focal_vs_comp(growth_df, comp_dist, blocks, id)
 }
 \arguments{
 \item{growth_df}{A \code{\link[=compute_growth]{compute_growth()}} output converted to \code{sf} object}
 
 \item{comp_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
 
-\item{cv_grid_sf}{An sf object of a \code{blockCV} block output}
+\item{blocks}{An sf object of a \code{blockCV} block output}
 
 \item{id}{A character string of the variable name in \code{growth_df} uniquely identifying each tree}
 }
@@ -26,16 +26,14 @@ we compute the \href{https://en.wikipedia.org/wiki/Basal_area}{basal area}
 "Focal versus competitor trees" data frames are the main data
 frame used for analysis. "Focal trees" are all trees that satisfy the
 following criteria
-\tabular{l}{
 \enumerate{
-\item Were alive at both censuses \cr
-\item Were not part of the study region's buffer as computed by \code{\link[=add_buffer_variable]{add_buffer_variable()}} \cr
+\item Were alive at both censuses
+\item Were not part of the study region's buffer as computed by \code{\link[=add_buffer_variable]{add_buffer_variable()}}
 \item Were not a resprout at the second census. Such trees should be coded as
 \code{"R"} in the \code{codes2} variable (OK if a resprout at first census)
 }
 For each focal tree, "competitor trees" are all trees that (1) were alive at
 the first census and (2) within \code{comp_dist} distance of the focal tree.
-}
 }
 \note{
 In order to speed computation, in particular of distances between all
@@ -74,16 +72,16 @@ ggplot() +
 
 # Return corresponding data frame
 growth_toy \%>\%
-  create_focal_vs_comp(comp_dist = 1.5, cv_grid_sf = SpatialBlock_ex, id = "ID")
+  create_focal_vs_comp(comp_dist = 1.5, blocks = SpatialBlock_ex, id = "ID")
 
 # Load in growth_df with spatial data
 # See ?growth_ex for attaching spatial data to growth_df
 data(growth_spatial_ex)
-# Load in cv_grid
-data(cv_grid_sf_ex)
+# Load in blocks
+data(blocks_ex)
 
 focal_vs_comp_ex <- growth_spatial_ex \%>\%
-  create_focal_vs_comp(comp_dist = 1, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+  create_focal_vs_comp(comp_dist = 1, blocks = blocks_ex, id = "ID")
 }
 \seealso{
 Other data processing functions: 

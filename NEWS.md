@@ -1,4 +1,4 @@
-# forestecology 0.1.0.9004: Refactoring package
+# forestecology 0.1.0: Refactoring package
 
 * Switched CI from travis to GitHub actions
 * Refactored spatial cross-validation in `run_cv()` to use `purrr::map_dfr()` using the `fit_one_fold()` function

@@ -50,15 +50,18 @@ We present an example analysis using toy data pre-loaded into the package where 
 
 1. Compute growth of trees based on census data
 1. Add spatial information
-1. Compute focal versus competitor tree information
+1. Identify all focal and corresponding competitor trees
 1. Fit model and make predictions
 1. Run spatial cross-validation
 
 ```{r}
 library(tidyverse)
 library(forestecology)
-library(blockCV)
 library(patchwork)
+library(blockCV)
+
+# Resolve conflicting functions
+filter <- dplyr::filter
 ```
 
 ### Compute growth of trees based on census data
@@ -103,11 +106,11 @@ comp_dist <- 1
 
 # Add buffer variable to growth data frame
 growth_ex <- growth_ex %>%
-  add_buffer_variable(direction = "in", size = comp_dist, region = study_region_ex)
+  add_buffer_variable(size = comp_dist, region = study_region_ex)
 
 # Optional: Create sf representation of buffer region
 buffer_region <- study_region_ex %>% 
-  compute_buffer_region(direction = "in", size = comp_dist)
+  compute_buffer_region(size = comp_dist)
 ```
 
 In the visualization below, the solid line represents the boundary of the study region while the dashed line delimits the buffer region within. All trees outside this buffer region (in red) will be our "focal" trees of interest in our model since we have complete competitor information on all of them. All trees inside this buffer region (in blue) will only be considered as "competitor" trees to "focal" trees.
@@ -160,7 +163,7 @@ Based on our `growth` data frame, we now explicitly define all "focal" trees and
 
 ```{r}
 focal_vs_comp_ex <- growth_ex %>%
-  create_focal_vs_comp(comp_dist, cv_grid_sf = blocks_ex, id = "ID")
+  create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
 focal_vs_comp_ex
 ```
 
@@ -197,7 +200,7 @@ Furthermore, we can apply a `predict()` method to the resulting `comp_bayes_lm` 
 
 ```{r}
 focal_vs_comp_ex <- focal_vs_comp_ex %>%
-  mutate(growth_hat = predict(comp_bayes_lm_ex, focal_vs_comp_ex))
+  mutate(growth_hat = predict(comp_bayes_lm_ex, newdata = focal_vs_comp_ex))
 focal_vs_comp_ex
 ```
 
@@ -215,7 +218,7 @@ Whereas in our example above we fit our model to the entirety of the data and th
 
 ```{r}
 focal_vs_comp_ex <- focal_vs_comp_ex %>%
-  run_cv(comp_dist = comp_dist, cv_grid = blocks_ex)
+  run_cv(comp_dist = comp_dist, blocks = blocks_ex)
 ```
 
 Note the increase in RMSE, reflecting the fact that our original estimate of model error was overly optimistic as it did not account for spatial autocorrelation.
@@ -226,4 +229,3 @@ focal_vs_comp_ex %>%
   pull(.estimate)
 ```
 
-<!--For fuller examples on actual datasets see ___.-->

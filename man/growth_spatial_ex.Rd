@@ -45,18 +45,18 @@ ggplot() +
 
 # Create the focal versus comp data frame
 focal_vs_comp_ex <- growth_spatial_ex \%>\%
-  create_focal_vs_comp(comp_dist, cv_grid_sf = cv_grid_sf_ex, id = "ID")
+  create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
 }
 \seealso{
 \code{\link[=compute_growth]{compute_growth()}}
 
 Other example data objects: 
+\code{\link{blocks_ex}},
 \code{\link{census_1_ex}},
 \code{\link{census_2008_bw}},
 \code{\link{census_2014_bw}},
 \code{\link{census_2_ex}},
 \code{\link{comp_bayes_lm_ex}},
-\code{\link{cv_grid_sf_ex}},
 \code{\link{focal_vs_comp_ex}},
 \code{\link{growth_ex}},
 \code{\link{growth_toy}},

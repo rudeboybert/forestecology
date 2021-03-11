@@ -5,7 +5,7 @@
 \title{Fit Bayesian competition model}
 \source{
 Closed-form solutions of Bayesian linear
-regression \url{https://doi.org/10.1371/journal.pone.0229930.s004)}
+regression \doi{10.1371/journal.pone.0229930.s004}
 }
 \usage{
 comp_bayes_lm(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE)
@@ -13,7 +13,10 @@ comp_bayes_lm(focal_vs_comp, prior_param = NULL, run_shuffle = FALSE)
 \arguments{
 \item{focal_vs_comp}{data frame from \code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}}
 
-\item{prior_param}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters}
+\item{prior_param}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters.
+Defaults to \code{a_0 = 250}, \code{b_0 = 250}, \code{mu_0} a vector of zeros of
+length \eqn{p + 1}, \code{V_0} an identity matrix of dimension \eqn{(p + 1) x (p
+  + 1)}}
 
 \item{run_shuffle}{boolean as to whether to run permutation test shuffle of
 competitor tree species within a particular focal_ID}

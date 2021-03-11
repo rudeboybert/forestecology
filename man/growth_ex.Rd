@@ -73,12 +73,12 @@ growth_spatial_ex <- growth_spatial_ex \%>\%
 \code{\link[=compute_growth]{compute_growth()}}
 
 Other example data objects: 
+\code{\link{blocks_ex}},
 \code{\link{census_1_ex}},
 \code{\link{census_2008_bw}},
 \code{\link{census_2014_bw}},
 \code{\link{census_2_ex}},
 \code{\link{comp_bayes_lm_ex}},
-\code{\link{cv_grid_sf_ex}},
 \code{\link{focal_vs_comp_ex}},
 \code{\link{growth_spatial_ex}},
 \code{\link{growth_toy}},
