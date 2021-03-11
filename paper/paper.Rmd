@@ -461,8 +461,8 @@ The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r if
 
 `run_cv()` also accepts the `run_shuffle` argument in order to permute competitor species identity as described in Section \ref{permutation-test}. Figure \ref{fig:scbi-simulation} compares model performance for 49 permutations of competitor species and RMSE calculations, both with and without cross-validation. Without cross-validation, competitor species identity does matter as the observed RMSE was significantly lower than the permutation null distribution of RMSE. However, once we incorporate spatial cross-validation, this improvement disappears. These results suggest that in this 9 ha subplot of the SCBI plot, competitive interactions do not depend on the identity of the competitor, which is the opposite of what has been observed in other locations [@allen_permutation_2020 @uriarte_spatially_2004]. This provides a striking example of the importance of cross-validation, as without it the over-fit model gives rise to an incorrect conclusion.
 
-```{r scbi-simulation, out.width="100%", fig.cap="Root mean squared error of models for standard, permuted, and spatial cross-validated error estimates. The dotted lines show non-permuted competitor identity, while the histogras so the RMSE for 49 permutations. The colors indicate whether cross validaton was used.", echo = FALSE}
-include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.png")
+```{r scbi-simulation, out.width="100%", fig.cap="Comparison of root mean squared error of models for standard, permuted, and spatial cross-validated error estimates. The dotted lines show non-permuted competitor identity, while the histogras so the RMSE for 49 permutations. The colors indicate whether cross validaton was used.", echo = FALSE}
+include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.pdf")
 ```
 
 
