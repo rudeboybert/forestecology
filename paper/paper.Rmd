@@ -196,7 +196,7 @@ growth_scbi %>%
 
 The output `growth_scbi` is a data frame of class `sf` that includes among other variables the species variable `sp` converted to a factor, the average annual `growth` in DBH (cm $\cdot$ y^-1^) for all stems that were alive at both time points, and the `sf` package's encoding of geolocations of `geometry` type `<POINT>`. Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2` using `geom_sf()` as seen in Figure \ref{fig:scbi-trees}.
 
-```{r scbi-trees, out.width="66%", fig.cap="Compute growth of trees based on census data. A map of the growth of a random sample of 500 trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot."}
+```{r scbi-trees, out.width="66%", fig.cap="Step 1 - Compute growth of trees based on census data. A map of the growth of a random sample of 500 trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot."}
 ggplot() +
   geom_sf(data = growth_scbi %>% sample_n(500), aes(size = growth)) + 
   scale_size_binned(limits = c(0.1, 1)) +
@@ -256,7 +256,7 @@ growth_scbi <- growth_scbi %>%
   mutate(foldID = spatial_block_scbi$foldID %>% factor())
 ```
 
-```{r scbi-spatial-information, out.width="66%", fig.cap="Add spatial information. A buffer region and spatial cross-validation blocks 1 througth 4. The location of each tree is marked with its fold number where the folds are delineated with solid lines. The color of each digit indicates whether the tree is part of the buffer region (thus will only be considered as a competitor tree) or is part of the interior of the study region (thus is a focal tree whose growth is of modeled interest)."}
+```{r scbi-spatial-information, out.width="66%", fig.cap="Step 2 - Add spatial information. A buffer region and spatial cross-validation blocks 1 through 4. The location of each tree is marked with its fold number where the folds are delineated with solid lines. The color of each digit indicates whether the tree is part of the buffer region (thus will only be considered as a competitor tree) or is part of the interior of the study region (thus is a focal tree whose growth is of modeled interest)."}
 ggplot() +
   geom_sf(data = blocks_scbi, fill = "transparent", linetype = "dashed") +
   geom_sf_text(data = growth_scbi %>% sample_n(1000), 
@@ -301,7 +301,7 @@ focal_vs_comp_scbi %>%
 
 We observe 4 variables describing 20 competitor trees: the unique tree-stem ID, the distance to the focal tree (all $\leq$ `r comp_dist` m), the species, and the basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ for the DBH in cm from the earlier census. Saving competitor information in list-column format minimizes redundancy since we do not need to repeat information on the focal tree 20 times. We visualize the spatial distribution of these trees in Figure \ref{fig:scbi-focal-vs-comp-map}. 
 
-```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Identify all focal and corresponding competitor trees. The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle."}
+```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Step 3 - Identify all focal and corresponding competitor trees. The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle.", fig.height=4}
 comp_radius <- growth_scbi %>% 
   filter(stemID == 4) %>% 
   st_buffer(dist = comp_dist)
@@ -367,7 +367,7 @@ model_rmse
 
 Lastly, the generic for `ggplot2::autoplot()` allows us to visualize all posterior distributions, as seen in Figure \ref{fig:scbi-posterior-viz}. Setting `type` to `"intercepts"` and `"dbh_slopes"` returns species-specific posterior distributions for $\beta_{0,j}$ and $\beta_{dbh,j}$ respectively, while setting `type = "competition"` returns competition coefficients $\lambda_{j,k}$. 
 
-```{r scbi-posterior-viz, out.width="100%", fig.cap= "Fit model. Posterior distributions of all parameters. For compactness we include only three species.", fig.width = 8, fig.height = 6}
+```{r scbi-posterior-viz, out.width="100%", fig.cap= "Step 4 - Fit model. Posterior distributions of all parameters. For compactness we include only three species.", fig.width = 8, fig.height = 6}
 # Plot posteriors for only a subset of species
 sp_to_plot <- c("litu", "quru", "cagl")
 
@@ -461,7 +461,7 @@ The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r if
 
 `run_cv()` also accepts the `run_shuffle` argument in order to permute competitor species identity as described in Section \ref{permutation-test}. Figure \ref{fig:scbi-simulation} compares model performance for 49 permutations of competitor species and RMSE calculations, both with and without cross-validation. Without cross-validation, competitor species identity does matter as the observed RMSE was significantly lower than the permutation null distribution of RMSE. However, once we incorporate spatial cross-validation, this improvement disappears. These results suggest that in this 9 ha subplot of the SCBI plot, competitive interactions do not depend on the identity of the competitor, which is the opposite of what has been observed in other locations [@allen_permutation_2020 @uriarte_spatially_2004]. This provides a striking example of the importance of cross-validation, as without it the over-fit model gives rise to an incorrect conclusion.
 
-```{r scbi-simulation, out.width="100%", fig.cap="Comparison of root mean squared error of models for standard, permuted, and spatial cross-validated error estimates. The dotted lines show non-permuted competitor identity, while the histogras so the RMSE for 49 permutations. The colors indicate whether cross validaton was used.", echo = FALSE}
+```{r scbi-simulation, out.width="100%", fig.cap="Comparison of root mean squared error of models for standard, permuted, and spatially cross-validated error estimates. The dotted lines show observed RMSE while the histograms show the null distribution of RMSE for 49 permutations under the null hypothesis of no competitor species identity effects. The colors indicate whether spatial cross-validation was used or not.", echo = FALSE}
 include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.pdf")
 ```
 

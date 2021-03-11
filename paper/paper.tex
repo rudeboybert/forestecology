@@ -410,7 +410,7 @@ plotted in \texttt{ggplot2} using \texttt{geom\_sf()} as seen in Figure
 
 }
 
-\caption{Compute growth of trees based on census data. A map of the growth of a random sample of 500 trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot.}\label{fig:scbi-trees}
+\caption{Step 1 - Compute growth of trees based on census data. A map of the growth of a random sample of 500 trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot.}\label{fig:scbi-trees}
 \end{figure}
 
 \hypertarget{spatial-information}{%
@@ -520,7 +520,7 @@ adding these two elements of spatial information to
 
 }
 
-\caption{Add spatial information. A buffer region and spatial cross-validation blocks 1 througth 4. The location of each tree is marked with its fold number where the folds are delineated with solid lines. The color of each digit indicates whether the tree is part of the buffer region (thus will only be considered as a competitor tree) or is part of the interior of the study region (thus is a focal tree whose growth is of modeled interest).}\label{fig:scbi-spatial-information}
+\caption{Step 2 - Add spatial information. A buffer region and spatial cross-validation blocks 1 through 4. The location of each tree is marked with its fold number where the folds are delineated with solid lines. The color of each digit indicates whether the tree is part of the buffer region (thus will only be considered as a competitor tree) or is part of the interior of the study region (thus is a focal tree whose growth is of modeled interest).}\label{fig:scbi-spatial-information}
 \end{figure}
 
 \hypertarget{focal-vs-comp}{%
@@ -599,7 +599,7 @@ trees in Figure \ref{fig:scbi-focal-vs-comp-map}.
 
 }
 
-\caption{Identify all focal and corresponding competitor trees. The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle.}\label{fig:scbi-focal-vs-comp-map}
+\caption{Step 3 - Identify all focal and corresponding competitor trees. The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle.}\label{fig:scbi-focal-vs-comp-map}
 \end{figure}
 
 \hypertarget{model-fit-predict}{%
@@ -723,7 +723,7 @@ species-specific posterior distributions for \(\beta_{0,j}\) and
 
 }
 
-\caption{Fit model. Posterior distributions of all parameters. For compactness we include only three species.}\label{fig:scbi-posterior-viz}
+\caption{Step 4 - Fit model. Posterior distributions of all parameters. For compactness we include only three species.}\label{fig:scbi-posterior-viz}
 \end{figure}
 
 For many users the visualizations of \(\lambda_{j,k}\) will be of
@@ -870,7 +870,7 @@ the over-fit model gives rise to an incorrect conclusion.
 
 }
 
-\caption{Comparison of root mean squared error of models for standard, permuted, and spatial cross-validated error estimates. The dotted lines show non-permuted competitor identity, while the histogras so the RMSE for 49 permutations. The colors indicate whether cross validaton was used.}\label{fig:scbi-simulation}
+\caption{Comparison of root mean squared error of models for standard, permuted, and spatially cross-validated error estimates. The dotted lines show observed RMSE while the histograms show the null distribution of RMSE for 49 permutations under the null hypothesis of no competitor species identity effects. The colors indicate whether spatial cross-validation was used or not.}\label{fig:scbi-simulation}
 \end{figure}
 
 \hypertarget{conclusion}{%
