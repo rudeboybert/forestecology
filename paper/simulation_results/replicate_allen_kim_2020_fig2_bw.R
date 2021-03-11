@@ -1,3 +1,17 @@
+#-------------------------------------------------------------------------------
+# This code replicates Allen and Kim (2020) ->
+# https://doi.org/10.1371/journal.pone.0229930 -> PLOS One -> "A permutation
+# test and spatial cross-validation approach to assess models of interspecific
+# competition between trees" -> Figure 2 -> A comparison of observed and
+# permutation null distribution of RMSE's for both spatially cross-validated and
+# not estimates of RMSE.
+#
+# Notes:
+# - The Michigan Big Woods data used comes pre-loaded in forestecology.
+# - When defining the spatial blocks used as folds in our spatial
+# cross-validation scheme, we use the blockCV::spatialBlock() function to do
+# this automatically, unlike in with SCBI example where we define this manually.
+#-------------------------------------------------------------------------------
 library(tidyverse)
 library(lubridate)
 library(here)
@@ -168,9 +182,6 @@ for(i in 1:length(species_notion_vector)){
 
 
 # Visualize results ------------------------------------------------------------
-# Load results and plot
-str_c(filename, ".RData") %>% load()
-
 model_comp <- bind_rows(
   model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
   model_comp_tbl %>% select(species_notion, run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
@@ -205,50 +216,7 @@ cv_plot <- ggplot() +
 cv_plot
 
 filename %>%
-  str_c(".png") %>%
+  str_c(".pdf") %>%
   ggsave(plot = cv_plot)
 
 
-
-
-
-
-
-
-
-
-
-
-
-# Residual analysis ------------------------------------------------------------
-ggplot(focal_vs_comp_scbi, aes(x = growth, y = growth_hat)) +
-  geom_point(size = 0.5, color = rgb(0, 0, 0, 0.25)) +
-  stat_smooth(method = "lm") +
-  geom_abline(slope = 1, intercept = 0) +
-  coord_fixed() +
-  labs(
-    x = "Observed growth in DBH", y = "Predicted growth in DBH",
-    title = "Predicted vs Observed Growth"
-  )
-
-
-
-focal_vs_comp_scbi %>%
-  st_as_sf() %>%
-  # TODO: Need to investigate missingness
-  filter(!is.na(growth_hat)) %>%
-  mutate(
-    error = growth - growth_hat,
-    error_bin = cut_number(error, n = 5),
-    error_compress = ifelse(error < -0.75, -0.75, ifelse(error > 0.75, 0.75, error))
-  ) %>%
-  ggplot() +
-  geom_sf(aes(col = error_compress), size = 1) +
-  theme_bw() +
-  scale_color_gradient2(
-    low = "#ef8a62", mid = "#f7f7f7", high = "#67a9cf",
-    name = expression(paste("Residual (cm ", y^{-1}, ")")),
-    breaks = seq(from = -0.75, to = 0.75, by = 0.25),
-    labels = c("< -0.75", "-0.5", "0.25", "0", "0.25", "0.5", "> 0.75")
-  ) +
-  labs(x = "Meter", y = "Meter")

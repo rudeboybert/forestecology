@@ -1,3 +1,7 @@
+#-------------------------------------------------------------------------------
+# This code replicates Figure 6: A comparison of root mean squared error of
+# models for standard, permuted, and spatial cross- validated error estimates.
+#-------------------------------------------------------------------------------
 library(tidyverse)
 library(lubridate)
 library(here)
@@ -90,7 +94,7 @@ observed_RMSE_CV <- 0
 shuffle_RMSE <- vector("list", 1)
 shuffle_RMSE_CV <- vector("list", 1)
 filename <- here("paper/simulation_results/") %>%
-  str_c(format(Sys.time(), "%Y-%m-%d"), "_scbi_", num_shuffle, "_shuffles")
+  str_c("2021-03-03_scbi_", num_shuffle, "_shuffles")
 
 
 # Run all simulations
@@ -168,9 +172,6 @@ save(model_comp_tbl, file = filename %>% str_c(".RData"))
 
 
 # Visualize results ------------------------------------------------------------
-# Load results and plot
-str_c(filename, ".RData") %>% load()
-
 model_comp <- bind_rows(
   model_comp_tbl %>% select(run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
   model_comp_tbl %>% select(run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
@@ -197,6 +198,6 @@ cv_plot <- ggplot() +
 cv_plot
 
 filename %>%
-  str_c(".png") %>%
+  str_c(".pdf") %>%
   ggsave(plot = cv_plot, width = 16/2, height = 9/2)
 
