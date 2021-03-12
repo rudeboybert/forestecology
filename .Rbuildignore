@@ -13,3 +13,4 @@
 ^paper$
 ^docs$
 ^CRAN-RELEASE$
+^codecov\.yml$

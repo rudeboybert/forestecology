@@ -5,8 +5,8 @@
 
 [![Build
 Status](https://github.com/rudeboybert/forestecology/workflows/R-CMD-check/badge.svg)](https://github.com/rudeboybert/forestecology/actions)
-[![Lifecycle:
-stable](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://www.tidyverse.org/lifecycle/#experimental)
+[![Codecov test
+coverage](https://codecov.io/gh/rudeboybert/forestecology/branch/master/graph/badge.svg)](https://codecov.io/gh/rudeboybert/forestecology?branch=master)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/forestecology)](https://cran.r-project.org/package=forestecology)
 
