@@ -88,10 +88,10 @@ We first combine data from two repeat censuses into a single `growth` data frame
 growth_ex <-
   compute_growth(
     census_1 = census_1_ex %>% 
-      mutate(sp = to_any_case(sp) %>% factor()),
+      mutate(sp = to_any_case(sp)),
     census_2 = census_2_ex %>% 
       filter(!str_detect(codes, "R")) %>% 
-      mutate(sp = to_any_case(sp) %>% factor()),
+      mutate(sp = to_any_case(sp)),
     id = "ID"
   )
 ```

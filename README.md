@@ -108,10 +108,10 @@ censuses that aren’t resprouts at the second census per Allen and Kim
 growth_ex <-
   compute_growth(
     census_1 = census_1_ex %>% 
-      mutate(sp = to_any_case(sp) %>% factor()),
+      mutate(sp = to_any_case(sp)),
     census_2 = census_2_ex %>% 
       filter(!str_detect(codes, "R")) %>% 
-      mutate(sp = to_any_case(sp) %>% factor()),
+      mutate(sp = to_any_case(sp)),
     id = "ID"
   )
 ```
@@ -266,8 +266,7 @@ associated with several methods.
 ``` r
 # Print
 comp_bayes_lm_ex
-#> Bayesian linear regression model parameters with a multivariate Normal
-#> likelihood. See ?comp_bayes_lm for details:
+#> Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:
 #> 
 #>   parameter_type           prior posterior
 #> 1 Inverse-Gamma on sigma^2 a_0   a_star   

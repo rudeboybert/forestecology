@@ -8,7 +8,8 @@ citEntry(
     year = 2020,
     volume = 15,
     issue = 3,
+    pages="e0229930",
     url = "https://doi.org/10.1371/journal.pone.0229930",
     textVersion = paste("Allen, D. and Kim, A.Y. (2020)",
         "A permutation test and spatial cross-validation approach to assess models of interspecific competition between trees",
-        "PLOS One. 15(3)"))
+        "PLOS One. 15(3):e0229930."))
