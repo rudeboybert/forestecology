@@ -250,7 +250,7 @@ predict.comp_bayes_lm <- function(object, newdata, ...) {
 #'
 #' run_cv(
 #'   focal_vs_comp_ex,
-#'   comp_dist = 1,
+#'   comp_dist = c(1, 2),
 #'   blocks = blocks_ex
 #' )
 run_cv <- function(focal_vs_comp, comp_dist, blocks, prior_param = NULL, run_shuffle = FALSE) {
@@ -268,14 +268,14 @@ run_cv <- function(focal_vs_comp, comp_dist, blocks, prior_param = NULL, run_shu
     unique() %>%
     sort()
 
-  purrr::map_dfr(
-    folds,
+  purrr::map2_dfr(
+    rep(folds, each = length(comp_dist)),
+    rep(comp_dist, times = length(folds)),
     fit_one_fold,
-    focal_vs_comp,
-    comp_dist,
-    blocks,
-    prior_param,
-    run_shuffle
+    focal_vs_comp = focal_vs_comp,
+    blocks = blocks,
+    prior_param = prior_param,
+    run_shuffle = run_shuffle
   )
 }
 
@@ -311,7 +311,8 @@ fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
 
   # Compute predicted values and append to test
   test %>%
-    mutate(growth_hat = predict(comp_bayes_lm_fold, test))
+    mutate(growth_hat = predict(comp_bayes_lm_fold, test),
+           comp_dist = comp_dist)
 }
 
 

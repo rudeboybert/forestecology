@@ -1,6 +1,7 @@
 # forestecology 0.1.0.9000: Development version
 
-* 
+* Implement model selection between multiple competitive distances by
+  allowing for a vector `comp_dist` argument in `run_cv()`. 
 
 
 
