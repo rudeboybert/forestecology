@@ -15,7 +15,9 @@ run_cv(
 \arguments{
 \item{focal_vs_comp}{data frame from \code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}}
 
-\item{comp_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
+\item{comp_dist}{A numeric vector of the distance(s) determining which
+neighboring trees to a focal tree are competitors. Multiple competitor
+distances are currently only supported in \code{\link[=run_cv]{run_cv()}}.}
 
 \item{blocks}{An sf object of a \code{blockCV} block output}
 
@@ -39,7 +41,7 @@ focal-competitor data frame, it appends a column with predicted growth values.
 
 run_cv(
   focal_vs_comp_ex,
-  comp_dist = 1,
+  comp_dist = c(1, 2),
   blocks = blocks_ex
 )
 }

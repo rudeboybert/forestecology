@@ -92,7 +92,9 @@ compute_growth <- function(census_1, census_2, id) {
 #'
 #' @param growth_df A [compute_growth()] output converted to \code{sf} object
 #' @param blocks An sf object of a \code{blockCV} block output
-#' @param comp_dist Distance to determine which neighboring trees to a focal tree are competitors.
+#' @param comp_dist A numeric vector of the distance(s) determining which
+#' neighboring trees to a focal tree are competitors. Multiple competitor
+#' distances are currently only supported in [run_cv()].
 #' @param id A character string of the variable name in \code{growth_df} uniquely identifying each tree
 #'
 #' @return \code{focal_vs_comp} data frame of all focal trees and for each focal

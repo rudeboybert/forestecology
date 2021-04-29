@@ -9,7 +9,9 @@ create_focal_vs_comp(growth_df, comp_dist, blocks, id)
 \arguments{
 \item{growth_df}{A \code{\link[=compute_growth]{compute_growth()}} output converted to \code{sf} object}
 
-\item{comp_dist}{Distance to determine which neighboring trees to a focal tree are competitors.}
+\item{comp_dist}{A numeric vector of the distance(s) determining which
+neighboring trees to a focal tree are competitors. Multiple competitor
+distances are currently only supported in \code{\link[=run_cv]{run_cv()}}.}
 
 \item{blocks}{An sf object of a \code{blockCV} block output}
 
