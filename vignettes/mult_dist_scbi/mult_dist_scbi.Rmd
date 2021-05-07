@@ -1,0 +1,114 @@
+---
+title: "Test multiple distances"
+author: "Dave Allen"
+date: "5/7/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(lubridate)
+library(sf)
+library(patchwork)
+library(forestecology)
+library(blockCV)
+```
+
+Load in the SCBI data and do all the prelim stuff to get things ready. Also here I am not going to separate by species. So this effecitvely just says, how much do you grow based on the total base area of your neighbors. This speeds up the model runs a lot because the lambda matrix is one-by-one. 
+
+```{r}
+census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    # Convert date from character to date
+    date = mdy(date),
+    # Convert dbh to be in cm
+    dbh = as.numeric(dbh)/10
+  ) %>%
+  filter(gx < 200, between(gy, 200, 400))
+
+census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh)/10
+  ) %>%
+  filter(gx < 200, between(gy, 200, 400))
+
+growth_scbi <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  mutate(sp = 'all_same',
+         sp = factor(sp, levels = c('all_same', 'dummy'))) 
+
+
+comp_dist <- 10
+
+# Manually construct study region boundary
+study_region_scbi <- tibble(
+  x = c(0, 200, 200, 0, 0),
+  y = c(200, 200, 400, 400, 400)
+) %>%
+  sf_polygon()
+
+growth_scbi <- growth_scbi %>%
+  add_buffer_variable(size = comp_dist, region = study_region_scbi)
+
+
+n_fold <- 4
+fold1 <- cbind(c(0, 100, 100, 0), c(200, 200, 300, 300))
+fold2 <- cbind(c(100, 200, 200, 100), c(200, 200, 300, 300))
+fold3 <- cbind(c(0, 100, 100, 0), c(300, 300, 400, 400))
+fold4 <- cbind(c(100, 200, 200, 100), c(300, 300, 400, 400))
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3), 
+  sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+spatial_block_scbi <- 
+  spatialBlock(speciesData = growth_scbi, k = n_fold, 
+               selection = "systematic", blocks = blocks_scbi, 
+               showBlocks = FALSE, verbose = FALSE)
+
+growth_scbi <- growth_scbi %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+
+ggplot() +
+  geom_sf(data = blocks_scbi, fill = "transparent", linetype = "dashed") +
+  geom_sf_text(data = growth_scbi %>% sample_n(1000), 
+               aes(label = foldID))
+
+focal_vs_comp_scbi <- growth_scbi %>%
+  create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID")
+
+```
+
+Try the `run_cv` with a range of `comp_dist`.
+
+```{r}
+run_cv_output <- run_cv(
+  focal_vs_comp_scbi,
+  comp_dist = seq(from = 1, to = 15, by = 0.5),
+  blocks = blocks_scbi
+)
+```
+
+
+Now see how they do!
+
+```{r}
+run_cv_output %>%
+  group_by(comp_dist) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  ggplot(aes(comp_dist,.estimate)) +
+  geom_point() + 
+  stat_smooth() +
+  xlab('Competitive distance (m)') +
+  ylab('RMSE (cm)')
+```
