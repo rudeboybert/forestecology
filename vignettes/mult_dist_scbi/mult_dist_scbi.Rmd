@@ -17,7 +17,9 @@ library(blockCV)
 Load in the SCBI data and do all the prelim stuff to get things ready. Also here I am not going to separate by species. So this effecitvely just says, how much do you grow based on the total base area of your neighbors. This speeds up the model runs a lot because the lambda matrix is one-by-one. 
 
 ```{r}
-census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+census_2013_scbi <- 
+  "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem2.csv" %>% 
+  read_csv() %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
     # Convert date from character to date
@@ -27,7 +29,9 @@ census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
   ) %>%
   filter(gx < 200, between(gy, 200, 400))
 
-census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+census_2018_scbi <- 
+  "https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/raw/master/tree_main_census/data/census-csv-files/scbi.stem3.csv" %>% 
+  read_csv() %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
     date = mdy(date),
