@@ -249,38 +249,72 @@ predict.comp_bayes_lm <- function(object, newdata, ...) {
 #' @examples
 #'
 #' run_cv(
-#'   focal_vs_comp_ex,
+#'   growth_spatial_ex,
 #'   comp_dist = c(1, 2),
-#'   blocks = blocks_ex
+#'   blocks = blocks_ex,
+#'   id = "ID"
 #' )
-run_cv <- function(focal_vs_comp, comp_dist, blocks, prior_param = NULL, run_shuffle = FALSE) {
-  check_focal_vs_comp(focal_vs_comp)
+run_cv <- function(growth_df, comp_dist, blocks, id,
+                   prior_param = NULL, run_shuffle = FALSE) {
+  check_growth_df(growth_df)
+
   check_inherits(comp_dist, "numeric")
   check_inherits(blocks, "sf")
+  check_inherits(id, "character")
+
   if (!is.null(prior_param)) {
     check_prior_params(prior_param)
   }
+
   check_inherits(run_shuffle, "logical")
 
-  # For each fold, store resulting y-hat for each focal tree in list
-  folds <- focal_vs_comp %>%
-    pull(foldID) %>%
-    unique() %>%
-    sort()
+  # Compute focal_vs_comp data frames for each comp_dist
+  focal_vs_comps <-
+    purrr::map(
+      comp_dist,
+      create_focal_vs_comp,
+      growth_df = growth_df,
+      blocks = blocks,
+      id = id
+    )
 
-  purrr::map2_dfr(
-    rep(folds, each = length(comp_dist)),
-    rep(comp_dist, times = length(folds)),
+  # For each focal_vs_comp, we have a set of folds. Each focal_vs_comp x fold
+  # combo should be run against each value of comp_dist.
+  combos <-
+    list(
+      focal_vs_comp = focal_vs_comps,
+      comp_dist = comp_dist
+    ) %>%
+    purrr::cross() %>%
+    purrr::map(
+      .f = function(x) {
+        c(
+          x,
+          list(fold = purrr::pluck(x, "focal_vs_comp") %>%
+            dplyr::pull(foldID) %>%
+            unique() %>%
+            sort()
+          )
+        )
+      }
+    ) %>%
+    tibble::enframe() %>%
+    tidyr::unnest_wider(value) %>%
+    tidyr::unnest(fold) %>%
+    dplyr::select(-name)
+
+  purrr::pmap_dfr(
+    combos,
     fit_one_fold,
-    focal_vs_comp = focal_vs_comp,
     blocks = blocks,
     prior_param = prior_param,
     run_shuffle = run_shuffle
   )
 }
 
-fit_one_fold <- function(fold, focal_vs_comp, comp_dist,
-                         blocks, prior_param, run_shuffle) {
+fit_one_fold <- function(focal_vs_comp, comp_dist, fold, blocks,
+                         prior_param, run_shuffle) {
+
   # Define test set and "full" training set (we will remove buffer region below)
   test <- focal_vs_comp %>%
     filter(foldID == fold)

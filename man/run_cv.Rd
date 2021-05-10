@@ -5,21 +5,24 @@
 \title{Run the bayesian model with spatial cross validation}
 \usage{
 run_cv(
-  focal_vs_comp,
+  growth_df,
   comp_dist,
   blocks,
+  id,
   prior_param = NULL,
   run_shuffle = FALSE
 )
 }
 \arguments{
-\item{focal_vs_comp}{data frame from \code{\link[=create_focal_vs_comp]{create_focal_vs_comp()}}}
+\item{growth_df}{A \code{\link[=compute_growth]{compute_growth()}} output converted to \code{sf} object}
 
 \item{comp_dist}{A numeric vector of the distance(s) determining which
 neighboring trees to a focal tree are competitors. Multiple competitor
 distances are currently only supported in \code{\link[=run_cv]{run_cv()}}.}
 
 \item{blocks}{An sf object of a \code{blockCV} block output}
+
+\item{id}{A character string of the variable name in \code{growth_df} uniquely identifying each tree}
 
 \item{prior_param}{A list of \verb{\{a_0, b_0, mu_0, V_0\}} prior hyperparameters.
 Defaults to \code{a_0 = 250}, \code{b_0 = 250}, \code{mu_0} a vector of zeros of
@@ -40,9 +43,10 @@ focal-competitor data frame, it appends a column with predicted growth values.
 \examples{
 
 run_cv(
-  focal_vs_comp_ex,
+  growth_spatial_ex,
   comp_dist = c(1, 2),
-  blocks = blocks_ex
+  blocks = blocks_ex,
+  id = "ID"
 )
 }
 \seealso{

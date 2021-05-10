@@ -124,3 +124,17 @@ check_focal_vs_comp <- function(focal_vs_comp) {
     focal_vs_comp
   )
 }
+
+check_growth_df <- function(growth_df) {
+  check_inherits(growth_df, "data.frame")
+
+  if ("comp" %in% colnames(growth_df)) {
+    if (inherits(growth_df[["comp"]], "list")) {
+      glue_stop(
+        "After v0.1.0, run_cv no longer takes a focal_vs_comp ",
+        "data frame as its first argument. Please instead supply a growth_df, ",
+        "blocks, and id argument, as you would supply to create_focal_vs_comp."
+      )
+    }
+  }
+}
