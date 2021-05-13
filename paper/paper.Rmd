@@ -211,7 +211,7 @@ We then add spatial information to `growth_scbi`. We first add a "buffer region"
 
 Our model of interspecific competition relies on a spatial definition of who competitor trees are: all trees within a distance `comp_dist` of a focal tree. We set `comp_dist` to 7.5m, a value informed by other studies [@canham_neighborhood_2004, @uriarte_spatially_2004, @canham_neighborhood_2006]. We use `comp_dist` and a manually constructed `sf` representation of the study region's boundary as inputs to `add_buffer_variable()` to add a `buffer` boolean variable to `growth_scbi`. All trees with `buffer` equal to `FALSE` will be our focal trees whose growth will be modeled, whereas those with `TRUE` will only act as competitor trees. 
 
-```{r}
+```{r add-buffer}
 # Define competitive distance range
 comp_dist <- 7.5
 
@@ -232,7 +232,7 @@ We first manually define an `sf` object defining four folds that partition the s
 
 Figure \ref{fig:scbi-spatial-information} illustrates the net effect of adding these two elements of spatial information to `growth_scbi`.
 
-```{r}
+```{r manually-define-folds}
 # Manually define spatial blocks to act as folds
 n_fold <- 4
 fold1 <- cbind(c(0, 150, 150, 0), c(300, 300, 450, 450))
@@ -276,7 +276,7 @@ focal_vs_comp_scbi %>%
   select(focal_ID, focal_sp, geometry, growth, comp)
 ```
 
-```{r, eval = FALSE, echo = FALSE}
+```{r internal, eval = FALSE, echo = FALSE}
 # Internal: after removing trees in buffer and have NA for growth, there is one
 # tree that is not included in focal_vs_comp_scbi b/c it has no neighbors within
 # comp_dist = 7.5m of it
@@ -292,7 +292,7 @@ growth_scbi %>%
 
 The resulting `focal_vs_comp_scbi` has `r nrow(focal_vs_comp_scbi)` rows, representing the subset of the `r nrow(growth_scbi)` trees in `growth_scbi` that will be considered as focal trees. The variables `focal_ID` and `focal_sp` relate to tree-stem identification and species information. Most notably however is the variable `comp`, which contains information on all competitor trees saved in `tidyr` package list-column format [@tidyr_package]. To inspect this information, we flatten the `comp` list-column for the tree with `focal_ID` 4 in the first row, here a `tibble [20 × 4]`, into regular columns using `unnest()` from the `tidyr` package. 
 
-```{r, scbi-focal-vs-comp-3}
+```{r demonstrate-unnest, scbi-focal-vs-comp-3}
 focal_vs_comp_scbi %>% 
   filter(focal_ID == 4) %>% 
   select(focal_ID, dbh, comp) %>% 
@@ -341,7 +341,7 @@ comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
 
 The resulting`comp_bayes_lm_scbi` is an object of S3 class type `comp_bayes_lm` containing the posterior values of all parameters. Furthermore, this class includes generics for three methods. First, the generic for `print()` displays the names of all prior and posterior parameters and the model formula:
 
-```{r}
+```{r show-comp-bayes}
 comp_bayes_lm_scbi
 ```
 
@@ -351,7 +351,7 @@ Next, the generic for `predict()` takes the posterior parameter values in `comp_
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
   mutate(growth_hat = predict(comp_bayes_lm_scbi, newdata = focal_vs_comp_scbi))
 ```
-```{r}
+```{r show-focal-vs-comp}
 focal_vs_comp_scbi %>% 
   select(focal_ID, focal_sp, dbh, growth, growth_hat)
 ```
@@ -399,7 +399,7 @@ focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
   mutate(growth_hat_shuffle = predict(comp_bayes_lm_scbi_shuffle, 
                                  newdata = focal_vs_comp_scbi))
 ```
-```{r}
+```{r show-rmse-shuffle}
 model_rmse_shuffle <- focal_vs_comp_scbi %>%
   rmse(truth = growth, estimate = growth_hat_shuffle) %>%
   pull(.estimate)
@@ -447,7 +447,7 @@ This process is repeated for each of the four folds acting as the test set, then
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
   run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
 ```
-```{r}
+```{r show-rmse-cv}
 model_rmse_cv <- focal_vs_comp_scbi %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
@@ -499,7 +499,7 @@ We intend to archive all data and source code for this manuscript on GitHub at h
 This code replicates Figure \ref{fig:scbi-simulation}: A comparison of root mean squared error of
 models for standard, permuted, and spatial cross- validated error estimates.
 
-```{r, eval = FALSE}
+```{r appendix-code, eval = FALSE, cache = FALSE}
 library(tidyverse)
 library(lubridate)
 library(here)
@@ -621,7 +621,7 @@ for(j in 1:num_shuffle){
   # Fit model (compute posterior parameters) with shuffling
   comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
     comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
-
+  
   # Make predictions and compute RMSE
   shuffle_RMSE[j] <-  focal_vs_comp_scbi %>%
     mutate(growth_hat = 
@@ -642,7 +642,7 @@ for(j in 1:num_shuffle){
            run_shuffle = TRUE) %>%
     rmse(truth = growth, estimate = growth_hat) %>%
     pull(.estimate)
-
+  
   # Status update
   str_c("Shuffle with permutation ", j, " at ", Sys.time()) %>% print()
 }
