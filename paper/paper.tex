@@ -821,8 +821,6 @@ set, then the four RMSE's are averaged to provide a single estimate of
 model error. This algorithm is implemented in \texttt{run\_cv()}, which
 acts as a wrapper function to both \texttt{comp\_bayes\_lm()} that fits
 the model and \texttt{predict()} that returns predicted values.
-Furthermore, \texttt{comp\_dist} can now be specified as a vector of
-competitive distances to consider.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -889,51 +887,20 @@ competition.
 While the package is designed with ForestGEO plot data in mind, we
 envision that it can be modified to work on any single large, mapped
 forest plot in which at least two measurements of each individual have
-been taken. Furthermore, we also envision the package being used more
-generally for inventory plot-structure with many spatially separated
-plots, e.g.~the US Forest Service Forest Inventory and Analysis plots
-\citep{smith_forest_2002}.
+been taken. Furthermore, we hope that future versions of the package
+will be flexible to other plot layouts, for example inventory
+plot-structure with many spatially separated plots like the US Forest
+Service Forest Inventory and Analysis plots \citep{smith_forest_2002}.
 
-We hope to extend the \texttt{forestecology} package's functionality to
-account for a larger variety of models for tree growth and corresponding
-tests. Some immediate
-
-\begin{quote}
-To address the reviewer's critique that the model is not flexible enough
-and does not include applications of existing competition theory, we
-could add another option for run\_shuffle. In this case the shuffle
-would not shuffle identity of competitors which share with the focal
-species. The idea being there is a special kind of competition with
-conspecifics (because they share your exact resource needs). The result
-is two lambda values, one for competition between conspecifics and one
-for competition between heterospecifics.
-\end{quote}
-
-A recently emerging body of literature suggests that traits of species
-rather than species identity themselves better inform competition models
-\citep[\citet{lasky_trait-mediated_2014}]{kunstler_competitive_2012}. To
-account for such clustering, instead of using Equation \ref{eq:model},
-we could use a model of which is a modification of
-\citet{kunstler_plant_2016}. Let \(Y_{ik}\) be the growth of the
-\(k^{\text{th}}\) individual of species \(i\) and let \(j\) be the
-species of competitors in the neighborhood. How much growth changes per
-unit of \(\text{BA}\) of all neighbors is quantified by two terms: an
-overall competition coefficient \(C\) and an \(i\)-\(j\) species pair
-specific coefficient \(c_{ij}\). which depends on the traits of the
-\(i\) and \(j\) species. Say we have \(l\) traits and \(t_{li}\) is the
-value of trait \(l\) for species \(i\). \(a_{\text{tol},l}\) quantifies
-how trait \(l\) affects the way a species tolerates (or is sensitive to)
-competition. \(a_{\text{eff},l}\) quantifies how trait \(l\) is how much
-trait \(l\) affects how strong a competitor is, how much it effects the
-reduction in growth of its neighbors. Finally \(a_{\text{sim},l}\) is
-about whether competition is stronger (or weaker) if the two species are
-similar. This is based on an idea that two species that are similar use
-the same resources and should compete more.
-
-\label{eq:model2} \begin{eqnarray}
-y_{ik} &=& \beta_{0,j} + \beta_{\text{dbh},j} \cdot \text{dbh}_{ij} + \sum_{j} (C + c_{ij}) \cdot \text{BA}_{j} + \epsilon_{ij}\\
-\text{where } c_{ij} &=& \sum_{l} a_{\text{tol},l}\cdot t_{li} + a_{\text{eff},l}\cdot t_{lj} + a_{\text{sim},l}|t_{li} - t_{lj}|\nonumber
-\end{eqnarray}
+We also hope to extend the \texttt{forestecology} package's
+functionality to account for a larger variety of models for tree growth.
+One clear future direction would be to allow competition based on
+species trait values rather than species identity. There is evidence
+that traits predict competitive outcomes
+\citep[\citet{lasky_trait-mediated_2014},
+\citet{uriarte_trait_2010}]{kunstler_competitive_2012}. Thus an
+extenstion of the model would allow \(lambda\) values to be a function
+of the traits of competing species.
 
 Lastly, the \texttt{forestecology} current uses the \texttt{blockCV}
 package behind the scenes to create the spatial blocks acting as folds

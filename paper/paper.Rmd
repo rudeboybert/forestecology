@@ -441,7 +441,7 @@ ggplot() +
   geom_sf(data = test_vs_train %>% st_as_sf() %>% sample_n(1000), aes(col = fold, shape = fold))
 ```
 
-This process is repeated for each of the four folds acting as the test set, then the four RMSE's are averaged to provide a single estimate of model error. This algorithm is implemented in `run_cv()`, which acts as a wrapper function to both `comp_bayes_lm()` that fits the model and `predict()` that returns predicted values. Furthermore, `comp_dist` can now be specified as a vector of competitive distances to consider.
+This process is repeated for each of the four folds acting as the test set, then the four RMSE's are averaged to provide a single estimate of model error. This algorithm is implemented in `run_cv()`, which acts as a wrapper function to both `comp_bayes_lm()` that fits the model and `predict()` that returns predicted values. 
 
 ```{r scbi-spatial-cv}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
@@ -470,23 +470,9 @@ include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.pdf")
 
 The `forestecology` package provides an accessible way to fit and test models of neighborhood competition. The package follows the `tidy` data design principles, leverages the `sf` package for spatial data, and S3 open-oriented model implementation structure. We hope that the package will increase the use of neighborhood competition models to better understand what structures plant competition.
 
-While the package is designed with ForestGEO plot data in mind, we envision that it can be modified to work on any single large, mapped forest plot in which at least two measurements of each individual have been taken. Furthermore, we also envision the package being used more generally for inventory plot-structure with many spatially separated plots, e.g. the US Forest Service Forest Inventory and Analysis plots [@smith_forest_2002]. 
+While the package is designed with ForestGEO plot data in mind, we envision that it can be modified to work on any single large, mapped forest plot in which at least two measurements of each individual have been taken. Furthermore, we hope that future versions of the package will be flexible to other plot layouts, for example inventory plot-structure with many spatially separated plots like the US Forest Service Forest Inventory and Analysis plots [@smith_forest_2002]. 
 
-We hope to extend the `forestecology` package's functionality to account for a larger variety of models for tree growth and corresponding tests. Some immediate improvements that can made include
-
-
-
-
-> To address the reviewer's critique that the model is not flexible enough and does not include applications of existing competition theory, we could add another option for run_shuffle. In this case the shuffle would not shuffle identity of competitors which share with the focal species. The idea being there is a special kind of competition with conspecifics (because they share your exact resource needs). The result is two lambda values, one for competition between conspecifics and one for competition between heterospecifics.
-
-
-A recently emerging body of literature suggests that traits of species rather than species identity themselves better inform competition models [@kunstler_competitive_2012, @lasky_trait-mediated_2014]. To account for such clustering, instead of using Equation \ref{eq:model}, we present a model of which is a modification of @kunstler_plant_2016 in Equation \ref{eq:model2}. Let $Y_{ik}$ be the growth of the $k^{\text{th}}$ individual of species $i$ and let $j$ be the species of competitors in the neighborhood. How much growth changes per unit of $\text{BA}$ of all neighbors is quantified by two terms: an overall competition coefficient $C$ and an $i$-$j$ species pair specific coefficient $c_{ij}$. which depends on the traits of the $i$ and $j$ species. Say we have $l$ traits and $t_{li}$ is the value of trait $l$ for species $i$. $a_{\text{tol},l}$ quantifies how trait $l$ affects the way a species tolerates (or is sensitive to) competition. $a_{\text{eff},l}$ quantifies how trait $l$ is how much trait $l$ affects how strong a competitor is, how much it effects the reduction in growth of its neighbors. Finally $a_{\text{sim},l}$ is about whether competition is stronger (or weaker) if the two species are similar. This is based on an idea that two species that are similar use the same resources and should compete more.
-
-\label{eq:model2}
-\begin{eqnarray}
-y_{ik} &=& \beta_{0,j} + \beta_{\text{dbh},j} \cdot \text{dbh}_{ij} + \sum_{j} (C + c_{ij}) \cdot \text{BA}_{j} + \epsilon_{ij}\\
-\text{where } c_{ij} &=& \sum_{l} a_{\text{tol},l}\cdot t_{li} + a_{\text{eff},l}\cdot t_{lj} + a_{\text{sim},l}|t_{li} - t_{lj}|\nonumber
-\end{eqnarray}
+We also hope to extend the `forestecology` package's functionality to account for a larger variety of models for tree growth. One clear future direction would be to allow competition based on species trait values rather than species identity. There is evidence that traits predict competitive outcomes [@kunstler_competitive_2012, @lasky_trait-mediated_2014, @uriarte_trait_2010]. Thus an extenstion of the model would allow $lambda$ values to be a function of the traits of competing species. 
 
 Lastly, the `forestecology` current uses the `blockCV` package behind the scenes to create the spatial blocks acting as folds for our spatial cross-validation algorithm detailed in Sections \ref{spatial-information} and \ref{spatial-cross-validation} [@valavi_blockcv_2019]. This back-end functionality could be substituted with the `spatialsample` package for spatial resampling infrastructure; a `tidymodels` package under active development as of 2021 [@spatialsample_package, @tidymodels_package].
 
