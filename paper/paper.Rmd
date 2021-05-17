@@ -441,7 +441,7 @@ ggplot() +
   geom_sf(data = test_vs_train %>% st_as_sf() %>% sample_n(1000), aes(col = fold, shape = fold))
 ```
 
-This process is repeated for each of the four folds acting as the test set, then the four RMSE's are averaged to provide a single estimate of model error. This algorithm is implemented in `run_cv()`, which acts as a wrapper function to both `comp_bayes_lm()` that fits the model and `predict()` that returns predicted values. 
+This process is repeated for each of the four folds acting as the test set, then the four RMSE's are averaged to provide a single estimate of model error. This algorithm is implemented in `run_cv()`, which acts as a wrapper function to both `comp_bayes_lm()` that fits the model and `predict()` that returns predicted values.
 
 ```{r scbi-spatial-cv}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
