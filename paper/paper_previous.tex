@@ -444,12 +444,14 @@ whereas those with \texttt{TRUE} will only act as competitor trees.
 \NormalTok{comp_dist <-}\StringTok{ }\FloatTok{7.5}
 
 \CommentTok{# Manually construct study region boundary}
-\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{, }
-    \DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{sf_polygon}\NormalTok{()}
+\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
+  \DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{),}
+  \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)}
+\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{sf_polygon}\NormalTok{()}
 
 \NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
+\StringTok{  }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -467,8 +469,11 @@ We first manually define an \texttt{sf} object defining four folds that
 partition the study region. We then use the output of the
 \texttt{spatialBlock()} function from the \texttt{blockCV} package to
 associate each tree in \texttt{growth\_scbi} to the correct
-\texttt{foldID} \citep{valavi_blockcv_2019}. This \texttt{foldID}
-variable will be used in Section \ref{spatial-cross-validation}.
+\texttt{foldID} \citep{valavi_blockcv_2019}.\footnote{In the Supporting
+  Information we present an example where the folds themselves are
+  created automatically, as opposed to manually as in the example.} This
+\texttt{foldID} variable will be used in Section
+\ref{spatial-cross-validation}.
 
 Figure \ref{fig:scbi-spatial-information} illustrates the net effect of
 adding these two elements of spatial information to
@@ -483,18 +488,20 @@ adding these two elements of spatial information to
 \NormalTok{fold3 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \NormalTok{fold4 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{150}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
-\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}\KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3), }
-    \KeywordTok{sf_polygon}\NormalTok{(fold4)) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{factor}\NormalTok{())}
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
+  \KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3), }
+  \KeywordTok{sf_polygon}\NormalTok{(fold4)}
+\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
 
 \CommentTok{# Associate each observation to a fold}
-\NormalTok{spatial_block_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }
-    \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
+\NormalTok{spatial_block_scbi <-}\StringTok{ }
+\StringTok{  }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }
+               \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
+               \DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
 
 \NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{factor}\NormalTok{())}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
 \end{Highlighting}
 \end{Shaded}
 
@@ -561,10 +568,10 @@ information, we flatten the \texttt{comp} list-column for the tree with
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{filter}\NormalTok{(focal_ID }\OperatorTok{==}\StringTok{ }\DecValTok{4}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{select}\NormalTok{(focal_ID, dbh, comp) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \StringTok{"comp"}\NormalTok{)}
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{filter}\NormalTok{(focal_ID }\OperatorTok{==}\StringTok{ }\DecValTok{4}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{select}\NormalTok{(focal_ID, dbh, comp) }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \StringTok{"comp"}\NormalTok{)}
 \CommentTok{## # A tibble: 20 x 6}
 \CommentTok{##   focal_ID   dbh comp_ID  dist comp_sp comp_basal_area}
 \CommentTok{##      <dbl> <dbl>   <dbl> <dbl> <fct>             <dbl>}
@@ -657,8 +664,8 @@ distribution.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{select}\NormalTok{(focal_ID, focal_sp, dbh, growth, growth_hat)}
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
+\StringTok{  }\KeywordTok{select}\NormalTok{(focal_ID, focal_sp, dbh, growth, growth_hat)}
 \CommentTok{## # A tibble: 6,296 x 5}
 \CommentTok{##   focal_ID focal_sp   dbh growth growth_hat}
 \CommentTok{##      <dbl> <fct>    <dbl>  <dbl>      <dbl>}
@@ -766,8 +773,8 @@ structure. We perform this permutation test once again using
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{model_rmse_shuffle <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat_shuffle) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
+\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat_shuffle) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
 \NormalTok{model_rmse_shuffle}
 \CommentTok{## [1] 0.131}
 \end{Highlighting}
@@ -825,8 +832,8 @@ the model and \texttt{predict()} that returns predicted values.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{model_rmse_cv <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
+\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
 \NormalTok{model_rmse_cv}
 \CommentTok{## [1] 0.14}
 \end{Highlighting}
@@ -866,44 +873,24 @@ the over-fit model gives rise to an incorrect conclusion.
 \caption{Comparison of root mean squared error of models for standard, permuted, and spatially cross-validated error estimates. The dotted lines show observed RMSE while the histograms show the null distribution of RMSE for 49 permutations under the null hypothesis of no competitor species identity effects. The colors indicate whether spatial cross-validation was used or not.}\label{fig:scbi-simulation}
 \end{figure}
 
-\hypertarget{conclusion-and-future-work}{%
-\section{Conclusion and future work}\label{conclusion-and-future-work}}
+\hypertarget{conclusion}{%
+\section{Conclusion}\label{conclusion}}
 
 The \texttt{forestecology} package provides an accessible way to fit and
-test models of neighborhood competition. The package follows the
-\texttt{tidy} data design principles, leverages the \texttt{sf} package
-for spatial data, and S3 open-oriented model implementation structure.
-We hope that the package will increase the use of neighborhood
-competition models to better understand what structures plant
-competition.
-
-While the package is designed with ForestGEO plot data in mind, we
-envision that it can be modified to work on any single large, mapped
-forest plot in which at least two measurements of each individual have
-been taken. Furthermore, we hope that future versions of the package
-will be flexible to other plot layouts, for example inventory
-plot-structure with many spatially separated plots like the US Forest
+test models of neighborhood competition. While the package is designed
+with ForestGEO plot data in mind, we envision that it can be modified to
+work on any single large, mapped forest plot in which at least two
+measurements of each individual have been taken. Furthermore, we also
+envision the package being used more generally for inventory
+plot-structure with many spatially separated plots, e.g.~the US Forest
 Service Forest Inventory and Analysis plots \citep{smith_forest_2002}.
-
-We also hope to extend the \texttt{forestecology} package's
-functionality to account for a larger variety of models for tree growth.
-One clear future direction would be to allow competition based on
-species trait values rather than species identity. There is evidence
-that traits predict competitive outcomes
-\citep[\citet{lasky_trait-mediated_2014},
-\citet{uriarte_trait_2010}]{kunstler_competitive_2012}. Thus an
-extension of the model would allow \(\lambda\) values from Equation
-\ref{eq:model} to be a function of the traits of competing species.
-
-Lastly, the \texttt{forestecology} current uses the \texttt{blockCV}
-package behind the scenes to create the spatial blocks acting as folds
-for our spatial cross-validation algorithm detailed in Sections
-\ref{spatial-information} and \ref{spatial-cross-validation}
-\citep{valavi_blockcv_2019}. This back-end functionality could be
-substituted with the \texttt{spatialsample} package for spatial
-resampling infrastructure; a \texttt{tidymodels} package under active
-development as of 2021
-\citep[\citet{tidymodels_package}]{spatialsample_package}.
+In future versions of \texttt{forestecology} we also hope to include
+models that account for tree mortality in addition to tree growth. The
+package follows the \texttt{tidy} data design principles, leverages the
+\texttt{sf} package for spatial data, and S3 open-oriented model
+implementation structure. We hope that the package will increase the use
+of neighborhood competition models to better understand what structures
+plant competition.
 
 \hypertarget{acknowledgments}{%
 \section{Acknowledgments}\label{acknowledgments}}
@@ -931,186 +918,6 @@ Institute census data are available on GitHub at
 and are archived on Zenodo at
 \url{https://doi.org/10.5281/zenodo.2649301}
 \citep{gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020}.
-
-\hypertarget{appendix}{%
-\section{Appendix}\label{appendix}}
-
-This code replicates Figure \ref{fig:scbi-simulation}: A comparison of
-root mean squared error of models for standard, permuted, and spatial
-cross- validated error estimates.
-
-\begin{Shaded}
-\begin{Highlighting}[]
-\KeywordTok{library}\NormalTok{(tidyverse)}
-\KeywordTok{library}\NormalTok{(lubridate)}
-\KeywordTok{library}\NormalTok{(here)}
-\KeywordTok{library}\NormalTok{(sf)}
-\KeywordTok{library}\NormalTok{(viridis)}
-\KeywordTok{library}\NormalTok{(forestecology)}
-\KeywordTok{library}\NormalTok{(blockCV)}
-\KeywordTok{library}\NormalTok{(tictoc)}
-
-
-\CommentTok{# Compute growth of trees based on census data -------------------------}
-\NormalTok{census_}\DecValTok{2013}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{here}\NormalTok{(}\StringTok{"paper/scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{read_csv}\NormalTok{() }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
-
-\NormalTok{census_}\DecValTok{2018}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{here}\NormalTok{(}\StringTok{"paper/scbi.stem3.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{read_csv}\NormalTok{() }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
-
-\NormalTok{growth_scbi <-}\StringTok{ }\KeywordTok{compute_growth}\NormalTok{(}\DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi, }\DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)), }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
-
-
-\CommentTok{# Add spatial information ----------------------------------------------}
-\CommentTok{# Define buffer region using competitive distance range}
-\NormalTok{comp_dist <-}\StringTok{ }\FloatTok{7.5}
-
-\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{, }
-    \DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{sf_polygon}\NormalTok{()}
-
-\NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
-
-\CommentTok{# Manually define spatial blocks to act as folds}
-\NormalTok{fold1 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{450}\NormalTok{))}
-\NormalTok{fold2 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{))}
-\NormalTok{fold3 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{600}\NormalTok{))}
-\NormalTok{fold4 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{))}
-\NormalTok{n_fold <-}\StringTok{ }\DecValTok{4}
-
-\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}\KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3), }
-    \KeywordTok{sf_polygon}\NormalTok{(fold4)) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{factor}\NormalTok{())}
-
-\CommentTok{# Associate each observation to a fold}
-\NormalTok{SpatialBlock_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }
-    \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
-
-\NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ SpatialBlock_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{factor}\NormalTok{())}
-
-
-\CommentTok{# Compute focal versus competitor tree information ---------------------}
-\NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
-
-
-\CommentTok{# Fit model and make predictions ---------------------------------------}
-\CommentTok{# Number of permutation shuffles:}
-\NormalTok{num_shuffle <-}\StringTok{ }\DecValTok{49}
-
-\CommentTok{# Save results here}
-\NormalTok{run_time <-}\StringTok{ }\DecValTok{0}
-\NormalTok{observed_RMSE <-}\StringTok{ }\DecValTok{0}
-\NormalTok{observed_RMSE_CV <-}\StringTok{ }\DecValTok{0}
-\NormalTok{shuffle_RMSE <-}\StringTok{ }\KeywordTok{vector}\NormalTok{(}\StringTok{"list"}\NormalTok{, }\DecValTok{1}\NormalTok{)}
-\NormalTok{shuffle_RMSE_CV <-}\StringTok{ }\KeywordTok{vector}\NormalTok{(}\StringTok{"list"}\NormalTok{, }\DecValTok{1}\NormalTok{)}
-\NormalTok{filename <-}\StringTok{ }\KeywordTok{here}\NormalTok{(}\StringTok{"paper/simulation_results/"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{str_c}\NormalTok{(}\StringTok{"2021-03-03_scbi_"}\NormalTok{, num_shuffle, }\StringTok{"_shuffles"}\NormalTok{)}
-
-\CommentTok{# Run all simulations 0. Setup simulation for this species type ----}
-\CommentTok{# Start clock}
-\KeywordTok{tic}\NormalTok{()}
-
-\CommentTok{# 1. Compute observed test statistic: RMSE with no cross-validation ----}
-\CommentTok{# Fit model (compute posterior parameters)}
-\NormalTok{comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{FALSE}\NormalTok{)}
-
-\CommentTok{# Make predictions and compute RMSE}
-\NormalTok{observed_RMSE <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, focal_vs_comp_scbi)) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
-
-\CommentTok{# 2. Compute observed test statistic: RMSE with cross-validation -------}
-\NormalTok{observed_RMSE_CV <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
-
-\CommentTok{# 3. Permutation distribution: RMSE with no cross-validation -----------}
-\CommentTok{# Compute num_shuffle permutation test statistics}
-\NormalTok{shuffle_RMSE <-}\StringTok{ }\KeywordTok{numeric}\NormalTok{(}\DataTypeTok{length =}\NormalTok{ num_shuffle)}
-\ControlFlowTok{for}\NormalTok{ (j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{num_shuffle) \{}
-    \CommentTok{# Fit model (compute posterior parameters) with shuffling}
-\NormalTok{    comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{)}
-
-    \CommentTok{# Make predictions and compute RMSE}
-\NormalTok{    shuffle_RMSE[j] <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, focal_vs_comp_scbi)) }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{pull}\NormalTok{(.estimate)}
-\NormalTok{\}}
-
-\CommentTok{# 4. Permutation distribution: RMSE with cross-validation --------------}
-\CommentTok{# Compute num_shuffle permutation test statistics}
-\NormalTok{shuffle_RMSE_CV <-}\StringTok{ }\KeywordTok{numeric}\NormalTok{(}\DataTypeTok{length =}\NormalTok{ num_shuffle)}
-
-\CommentTok{# Compute num_shuffle permutation test statistics}
-\ControlFlowTok{for}\NormalTok{ (j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{num_shuffle) \{}
-    \CommentTok{# Compute and save RMSE}
-\NormalTok{    shuffle_RMSE_CV[j] <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{pull}\NormalTok{(.estimate)}
-
-    \CommentTok{# Status update}
-    \KeywordTok{str_c}\NormalTok{(}\StringTok{"Shuffle with permutation "}\NormalTok{, j, }\StringTok{" at "}\NormalTok{, }\KeywordTok{Sys.time}\NormalTok{()) }\OperatorTok{%>%}
-\StringTok{        }\KeywordTok{print}\NormalTok{()}
-\NormalTok{\}}
-
-\CommentTok{# 5. Save results ----}
-\NormalTok{clock <-}\StringTok{ }\KeywordTok{toc}\NormalTok{(}\DataTypeTok{quiet =} \OtherTok{TRUE}\NormalTok{)}
-\NormalTok{run_time <-}\StringTok{ }\NormalTok{clock}\OperatorTok{$}\NormalTok{toc }\OperatorTok{-}\StringTok{ }\NormalTok{clock}\OperatorTok{$}\NormalTok{tic}
-
-\NormalTok{model_comp_tbl <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{run_time =}\NormalTok{ run_time, }\DataTypeTok{observed_RMSE =}\NormalTok{ observed_RMSE, }
-    \DataTypeTok{observed_RMSE_CV =}\NormalTok{ observed_RMSE_CV, }\DataTypeTok{shuffle_RMSE =}\NormalTok{ shuffle_RMSE, }\DataTypeTok{shuffle_RMSE_CV =}\NormalTok{ shuffle_RMSE_CV, }
-\NormalTok{    )}
-\KeywordTok{save}\NormalTok{(model_comp_tbl, }\DataTypeTok{file =}\NormalTok{ filename }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{str_c}\NormalTok{(}\StringTok{".RData"}\NormalTok{))}
-
-
-\CommentTok{# Visualize results ----------------------------------------------------}
-\NormalTok{model_comp <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(model_comp_tbl }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{select}\NormalTok{(run_time, }\DataTypeTok{observed =}\NormalTok{ observed_RMSE, }\DataTypeTok{shuffle =}\NormalTok{ shuffle_RMSE) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{CV =} \OtherTok{FALSE}\NormalTok{), model_comp_tbl }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{select}\NormalTok{(run_time, }\DataTypeTok{observed =}\NormalTok{ observed_RMSE_CV, }\DataTypeTok{shuffle =}\NormalTok{ shuffle_RMSE_CV) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{CV =} \OtherTok{TRUE}\NormalTok{)) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{gather}\NormalTok{(type, RMSE, }\OperatorTok{-}\KeywordTok{c}\NormalTok{(run_time, CV))}
-
-\NormalTok{model_comp_observed <-}\StringTok{ }\NormalTok{model_comp }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{filter}\NormalTok{(type }\OperatorTok{==}\StringTok{ "observed"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \KeywordTok{c}\NormalTok{(RMSE))}
-\NormalTok{model_comp_shuffle <-}\StringTok{ }\NormalTok{model_comp }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{filter}\NormalTok{(type }\OperatorTok{==}\StringTok{ "shuffle"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \KeywordTok{c}\NormalTok{(RMSE))}
-
-\NormalTok{cv_plot <-}\StringTok{ }\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_vline}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ model_comp_observed, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{xintercept =}\NormalTok{ RMSE, }
-    \DataTypeTok{col =}\NormalTok{ CV), }\DataTypeTok{linetype =} \StringTok{"dashed"}\NormalTok{, }\DataTypeTok{show.legend =}\NormalTok{ F) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_histogram}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ model_comp_shuffle, }
-    \KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ RMSE, }\DataTypeTok{fill =}\NormalTok{ CV), }\DataTypeTok{bins =} \DecValTok{50}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{fill =} \StringTok{"Cross-validated?"}\NormalTok{, }
-    \DataTypeTok{x =} \KeywordTok{expression}\NormalTok{(}\KeywordTok{paste}\NormalTok{(}\StringTok{"RMSE (cm "}\NormalTok{, y}\OperatorTok{^}\NormalTok{\{}
-        \DecValTok{-1}
-\NormalTok{    \}, }\StringTok{")"}\NormalTok{))) }\OperatorTok{+}\StringTok{ }\KeywordTok{scale_color_viridis}\NormalTok{(}\DataTypeTok{discrete =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{option =} \StringTok{"D"}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{scale_fill_viridis}\NormalTok{(}\DataTypeTok{discrete =} \OtherTok{TRUE}\NormalTok{) }\OperatorTok{+}\StringTok{ }
-\StringTok{    }\KeywordTok{theme_light}\NormalTok{()}
-\NormalTok{cv_plot}
-
-\NormalTok{filename }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{str_c}\NormalTok{(}\StringTok{".pdf"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{ggsave}\NormalTok{(}\DataTypeTok{plot =}\NormalTok{ cv_plot, }\DataTypeTok{width =} \DecValTok{16}\OperatorTok{/}\DecValTok{2}\NormalTok{, }\DataTypeTok{height =} \DecValTok{9}\OperatorTok{/}\DecValTok{2}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
 
 \bibliographystyle{agsm}
 \bibliography{paper.bib}
