@@ -1155,6 +1155,47 @@ cross- validated error estimates.
 \section{Appendix 2: Compare different competitive
 distances}\label{mult-dist}}
 
+Above we set the cut off distance for two stems to compete at 7.5 m. Our
+package can be used to find which distance is best supported by the
+data. Here we give an example.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mult_dist_comp <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
+  \DataTypeTok{dist =} \KeywordTok{c}\NormalTok{(}\FloatTok{2.5}\NormalTok{, }\DecValTok{5}\NormalTok{, }\FloatTok{7.5}\NormalTok{, }\DecValTok{10}\NormalTok{, }\FloatTok{12.5}\NormalTok{),}
+  \DataTypeTok{rmse =} \DecValTok{0}
+\NormalTok{)}
+
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\KeywordTok{length}\NormalTok{(mult_dist_comp}\OperatorTok{$}\NormalTok{dist))}
+\NormalTok{\{}
+\NormalTok{  comp_dist <-}\StringTok{ }\NormalTok{mult_dist_comp}\OperatorTok{$}\NormalTok{dist[i]}
+\NormalTok{  growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
+  
+\NormalTok{  focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
+\NormalTok{  focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
+\StringTok{    }\KeywordTok{select}\NormalTok{(focal_ID, focal_sp, geometry, growth, comp)}
+  
+\NormalTok{  focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
+
+\NormalTok{  mult_dist_comp}\OperatorTok{$}\NormalTok{rmse[i] <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
+\NormalTok{\}}
+
+\NormalTok{mult_dist_comp }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{aes}\NormalTok{(dist,rmse)) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{geom_point}\NormalTok{() }\OperatorTok{+}
+\StringTok{  }\KeywordTok{xlab}\NormalTok{(}\StringTok{'Distance (m)'}\NormalTok{) }\OperatorTok{+}
+\StringTok{  }\KeywordTok{ylab}\NormalTok{(}\StringTok{'RMSE (cm)'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{center}\includegraphics[width=1\linewidth]{Figures/appendix2-code-1} \end{center}
+
 \bibliographystyle{agsm}
 \bibliography{paper.bib}
 
