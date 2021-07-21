@@ -209,7 +209,7 @@ ggplot() +
 
 We then add spatial information to `growth_scbi`. We first add a "buffer region" to the periphery of the study region. Since some of our model's explanatory variables are cumulative, we must ensure that all trees being modeled are not biased to have different neighbor structures. This is of concern for trees at the boundary of the study region who will not have all their neighbors included in the census stems. To account for such edge effects, only trees that are not part of this buffer region, i.e. are part of the interior of the study region, will have their growth modeled [@waller_applied_2004].
 
-Our model of interspecific competition relies on a spatial definition of who competitor trees are: all trees within a distance `comp_dist` of a focal tree. We set `comp_dist` to 7.5m, a value informed by other studies [@canham_neighborhood_2004, @uriarte_spatially_2004, @canham_neighborhood_2006]. We use `comp_dist` and a manually constructed `sf` representation of the study region's boundary as inputs to `add_buffer_variable()` to add a `buffer` boolean variable to `growth_scbi`. All trees with `buffer` equal to `FALSE` will be our focal trees whose growth will be modeled, whereas those with `TRUE` will only act as competitor trees. 
+Our model of interspecific competition relies on a spatial definition of who competitor trees are: all trees within a distance `comp_dist` of a focal tree. Here we set `comp_dist` to 7.5m, a value informed by other studies [@canham_neighborhood_2004, @uriarte_spatially_2004, @canham_neighborhood_2006], but the package could also be used to compare multiple distances and see which is best supported (see Appendix 2 \ref{mult-dist}). We use `comp_dist` and a manually constructed `sf` representation of the study region's boundary as inputs to `add_buffer_variable()` to add a `buffer` boolean variable to `growth_scbi`. All trees with `buffer` equal to `FALSE` will be our focal trees whose growth will be modeled, whereas those with `TRUE` will only act as competitor trees. 
 
 ```{r add-buffer}
 # Define competitive distance range
@@ -494,12 +494,12 @@ We intend to archive all data and source code for this manuscript on GitHub at h
 
 
 
-# Appendix
+# Appendix 1: Replicate RMSE comparison
 
 This code replicates Figure \ref{fig:scbi-simulation}: A comparison of root mean squared error of
 models for standard, permuted, and spatial cross- validated error estimates.
 
-```{r appendix-code, eval = FALSE, cache = FALSE}
+```{r appendix1-code, eval = FALSE, cache = FALSE}
 library(tidyverse)
 library(lubridate)
 library(here)
@@ -702,6 +702,47 @@ filename %>%
 ```
 
 
+
+
+# Appendix 2: Compare different competitive distances {#mult-dist}
+
+
+Above we set the cut off distance for two stems to compete at 7.5 m. Our package can be used to find which distance is best supported by the data. Here we give an example.
+
+```{r appendix2-code}
+
+mult_dist_comp <- tibble(
+  dist = c(2.5, 5, 7.5, 10, 12.5 ),
+  rmse = 0
+)
+
+
+for (i in 1:length(mult_dist_comp$dist))
+{
+  comp_dist <- mult_dist_comp$dist[i]
+  growth_scbi <- growth_scbi %>%
+    add_buffer_variable(size = comp_dist, region = study_region_scbi)
+  
+  focal_vs_comp_scbi <- growth_scbi %>%
+    create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID")
+  focal_vs_comp_scbi %>% 
+    select(focal_ID, focal_sp, geometry, growth, comp)
+  
+  focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
+    run_cv(comp_dist = mult_dists[i], blocks = blocks_scbi)
+
+  mult_dist_comp$rmse[i] <- focal_vs_comp_scbi %>%
+    rmse(truth = growth, estimate = growth_hat) %>%
+    pull(.estimate)
+}
+
+mult_dist_comp %>%
+  ggplot(aes(dist,rmse)) +
+  geom_point() +
+  xlab('Distance (m)') +
+  ylab('RMSE (cm)')
+
+```
 
 # References
 
