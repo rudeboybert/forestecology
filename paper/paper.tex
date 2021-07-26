@@ -1155,30 +1155,87 @@ cross- validated error estimates.
 \section{Appendix 2: Compare different competitive
 distances}\label{mult-dist}}
 
-Above we set the cut off distance for two stems to compete at 7.5 m. Our
-package can be used to find which distance is best supported by the
-data. Here we give an example.
+For all the above analyses we took the cut off distance
+(\texttt{comp\_dist}) for two stems to compete as 7.5 m. This distance
+has been estimated in previous neighborhood competition studies in
+forests \citep[\citet{uriarte_spatially_2004},
+\citet{canham_neighborhood_2006}]{canham_neighborhood_2004}. We used 7.5
+m in \citet{allen_permutation_2020} as an average of the values
+estimated in other studies. But our package can be used to find which
+distance is best supported by the data. Here we provide an example using
+another section of the SCBI plot to provide an additional example of the
+CV block layout. To speed computation we do not consider species
+differences in competitive effects and treat all species as the same.
 
 \begin{Shaded}
 \begin{Highlighting}[]
+
+\NormalTok{census_}\DecValTok{2013}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
+    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
+\NormalTok{  ) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{, gy }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{)}
+
+\NormalTok{census_}\DecValTok{2018}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem3.csv"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
+    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
+\NormalTok{  ) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{, gy }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{)}
+
+\NormalTok{growth_scbi <-}
+\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
+    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi,}
+    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)),}
+    \DataTypeTok{id =} \StringTok{"stemID"}
+\NormalTok{  ) }\OperatorTok{%>%}
+\StringTok{  }\CommentTok{# make all species the same, needs to be factor with at least two levels}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{factor}\NormalTok{(}\StringTok{'A'}\NormalTok{, }\DataTypeTok{levels =} \KeywordTok{c}\NormalTok{(}\StringTok{'A'}\NormalTok{, }\StringTok{'B'}\NormalTok{)) )}
+
+\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
+  \DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{),}
+  \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{0}\NormalTok{)}
+\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{sf_polygon}\NormalTok{()}
+
+\NormalTok{n_fold <-}\StringTok{ }\DecValTok{4}
+\NormalTok{fold1 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{))}
+\NormalTok{fold2 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{200}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{200}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{))}
+\NormalTok{fold3 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{))}
+\NormalTok{fold4 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{200}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{200}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{))}
+
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
+  \KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3), }
+  \KeywordTok{sf_polygon}\NormalTok{(fold4)}
+\NormalTok{) }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+
+\CommentTok{# Associate each observation to a fold}
+\NormalTok{spatial_block_scbi <-}\StringTok{ }
+\StringTok{  }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }
+               \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
+               \DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
+
+\NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+
 \NormalTok{mult_dist_comp <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
-  \DataTypeTok{dist =} \KeywordTok{c}\NormalTok{(}\FloatTok{2.5}\NormalTok{, }\DecValTok{5}\NormalTok{, }\FloatTok{7.5}\NormalTok{, }\DecValTok{10}\NormalTok{, }\FloatTok{12.5}\NormalTok{),}
+  \DataTypeTok{dist =} \KeywordTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{ ,}\FloatTok{6.25}\NormalTok{,  }\FloatTok{7.5}\NormalTok{, }\FloatTok{8.75}\NormalTok{,  }\DecValTok{10}\NormalTok{),}
   \DataTypeTok{rmse =} \DecValTok{0}
 \NormalTok{)}
-
 
 \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\KeywordTok{length}\NormalTok{(mult_dist_comp}\OperatorTok{$}\NormalTok{dist))}
 \NormalTok{\{}
 \NormalTok{  comp_dist <-}\StringTok{ }\NormalTok{mult_dist_comp}\OperatorTok{$}\NormalTok{dist[i]}
+  
 \NormalTok{  growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
   
 \NormalTok{  focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
-\NormalTok{  focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
-\StringTok{    }\KeywordTok{select}\NormalTok{(focal_ID, focal_sp, geometry, growth, comp)}
-  
-\NormalTok{  focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
 
 \NormalTok{  mult_dist_comp}\OperatorTok{$}\NormalTok{rmse[i] <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
@@ -1195,6 +1252,8 @@ data. Here we give an example.
 \end{Shaded}
 
 \begin{center}\includegraphics[width=1\linewidth]{Figures/appendix2-code-1} \end{center}
+
+Here we see that a cut off distance of approximately 6 m minimizes RMSE.
 
 \bibliographystyle{agsm}
 \bibliography{paper.bib}

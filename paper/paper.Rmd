@@ -701,33 +701,78 @@ filename %>%
   ggsave(plot = cv_plot, width = 16/2, height = 9/2)
 ```
 
-
-
-
 # Appendix 2: Compare different competitive distances {#mult-dist}
 
-
-Above we set the cut off distance for two stems to compete at 7.5 m. Our package can be used to find which distance is best supported by the data. Here we give an example.
+For all the above analyses we took the cut off distance (`comp_dist`) for two stems to compete as 7.5 m. This distance has been estimated in previous neighborhood competition studies in forests [@canham_neighborhood_2004, @uriarte_spatially_2004, @canham_neighborhood_2006]. We used 7.5 m in @allen_permutation_2020 as an average of the values estimated in other studies. But our package can be used to find which distance is best supported by the data. Here we provide an example using another section of the SCBI plot to provide an additional example of the CV block layout. To speed computation we do not consider species differences in competitive effects and treat all species as the same.
 
 ```{r appendix2-code}
+
+census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh)/10
+  ) %>%
+  filter(gx < 400, gy < 400)
+
+census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh)/10
+  ) %>%
+  filter(gx < 400, gy < 400)
+
+growth_scbi <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  # make all species the same, needs to be factor with at least two levels
+  mutate(sp = factor('A', levels = c('A', 'B')) )
+
+study_region_scbi <- tibble(
+  x = c(0, 400, 400, 0, 0),
+  y = c(0, 0, 400, 400, 0)
+) %>%
+  sf_polygon()
+
+n_fold <- 4
+fold1 <- cbind(c(0, 200, 200, 0), c(0, 0, 200, 200))
+fold2 <- cbind(c(200, 400, 400, 200), c(0, 0, 200, 200))
+fold3 <- cbind(c(0, 200, 200, 0), c(200, 200, 400, 400))
+fold4 <- cbind(c(200, 400, 400, 200), c(200, 200, 400, 400))
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3), 
+  sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+spatial_block_scbi <- 
+  spatialBlock(speciesData = growth_scbi, k = n_fold, 
+               selection = "systematic", blocks = blocks_scbi, 
+               showBlocks = FALSE, verbose = FALSE)
+
+growth_scbi <- growth_scbi %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+
 mult_dist_comp <- tibble(
-  dist = c(2.5, 5, 7.5, 10, 12.5),
+  dist = c(5 ,6.25,  7.5, 8.75,  10),
   rmse = 0
 )
-
 
 for (i in 1:length(mult_dist_comp$dist))
 {
   comp_dist <- mult_dist_comp$dist[i]
+  
   growth_scbi <- growth_scbi %>%
     add_buffer_variable(size = comp_dist, region = study_region_scbi)
   
   focal_vs_comp_scbi <- growth_scbi %>%
-    create_focal_vs_comp(comp_dist = comp_dist, blocks = blocks_scbi, id = "stemID")
-  focal_vs_comp_scbi %>% 
-    select(focal_ID, focal_sp, geometry, growth, comp)
-  
-  focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
+    create_focal_vs_comp(comp_dist = comp_dist, blocks = blocks_scbi, id = "stemID") %>%
     run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
 
   mult_dist_comp$rmse[i] <- focal_vs_comp_scbi %>%
@@ -742,6 +787,8 @@ mult_dist_comp %>%
   ylab('RMSE (cm)')
 
 ```
+
+Here we see that a cut off distance of approximately 6 m minimizes RMSE.
 
 # References
 
