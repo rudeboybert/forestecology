@@ -322,7 +322,7 @@ We then identify all focal trees and their corresponding competitor trees. More 
 
 ```{r scbi-focal-vs-comp}
 focal_vs_comp_scbi <- growth_scbi %>%
-  create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID")
+  create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID", comp_x_var = "agb")
 focal_vs_comp_scbi %>% 
   select(focal_ID, focal_sp, geometry, growth, comp)
 ```
