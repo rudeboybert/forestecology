@@ -241,16 +241,18 @@ fold3 <- cbind(c(0, 150, 150, 0), c(450, 450, 600, 600))
 fold4 <- cbind(c(150, 300, 300, 150), c(450, 450, 600, 600))
 
 blocks_scbi <- bind_rows(
-  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3), 
-  sf_polygon(fold4)
+  sf_polygon(fold1), sf_polygon(fold2), 
+  sf_polygon(fold3), sf_polygon(fold4)
 ) %>%
   mutate(folds = c(1:n_fold) %>% factor())
 
 # Associate each observation to a fold
 spatial_block_scbi <- 
-  spatialBlock(speciesData = growth_scbi, k = n_fold, 
-               selection = "systematic", blocks = blocks_scbi, 
-               showBlocks = FALSE, verbose = FALSE)
+  spatialBlock(
+    speciesData = growth_scbi, k = n_fold, 
+    selection = "systematic", blocks = blocks_scbi, 
+    showBlocks = FALSE, verbose = FALSE
+  )
 
 growth_scbi <- growth_scbi %>%
   mutate(foldID = spatial_block_scbi$foldID %>% factor())
@@ -349,7 +351,8 @@ Next, the generic for `predict()` takes the posterior parameter values in `comp_
 
 ```{r scbi-model-predict}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
-  mutate(growth_hat = predict(comp_bayes_lm_scbi, newdata = focal_vs_comp_scbi))
+  mutate(growth_hat = predict(comp_bayes_lm_scbi, 
+                              newdata = focal_vs_comp_scbi))
 ```
 ```{r show-focal-vs-comp}
 focal_vs_comp_scbi %>% 
@@ -558,7 +561,7 @@ fold4 <- rbind(c(150, 450), c(300, 450), c(300, 600), c(150, 600))
 n_fold <- 4
 
 blocks_scbi <- bind_rows(
-  sf_polygon(fold1), sf_polygon(fold2), 
+  sf_polygon(fold1), sf_polygon(fold2),
   sf_polygon(fold3), sf_polygon(fold4)
 ) %>%
   mutate(folds = c(1:n_fold) %>% factor())
@@ -624,8 +627,9 @@ for(j in 1:num_shuffle){
   
   # Make predictions and compute RMSE
   shuffle_RMSE[j] <-  focal_vs_comp_scbi %>%
-    mutate(growth_hat = 
-             predict(comp_bayes_lm_scbi, focal_vs_comp_scbi)) %>%
+    mutate(
+      growth_hat = predict(comp_bayes_lm_scbi, focal_vs_comp_scbi)
+    ) %>%
     rmse(truth = growth, estimate = growth_hat) %>%
     pull(.estimate)
 }
