@@ -116,9 +116,17 @@ To evaluate whether competitor species identity matters, @allen_permutation_2020
 
 Furthermore, to account for the spatial autocorrelation in their estimates of out-of-sample model error, @allen_permutation_2020 use spatial cross-validation. Estimates of model error that do not account for this dependence tend to underestimate the true model error [@roberts_cross-validation_2017].
 
-The package is designed with "tidy" design principles in mind [@wickham_welcome_2019]. Much like all `tidyverse` packages, `forestecology` has verb-named functions that can be modularly composed using the pipe `%>%` operator to sequentially complete all necessary analysis steps [@bache_pipe_2020]. Furthermore, the inputs and outputs of most functions use the same "simple features for R" data structures from the `sf` package, a package for standardized and `tidyverse`-friendly wrangling and visualizing of spatial data [@pebesma_simple_2018].
+The package is designed with "tidy" design principles in mind [@wickham_welcome_2019]. Much like all `tidyverse` packages, `forestecology` has verb-named functions that can be modularly composed using the pipe `%>%` operator to sequentially complete all necessary analysis steps [@bache_pipe_2020]. 
 
-Currently the package only implements the Bayesian linear regression model detailed in Equation \ref{eq:model}. As we demonstrate in Section \ref{model-fit-predict} however, the fitting of this model is self-contained in a single function `comp_bayes_lm()` which returns an object of S3 class type `comp_bayes_lm`. This class has generic methods implemented to print, make predictions, and plot all results. Therefore the package can be modularly extended to fit other models as long as they are coded similarly to `comp_bayes_lm()` and have equivalent generic methods implemented.
+Furthermore, the inputs and outputs of most functions use the same "simple features for R" data structures for spatial data from the `sf` package [@pebesma_simple_2018]. Previously `sp` package classes were commonly used for storing spatial data and interfacing with geospatial libraries [@bivand_sp_2013]; the `sf` package aims to improve on the `sp` package by:
+
+1. Using simple feature access as the base standard for representing and encoding spatial data, rather than shapefiles [@herring_2011]. 
+1. Leveraging improvements in external libraries for reading and writing spatial data (GDAL) and for geometrical operations (GEOS) [@warmerdam_geospatial_2008, @geos_2017].
+1. Integrating closely with the popular `tidyverse` suite of packages for data science [@wickham_welcome_2019]. 
+
+By using the `sf` package classes to represent spatial data rather than the `sp` package, the implementation and use of the `forestecology` package's spatial algorithms was greatly simplified. 
+
+Lastly, currently the package only implements the Bayesian linear regression model detailed in Equation \ref{eq:model}. As we demonstrate in Section \ref{model-fit-predict} however, the fitting of this model is self-contained in a single function `comp_bayes_lm()` which returns an object of S3 class type `comp_bayes_lm`. This class has generic methods implemented to print, make predictions, and plot all results. Therefore the package can be modularly extended to fit other models as long as they are coded similarly to `comp_bayes_lm()` and have equivalent generic methods implemented.
 
 
 
@@ -471,7 +479,7 @@ include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.pdf")
 
 # Conclusion and future work
 
-The `forestecology` package provides an accessible way to fit and test models of neighborhood competition. The package follows the `tidy` data design principles, leverages the `sf` package for spatial data, and S3 open-oriented model implementation structure. We hope that the package will increase the use of neighborhood competition models to better understand what structures plant competition.
+The `forestecology` package provides an accessible way to fit and test models of neighborhood competition. The package follows the `tidy` data design principles, leverages the `sf` package for spatial data, and S3 open-oriented model implementation structure [@pebesma_simple_2018]. We hope that the package will increase the use of neighborhood competition models to better understand what structures plant competition.
 
 While the package is designed with ForestGEO plot data in mind, we envision that it can be modified to work on any single large, mapped forest plot in which at least two measurements of each individual have been taken. Furthermore, we hope that future versions of the package will be flexible to other plot layouts, for example inventory plot-structure with many spatially separated plots like the US Forest Service Forest Inventory and Analysis plots [@smith_forest_2002]. 
 
