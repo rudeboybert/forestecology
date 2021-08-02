@@ -118,6 +118,8 @@ Furthermore, to account for the spatial autocorrelation in their estimates of ou
 
 The package is designed with "tidy" design principles in mind [@wickham_welcome_2019]. Much like all `tidyverse` packages, `forestecology` has verb-named functions that can be modularly composed using the pipe `%>%` operator to sequentially complete all necessary analysis steps [@bache_pipe_2020]. Furthermore, the inputs and outputs of most functions use the same "simple features for R" data structures from the `sf` package, a package for standardized and `tidyverse`-friendly wrangling and visualizing of spatial data [@pebesma_simple_2018].
 
+Compare `sf` and `sp` here
+
 Currently the package only implements the Bayesian linear regression model detailed in Equation \ref{eq:model}. As we demonstrate in Section \ref{model-fit-predict} however, the fitting of this model is self-contained in a single function `comp_bayes_lm()` which returns an object of S3 class type `comp_bayes_lm`. This class has generic methods implemented to print, make predictions, and plot all results. Therefore the package can be modularly extended to fit other models as long as they are coded similarly to `comp_bayes_lm()` and have equivalent generic methods implemented.
 
 
