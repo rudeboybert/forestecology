@@ -71,7 +71,7 @@ data in `census_1_ex`.
 
 ``` r
 census_1_ex
-#> # A tibble: 10 x 7
+#> # A tibble: 10 × 7
 #>       ID sp                gx    gy date       codes   dbh
 #>    <int> <chr>          <dbl> <dbl> <date>     <chr> <dbl>
 #>  1     1 sugar maple     0.75  2.5  2015-06-01 M         5
@@ -113,7 +113,9 @@ growth_ex <-
       filter(!str_detect(codes, "R")) %>% 
       mutate(sp = to_any_case(sp)),
     id = "ID"
-  )
+  ) %>% 
+  # Compute basal area:
+  mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2)
 ```
 
 ### Add spatial information
@@ -209,9 +211,9 @@ competitor multiple times.
 
 ``` r
 focal_vs_comp_ex <- growth_ex %>%
-  create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
+  create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID", comp_x_var = "basal_area")
 focal_vs_comp_ex
-#> # A tibble: 6 x 7
+#> # A tibble: 6 × 7
 #>   focal_ID focal_sp         dbh foldID    geometry growth comp            
 #>      <dbl> <fct>          <dbl> <fct>      <POINT>  <dbl> <list>          
 #> 1        2 american_beech    20 1        (1.5 2.5)  0.800 <tibble [2 × 4]>
@@ -230,7 +232,7 @@ distance from it.
 ``` r
 focal_vs_comp_ex %>% 
   unnest(cols = "comp")
-#> # A tibble: 11 x 10
+#> # A tibble: 11 × 10
 #>    focal_ID focal_sp         dbh foldID    geometry growth comp_ID  dist
 #>       <dbl> <fct>          <dbl> <fct>      <POINT>  <dbl>   <dbl> <dbl>
 #>  1        2 american_beech    20 1        (1.5 2.5)  0.800       1 0.75 
@@ -244,7 +246,7 @@ focal_vs_comp_ex %>%
 #>  9        9 sugar_maple       42 2       (8.75 1.5)  1.40        7 0.75 
 #> 10        9 sugar_maple       42 2       (8.75 1.5)  1.40        8 0.791
 #> 11        9 sugar_maple       42 2       (8.75 1.5)  1.40       10 0.25 
-#> # … with 2 more variables: comp_sp <fct>, comp_basal_area <dbl>
+#> # … with 2 more variables: comp_sp <fct>, comp_x_var <dbl>
 ```
 
 ### Fit model and make predictions
@@ -266,7 +268,8 @@ associated with several methods.
 ``` r
 # Print
 comp_bayes_lm_ex
-#> Bayesian linear regression model parameters with a multivariate Normal likelihood. See ?comp_bayes_lm for details:
+#> Bayesian linear regression model parameters with a multivariate Normal
+#> likelihood. See ?comp_bayes_lm for details:
 #> 
 #>   parameter_type           prior posterior
 #> 1 Inverse-Gamma on sigma^2 a_0   a_star   
@@ -294,7 +297,7 @@ We append these `growth_hat` values to our `focal_vs_comp` data frame.
 focal_vs_comp_ex <- focal_vs_comp_ex %>%
   mutate(growth_hat = predict(comp_bayes_lm_ex, newdata = focal_vs_comp_ex))
 focal_vs_comp_ex
-#> # A tibble: 6 x 8
+#> # A tibble: 6 × 8
 #>   focal_ID focal_sp         dbh foldID    geometry growth comp            
 #>      <dbl> <fct>          <dbl> <fct>      <POINT>  <dbl> <list>          
 #> 1        2 american_beech    20 1        (1.5 2.5)  0.800 <tibble [2 × 4]>

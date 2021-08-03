@@ -158,7 +158,8 @@ use_data(blocks_ex, overwrite = TRUE)
 
 ## Create focal_vs_comp data frame  ----
 focal_vs_comp_ex <- growth_spatial_ex %>%
-  create_focal_vs_comp(comp_dist = 1, blocks = blocks_ex, id = "ID")
+  mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2) %>%
+  create_focal_vs_comp(comp_dist = 1, blocks = blocks_ex, id = "ID", comp_x_var = "basal_area")
 use_data(focal_vs_comp_ex, overwrite = TRUE)
 
 
