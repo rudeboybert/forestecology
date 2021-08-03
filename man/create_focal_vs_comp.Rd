@@ -4,7 +4,7 @@
 \alias{create_focal_vs_comp}
 \title{Create focal versus competitor trees data frame}
 \usage{
-create_focal_vs_comp(growth_df, comp_dist, blocks, id)
+create_focal_vs_comp(growth_df, comp_dist, blocks, id, comp_x_var)
 }
 \arguments{
 \item{growth_df}{A \code{\link[=compute_growth]{compute_growth()}} output converted to \code{sf} object}
@@ -14,13 +14,16 @@ create_focal_vs_comp(growth_df, comp_dist, blocks, id)
 \item{blocks}{An sf object of a \code{blockCV} block output}
 
 \item{id}{A character string of the variable name in \code{growth_df} uniquely identifying each tree}
+
+\item{comp_x_var}{A character string indicating which numerical variable to use as competitor explanatory variable}
 }
 \value{
-\code{focal_vs_comp} data frame of all focal trees and for each focal
-tree all possible competitor trees. In particular, for each competitor tree
-we compute the \href{https://en.wikipedia.org/wiki/Basal_area}{basal area}
-(in meters-squared) based on the \code{dbh1} variable from the first census
-(assumed to be in cm).
+\code{focal_vs_comp} data frame of all focal trees and for
+each focal tree all possible competitor trees. In particular, for
+each competitor tree we return \code{comp_x_var}. Potential examples of
+\code{comp_x_var} include
+\href{https://en.wikipedia.org/wiki/Basal_area}{basal area} or
+estimate above ground biomass.
 }
 \description{
 "Focal versus competitor trees" data frames are the main data

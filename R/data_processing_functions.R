@@ -94,12 +94,14 @@ compute_growth <- function(census_1, census_2, id) {
 #' @param blocks An sf object of a \code{blockCV} block output
 #' @param comp_dist Distance to determine which neighboring trees to a focal tree are competitors.
 #' @param id A character string of the variable name in \code{growth_df} uniquely identifying each tree
+#' @param comp_x_var A character string indicating which numerical variable to use as competitor explanatory variable
 #'
-#' @return \code{focal_vs_comp} data frame of all focal trees and for each focal
-#'   tree all possible competitor trees. In particular, for each competitor tree
-#'   we compute the \href{https://en.wikipedia.org/wiki/Basal_area}{basal area}
-#'   (in meters-squared) based on the `dbh1` variable from the first census
-#'   (assumed to be in cm).
+#' @return \code{focal_vs_comp} data frame of all focal trees and for
+#'   each focal tree all possible competitor trees. In particular, for
+#'   each competitor tree we return `comp_x_var`. Potential examples of
+#'   `comp_x_var` include
+#'   \href{https://en.wikipedia.org/wiki/Basal_area}{basal area} or
+#'   estimate above ground biomass.
 #'
 #' @import dplyr
 #' @importFrom tidyr nest
@@ -167,20 +169,21 @@ compute_growth <- function(census_1, census_2, id) {
 #'
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
 #'   create_focal_vs_comp(comp_dist = 1, blocks = blocks_ex, id = "ID")
-create_focal_vs_comp <- function(growth_df, comp_dist, blocks, id) {
+create_focal_vs_comp <- function(growth_df, comp_dist, blocks, id, comp_x_var) {
   # 0. Check inputs
   check_inherits(growth_df, "data.frame")
   check_inherits(comp_dist, "numeric")
   check_inherits(blocks, "sf")
   check_inherits(id, "character")
+  check_inherits(comp_x_var, "character")
 
   if (!id %in% colnames(growth_df)) {
     glue_stop("The `id` argument must be the name of a column in both `census_1` and `census_2` that uniquely identifies each row.")
   }
 
   purrr::map2(
-    c(id, "sp", "dbh1", "dbh2", "growth", "geometry", "buffer", "foldID"),
-    c("numeric", "factor", "numeric", "numeric", "numeric", "sfc", "logical", "factor"),
+    c(id, "sp", "dbh1", "dbh2", "growth", "geometry", "buffer", "foldID", comp_x_var),
+    c("numeric", "factor", "numeric", "numeric", "numeric", "sfc", "logical", "factor", "numeric"),
     check_column,
     growth_df
   )
@@ -200,10 +203,8 @@ create_focal_vs_comp <- function(growth_df, comp_dist, blocks, id) {
   comp_trees <- growth_df %>%
     # Identify trees that satisfy competitor tree criteria
     filter(dbh1 > 0) %>%
-    mutate(
-      comp_ID = .data[[id]]
-    ) %>%
-    select(comp_ID, foldID, comp_sp = sp, comp_x_var)
+    mutate(comp_ID = .data[[id]]) %>%
+    select(comp_ID, foldID, comp_sp = sp, comp_x_var = .data[[comp_x_var]])
 
 
   # 3. For each focal tree, identify all candidate competitor trees that are
