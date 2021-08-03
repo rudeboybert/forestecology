@@ -201,11 +201,9 @@ create_focal_vs_comp <- function(growth_df, comp_dist, blocks, id) {
     # Identify trees that satisfy competitor tree criteria
     filter(dbh1 > 0) %>%
     mutate(
-      comp_ID = .data[[id]],
-      # Compute basal area using dbh1 from first census
-      comp_basal_area = 0.0001 * pi * (dbh1 / 2)^2
+      comp_ID = .data[[id]]
     ) %>%
-    select(comp_ID, foldID, comp_sp = sp, comp_basal_area)
+    select(comp_ID, foldID, comp_sp = sp, comp_x_var)
 
 
   # 3. For each focal tree, identify all candidate competitor trees that are
@@ -275,9 +273,9 @@ create_focal_vs_comp <- function(growth_df, comp_dist, blocks, id) {
       # Relating to focal tree:
       focal_ID, focal_sp, dbh, foldID, geometry, growth,
       # Relating to competitor tree:
-      comp_ID, dist, comp_sp, comp_basal_area
+      comp_ID, dist, comp_sp, comp_x_var
     ) %>%
-    nest(comp = c(comp_ID, dist, comp_sp, comp_basal_area))
+    nest(comp = c(comp_ID, dist, comp_sp, comp_x_var))
 
   return(focal_vs_comp)
 }

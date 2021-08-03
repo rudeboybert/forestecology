@@ -23,7 +23,7 @@ if (getRversion() >= "2.15.1") {
       "comp_ID", "x", "y", "x_fold", "y_fold", "neighbor", "notion_of_competitor_species",
       "ExactDate", "ExactDate2", "code", "code_2018", "dbh1", "dbh2",
       "family", "growth_df", "gx", "gy", "n_days", "n_years", "sp",
-      "stemID", ".", ":=", "comp_sp", "comp_basal_area", "focal_sp",
+      "stemID", ".", ":=", "comp_sp", "comp_x_var", "focal_sp",
       "codes2", "foldID", "geometry", "folds", "dist", "foldID.y",
       "foldID.x", "geometry.y", "geometry.x", "Var1", "Var2", "aes",
       "as.formula", "coefficient_type", "facet_wrap", "fct_rev", "gather",
