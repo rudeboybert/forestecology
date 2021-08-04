@@ -348,7 +348,7 @@ create_bayes_lm_data <- function(focal_vs_comp, run_shuffle = FALSE) {
     group_by(focal_ID, comp_sp) %>%
     # Sum basal area of all neighbors; set to 0 for cases of no neighbors
     # within range.
-    summarise(comp_basal_area = sum(comp_basal_area))
+    summarise(comp_x_var = sum(comp_x_var))
 
   # Shuffle group label only if flag is set
   if (run_shuffle) {
@@ -367,7 +367,7 @@ create_bayes_lm_data <- function(focal_vs_comp, run_shuffle = FALSE) {
     # compute biomass for each tree type
     # Note we have to specifically use spread() and not pivot_wider()
     # https://github.com/tidyverse/tidyr/issues/770 to use drop functionality
-    spread(key = comp_sp, value = comp_basal_area, fill = 0, drop = FALSE) %>%
+    spread(key = comp_sp, value = comp_x_var, fill = 0, drop = FALSE) %>%
     group_by(focal_ID) %>%
     summarise_all(list(sum)) %>%
     ungroup()

@@ -19,6 +19,8 @@ test_that("readme code works", {
         mutate(sp = to_any_case(sp) %>% factor()),
       id = "ID"
     ) %>%
+    # Compute basal area:
+    mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2) %>%
     add_buffer_variable(direction = "in", size = comp_dist, region = study_region_ex)
 
   expect_true(check_inherits(growth_ex, "data.frame"))
@@ -46,7 +48,7 @@ test_that("readme code works", {
     mutate(foldID = SpatialBlock_ex$foldID %>% factor())
 
   focal_vs_comp_ex <- growth_ex %>%
-    create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
+    create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID", comp_x_var = "basal_area")
 
   # Checks each column in focal_vs_comp is of appropriate type
   expect_true(check_inherits(focal_vs_comp_ex, "data.frame"))

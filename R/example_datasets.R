@@ -214,7 +214,8 @@
 #'
 #' # Create the focal versus comp data frame
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
-#'   create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
+#'   mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2) %>%
+#'   create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID", comp_x_var = "basal_area")
 "growth_spatial_ex"
 
 
@@ -239,6 +240,7 @@
 #' @examples
 #' library(ggplot2)
 #' library(sf)
+#' library(dplyr)
 #'
 #' comp_dist <- 1
 #'
@@ -247,7 +249,8 @@
 #'   geom_sf(data = growth_spatial_ex)
 #'
 #' focal_vs_comp_ex <- growth_spatial_ex %>%
-#'   create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
+#'   mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2) %>%
+#'   create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID", comp_x_var = "basal_area")
 "blocks_ex"
 
 
@@ -278,8 +281,8 @@
 #' \describe{
 #'   \item{comp_ID}{Tree identification number for the competitor tree}
 #'   \item{dist}{The distance between the focal and comp tree, this will be less than the max distance specified.}
-#'   \item{comp_so}{Species of the comp tree}
-#'   \item{comp_basal_area}{Basal area of the comp tree}
+#'   \item{comp_sp}{Species of the comp tree}
+#'   \item{comp_x_var}{Numerical variable associated with comp tree}
 #' }
 #'
 #' @family example data objects
@@ -288,7 +291,6 @@
 #' @importFrom forcats fct_rev
 #'
 #' @examples
-#'
 #' comp_bayes_lm_ex <- focal_vs_comp_ex %>%
 #'   comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
 "focal_vs_comp_ex"

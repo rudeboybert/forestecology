@@ -45,7 +45,8 @@ ggplot() +
 
 # Create the focal versus comp data frame
 focal_vs_comp_ex <- growth_spatial_ex \%>\%
-  create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID")
+  mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2) \%>\%
+  create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID", comp_x_var = "basal_area")
 }
 \seealso{
 \code{\link[=compute_growth]{compute_growth()}}
