@@ -276,11 +276,12 @@ We present a case-study of \texttt{forestecology}'s functionality on
 data from the Smithsonian Conservation Biology Institute (SCBI) large
 forest dynamics plot in Front Royal, VA, USA, part of the ForestGEO
 global network of research sites
-\citep[\citet{andersonteixeira_ctfs-forestgeo_2015}]{bourg_initial_2013}.
-The 25.6 ha (640 x 400 m) plot is located at the intersection of three
-of the major physiographic provinces of the eastern US---the Blue Ridge,
-Ridge and Valley, and Piedmont provinces---and is adjacent to the
-northern end of Shenandoah National Park.
+\citep[\citet{andersonteixeira_ctfs-forestgeo_2015},
+\citet{davies_forestgeo_2021}]{bourg_initial_2013}. The 25.6 ha (640 x
+400 m) plot is located at the intersection of three of the major
+physiographic provinces of the eastern US---the Blue Ridge, Ridge and
+Valley, and Piedmont provinces---and is adjacent to the northern end of
+Shenandoah National Park.
 
 The package has the following goals: to evaluate i) the effect of
 competitor species identity using permutation tests and ii) model
@@ -443,8 +444,8 @@ plotted in \texttt{ggplot2} using \texttt{geom\_sf()} as seen in Figure
 We also load species information as it existed on GitHub on 2021/08/02,
 which includes family, genus, and species information; as well as
 classifications of the canopy position (canopy, canopy emergent,
-understory, shrub layer) and drought tolerance (intolerant, resistant)
-of the species.
+understory, shrub layer), drought tolerance (intolerant, resistant) and
+other characteristics of the species.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -688,6 +689,20 @@ earlier census. Saving competitor information in list-column format
 minimizes redundancy since we do not need to repeat information on the
 focal tree 20 times. We visualize the spatial distribution of these
 trees in Figure \ref{fig:scbi-focal-vs-comp-map}.
+
+Here we use basal area as the continuous predictor variable but the
+package is flexible to allow the user to specify any continuous
+predictor variable (basal area, biomass, tree height, a soil nutrient
+value, \dots). The package can also be used to compare predictor
+variables and see which best explains tree growth, see Appendix 3
+\ref{compare-pred-var} for an example comparing basal area and above
+ground biomass. Similarly, the package can use any categorical variable
+as a predictor and compare between different categorical variables. For
+example in \citet{allen_permutation_2020} we compare grouping
+individuals based on species, family, and based on trait-based groups.
+In Appendix 4 \ref{compare-group-var} we give another example and
+compare grouping individuals by species or by potential canopy position
+(canopy, understory, shrub layer).
 
 \begin{figure}
 
@@ -1357,6 +1372,13 @@ Here we see that a cut off distance of approximately 6 m minimizes RMSE.
 \section{Appendix 3: Compare predictor
 variables}\label{compare-pred-var}}
 
+In the above code we use the basal area of an individual as a continuous
+predictor variable. But the package allows the user to specify any
+predictor variable in the \texttt{comp\_x\_var} argument of
+\texttt{create\_focal\_vs\_comp} function. Here we use the
+cross-validated model comparison to see which of two possible predictor
+variables, basal area or above ground biomass, best explains growth.
+
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{census_}\DecValTok{2013}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
@@ -1450,13 +1472,18 @@ variables}\label{compare-pred-var}}
 \end{Highlighting}
 \end{Shaded}
 
+Here we see that basal area does a much better job than above ground
+biomass.
+
 \hypertarget{compare-group-var}{%
 \section{Appendix 4: Compare grouping
 variables}\label{compare-group-var}}
 
-Creative use of the grouping variable allows for tests of what best
-explains competitive interactions. Here we compare whether species
-idenity or canopy position of the species best explains.
+The package also allows the user to specify the categorical predictor
+grouping variable. Here we compare two different such variables: species
+and the potential canopy position of that species. If we had
+individual-level crown classes (\citet{smith_practice_1986} dominant,
+codominant, intermediate and suppressed) that could also be used.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1565,8 +1592,8 @@ idenity or canopy position of the species best explains.
 \end{Shaded}
 
 We find that species identity has a lower RMSE, so does a better job.
-But we can still plot the competition posteriors for the canopoy
-position groupings.
+But we can still plot the competition posteriors for the canopy position
+groupings.
 
 \begin{Shaded}
 \begin{Highlighting}[]
@@ -1584,6 +1611,10 @@ position groupings.
 \end{Shaded}
 
 \begin{center}\includegraphics[width=1\linewidth]{Figures/can-pos-comp-1} \end{center}
+
+Unsurprisingly we see that canopy and canopy emergent competitors
+generally have negative effects on their neighbors, while shrubs and
+understory competitors have neutral or even positive effects.
 
 \bibliographystyle{agsm}
 \bibliography{paper.bib}

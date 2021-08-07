@@ -134,7 +134,7 @@ Lastly, currently the package only implements the Bayesian linear regression mod
 
 # forestecology workflow: a case study {#casestudy}
 
-We present a case-study of `forestecology`'s functionality on data from the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot in Front Royal, VA, USA, part of the ForestGEO global network of research sites [@bourg_initial_2013, @andersonteixeira_ctfs-forestgeo_2015]. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US---the Blue Ridge, Ridge and Valley, and Piedmont provinces---and is adjacent to the northern end of Shenandoah National Park. 
+We present a case-study of `forestecology`'s functionality on data from the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot in Front Royal, VA, USA, part of the ForestGEO global network of research sites [@bourg_initial_2013, @andersonteixeira_ctfs-forestgeo_2015, @davies_forestgeo_2021]. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US---the Blue Ridge, Ridge and Valley, and Piedmont provinces---and is adjacent to the northern end of Shenandoah National Park. 
 
 The package has the following goals: to evaluate i) the effect of competitor species identity using permutation tests and ii) model performance using spatial cross-validation. We outline the four-step basic analysis sequence:
 
@@ -213,7 +213,7 @@ ggplot() +
   labs(size = expression(paste(Growth, " (cm ",y^{-1},')')) )
 ```
 
-We also load species information as it existed on GitHub on 2021/08/02, which includes family, genus, and species information; as well as classifications of the canopy position (canopy, canopy emergent, understory, shrub layer) and drought tolerance (intolerant, resistant) of the species.
+We also load species information as it existed on GitHub on 2021/08/02, which includes family, genus, and species information; as well as classifications of the canopy position (canopy, canopy emergent, understory, shrub layer), drought tolerance (intolerant, resistant) and other characteristics of the species. 
 
 ```{r scbi-load-sp-data}
 sp_info <- read_csv("SCBI_ForestGEO_sp_ecology.csv") %>%
@@ -353,6 +353,8 @@ focal_vs_comp_scbi %>%
 ```
 
 We observe 4 variables describing 20 competitor trees: the unique tree-stem ID, the distance to the focal tree (all $\leq$ `r comp_dist` m), the species, and the basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ for the DBH in cm from the earlier census. Saving competitor information in list-column format minimizes redundancy since we do not need to repeat information on the focal tree 20 times. We visualize the spatial distribution of these trees in Figure \ref{fig:scbi-focal-vs-comp-map}. 
+
+Here we use basal area as the continuous predictor variable but the package is flexible to allow the user to specify any continuous predictor variable (basal area, biomass, tree height, a soil nutrient value, \dots). The package can also be used to compare predictor variables and see which best explains tree growth, see Appendix 3 \ref{compare-pred-var} for an example comparing basal area and above ground biomass. Similarly, the package can use any categorical variable as a predictor and compare between different categorical variables. For example in @allen_permutation_2020 we compare grouping individuals based on species, family, and based on trait-based groups. In Appendix 4 \ref{compare-group-var} we give another example and compare grouping individuals by species or by potential canopy position (canopy, understory, shrub layer). 
 
 ```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Step 3 - Identify all focal and corresponding competitor trees. The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle.", fig.height=4}
 comp_radius <- growth_scbi %>% 
@@ -848,6 +850,8 @@ Here we see that a cut off distance of approximately 6 m minimizes RMSE.
 
 # Appendix 3: Compare predictor variables {#compare-pred-var}
 
+In the above code we use the basal area of an individual as a continuous predictor variable. But the package allows the user to specify any predictor variable in the `comp_x_var` argument of `create_focal_vs_comp` function. Here we use the cross-validated model comparison to see which of two possible predictor variables, basal area or above ground biomass, best explains growth. 
+
 ```{r compar-pred-var}
 census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
@@ -938,10 +942,11 @@ focal_vs_comp_agb <- growth_scbi %>%
 
 ```
 
+Here we see that basal area does a much better job than above ground biomass. 
 
 # Appendix 4: Compare grouping variables {#compare-group-var}
 
-Creative use of the grouping variable allows for tests of what best explains competitive interactions. Here we compare whether species idenity or canopy position of the species best explains.
+The package also allows the user to specify the categorical predictor grouping variable. Here we compare two different such variables: species and the potential canopy position of that species. If we had individual-level crown classes (@smith_practice_1986 dominant, codominant, intermediate and suppressed) that could also be used.  
 
 ```{r compare-group-var}
 
@@ -1045,7 +1050,7 @@ focal_vs_comp_can_pos <- growth_scbi_can_pos %>%
     pull(.estimate)
 ```
 
-We find that species identity has a lower RMSE, so does a better job. But we can still plot the competition posteriors for the canopoy position groupings.
+We find that species identity has a lower RMSE, so does a better job. But we can still plot the competition posteriors for the canopy position groupings.
 
 ```{r can-pos-comp}
   
@@ -1060,7 +1065,7 @@ We find that species identity has a lower RMSE, so does a better job. But we can
     
 ```
 
-
+Unsurprisingly we see that canopy and canopy emergent competitors generally have negative effects on their neighbors, while shrubs and understory competitors have neutral or even positive effects. 
 
 # References
 
