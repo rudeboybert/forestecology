@@ -62,7 +62,7 @@ opts_chunk$set(
   # Etc:
   collapse = TRUE,
   comment = "##",
-  tidy.opts = list(width.cutoff=72),
+  tidy.opts = list(width.cutoff = 72),
   tidy = TRUE
 )
 
@@ -79,11 +79,11 @@ if (!is_html_output()) {
 
 # Set output width
 options(
-  width = 72, 
+  width = 72,
   # Decimal precision
-  digits = 3, 
+  digits = 3,
   # Number of rows for tibble printing
-  tibble.print_max = 5, 
+  tibble.print_max = 5,
   tibble.print_min = 5
 )
 ```
@@ -178,7 +178,7 @@ census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
     # Convert date from character to date
     date = mdy(date),
     # Convert dbh to be in cm
-    dbh = as.numeric(dbh)/10
+    dbh = as.numeric(dbh) / 10
   ) %>%
   filter(gx < 300, between(gy, 300, 600))
 
@@ -186,7 +186,7 @@ census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
     date = mdy(date),
-    dbh = as.numeric(dbh)/10
+    dbh = as.numeric(dbh) / 10
   ) %>%
   filter(gx < 300, between(gy, 300, 600))
 ```
@@ -200,7 +200,7 @@ growth_scbi <-
     census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
     id = "stemID"
   )
-growth_scbi %>% 
+growth_scbi %>%
   select(stemID, sp, dbh1, dbh2, growth, geometry)
 ```
 
@@ -218,9 +218,9 @@ We also load species information as it existed on GitHub on 2021/08/02, which in
 ```{r scbi-load-sp-data}
 sp_info <- read_csv("SCBI_ForestGEO_sp_ecology.csv") %>%
   select(
-    sp = spcode, family, genus, species, canopy_position, 
+    sp = spcode, family, genus, species, canopy_position,
     drought_tolerance
-  ) %>% 
+  ) %>%
   mutate()
 sp_info
 ```
@@ -228,8 +228,8 @@ sp_info
 We join this species information to our `growth_scbi` data frame.
 
 ```{r}
-growth_scbi <- growth_scbi %>% 
-  left_join(sp_info, by = "sp") %>% 
+growth_scbi <- growth_scbi %>%
+  left_join(sp_info, by = "sp") %>%
   # TODO:
   mutate(sp = as.factor(sp))
 ```
@@ -240,7 +240,7 @@ Furthermore, we compute two potential competitor explanatory variables $x^{\text
 # Install development version of allodb using:
 # remotes::install_github("forestgeo/allodb")
 library(allodb)
-growth_scbi <- growth_scbi %>% 
+growth_scbi <- growth_scbi %>%
   mutate(
     # Compute basal area:
     basal_area = 0.0001 * pi * (dbh1 / 2)^2,
@@ -292,16 +292,16 @@ fold3 <- cbind(c(0, 150, 150, 0), c(450, 450, 600, 600))
 fold4 <- cbind(c(150, 300, 300, 150), c(450, 450, 600, 600))
 
 blocks_scbi <- bind_rows(
-  sf_polygon(fold1), sf_polygon(fold2), 
+  sf_polygon(fold1), sf_polygon(fold2),
   sf_polygon(fold3), sf_polygon(fold4)
 ) %>%
   mutate(folds = c(1:n_fold) %>% factor())
 
 # Associate each observation to a fold
-spatial_block_scbi <- 
+spatial_block_scbi <-
   spatialBlock(
-    speciesData = growth_scbi, k = n_fold, 
-    selection = "systematic", blocks = blocks_scbi, 
+    speciesData = growth_scbi, k = n_fold,
+    selection = "systematic", blocks = blocks_scbi,
     showBlocks = FALSE, verbose = FALSE
   )
 
@@ -312,8 +312,10 @@ growth_scbi <- growth_scbi %>%
 ```{r scbi-spatial-information, out.width="66%", fig.cap="Step 2 - Add spatial information. A buffer region and spatial cross-validation blocks 1 through 4. The location of each tree is marked with its fold number where the folds are delineated with solid lines. The color of each digit indicates whether the tree is part of the buffer region (thus will only be considered as a competitor tree) or is part of the interior of the study region (thus is a focal tree whose growth is of modeled interest)."}
 ggplot() +
   geom_sf(data = blocks_scbi, fill = "transparent", linetype = "dashed") +
-  geom_sf_text(data = growth_scbi %>% sample_n(1000), 
-               aes(label = foldID, col = buffer))
+  geom_sf_text(
+    data = growth_scbi %>% sample_n(1000),
+    aes(label = foldID, col = buffer)
+  )
 ```
 
 
@@ -325,7 +327,7 @@ We then identify all focal trees and their corresponding competitor trees. More 
 ```{r scbi-focal-vs-comp}
 focal_vs_comp_scbi <- growth_scbi %>%
   create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID", comp_x_var = "basal_area")
-focal_vs_comp_scbi %>% 
+focal_vs_comp_scbi %>%
   select(focal_ID, focal_sp, geometry, growth, comp)
 ```
 
@@ -333,12 +335,12 @@ focal_vs_comp_scbi %>%
 # Internal: after removing trees in buffer and have NA for growth, there is one
 # tree that is not included in focal_vs_comp_scbi b/c it has no neighbors within
 # comp_dist = 7.5m of it
-growth_scbi %>% 
-  filter(!buffer & !is.na(growth)) %>% 
+growth_scbi %>%
+  filter(!buffer & !is.na(growth)) %>%
   filter(!stemID %in% focal_vs_comp_scbi$focal_ID)
 
-growth_scbi %>% 
-  mutate(flag = stemID == 18823) %>% 
+growth_scbi %>%
+  mutate(flag = stemID == 18823) %>%
   ggplot() +
   geom_sf(aes(col = flag))
 ```
@@ -346,9 +348,9 @@ growth_scbi %>%
 The resulting `focal_vs_comp_scbi` has `r nrow(focal_vs_comp_scbi)` rows, representing the subset of the `r nrow(growth_scbi)` trees in `growth_scbi` that will be considered as focal trees. The variables `focal_ID` and `focal_sp` relate to tree-stem identification and species information. Most notably however is the variable `comp`, which contains information on all competitor trees saved in `tidyr` package list-column format [@tidyr_package]. To inspect this information, we flatten the `comp` list-column for the tree with `focal_ID` 4 in the first row, here a `tibble [20 × 4]`, into regular columns using `unnest()` from the `tidyr` package. 
 
 ```{r demonstrate-unnest, scbi-focal-vs-comp-3}
-focal_vs_comp_scbi %>% 
-  filter(focal_ID == 4) %>% 
-  select(focal_ID, dbh, comp) %>% 
+focal_vs_comp_scbi %>%
+  filter(focal_ID == 4) %>%
+  select(focal_ID, dbh, comp) %>%
   unnest(cols = "comp")
 ```
 
@@ -357,19 +359,19 @@ We observe 4 variables describing 20 competitor trees: the unique tree-stem ID, 
 Here we use basal area as the continuous predictor variable but the package is flexible to allow the user to specify any continuous predictor variable (basal area, biomass, tree height, a soil nutrient value, \dots). The package can also be used to compare predictor variables and see which best explains tree growth, see Appendix 3 \ref{compare-pred-var} for an example comparing basal area and above ground biomass. Similarly, the package can use any categorical variable as a predictor and compare between different categorical variables. For example in @allen_permutation_2020 we compare grouping individuals based on species, family, and based on trait-based groups. In Appendix 4 \ref{compare-group-var} we give another example and compare grouping individuals by species or by potential canopy position (canopy, understory, shrub layer). 
 
 ```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Step 3 - Identify all focal and corresponding competitor trees. The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle.", fig.height=4}
-comp_radius <- growth_scbi %>% 
-  filter(stemID == 4) %>% 
+comp_radius <- growth_scbi %>%
+  filter(stemID == 4) %>%
   st_buffer(dist = comp_dist)
 
-comp_radius_box <- growth_scbi %>% 
-  filter(stemID == 4) %>% 
-  st_buffer(dist = comp_dist + 10) %>% 
-  st_bbox() %>% 
-  st_as_sfc() %>% 
+comp_radius_box <- growth_scbi %>%
+  filter(stemID == 4) %>%
+  st_buffer(dist = comp_dist + 10) %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
   st_intersects(growth_scbi, ., sparse = FALSE)
 
-growth_scbi_subset <- growth_scbi %>% 
-  mutate(inside = comp_radius_box) %>% 
+growth_scbi_subset <- growth_scbi %>%
+  mutate(inside = comp_radius_box) %>%
   filter(inside)
 
 ggplot() +
@@ -377,7 +379,7 @@ ggplot() +
   geom_sf(data = comp_radius, linetype = "dashed", alpha = 0, inherit.aes = FALSE) +
   coord_sf(xlim = st_bbox(comp_radius)[c("xmin", "xmax")], ylim = st_bbox(comp_radius)[c("ymin", "ymax")]) +
   geom_sf_text(data = growth_scbi %>% filter(stemID == 4), aes(label = stemID), size = 12) +
-  labs(size = "DBH at first census", col = "species") 
+  labs(size = "DBH at first census", col = "species")
 ```
 
 
@@ -404,11 +406,12 @@ Next, the generic for `predict()` takes the posterior parameter values in `comp_
 
 ```{r scbi-model-predict}
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
-  mutate(growth_hat = predict(comp_bayes_lm_scbi, 
-                              newdata = focal_vs_comp_scbi))
+  mutate(growth_hat = predict(comp_bayes_lm_scbi,
+    newdata = focal_vs_comp_scbi
+  ))
 ```
 ```{r show-focal-vs-comp}
-focal_vs_comp_scbi %>% 
+focal_vs_comp_scbi %>%
   select(focal_ID, focal_sp, dbh, growth, growth_hat)
 ```
 
@@ -427,12 +430,18 @@ Lastly, the generic for `ggplot2::autoplot()` allows us to visualize all posteri
 # Plot posteriors for only a subset of species
 sp_to_plot <- c("litu", "quru", "cagl")
 
-plot1 <- autoplot(comp_bayes_lm_scbi, type = "intercepts", 
-                  sp_to_plot = sp_to_plot)
-plot2 <- autoplot(comp_bayes_lm_scbi, type = "dbh_slopes", 
-                  sp_to_plot = sp_to_plot)
-plot3 <- autoplot(comp_bayes_lm_scbi, type = "competition", 
-                  sp_to_plot = sp_to_plot)
+plot1 <- autoplot(comp_bayes_lm_scbi,
+  type = "intercepts",
+  sp_to_plot = sp_to_plot
+)
+plot2 <- autoplot(comp_bayes_lm_scbi,
+  type = "dbh_slopes",
+  sp_to_plot = sp_to_plot
+)
+plot3 <- autoplot(comp_bayes_lm_scbi,
+  type = "competition",
+  sp_to_plot = sp_to_plot
+)
 
 # Combine plots using the patchwork package
 (plot1 | plot2) / plot3
@@ -452,8 +461,9 @@ comp_bayes_lm_scbi_shuffle <- focal_vs_comp_scbi %>%
   comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
 
 focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
-  mutate(growth_hat_shuffle = predict(comp_bayes_lm_scbi_shuffle, 
-                                 newdata = focal_vs_comp_scbi))
+  mutate(growth_hat_shuffle = predict(comp_bayes_lm_scbi_shuffle,
+    newdata = focal_vs_comp_scbi
+  ))
 ```
 ```{r show-rmse-shuffle}
 model_rmse_shuffle <- focal_vs_comp_scbi %>%
@@ -474,14 +484,14 @@ At each iteration of the cross-validation, one fold acts as the test set and the
 ```{r scbi-spatial-cross-validation-schematic, out.width="66%", fig.cap= "Schematic of spatial cross-validation. Using the k = 1 fold (bottom-left) as the test set, k = 2 through 4 as the training set, along with a \"fold buffer\" extending outwards from the test set to maintain spatial independence between it and the training set.", echo = FALSE}
 fold_number <- 1
 
-test_fold_buffer <- blocks_scbi %>% 
+test_fold_buffer <- blocks_scbi %>%
   filter(folds == fold_number)
-                                              
-test_vs_train <- focal_vs_comp_scbi %>% 
-  st_as_sf() %>% 
+
+test_vs_train <- focal_vs_comp_scbi %>%
+  st_as_sf() %>%
   add_buffer_variable(
     direction = "out", size = comp_dist, region = test_fold_buffer
-  ) %>% 
+  ) %>%
   mutate(
     fold = case_when(
       foldID == fold_number ~ "test",
@@ -1095,7 +1105,3 @@ autoplot(fit_mod_can_pos, type = "competition")
 Unsurprisingly we see that canopy and canopy emergent competitors generally have negative effects on their neighbors, while shrubs and understory competitors have neutral or even positive effects. 
 
 # References
-
-
-
-
