@@ -366,7 +366,7 @@ and \texttt{gy} from 300--600 instead of 0--640.
     \CommentTok{# Convert date from character to date}
     \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
     \CommentTok{# Convert dbh to be in cm}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh) }\OperatorTok{/}\StringTok{ }\DecValTok{10}
 \NormalTok{  ) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
@@ -374,7 +374,7 @@ and \texttt{gy} from 300--600 instead of 0--640.
 \StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}
     \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
+    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh) }\OperatorTok{/}\StringTok{ }\DecValTok{10}
 \NormalTok{  ) }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \end{Highlighting}
@@ -388,19 +388,15 @@ only interested in the growth of surviving, and not resprouted, stems.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{growth_scbi <-}
-\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
-    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi,}
-    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)),}
-    \DataTypeTok{id =} \StringTok{"stemID"}
-\NormalTok{  )}
-\NormalTok{growth_scbi }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, dbh1, dbh2, growth, geometry)}
+\NormalTok{growth_scbi <-}\StringTok{ }\KeywordTok{compute_growth}\NormalTok{(}\DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi, }\DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)), }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{)}
+\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, dbh1, dbh2, growth, geometry)}
 \CommentTok{## Simple feature collection with 7954 features and 5 fields}
-\CommentTok{## geometry type:  POINT}
-\CommentTok{## dimension:      XY}
-\CommentTok{## bbox:           xmin: 0.2 ymin: 300 xmax: 300 ymax: 600}
-\CommentTok{## CRS:            NA}
+\CommentTok{## Geometry type: POINT}
+\CommentTok{## Dimension:     XY}
+\CommentTok{## Bounding box:  xmin: 0.2 ymin: 300 xmax: 300 ymax: 600}
+\CommentTok{## CRS:           NA}
 \CommentTok{## # A tibble: 7,954 x 6}
 \CommentTok{##   stemID sp     dbh1  dbh2 growth   geometry}
 \CommentTok{##    <dbl> <fct> <dbl> <dbl>  <dbl>    <POINT>}
@@ -425,10 +421,11 @@ plotted in \texttt{ggplot2} using \texttt{geom\_sf()} as seen in Figure
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{sample_n}\NormalTok{(}\DecValTok{500}\NormalTok{), }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ growth)) }\OperatorTok{+}\StringTok{ }
-\StringTok{  }\KeywordTok{scale_size_binned}\NormalTok{(}\DataTypeTok{limits =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{, }\DecValTok{1}\NormalTok{)) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{size =} \KeywordTok{expression}\NormalTok{(}\KeywordTok{paste}\NormalTok{(Growth, }\StringTok{" (cm "}\NormalTok{,y}\OperatorTok{^}\NormalTok{\{}\OperatorTok{-}\DecValTok{1}\NormalTok{\},}\StringTok{')'}\NormalTok{)) )}
+\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{sample_n}\NormalTok{(}\DecValTok{500}\NormalTok{), }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ growth)) }\OperatorTok{+}\StringTok{ }\KeywordTok{scale_size_binned}\NormalTok{(}\DataTypeTok{limits =} \KeywordTok{c}\NormalTok{(}\FloatTok{0.1}\NormalTok{,}
+    \DecValTok{1}\NormalTok{)) }\OperatorTok{+}\StringTok{ }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{size =} \KeywordTok{expression}\NormalTok{(}\KeywordTok{paste}\NormalTok{(Growth, }\StringTok{" (cm "}\NormalTok{, y}\OperatorTok{^}\NormalTok{\{}
+    \DecValTok{-1}
+\NormalTok{\}, }\StringTok{")"}\NormalTok{)))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -450,11 +447,8 @@ other characteristics of the species.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{sp_info <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"SCBI_ForestGEO_sp_ecology.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(}
-    \DataTypeTok{sp =}\NormalTok{ spcode, family, genus, species, canopy_position, }
-\NormalTok{    drought_tolerance}
-\NormalTok{  ) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{mutate}\NormalTok{()}
+\StringTok{    }\KeywordTok{select}\NormalTok{(}\DataTypeTok{sp =}\NormalTok{ spcode, family, genus, species, canopy_position, drought_tolerance) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{()}
 \NormalTok{sp_info}
 \CommentTok{## # A tibble: 65 x 6}
 \CommentTok{##   sp    family        genus       species     canopy_position drought_toleran~}
@@ -473,10 +467,10 @@ frame.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{left_join}\NormalTok{(sp_info, }\DataTypeTok{by =} \StringTok{"sp"}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\CommentTok{# }\AlertTok{TODO}\CommentTok{:}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{as.factor}\NormalTok{(sp))}
+\NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{left_join}\NormalTok{(sp_info, }\DataTypeTok{by =} \StringTok{"sp"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\CommentTok{# }\AlertTok{TODO}\CommentTok{:}
+\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{as.factor}\NormalTok{(sp))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -493,7 +487,7 @@ geographic coordinates as arguments.
 \CommentTok{# Install development version of allodb using:}
 \CommentTok{# remotes::install_github("forestgeo/allodb")}
 \KeywordTok{library}\NormalTok{(allodb)}
-\NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}\StringTok{ }
+\NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
 \StringTok{  }\KeywordTok{mutate}\NormalTok{(}
     \CommentTok{# Compute basal area:}
     \DataTypeTok{basal_area =} \FloatTok{0.0001} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1 }\OperatorTok{/}\StringTok{ }\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{,}
@@ -542,14 +536,12 @@ whereas those with \texttt{TRUE} will only act as competitor trees.
 \NormalTok{comp_dist <-}\StringTok{ }\FloatTok{7.5}
 
 \CommentTok{# Manually construct study region boundary}
-\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
-  \DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{),}
-  \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{sf_polygon}\NormalTok{()}
+\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{,}
+    \DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{sf_polygon}\NormalTok{()}
 
 \NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
+\StringTok{    }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -583,31 +575,26 @@ adding these two elements of spatial information to
 \NormalTok{fold3 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \NormalTok{fold4 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{150}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
-\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
-  \KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }
-  \KeywordTok{sf_polygon}\NormalTok{(fold3), }\KeywordTok{sf_polygon}\NormalTok{(fold4)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}\KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3),}
+    \KeywordTok{sf_polygon}\NormalTok{(fold4)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 
 \CommentTok{# Associate each observation to a fold}
-\NormalTok{spatial_block_scbi <-}\StringTok{ }
-\StringTok{  }\KeywordTok{spatialBlock}\NormalTok{(}
-    \DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }
-    \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-    \DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}
-\NormalTok{  )}
+\NormalTok{spatial_block_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold,}
+    \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
 
 \NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ blocks_scbi, }\DataTypeTok{fill =} \StringTok{"transparent"}\NormalTok{, }\DataTypeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{sample_n}\NormalTok{(}\DecValTok{1000}\NormalTok{), }
-               \KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer))}
+\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_sf}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ blocks_scbi, }\DataTypeTok{fill =} \StringTok{"transparent"}\NormalTok{, }\DataTypeTok{linetype =} \StringTok{"dashed"}\NormalTok{) }\OperatorTok{+}
+\StringTok{    }\KeywordTok{geom_sf_text}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ growth_scbi }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{sample_n}\NormalTok{(}\DecValTok{1000}\NormalTok{), }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{label =}\NormalTok{ foldID, }\DataTypeTok{col =}\NormalTok{ buffer))}
 \end{Highlighting}
 \end{Shaded}
 
@@ -636,9 +623,10 @@ data frame \texttt{focal\_vs\_comp\_scbi}.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{, }\DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{)}
-\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{select}\NormalTok{(focal_ID, focal_sp, geometry, growth, comp)}
+\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{,}
+        \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{)}
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{select}\NormalTok{(focal_ID, focal_sp, geometry, growth, comp)}
 \CommentTok{## # A tibble: 6,296 x 5}
 \CommentTok{##   focal_ID focal_sp   geometry growth comp             }
 \CommentTok{##      <dbl> <fct>       <POINT>  <dbl> <list>           }
@@ -650,6 +638,24 @@ data frame \texttt{focal\_vs\_comp\_scbi}.
 \CommentTok{## # ... with 6,291 more rows}
 \end{Highlighting}
 \end{Shaded}
+
+\begin{verbatim}
+## Simple feature collection with 1 feature and 17 fields
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: 250 ymin: 582 xmax: 250 ymax: 582
+## CRS:           NA
+## # A tibble: 1 x 18
+##   stemID sp     dbh1 codes1 status  dbh2 codes2 growth
+## *  <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>   <dbl>
+## 1  18823 quve   68.8 NULL   A       69.9 NULL    0.215
+## # ... with 10 more variables: geometry <POINT>, family <chr>,
+## #   genus <chr>, species <chr>, canopy_position <chr>,
+## #   drought_tolerance <chr>, basal_area <dbl>, agb <dbl>, buffer <lgl>,
+## #   foldID <fct>
+\end{verbatim}
+
+\begin{center}\includegraphics[width=1\linewidth]{Figures/internal-1} \end{center}
 
 The resulting \texttt{focal\_vs\_comp\_scbi} has 6296 rows, representing
 the subset of the 7954 trees in \texttt{growth\_scbi} that will be
@@ -665,10 +671,10 @@ information, we flatten the \texttt{comp} list-column for the tree with
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{filter}\NormalTok{(focal_ID }\OperatorTok{==}\StringTok{ }\DecValTok{4}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{select}\NormalTok{(focal_ID, dbh, comp) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \StringTok{"comp"}\NormalTok{)}
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(focal_ID }\OperatorTok{==}\StringTok{ }\DecValTok{4}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{select}\NormalTok{(focal_ID, dbh, comp) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \StringTok{"comp"}\NormalTok{)}
 \CommentTok{## # A tibble: 20 x 6}
 \CommentTok{##   focal_ID   dbh comp_ID  dist comp_sp comp_x_var}
 \CommentTok{##      <dbl> <dbl>   <dbl> <dbl> <fct>        <dbl>}
@@ -725,7 +731,7 @@ in \texttt{?comp\_bayes\_lm}.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
+\StringTok{    }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -769,15 +775,14 @@ distribution.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, }
-                              \DataTypeTok{newdata =}\NormalTok{ focal_vs_comp_scbi))}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{newdata =}\NormalTok{ focal_vs_comp_scbi))}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{select}\NormalTok{(focal_ID, focal_sp, dbh, growth, growth_hat)}
+\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{select}\NormalTok{(focal_ID, focal_sp, dbh, growth, growth_hat)}
 \CommentTok{## # A tibble: 6,296 x 5}
 \CommentTok{##   focal_ID focal_sp   dbh growth growth_hat}
 \CommentTok{##      <dbl> <fct>    <dbl>  <dbl>      <dbl>}
@@ -796,8 +801,8 @@ root mean squared error (RMSE) of our model:
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{model_rmse <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
+\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
 \NormalTok{model_rmse}
 \CommentTok{## [1] 0.128}
 \end{Highlighting}
@@ -817,15 +822,12 @@ species-specific posterior distributions for \(\beta_{0,j}\) and
 \CommentTok{# Plot posteriors for only a subset of species}
 \NormalTok{sp_to_plot <-}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"litu"}\NormalTok{, }\StringTok{"quru"}\NormalTok{, }\StringTok{"cagl"}\NormalTok{)}
 
-\NormalTok{plot1 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"intercepts"}\NormalTok{, }
-                  \DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
-\NormalTok{plot2 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"dbh_slopes"}\NormalTok{, }
-                  \DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
-\NormalTok{plot3 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"competition"}\NormalTok{, }
-                  \DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
+\NormalTok{plot1 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"intercepts"}\NormalTok{, }\DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
+\NormalTok{plot2 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"dbh_slopes"}\NormalTok{, }\DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
+\NormalTok{plot3 <-}\StringTok{ }\KeywordTok{autoplot}\NormalTok{(comp_bayes_lm_scbi, }\DataTypeTok{type =} \StringTok{"competition"}\NormalTok{, }\DataTypeTok{sp_to_plot =}\NormalTok{ sp_to_plot)}
 
 \CommentTok{# Combine plots using the patchwork package}
-\NormalTok{(plot1 }\OperatorTok{|}\StringTok{ }\NormalTok{plot2) }\OperatorTok{/}\StringTok{ }\NormalTok{plot3}
+\NormalTok{(plot1 }\OperatorTok{|}\StringTok{ }\NormalTok{plot2)}\OperatorTok{/}\NormalTok{plot3}
 \end{Highlighting}
 \end{Shaded}
 
@@ -874,19 +876,18 @@ structure. We perform this permutation test once again using
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{comp_bayes_lm_scbi_shuffle <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{)}
+\StringTok{    }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{)}
 
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat_shuffle =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi_shuffle, }
-                                 \DataTypeTok{newdata =}\NormalTok{ focal_vs_comp_scbi))}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat_shuffle =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi_shuffle, }\DataTypeTok{newdata =}\NormalTok{ focal_vs_comp_scbi))}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{model_rmse_shuffle <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat_shuffle) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
+\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat_shuffle) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
 \NormalTok{model_rmse_shuffle}
 \CommentTok{## [1] 0.131}
 \end{Highlighting}
@@ -937,15 +938,15 @@ the model and \texttt{predict()} that returns predicted values.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
+\StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{model_rmse_cv <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
+\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
 \NormalTok{model_rmse_cv}
 \CommentTok{## [1] 0.14}
 \end{Highlighting}
@@ -1071,47 +1072,37 @@ cross- validated error estimates.
 \KeywordTok{library}\NormalTok{(tictoc)}
 
 
-\CommentTok{# Compute growth of trees based on census data -------------------------}
+\CommentTok{# Compute growth of trees based on census data}
+\CommentTok{# -------------------------}
 \NormalTok{census_}\DecValTok{2013}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{here}\NormalTok{(}\StringTok{"paper/scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{read_csv}\NormalTok{() }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\StringTok{    }\KeywordTok{read_csv}\NormalTok{() }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
 \NormalTok{census_}\DecValTok{2018}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{here}\NormalTok{(}\StringTok{"paper/scbi.stem3.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{read_csv}\NormalTok{() }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\StringTok{    }\KeywordTok{read_csv}\NormalTok{() }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
-\NormalTok{growth_scbi <-}
-\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
-    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi,}
-    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)),}
-    \DataTypeTok{id =} \StringTok{"stemID"}
-\NormalTok{  ) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\CommentTok{# Compute basal area:}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{basal_area =} \FloatTok{0.0001} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1 }\OperatorTok{/}\StringTok{ }\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{)}
+\NormalTok{growth_scbi <-}\StringTok{ }\KeywordTok{compute_growth}\NormalTok{(}\DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi, }\DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)), }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\CommentTok{# Compute basal area:}
+\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{basal_area =} \FloatTok{1e-04} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1}\OperatorTok{/}\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{)}
 
 
-\CommentTok{# Add spatial information ----------------------------------------------}
-\CommentTok{# Define buffer region using competitive distance range}
+\CommentTok{# Add spatial information}
+\CommentTok{# ---------------------------------------------- Define buffer region}
+\CommentTok{# using competitive distance range}
 \NormalTok{comp_dist <-}\StringTok{ }\FloatTok{7.5}
 
-\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
-  \DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{),}
-  \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{sf_polygon}\NormalTok{()}
+\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{,}
+    \DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{sf_polygon}\NormalTok{()}
 
 \NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
+\StringTok{    }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
 
 \CommentTok{# Manually define spatial blocks to act as folds}
 \NormalTok{fold1 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{450}\NormalTok{))}
@@ -1120,29 +1111,29 @@ cross- validated error estimates.
 \NormalTok{fold4 <-}\StringTok{ }\KeywordTok{rbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{450}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \NormalTok{n_fold <-}\StringTok{ }\DecValTok{4}
 
-\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
-  \KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2),}
-  \KeywordTok{sf_polygon}\NormalTok{(fold3), }\KeywordTok{sf_polygon}\NormalTok{(fold4)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}\KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3),}
+    \KeywordTok{sf_polygon}\NormalTok{(fold4)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 
 \CommentTok{# Associate each observation to a fold}
-\NormalTok{SpatialBlock_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}
-  \DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }\DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{,}
-  \DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}
-\NormalTok{)}
+\NormalTok{SpatialBlock_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold,}
+    \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
 
 \NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ SpatialBlock_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ SpatialBlock_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 
-
-\CommentTok{# Compute focal versus competitor tree information ---------------------}
+\CommentTok{# Compute focal versus competitor tree information}
+\CommentTok{# ---------------------}
 \NormalTok{focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{, }\DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{)}
+\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{,}
+        \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{)}
 
 
-\CommentTok{# Fit model and make predictions ---------------------------------------}
-\CommentTok{# Number of permutation shuffles:}
+\CommentTok{# Fit model and make predictions}
+\CommentTok{# --------------------------------------- Number of permutation}
+\CommentTok{# shuffles:}
 \NormalTok{num_shuffle <-}\StringTok{ }\DecValTok{49}
 
 \CommentTok{# Save results here}
@@ -1152,119 +1143,154 @@ cross- validated error estimates.
 \NormalTok{shuffle_RMSE <-}\StringTok{ }\KeywordTok{vector}\NormalTok{(}\StringTok{"list"}\NormalTok{, }\DecValTok{1}\NormalTok{)}
 \NormalTok{shuffle_RMSE_CV <-}\StringTok{ }\KeywordTok{vector}\NormalTok{(}\StringTok{"list"}\NormalTok{, }\DecValTok{1}\NormalTok{)}
 \NormalTok{filename <-}\StringTok{ }\KeywordTok{here}\NormalTok{(}\StringTok{"paper/simulation_results/"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{str_c}\NormalTok{(}\StringTok{"2021-03-03_scbi_"}\NormalTok{, num_shuffle, }\StringTok{"_shuffles"}\NormalTok{)}
+\StringTok{    }\KeywordTok{str_c}\NormalTok{(}\StringTok{"2021-03-03_scbi_"}\NormalTok{, num_shuffle, }\StringTok{"_shuffles"}\NormalTok{)}
 
-\CommentTok{# Run all simulations}
-\CommentTok{# 0. Setup simulation for this species type ----}
+\CommentTok{# Run all simulations 0. Setup simulation for this species type ----}
 \CommentTok{# Start clock}
 \KeywordTok{tic}\NormalTok{()}
 
-\CommentTok{# 1. Compute observed test statistic: RMSE with no cross-validation ----}
-\CommentTok{# Fit model (compute posterior parameters)}
+\CommentTok{# 1. Compute observed test statistic: RMSE with no cross-validation}
+\CommentTok{# ---- Fit model (compute posterior parameters)}
 \NormalTok{comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{FALSE}\NormalTok{)}
+\StringTok{    }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{FALSE}\NormalTok{)}
 
 \CommentTok{# Make predictions and compute RMSE}
 \NormalTok{observed_RMSE <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} 
-           \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, focal_vs_comp_scbi)) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-
-\CommentTok{# 2. Compute observed test statistic: RMSE with cross-validation -------}
-\NormalTok{observed_RMSE_CV <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{pull}\NormalTok{(.estimate)}
-
-\CommentTok{# 3. Permutation distribution: RMSE with no cross-validation -----------}
-\CommentTok{# Compute num_shuffle permutation test statistics}
-\NormalTok{shuffle_RMSE <-}\StringTok{ }\KeywordTok{numeric}\NormalTok{(}\DataTypeTok{length =}\NormalTok{ num_shuffle)}
-\ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{num_shuffle)\{}
-  \CommentTok{# Fit model (compute posterior parameters) with shuffling}
-\NormalTok{  comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{)}
-  
-  \CommentTok{# Make predictions and compute RMSE}
-\NormalTok{  shuffle_RMSE[j] <-}\StringTok{  }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}
-      \DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, focal_vs_comp_scbi)}
-\NormalTok{    ) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, focal_vs_comp_scbi)) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
+
+\CommentTok{# 2. Compute observed test statistic: RMSE with cross-validation}
+\CommentTok{# -------}
+\NormalTok{observed_RMSE_CV <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
+
+\CommentTok{# 3. Permutation distribution: RMSE with no cross-validation}
+\CommentTok{# ----------- Compute num_shuffle permutation test statistics}
+\NormalTok{shuffle_RMSE <-}\StringTok{ }\KeywordTok{numeric}\NormalTok{(}\DataTypeTok{length =}\NormalTok{ num_shuffle)}
+\ControlFlowTok{for}\NormalTok{ (j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{num_shuffle) \{}
+    \CommentTok{# Fit model (compute posterior parameters) with shuffling}
+\NormalTok{    comp_bayes_lm_scbi <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{)}
+
+    \CommentTok{# Make predictions and compute RMSE}
+\NormalTok{    shuffle_RMSE[j] <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{growth_hat =} \KeywordTok{predict}\NormalTok{(comp_bayes_lm_scbi, focal_vs_comp_scbi)) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{pull}\NormalTok{(.estimate)}
 \NormalTok{\}}
 
-\CommentTok{# 4. Permutation distribution: RMSE with cross-validation --------------}
-\CommentTok{# Compute num_shuffle permutation test statistics}
+\CommentTok{# 4. Permutation distribution: RMSE with cross-validation}
+\CommentTok{# -------------- Compute num_shuffle permutation test statistics}
 \NormalTok{shuffle_RMSE_CV <-}\StringTok{ }\KeywordTok{numeric}\NormalTok{(}\DataTypeTok{length =}\NormalTok{ num_shuffle)}
 
 \CommentTok{# Compute num_shuffle permutation test statistics}
-\ControlFlowTok{for}\NormalTok{(j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{num_shuffle)\{}
-  \CommentTok{# Compute and save RMSE}
-\NormalTok{  shuffle_RMSE_CV[j] <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-           \DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
-  
-  \CommentTok{# Status update}
-  \KeywordTok{str_c}\NormalTok{(}\StringTok{"Shuffle with permutation "}\NormalTok{, j, }\StringTok{" at "}\NormalTok{, }\KeywordTok{Sys.time}\NormalTok{()) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{print}\NormalTok{()}
+\ControlFlowTok{for}\NormalTok{ (j }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\NormalTok{num_shuffle) \{}
+    \CommentTok{# Compute and save RMSE}
+\NormalTok{    shuffle_RMSE_CV[j] <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{run_shuffle =} \OtherTok{TRUE}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{pull}\NormalTok{(.estimate)}
+
+    \CommentTok{# Status update}
+    \KeywordTok{str_c}\NormalTok{(}\StringTok{"Shuffle with permutation "}\NormalTok{, j, }\StringTok{" at "}\NormalTok{, }\KeywordTok{Sys.time}\NormalTok{()) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{print}\NormalTok{()}
 \NormalTok{\}}
+\CommentTok{## [1] "Shuffle with permutation 1 at 2021-08-09 18:21:51"}
+\CommentTok{## [1] "Shuffle with permutation 2 at 2021-08-09 18:26:48"}
+\CommentTok{## [1] "Shuffle with permutation 3 at 2021-08-09 18:31:46"}
+\CommentTok{## [1] "Shuffle with permutation 4 at 2021-08-09 18:36:41"}
+\CommentTok{## [1] "Shuffle with permutation 5 at 2021-08-09 18:41:31"}
+\CommentTok{## [1] "Shuffle with permutation 6 at 2021-08-09 18:46:03"}
+\CommentTok{## [1] "Shuffle with permutation 7 at 2021-08-09 18:50:32"}
+\CommentTok{## [1] "Shuffle with permutation 8 at 2021-08-09 18:55:09"}
+\CommentTok{## [1] "Shuffle with permutation 9 at 2021-08-09 18:59:38"}
+\CommentTok{## [1] "Shuffle with permutation 10 at 2021-08-09 19:04:06"}
+\CommentTok{## [1] "Shuffle with permutation 11 at 2021-08-09 19:08:36"}
+\CommentTok{## [1] "Shuffle with permutation 12 at 2021-08-09 19:13:01"}
+\CommentTok{## [1] "Shuffle with permutation 13 at 2021-08-09 19:17:25"}
+\CommentTok{## [1] "Shuffle with permutation 14 at 2021-08-09 19:21:47"}
+\CommentTok{## [1] "Shuffle with permutation 15 at 2021-08-09 19:26:20"}
+\CommentTok{## [1] "Shuffle with permutation 16 at 2021-08-09 19:30:42"}
+\CommentTok{## [1] "Shuffle with permutation 17 at 2021-08-09 19:35:05"}
+\CommentTok{## [1] "Shuffle with permutation 18 at 2021-08-09 19:39:28"}
+\CommentTok{## [1] "Shuffle with permutation 19 at 2021-08-09 19:43:51"}
+\CommentTok{## [1] "Shuffle with permutation 20 at 2021-08-09 19:48:14"}
+\CommentTok{## [1] "Shuffle with permutation 21 at 2021-08-09 19:52:37"}
+\CommentTok{## [1] "Shuffle with permutation 22 at 2021-08-09 19:57:01"}
+\CommentTok{## [1] "Shuffle with permutation 23 at 2021-08-09 20:01:29"}
+\CommentTok{## [1] "Shuffle with permutation 24 at 2021-08-09 20:06:09"}
+\CommentTok{## [1] "Shuffle with permutation 25 at 2021-08-09 20:10:42"}
+\CommentTok{## [1] "Shuffle with permutation 26 at 2021-08-09 20:15:06"}
+\CommentTok{## [1] "Shuffle with permutation 27 at 2021-08-09 20:19:29"}
+\CommentTok{## [1] "Shuffle with permutation 28 at 2021-08-09 20:23:52"}
+\CommentTok{## [1] "Shuffle with permutation 29 at 2021-08-09 20:28:15"}
+\CommentTok{## [1] "Shuffle with permutation 30 at 2021-08-09 20:32:37"}
+\CommentTok{## [1] "Shuffle with permutation 31 at 2021-08-09 20:36:59"}
+\CommentTok{## [1] "Shuffle with permutation 32 at 2021-08-09 20:41:21"}
+\CommentTok{## [1] "Shuffle with permutation 33 at 2021-08-09 20:45:43"}
+\CommentTok{## [1] "Shuffle with permutation 34 at 2021-08-09 20:50:06"}
+\CommentTok{## [1] "Shuffle with permutation 35 at 2021-08-09 20:54:29"}
+\CommentTok{## [1] "Shuffle with permutation 36 at 2021-08-09 20:58:51"}
+\CommentTok{## [1] "Shuffle with permutation 37 at 2021-08-09 21:03:16"}
+\CommentTok{## [1] "Shuffle with permutation 38 at 2021-08-09 21:07:38"}
+\CommentTok{## [1] "Shuffle with permutation 39 at 2021-08-09 21:12:01"}
+\CommentTok{## [1] "Shuffle with permutation 40 at 2021-08-09 21:16:24"}
+\CommentTok{## [1] "Shuffle with permutation 41 at 2021-08-09 21:20:47"}
+\CommentTok{## [1] "Shuffle with permutation 42 at 2021-08-09 21:25:11"}
+\CommentTok{## [1] "Shuffle with permutation 43 at 2021-08-09 21:29:34"}
+\CommentTok{## [1] "Shuffle with permutation 44 at 2021-08-09 21:33:57"}
+\CommentTok{## [1] "Shuffle with permutation 45 at 2021-08-09 21:38:20"}
+\CommentTok{## [1] "Shuffle with permutation 46 at 2021-08-09 21:42:42"}
+\CommentTok{## [1] "Shuffle with permutation 47 at 2021-08-09 21:47:05"}
+\CommentTok{## [1] "Shuffle with permutation 48 at 2021-08-09 21:51:27"}
+\CommentTok{## [1] "Shuffle with permutation 49 at 2021-08-09 21:56:05"}
 
 \CommentTok{# 5. Save results ----}
 \NormalTok{clock <-}\StringTok{ }\KeywordTok{toc}\NormalTok{(}\DataTypeTok{quiet =} \OtherTok{TRUE}\NormalTok{)}
 \NormalTok{run_time <-}\StringTok{ }\NormalTok{clock}\OperatorTok{$}\NormalTok{toc }\OperatorTok{-}\StringTok{ }\NormalTok{clock}\OperatorTok{$}\NormalTok{tic}
 
-\NormalTok{model_comp_tbl <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
-  \DataTypeTok{run_time =}\NormalTok{ run_time,}
-  \DataTypeTok{observed_RMSE =}\NormalTok{ observed_RMSE,}
-  \DataTypeTok{observed_RMSE_CV =}\NormalTok{ observed_RMSE_CV,}
-  \DataTypeTok{shuffle_RMSE =}\NormalTok{ shuffle_RMSE,}
-  \DataTypeTok{shuffle_RMSE_CV =}\NormalTok{ shuffle_RMSE_CV,}
-\NormalTok{)}
-\KeywordTok{save}\NormalTok{(model_comp_tbl, }\DataTypeTok{file =}\NormalTok{ filename }\OperatorTok{%>%}\StringTok{ }\KeywordTok{str_c}\NormalTok{(}\StringTok{".RData"}\NormalTok{))}
+\NormalTok{model_comp_tbl <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{run_time =}\NormalTok{ run_time, }\DataTypeTok{observed_RMSE =}\NormalTok{ observed_RMSE,}
+    \DataTypeTok{observed_RMSE_CV =}\NormalTok{ observed_RMSE_CV, }\DataTypeTok{shuffle_RMSE =}\NormalTok{ shuffle_RMSE, }\DataTypeTok{shuffle_RMSE_CV =}\NormalTok{ shuffle_RMSE_CV,}
+\NormalTok{    )}
+\KeywordTok{save}\NormalTok{(model_comp_tbl, }\DataTypeTok{file =}\NormalTok{ filename }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{str_c}\NormalTok{(}\StringTok{".RData"}\NormalTok{))}
 
 
-\CommentTok{# Visualize results ----------------------------------------------------}
-\NormalTok{model_comp <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
-\NormalTok{  model_comp_tbl }\OperatorTok{%>%}\StringTok{ }
-\StringTok{    }\KeywordTok{select}\NormalTok{(run_time, }\DataTypeTok{observed =}\NormalTok{ observed_RMSE, }
-           \DataTypeTok{shuffle =}\NormalTok{ shuffle_RMSE) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{CV =} \OtherTok{FALSE}\NormalTok{),}
-\NormalTok{  model_comp_tbl }\OperatorTok{%>%}\StringTok{ }
-\StringTok{    }\KeywordTok{select}\NormalTok{(run_time, }\DataTypeTok{observed =}\NormalTok{ observed_RMSE_CV, }
-           \DataTypeTok{shuffle =}\NormalTok{ shuffle_RMSE_CV) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{CV =} \OtherTok{TRUE}\NormalTok{)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{gather}\NormalTok{(type, RMSE, }\OperatorTok{-}\KeywordTok{c}\NormalTok{(run_time, CV))}
+\CommentTok{# Visualize results}
+\CommentTok{# ----------------------------------------------------}
+\NormalTok{model_comp <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(model_comp_tbl }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{select}\NormalTok{(run_time, }\DataTypeTok{observed =}\NormalTok{ observed_RMSE, }\DataTypeTok{shuffle =}\NormalTok{ shuffle_RMSE) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{CV =} \OtherTok{FALSE}\NormalTok{), model_comp_tbl }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{select}\NormalTok{(run_time, }\DataTypeTok{observed =}\NormalTok{ observed_RMSE_CV, }\DataTypeTok{shuffle =}\NormalTok{ shuffle_RMSE_CV) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{CV =} \OtherTok{TRUE}\NormalTok{)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{gather}\NormalTok{(type, RMSE, }\OperatorTok{-}\KeywordTok{c}\NormalTok{(run_time, CV))}
 
 \NormalTok{model_comp_observed <-}\StringTok{ }\NormalTok{model_comp }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(type }\OperatorTok{==}\StringTok{ "observed"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \KeywordTok{c}\NormalTok{(RMSE))}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(type }\OperatorTok{==}\StringTok{ "observed"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \KeywordTok{c}\NormalTok{(RMSE))}
 \NormalTok{model_comp_shuffle <-}\StringTok{ }\NormalTok{model_comp }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(type }\OperatorTok{==}\StringTok{ "shuffle"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \KeywordTok{c}\NormalTok{(RMSE))}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(type }\OperatorTok{==}\StringTok{ "shuffle"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{unnest}\NormalTok{(}\DataTypeTok{cols =} \KeywordTok{c}\NormalTok{(RMSE))}
 
-\NormalTok{cv_plot <-}\StringTok{ }\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_vline}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ model_comp_observed, }
-             \KeywordTok{aes}\NormalTok{(}\DataTypeTok{xintercept =}\NormalTok{ RMSE, }\DataTypeTok{col =}\NormalTok{ CV), }
-             \DataTypeTok{linetype =} \StringTok{"dashed"}\NormalTok{, }\DataTypeTok{show.legend =}\NormalTok{ F) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_histogram}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ model_comp_shuffle, }
-                 \KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ RMSE, }\DataTypeTok{fill =}\NormalTok{ CV), }\DataTypeTok{bins =} \DecValTok{50}\NormalTok{) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{labs}\NormalTok{(}
-    \DataTypeTok{fill =} \StringTok{"Cross-validated?"}\NormalTok{,}
-    \DataTypeTok{x =} \KeywordTok{expression}\NormalTok{(}\KeywordTok{paste}\NormalTok{(}\StringTok{"RMSE (cm "}\NormalTok{, y}\OperatorTok{^}\NormalTok{\{}\OperatorTok{-}\DecValTok{1}\NormalTok{\}, }\StringTok{")"}\NormalTok{))}
-\NormalTok{  ) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{scale_color_viridis}\NormalTok{(}\DataTypeTok{discrete =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{option =} \StringTok{"D"}\NormalTok{) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{scale_fill_viridis}\NormalTok{(}\DataTypeTok{discrete =} \OtherTok{TRUE}\NormalTok{) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{theme_light}\NormalTok{()}
+\NormalTok{cv_plot <-}\StringTok{ }\KeywordTok{ggplot}\NormalTok{() }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_vline}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ model_comp_observed, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{xintercept =}\NormalTok{ RMSE,}
+    \DataTypeTok{col =}\NormalTok{ CV), }\DataTypeTok{linetype =} \StringTok{"dashed"}\NormalTok{, }\DataTypeTok{show.legend =}\NormalTok{ F) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_histogram}\NormalTok{(}\DataTypeTok{data =}\NormalTok{ model_comp_shuffle,}
+    \KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ RMSE, }\DataTypeTok{fill =}\NormalTok{ CV), }\DataTypeTok{bins =} \DecValTok{50}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{labs}\NormalTok{(}\DataTypeTok{fill =} \StringTok{"Cross-validated?"}\NormalTok{,}
+    \DataTypeTok{x =} \KeywordTok{expression}\NormalTok{(}\KeywordTok{paste}\NormalTok{(}\StringTok{"RMSE (cm "}\NormalTok{, y}\OperatorTok{^}\NormalTok{\{}
+        \DecValTok{-1}
+\NormalTok{    \}, }\StringTok{")"}\NormalTok{))) }\OperatorTok{+}\StringTok{ }\KeywordTok{scale_color_viridis}\NormalTok{(}\DataTypeTok{discrete =} \OtherTok{TRUE}\NormalTok{, }\DataTypeTok{option =} \StringTok{"D"}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{scale_fill_viridis}\NormalTok{(}\DataTypeTok{discrete =} \OtherTok{TRUE}\NormalTok{) }\OperatorTok{+}
+\StringTok{    }\KeywordTok{theme_light}\NormalTok{()}
 \NormalTok{cv_plot}
 
 \NormalTok{filename }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{str_c}\NormalTok{(}\StringTok{".pdf"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{ggsave}\NormalTok{(}\DataTypeTok{plot =}\NormalTok{ cv_plot, }\DataTypeTok{width =} \DecValTok{16}\OperatorTok{/}\DecValTok{2}\NormalTok{, }\DataTypeTok{height =} \DecValTok{9}\OperatorTok{/}\DecValTok{2}\NormalTok{)}
+\StringTok{    }\KeywordTok{str_c}\NormalTok{(}\StringTok{".pdf"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{ggsave}\NormalTok{(}\DataTypeTok{plot =}\NormalTok{ cv_plot, }\DataTypeTok{width =} \DecValTok{16}\OperatorTok{/}\DecValTok{2}\NormalTok{, }\DataTypeTok{height =} \DecValTok{9}\OperatorTok{/}\DecValTok{2}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
+
+\begin{center}\includegraphics[width=1\linewidth]{Figures/appendix1-code-1} \end{center}
 
 \hypertarget{mult-dist}{%
 \section{Appendix 2: Compare different competitive
@@ -1285,37 +1311,26 @@ differences in competitive effects and treat all species as the same.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{census_}\DecValTok{2013}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{, gy }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{)}
+\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{, gy }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{)}
 
 \NormalTok{census_}\DecValTok{2018}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem3.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{, gy }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{)}
+\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{, gy }\OperatorTok{<}\StringTok{ }\DecValTok{400}\NormalTok{)}
 
-\NormalTok{growth_scbi <-}
-\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
-    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi,}
-    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)),}
-    \DataTypeTok{id =} \StringTok{"stemID"}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\CommentTok{# make all species the same, needs to be factor with at least two levels}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{factor}\NormalTok{(}\StringTok{'A'}\NormalTok{, }\DataTypeTok{levels =} \KeywordTok{c}\NormalTok{(}\StringTok{'A'}\NormalTok{, }\StringTok{'B'}\NormalTok{)) ) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\CommentTok{# Compute basal area:}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{basal_area =} \FloatTok{0.0001} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1 }\OperatorTok{/}\StringTok{ }\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{)}
+\NormalTok{growth_scbi <-}\StringTok{ }\KeywordTok{compute_growth}\NormalTok{(}\DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi, }\DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)), }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\CommentTok{# make all species the same, needs to be factor with at least two}
+\StringTok{    }\CommentTok{# levels}
+\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{factor}\NormalTok{(}\StringTok{"A"}\NormalTok{, }\DataTypeTok{levels =} \KeywordTok{c}\NormalTok{(}\StringTok{"A"}\NormalTok{, }\StringTok{"B"}\NormalTok{))) }\OperatorTok{%>%}
+\StringTok{    }\CommentTok{# Compute basal area:}
+\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{basal_area =} \FloatTok{1e-04} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1}\OperatorTok{/}\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{)}
 
-\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
-  \DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{),}
-  \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{0}\NormalTok{)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{sf_polygon}\NormalTok{()}
+\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{,}
+    \DecValTok{0}\NormalTok{)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{sf_polygon}\NormalTok{()}
 
 \NormalTok{n_fold <-}\StringTok{ }\DecValTok{4}
 \NormalTok{fold1 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{))}
@@ -1323,48 +1338,43 @@ differences in competitive effects and treat all species as the same.
 \NormalTok{fold3 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{))}
 \NormalTok{fold4 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{200}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{200}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{200}\NormalTok{, }\DecValTok{200}\NormalTok{, }\DecValTok{400}\NormalTok{, }\DecValTok{400}\NormalTok{))}
 
-\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
-  \KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3), }
-  \KeywordTok{sf_polygon}\NormalTok{(fold4)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}\KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3),}
+    \KeywordTok{sf_polygon}\NormalTok{(fold4)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 
 \CommentTok{# Associate each observation to a fold}
-\NormalTok{spatial_block_scbi <-}\StringTok{ }
-\StringTok{  }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }
-               \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-               \DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
+\NormalTok{spatial_block_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold,}
+    \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
 
 \NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 
-\NormalTok{mult_dist_comp <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
-  \DataTypeTok{dist =} \KeywordTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{ ,}\FloatTok{6.25}\NormalTok{,  }\FloatTok{7.5}\NormalTok{, }\FloatTok{8.75}\NormalTok{,  }\DecValTok{10}\NormalTok{),}
-  \DataTypeTok{rmse =} \DecValTok{0}
-\NormalTok{)}
+\NormalTok{mult_dist_comp <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{dist =} \KeywordTok{c}\NormalTok{(}\DecValTok{5}\NormalTok{, }\FloatTok{6.25}\NormalTok{, }\FloatTok{7.5}\NormalTok{, }\FloatTok{8.75}\NormalTok{, }\DecValTok{10}\NormalTok{), }\DataTypeTok{rmse =} \DecValTok{0}\NormalTok{)}
 
-\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\KeywordTok{length}\NormalTok{(mult_dist_comp}\OperatorTok{$}\NormalTok{dist))\{}
-\NormalTok{  comp_dist <-}\StringTok{ }\NormalTok{mult_dist_comp}\OperatorTok{$}\NormalTok{dist[i]}
-  
-\NormalTok{  growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
-  
-\NormalTok{  focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{, }\DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\OperatorTok{:}\KeywordTok{length}\NormalTok{(mult_dist_comp}\OperatorTok{$}\NormalTok{dist)) \{}
+\NormalTok{    comp_dist <-}\StringTok{ }\NormalTok{mult_dist_comp}\OperatorTok{$}\NormalTok{dist[i]}
 
-\NormalTok{  mult_dist_comp}\OperatorTok{$}\NormalTok{rmse[i] <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
+\NormalTok{    growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
+
+\NormalTok{    focal_vs_comp_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi,}
+            \DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{, }\DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
+
+\NormalTok{    mult_dist_comp}\OperatorTok{$}\NormalTok{rmse[i] <-}\StringTok{ }\NormalTok{focal_vs_comp_scbi }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{pull}\NormalTok{(.estimate)}
 \NormalTok{\}}
 
 \NormalTok{mult_dist_comp }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{aes}\NormalTok{(dist,rmse)) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{geom_point}\NormalTok{() }\OperatorTok{+}
-\StringTok{  }\KeywordTok{xlab}\NormalTok{(}\StringTok{'Distance (m)'}\NormalTok{) }\OperatorTok{+}
-\StringTok{  }\KeywordTok{ylab}\NormalTok{(}\StringTok{'RMSE (cm)'}\NormalTok{)}
+\StringTok{    }\KeywordTok{ggplot}\NormalTok{(}\KeywordTok{aes}\NormalTok{(dist, rmse)) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_point}\NormalTok{() }\OperatorTok{+}\StringTok{ }\KeywordTok{xlab}\NormalTok{(}\StringTok{"Distance (m)"}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{ylab}\NormalTok{(}\StringTok{"RMSE (cm)"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
+
+\begin{center}\includegraphics[width=1\linewidth]{Figures/appendix2-code-1} \end{center}
 
 Here we see that a cut off distance of approximately 6 m minimizes RMSE.
 
@@ -1382,42 +1392,24 @@ variables, basal area or above ground biomass, best explains growth.
 \begin{Shaded}
 \begin{Highlighting}[]
 \NormalTok{census_}\DecValTok{2013}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
 \NormalTok{census_}\DecValTok{2018}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem3.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
-\NormalTok{growth_scbi <-}
-\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
-    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi,}
-    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)),}
-    \DataTypeTok{id =} \StringTok{"stemID"}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{left_join}\NormalTok{(sp_info, }\DataTypeTok{by =} \StringTok{"sp"}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{as.factor}\NormalTok{(sp),}
-        \DataTypeTok{basal_area =} \FloatTok{0.0001} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1 }\OperatorTok{/}\StringTok{ }\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{,}
-         \DataTypeTok{agb =} \KeywordTok{get_biomass}\NormalTok{(}
-                  \DataTypeTok{dbh =}\NormalTok{ dbh1,}
-                  \DataTypeTok{genus =}\NormalTok{ genus,}
-                  \DataTypeTok{species =}\NormalTok{ species,}
-                  \DataTypeTok{coords =} \KeywordTok{c}\NormalTok{(}\OperatorTok{-}\FloatTok{78.2}\NormalTok{, }\FloatTok{38.9}\NormalTok{)}
-\NormalTok{    ))}
+\NormalTok{growth_scbi <-}\StringTok{ }\KeywordTok{compute_growth}\NormalTok{(}\DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi, }\DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)), }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{left_join}\NormalTok{(sp_info, }\DataTypeTok{by =} \StringTok{"sp"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{as.factor}\NormalTok{(sp), }\DataTypeTok{basal_area =} \FloatTok{1e-04} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1}\OperatorTok{/}\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{, }\DataTypeTok{agb =} \KeywordTok{get_biomass}\NormalTok{(}\DataTypeTok{dbh =}\NormalTok{ dbh1,}
+        \DataTypeTok{genus =}\NormalTok{ genus, }\DataTypeTok{species =}\NormalTok{ species, }\DataTypeTok{coords =} \KeywordTok{c}\NormalTok{(}\OperatorTok{-}\FloatTok{78.2}\NormalTok{, }\FloatTok{38.9}\NormalTok{)))}
 
-\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
-  \DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{),}
-  \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{sf_polygon}\NormalTok{()}
+\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{,}
+    \DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{sf_polygon}\NormalTok{()}
 
 \NormalTok{n_fold <-}\StringTok{ }\DecValTok{4}
 \NormalTok{fold1 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{))}
@@ -1425,20 +1417,18 @@ variables, basal area or above ground biomass, best explains growth.
 \NormalTok{fold3 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \NormalTok{fold4 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{150}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
-\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
-  \KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3), }
-  \KeywordTok{sf_polygon}\NormalTok{(fold4)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}\KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3),}
+    \KeywordTok{sf_polygon}\NormalTok{(fold4)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 
 \CommentTok{# Associate each observation to a fold}
-\NormalTok{spatial_block_scbi <-}\StringTok{ }
-\StringTok{  }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }
-               \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-               \DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
+\NormalTok{spatial_block_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold,}
+    \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
 
 \NormalTok{growth_scbi <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 
 \NormalTok{comp_dist <-}\StringTok{ }\FloatTok{7.5}
 
@@ -1446,29 +1436,24 @@ variables, basal area or above ground biomass, best explains growth.
 \StringTok{    }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
 
 \NormalTok{focal_vs_comp_ba <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }
-                         \DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-                         \DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{, }
-                         \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{,}
+        \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
 
 \NormalTok{focal_vs_comp_agb <-}\StringTok{ }\NormalTok{growth_scbi }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }
-                         \DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-                         \DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{, }
-                         \DataTypeTok{comp_x_var =} \StringTok{"agb"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{,}
+        \DataTypeTok{comp_x_var =} \StringTok{"agb"}\NormalTok{) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
 
-
-\NormalTok{  focal_vs_comp_ba }\OperatorTok{%>%}
+\NormalTok{focal_vs_comp_ba }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
 \CommentTok{## [1] 0.14}
-  
-\NormalTok{  focal_vs_comp_agb }\OperatorTok{%>%}
+
+\NormalTok{focal_vs_comp_agb }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
-\CommentTok{## [1] 1.83}
+\CommentTok{## [1] 2.08}
 \end{Highlighting}
 \end{Shaded}
 
@@ -1487,53 +1472,31 @@ codominant, intermediate and suppressed) that could also be used.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-
 \NormalTok{census_}\DecValTok{2013}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem2.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
 \NormalTok{census_}\DecValTok{2018}\NormalTok{_scbi <-}\StringTok{ }\KeywordTok{read_csv}\NormalTok{(}\StringTok{"scbi.stem3.csv"}\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date),}
-    \DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
+\StringTok{    }\KeywordTok{select}\NormalTok{(stemID, sp, }\DataTypeTok{date =}\NormalTok{ ExactDate, gx, gy, dbh, codes, status) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{date =} \KeywordTok{mdy}\NormalTok{(date), }\DataTypeTok{dbh =} \KeywordTok{as.numeric}\NormalTok{(dbh)}\OperatorTok{/}\DecValTok{10}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(gx }\OperatorTok{<}\StringTok{ }\DecValTok{300}\NormalTok{, }\KeywordTok{between}\NormalTok{(gy, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
+\NormalTok{growth_scbi_sp <-}\StringTok{ }\KeywordTok{compute_growth}\NormalTok{(}\DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi, }\DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)), }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{as.factor}\NormalTok{(sp), }\DataTypeTok{basal_area =} \FloatTok{1e-04} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1}\OperatorTok{/}\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{)}
 
+\NormalTok{growth_scbi_can_pos <-}\StringTok{ }\KeywordTok{compute_growth}\NormalTok{(}\DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi, }\DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)), }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{left_join}\NormalTok{(sp_info, }\DataTypeTok{by =} \StringTok{"sp"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{canopy_position =} \KeywordTok{str_replace}\NormalTok{(canopy_position, }\StringTok{" "}\NormalTok{, }\StringTok{"_"}\NormalTok{), }\DataTypeTok{canopy_position =} \KeywordTok{str_replace}\NormalTok{(canopy_position,}
+        \StringTok{","}\NormalTok{, }\StringTok{""}\NormalTok{), }\DataTypeTok{canopy_position =} \KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(canopy_position), }\StringTok{"shrub_layer"}\NormalTok{,}
+\NormalTok{        canopy_position), }\DataTypeTok{sp =} \KeywordTok{as.factor}\NormalTok{(canopy_position), }\DataTypeTok{basal_area =} \FloatTok{1e-04} \OperatorTok{*}
+\StringTok{        }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1}\OperatorTok{/}\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{)}
 
-\NormalTok{growth_scbi_sp <-}
-\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
-    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi,}
-    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)),}
-    \DataTypeTok{id =} \StringTok{"stemID"}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{sp =} \KeywordTok{as.factor}\NormalTok{(sp),}
-        \DataTypeTok{basal_area =} \FloatTok{0.0001} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1 }\OperatorTok{/}\StringTok{ }\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{ )}
-
-\NormalTok{growth_scbi_can_pos <-}
-\StringTok{  }\KeywordTok{compute_growth}\NormalTok{(}
-    \DataTypeTok{census_1 =}\NormalTok{ census_}\DecValTok{2013}\NormalTok{_scbi,}
-    \DataTypeTok{census_2 =}\NormalTok{ census_}\DecValTok{2018}\NormalTok{_scbi }\OperatorTok{%>%}\StringTok{ }\KeywordTok{filter}\NormalTok{(}\OperatorTok{!}\KeywordTok{str_detect}\NormalTok{(codes, }\StringTok{"R"}\NormalTok{)),}
-    \DataTypeTok{id =} \StringTok{"stemID"}
-\NormalTok{  ) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{left_join}\NormalTok{(sp_info, }\DataTypeTok{by =} \StringTok{"sp"}\NormalTok{) }\OperatorTok{%>%}\StringTok{ }
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}
-    \DataTypeTok{canopy_position =} \KeywordTok{str_replace}\NormalTok{(canopy_position, }\StringTok{' '}\NormalTok{, }\StringTok{'_'}\NormalTok{),}
-    \DataTypeTok{canopy_position =} \KeywordTok{str_replace}\NormalTok{(canopy_position, }\StringTok{','}\NormalTok{, }\StringTok{''}\NormalTok{),}
-    \DataTypeTok{canopy_position =} \KeywordTok{ifelse}\NormalTok{(}\KeywordTok{is.na}\NormalTok{(canopy_position), }\StringTok{'shrub_layer'}\NormalTok{, canopy_position),}
-    \DataTypeTok{sp =} \KeywordTok{as.factor}\NormalTok{(canopy_position),}
-    \DataTypeTok{basal_area =} \FloatTok{0.0001} \OperatorTok{*}\StringTok{ }\NormalTok{pi }\OperatorTok{*}\StringTok{ }\NormalTok{(dbh1 }\OperatorTok{/}\StringTok{ }\DecValTok{2}\NormalTok{)}\OperatorTok{^}\DecValTok{2}\NormalTok{ )}
-
-\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}
-  \DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{),}
-  \DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{sf_polygon}\NormalTok{()}
+\NormalTok{study_region_scbi <-}\StringTok{ }\KeywordTok{tibble}\NormalTok{(}\DataTypeTok{x =} \KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{0}\NormalTok{), }\DataTypeTok{y =} \KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{600}\NormalTok{,}
+    \DecValTok{600}\NormalTok{, }\DecValTok{300}\NormalTok{)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{sf_polygon}\NormalTok{()}
 
 \NormalTok{n_fold <-}\StringTok{ }\DecValTok{4}
 \NormalTok{fold1 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{))}
@@ -1541,22 +1504,21 @@ codominant, intermediate and suppressed) that could also be used.
 \NormalTok{fold3 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{150}\NormalTok{, }\DecValTok{0}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 \NormalTok{fold4 <-}\StringTok{ }\KeywordTok{cbind}\NormalTok{(}\KeywordTok{c}\NormalTok{(}\DecValTok{150}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{300}\NormalTok{, }\DecValTok{150}\NormalTok{), }\KeywordTok{c}\NormalTok{(}\DecValTok{450}\NormalTok{, }\DecValTok{450}\NormalTok{, }\DecValTok{600}\NormalTok{, }\DecValTok{600}\NormalTok{))}
 
-\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}
-  \KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3), }
-  \KeywordTok{sf_polygon}\NormalTok{(fold4)}
-\NormalTok{) }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\NormalTok{blocks_scbi <-}\StringTok{ }\KeywordTok{bind_rows}\NormalTok{(}\KeywordTok{sf_polygon}\NormalTok{(fold1), }\KeywordTok{sf_polygon}\NormalTok{(fold2), }\KeywordTok{sf_polygon}\NormalTok{(fold3),}
+    \KeywordTok{sf_polygon}\NormalTok{(fold4)) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{folds =} \KeywordTok{c}\NormalTok{(}\DecValTok{1}\OperatorTok{:}\NormalTok{n_fold) }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 
 \CommentTok{# Associate each observation to a fold}
-\NormalTok{spatial_block_scbi <-}\StringTok{ }
-\StringTok{  }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold, }
-               \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-               \DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
+\NormalTok{spatial_block_scbi <-}\StringTok{ }\KeywordTok{spatialBlock}\NormalTok{(}\DataTypeTok{speciesData =}\NormalTok{ growth_scbi, }\DataTypeTok{k =}\NormalTok{ n_fold,}
+    \DataTypeTok{selection =} \StringTok{"systematic"}\NormalTok{, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{showBlocks =} \OtherTok{FALSE}\NormalTok{, }\DataTypeTok{verbose =} \OtherTok{FALSE}\NormalTok{)}
 
 \NormalTok{growth_scbi_sp <-}\StringTok{ }\NormalTok{growth_scbi_sp }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 \NormalTok{growth_scbi_can_pos <-}\StringTok{ }\NormalTok{growth_scbi_can_pos }\OperatorTok{%>%}
-\StringTok{  }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}\StringTok{ }\KeywordTok{factor}\NormalTok{())}
+\StringTok{    }\KeywordTok{mutate}\NormalTok{(}\DataTypeTok{foldID =}\NormalTok{ spatial_block_scbi}\OperatorTok{$}\NormalTok{foldID }\OperatorTok{%>%}
+\StringTok{        }\KeywordTok{factor}\NormalTok{())}
 
 \NormalTok{comp_dist <-}\StringTok{ }\FloatTok{7.5}
 
@@ -1566,25 +1528,21 @@ codominant, intermediate and suppressed) that could also be used.
 \StringTok{    }\KeywordTok{add_buffer_variable}\NormalTok{(}\DataTypeTok{size =}\NormalTok{ comp_dist, }\DataTypeTok{region =}\NormalTok{ study_region_scbi)}
 
 \NormalTok{focal_vs_comp_sp <-}\StringTok{ }\NormalTok{growth_scbi_sp }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }
-                         \DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-                         \DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{, }
-                         \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{,}
+        \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
 
 \NormalTok{focal_vs_comp_can_pos <-}\StringTok{ }\NormalTok{growth_scbi_can_pos }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }
-                         \DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-                         \DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{, }
-                         \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{) }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{,}
+        \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{run_cv}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi)}
 
-\NormalTok{  focal_vs_comp_sp }\OperatorTok{%>%}
+\NormalTok{focal_vs_comp_sp }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
 \CommentTok{## [1] 0.14}
-  
-\NormalTok{  focal_vs_comp_can_pos }\OperatorTok{%>%}
+
+\NormalTok{focal_vs_comp_can_pos }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{rmse}\NormalTok{(}\DataTypeTok{truth =}\NormalTok{ growth, }\DataTypeTok{estimate =}\NormalTok{ growth_hat) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{pull}\NormalTok{(.estimate)}
 \CommentTok{## [1] 0.144}
@@ -1597,16 +1555,11 @@ groupings.
 
 \begin{Shaded}
 \begin{Highlighting}[]
-  
-\NormalTok{  fit_mod_can_pos <-}\StringTok{ }\NormalTok{growth_scbi_can_pos }\OperatorTok{%>%}
-\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }
-                         \DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }
-                         \DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{, }
-                         \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{)  }\OperatorTok{%>%}
+\NormalTok{fit_mod_can_pos <-}\StringTok{ }\NormalTok{growth_scbi_can_pos }\OperatorTok{%>%}
+\StringTok{    }\KeywordTok{create_focal_vs_comp}\NormalTok{(}\DataTypeTok{comp_dist =}\NormalTok{ comp_dist, }\DataTypeTok{blocks =}\NormalTok{ blocks_scbi, }\DataTypeTok{id =} \StringTok{"stemID"}\NormalTok{,}
+        \DataTypeTok{comp_x_var =} \StringTok{"basal_area"}\NormalTok{) }\OperatorTok{%>%}
 \StringTok{    }\KeywordTok{comp_bayes_lm}\NormalTok{(}\DataTypeTok{prior_param =} \OtherTok{NULL}\NormalTok{)}
-
-  \KeywordTok{autoplot}\NormalTok{(fit_mod_can_pos, }\DataTypeTok{type =} \StringTok{"competition"}\NormalTok{)}
-    
+\KeywordTok{autoplot}\NormalTok{(fit_mod_can_pos, }\DataTypeTok{type =} \StringTok{"competition"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
