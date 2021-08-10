@@ -331,7 +331,7 @@ focal_vs_comp_scbi %>%
   select(focal_ID, focal_sp, geometry, growth, comp)
 ```
 
-```{r internal, echo = FALSE}
+```{r internal, echo = FALSE, eval = FALSE}
 # Internal: after removing trees in buffer and have NA for growth, there is one
 # tree that is not included in focal_vs_comp_scbi b/c it has no neighbors within
 # comp_dist = 7.5m of it

@@ -639,24 +639,6 @@ data frame \texttt{focal\_vs\_comp\_scbi}.
 \end{Highlighting}
 \end{Shaded}
 
-\begin{verbatim}
-## Simple feature collection with 1 feature and 17 fields
-## Geometry type: POINT
-## Dimension:     XY
-## Bounding box:  xmin: 250 ymin: 582 xmax: 250 ymax: 582
-## CRS:           NA
-## # A tibble: 1 x 18
-##   stemID sp     dbh1 codes1 status  dbh2 codes2 growth
-## *  <dbl> <fct> <dbl> <chr>  <chr>  <dbl> <chr>   <dbl>
-## 1  18823 quve   68.8 NULL   A       69.9 NULL    0.215
-## # ... with 10 more variables: geometry <POINT>, family <chr>,
-## #   genus <chr>, species <chr>, canopy_position <chr>,
-## #   drought_tolerance <chr>, basal_area <dbl>, agb <dbl>, buffer <lgl>,
-## #   foldID <fct>
-\end{verbatim}
-
-\begin{center}\includegraphics[width=1\linewidth]{Figures/internal-1} \end{center}
-
 The resulting \texttt{focal\_vs\_comp\_scbi} has 6296 rows, representing
 the subset of the 7954 trees in \texttt{growth\_scbi} that will be
 considered as focal trees. The variables \texttt{focal\_ID} and
