@@ -352,7 +352,7 @@ focal_vs_comp_scbi %>%
 
 We observe 4 variables describing 20 competitor trees: the unique tree-stem ID, the distance to the focal tree (all $\leq$ `r comp_dist`m), the species, and the basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ for the DBH in cm from the earlier census. Saving competitor information in list-column format minimizes redundancy since we do not need to repeat information on the focal tree 20 times. We visualize the spatial distribution of these trees in Figure \ref{fig:scbi-focal-vs-comp-map}. 
 
-Here we use basal area as the continuous predictor variable but the package is flexible to allow the user to specify any continuous predictor variable (basal area, biomass, tree height, a soil nutrient value, \dots). The package can also be used to compare predictor variables and see which best explains tree growth, see Appendix \ref{compare-pred-var} for an example comparing basal area and above ground biomass. Similarly, the package can use any categorical variable as a predictor and compare between different categorical variables. For example in @allen_permutation_2020 we compare grouping individuals based on species, family, and based on trait-based groups. In Appendix \ref{compare-group-var} we give another example and compare grouping individuals by species or by potential canopy position (canopy, understory, shrub layer). 
+Here we use basal area as the continuous competitor explanatory variable but the package is flexible to allow the user to specify any competitor explanatory variable (basal area, biomass, tree height, a soil nutrient value, \dots). The package can also be used to compare competitor explanatory variables and see which best explains tree growth, see Appendix \ref{compare-pred-var} for an example comparing basal area and above ground biomass. Similarly, the package can use any categorical variable as an explanatory variable and compare between different categorical variables. For example in @allen_permutation_2020 we compare grouping individuals based on species, family, and based on trait-based groups. In Appendix \ref{compare-group-var} we give another example and compare grouping individuals by species or by potential canopy position (canopy, understory, shrub layer). 
 
 ```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Step 3 - Identify all focal and corresponding competitor trees. The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle.", fig.height=4}
 comp_radius <- growth_scbi %>%
@@ -563,6 +563,334 @@ We intend to archive all data and source code for this manuscript on GitHub at h
 <div id="refs"></div>
 
 \appendix
+
+# Appendix: Compare different competitive distances {#mult-dist}
+
+For all the above analyses we set the cut off distance (`comp_dist`) for two stems to compete as `r comp_dist`m. This distance has been estimated in previous neighborhood competition studies in forests [@canham_neighborhood_2004, @uriarte_spatially_2004, @canham_neighborhood_2006]. We used `r comp_dist`m in @allen_permutation_2020 as an average of the values estimated in other studies. But our package can be used to find which distance is best supported by the data. Here we provide an example using another section of the SCBI plot to provide an additional example of the cross-validation block layout. To speed computation we do not consider species differences in competitive effects and treat all species as the same.
+
+We observe in Figure \ref{fig:appendix2-plot} that a cut-off distance of approximately 6m minimizes the cross-validation estimated RMSE.
+
+```{r appendix2-code}
+census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 400, gy < 400)
+
+census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 400, gy < 400)
+
+growth_scbi <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  # make all species the same, needs to be factor with at least two levels
+  mutate(sp = factor("A", levels = c("A", "B"))) %>%
+  # Compute basal area:
+  mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2)
+
+study_region_scbi <- tibble(
+  x = c(0, 400, 400, 0, 0),
+  y = c(0, 0, 400, 400, 0)
+) %>%
+  sf_polygon()
+
+n_fold <- 4
+fold1 <- cbind(c(0, 200, 200, 0), c(0, 0, 200, 200))
+fold2 <- cbind(c(200, 400, 400, 200), c(0, 0, 200, 200))
+fold3 <- cbind(c(0, 200, 200, 0), c(200, 200, 400, 400))
+fold4 <- cbind(c(200, 400, 400, 200), c(200, 200, 400, 400))
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3),
+  sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+spatial_block_scbi <-
+  spatialBlock(
+    speciesData = growth_scbi, k = n_fold,
+    selection = "systematic", blocks = blocks_scbi,
+    showBlocks = FALSE, verbose = FALSE
+  )
+
+growth_scbi <- growth_scbi %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+
+mult_dist_comp <- tibble(
+  dist = c(5, 6.25, 7.5, 8.75, 10),
+  rmse = 0
+)
+
+for (i in 1:length(mult_dist_comp$dist)) {
+  comp_dist <- mult_dist_comp$dist[i]
+
+  growth_scbi <- growth_scbi %>%
+    add_buffer_variable(size = comp_dist, region = study_region_scbi)
+
+  focal_vs_comp_scbi <- growth_scbi %>%
+    create_focal_vs_comp(comp_dist = comp_dist, blocks = blocks_scbi, id = "stemID", comp_x_var = "basal_area") %>%
+    run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+  mult_dist_comp$rmse[i] <- focal_vs_comp_scbi %>%
+    rmse(truth = growth, estimate = growth_hat) %>%
+    pull(.estimate)
+}
+```
+
+```{r appendix2-plot, out.width="100%", fig.cap="Cross-validated RMSE estimates for 5 `comp_dist` competitive distances.", echo = FALSE}
+mult_dist_comp %>%
+  ggplot(aes(dist, rmse)) +
+  geom_point() +
+  xlab("Distance (m)") +
+  ylab("RMSE (cm)")
+```
+
+
+# Appendix: Compare competitor explanatory variables {#compare-pred-var}
+
+In the above code we use the basal area of an individual as a continuous competitor explanatory variable. But the package allows the user to specify any competitor explanatory variable in the `comp_x_var` argument of `create_focal_vs_comp` function. Here we use the cross-validated model comparison to see which of two possible competitor explanatory variables computed in Section \ref{compute-growth}, basal area or above ground biomass, best explains growth. 
+
+We observe in Figure \ref{fig:appendix2-code} that a cut-off distance of approximately 6m minimizes the cross-validation estimated RMSE.
+
+```{r compar-pred-var}
+census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+growth_scbi <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  left_join(sp_info, by = "sp") %>%
+  mutate(
+    sp = as.factor(sp),
+    basal_area = 0.0001 * pi * (dbh1 / 2)^2,
+    agb = get_biomass(
+      dbh = dbh1,
+      genus = genus,
+      species = species,
+      coords = c(-78.2, 38.9)
+    )
+  )
+
+study_region_scbi <- tibble(
+  x = c(0, 300, 300, 0, 0),
+  y = c(300, 300, 600, 600, 300)
+) %>%
+  sf_polygon()
+
+n_fold <- 4
+fold1 <- cbind(c(0, 150, 150, 0), c(300, 300, 450, 450))
+fold2 <- cbind(c(150, 300, 300, 150), c(300, 300, 450, 450))
+fold3 <- cbind(c(0, 150, 150, 0), c(450, 450, 600, 600))
+fold4 <- cbind(c(150, 300, 300, 150), c(450, 450, 600, 600))
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3),
+  sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+spatial_block_scbi <-
+  spatialBlock(
+    speciesData = growth_scbi, k = n_fold,
+    selection = "systematic", blocks = blocks_scbi,
+    showBlocks = FALSE, verbose = FALSE
+  )
+
+growth_scbi <- growth_scbi %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+
+comp_dist <- 7.5
+
+growth_scbi <- growth_scbi %>%
+  add_buffer_variable(size = comp_dist, region = study_region_scbi)
+
+focal_vs_comp_ba <- growth_scbi %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "basal_area"
+  ) %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+focal_vs_comp_agb <- growth_scbi %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "agb"
+  ) %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+focal_vs_comp_ba %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
+focal_vs_comp_agb %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+```
+
+Here we observe that basal area is a better competitor explanatory variable competitor explanatory variables $x^{\text{comp}}_{ijk}$ from Equation \ref{eq:model} than above ground biomass as suggested by the lower estimated RMSE.
+
+
+# Appendix: Compare grouping variables {#compare-group-var}
+
+The package also allows the user to specify the categorical explanatory grouping variable. Here we compare two different such variables: species and the potential canopy position of that species. If we had individual-level crown classes (@smith_practice_1986 dominant, codominant, intermediate and suppressed) that could also be used.  
+
+```{r compare-group-var}
+census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+growth_scbi_sp <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  mutate(
+    sp = as.factor(sp),
+    basal_area = 0.0001 * pi * (dbh1 / 2)^2
+  )
+
+growth_scbi_can_pos <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  left_join(sp_info, by = "sp") %>%
+  mutate(
+    canopy_position = str_replace(canopy_position, " ", "_"),
+    canopy_position = str_replace(canopy_position, ",", ""),
+    canopy_position = ifelse(is.na(canopy_position), "shrub_layer", canopy_position),
+    sp = as.factor(canopy_position),
+    basal_area = 0.0001 * pi * (dbh1 / 2)^2
+  )
+
+study_region_scbi <- tibble(
+  x = c(0, 300, 300, 0, 0),
+  y = c(300, 300, 600, 600, 300)
+) %>%
+  sf_polygon()
+
+n_fold <- 4
+fold1 <- cbind(c(0, 150, 150, 0), c(300, 300, 450, 450))
+fold2 <- cbind(c(150, 300, 300, 150), c(300, 300, 450, 450))
+fold3 <- cbind(c(0, 150, 150, 0), c(450, 450, 600, 600))
+fold4 <- cbind(c(150, 300, 300, 150), c(450, 450, 600, 600))
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3),
+  sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+spatial_block_scbi <-
+  spatialBlock(
+    speciesData = growth_scbi, k = n_fold,
+    selection = "systematic", blocks = blocks_scbi,
+    showBlocks = FALSE, verbose = FALSE
+  )
+
+growth_scbi_sp <- growth_scbi_sp %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+growth_scbi_can_pos <- growth_scbi_can_pos %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+
+comp_dist <- 7.5
+
+growth_scbi_sp <- growth_scbi_sp %>%
+  add_buffer_variable(size = comp_dist, region = study_region_scbi)
+growth_scbi_can_pos <- growth_scbi_can_pos %>%
+  add_buffer_variable(size = comp_dist, region = study_region_scbi)
+
+focal_vs_comp_sp <- growth_scbi_sp %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "basal_area"
+  ) %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+focal_vs_comp_can_pos <- growth_scbi_can_pos %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "basal_area"
+  ) %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+focal_vs_comp_sp %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
+focal_vs_comp_can_pos %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+```
+
+We find that species identity has a lower RMSE, so does a better job. We still however plot the competition posteriors for the canopy position groupings in Figure \ref{fig:can-pos-comp-plot}. Unsurprisingly we see that canopy and canopy emergent competitors generally have negative effects on their neighbors, while shrubs and understory competitors have neutral or even positive effects. 
+
+```{r can-pos-comp}
+fit_mod_can_pos <- growth_scbi_can_pos %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "basal_area"
+  ) %>%
+  comp_bayes_lm(prior_param = NULL)
+``` 
+  
+```{r can-pos-comp-plot, out.width="100%", fig.cap="Posterior distributions of all competition parameters.", echo = FALSE}
+autoplot(fit_mod_can_pos, type = "competition")
+```
+
 
 # Appendix: Replicate RMSE comparison
 
@@ -786,327 +1114,6 @@ filename %>%
   str_c(".pdf") %>%
   ggsave(plot = cv_plot, width = 16 / 2, height = 9 / 2)
 ```
-
-# Appendix: Compare different competitive distances {#mult-dist}
-
-For all the above analyses we took the cut off distance (`comp_dist`) for two stems to compete as `r comp_dist`m. This distance has been estimated in previous neighborhood competition studies in forests [@canham_neighborhood_2004, @uriarte_spatially_2004, @canham_neighborhood_2006]. We used `r comp_dist`m in @allen_permutation_2020 as an average of the values estimated in other studies. But our package can be used to find which distance is best supported by the data. Here we provide an example using another section of the SCBI plot to provide an additional example of the CV block layout. To speed computation we do not consider species differences in competitive effects and treat all species as the same.
-
-```{r appendix2-code}
-census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
-  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
-  mutate(
-    date = mdy(date),
-    dbh = as.numeric(dbh) / 10
-  ) %>%
-  filter(gx < 400, gy < 400)
-
-census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
-  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
-  mutate(
-    date = mdy(date),
-    dbh = as.numeric(dbh) / 10
-  ) %>%
-  filter(gx < 400, gy < 400)
-
-growth_scbi <-
-  compute_growth(
-    census_1 = census_2013_scbi,
-    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
-    id = "stemID"
-  ) %>%
-  # make all species the same, needs to be factor with at least two levels
-  mutate(sp = factor("A", levels = c("A", "B"))) %>%
-  # Compute basal area:
-  mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2)
-
-study_region_scbi <- tibble(
-  x = c(0, 400, 400, 0, 0),
-  y = c(0, 0, 400, 400, 0)
-) %>%
-  sf_polygon()
-
-n_fold <- 4
-fold1 <- cbind(c(0, 200, 200, 0), c(0, 0, 200, 200))
-fold2 <- cbind(c(200, 400, 400, 200), c(0, 0, 200, 200))
-fold3 <- cbind(c(0, 200, 200, 0), c(200, 200, 400, 400))
-fold4 <- cbind(c(200, 400, 400, 200), c(200, 200, 400, 400))
-
-blocks_scbi <- bind_rows(
-  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3),
-  sf_polygon(fold4)
-) %>%
-  mutate(folds = c(1:n_fold) %>% factor())
-
-# Associate each observation to a fold
-spatial_block_scbi <-
-  spatialBlock(
-    speciesData = growth_scbi, k = n_fold,
-    selection = "systematic", blocks = blocks_scbi,
-    showBlocks = FALSE, verbose = FALSE
-  )
-
-growth_scbi <- growth_scbi %>%
-  mutate(foldID = spatial_block_scbi$foldID %>% factor())
-
-mult_dist_comp <- tibble(
-  dist = c(5, 6.25, 7.5, 8.75, 10),
-  rmse = 0
-)
-
-for (i in 1:length(mult_dist_comp$dist)) {
-  comp_dist <- mult_dist_comp$dist[i]
-
-  growth_scbi <- growth_scbi %>%
-    add_buffer_variable(size = comp_dist, region = study_region_scbi)
-
-  focal_vs_comp_scbi <- growth_scbi %>%
-    create_focal_vs_comp(comp_dist = comp_dist, blocks = blocks_scbi, id = "stemID", comp_x_var = "basal_area") %>%
-    run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
-
-  mult_dist_comp$rmse[i] <- focal_vs_comp_scbi %>%
-    rmse(truth = growth, estimate = growth_hat) %>%
-    pull(.estimate)
-}
-
-mult_dist_comp %>%
-  ggplot(aes(dist, rmse)) +
-  geom_point() +
-  xlab("Distance (m)") +
-  ylab("RMSE (cm)")
-```
-
-Here we see that a cut off distance of approximately 6m minimizes the RMSE.
-
-# Appendix: Compare predictor variables {#compare-pred-var}
-
-In the above code we use the basal area of an individual as a continuous predictor variable. But the package allows the user to specify any predictor variable in the `comp_x_var` argument of `create_focal_vs_comp` function. Here we use the cross-validated model comparison to see which of two possible predictor variables, basal area or above ground biomass, best explains growth. 
-
-```{r compar-pred-var}
-census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
-  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
-  mutate(
-    date = mdy(date),
-    dbh = as.numeric(dbh) / 10
-  ) %>%
-  filter(gx < 300, between(gy, 300, 600))
-
-census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
-  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
-  mutate(
-    date = mdy(date),
-    dbh = as.numeric(dbh) / 10
-  ) %>%
-  filter(gx < 300, between(gy, 300, 600))
-
-growth_scbi <-
-  compute_growth(
-    census_1 = census_2013_scbi,
-    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
-    id = "stemID"
-  ) %>%
-  left_join(sp_info, by = "sp") %>%
-  mutate(
-    sp = as.factor(sp),
-    basal_area = 0.0001 * pi * (dbh1 / 2)^2,
-    agb = get_biomass(
-      dbh = dbh1,
-      genus = genus,
-      species = species,
-      coords = c(-78.2, 38.9)
-    )
-  )
-
-study_region_scbi <- tibble(
-  x = c(0, 300, 300, 0, 0),
-  y = c(300, 300, 600, 600, 300)
-) %>%
-  sf_polygon()
-
-n_fold <- 4
-fold1 <- cbind(c(0, 150, 150, 0), c(300, 300, 450, 450))
-fold2 <- cbind(c(150, 300, 300, 150), c(300, 300, 450, 450))
-fold3 <- cbind(c(0, 150, 150, 0), c(450, 450, 600, 600))
-fold4 <- cbind(c(150, 300, 300, 150), c(450, 450, 600, 600))
-
-blocks_scbi <- bind_rows(
-  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3),
-  sf_polygon(fold4)
-) %>%
-  mutate(folds = c(1:n_fold) %>% factor())
-
-# Associate each observation to a fold
-spatial_block_scbi <-
-  spatialBlock(
-    speciesData = growth_scbi, k = n_fold,
-    selection = "systematic", blocks = blocks_scbi,
-    showBlocks = FALSE, verbose = FALSE
-  )
-
-growth_scbi <- growth_scbi %>%
-  mutate(foldID = spatial_block_scbi$foldID %>% factor())
-
-comp_dist <- 7.5
-
-growth_scbi <- growth_scbi %>%
-  add_buffer_variable(size = comp_dist, region = study_region_scbi)
-
-focal_vs_comp_ba <- growth_scbi %>%
-  create_focal_vs_comp(
-    comp_dist = comp_dist,
-    blocks = blocks_scbi,
-    id = "stemID",
-    comp_x_var = "basal_area"
-  ) %>%
-  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
-
-focal_vs_comp_agb <- growth_scbi %>%
-  create_focal_vs_comp(
-    comp_dist = comp_dist,
-    blocks = blocks_scbi,
-    id = "stemID",
-    comp_x_var = "agb"
-  ) %>%
-  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
-
-focal_vs_comp_ba %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
-  pull(.estimate)
-
-focal_vs_comp_agb %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
-  pull(.estimate)
-```
-
-Here we see that basal area does a much better job than above ground biomass. 
-
-
-# Appendix: Compare grouping variables {#compare-group-var}
-
-The package also allows the user to specify the categorical predictor grouping variable. Here we compare two different such variables: species and the potential canopy position of that species. If we had individual-level crown classes (@smith_practice_1986 dominant, codominant, intermediate and suppressed) that could also be used.  
-
-```{r compare-group-var}
-census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
-  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
-  mutate(
-    date = mdy(date),
-    dbh = as.numeric(dbh) / 10
-  ) %>%
-  filter(gx < 300, between(gy, 300, 600))
-
-census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
-  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
-  mutate(
-    date = mdy(date),
-    dbh = as.numeric(dbh) / 10
-  ) %>%
-  filter(gx < 300, between(gy, 300, 600))
-
-growth_scbi_sp <-
-  compute_growth(
-    census_1 = census_2013_scbi,
-    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
-    id = "stemID"
-  ) %>%
-  mutate(
-    sp = as.factor(sp),
-    basal_area = 0.0001 * pi * (dbh1 / 2)^2
-  )
-
-growth_scbi_can_pos <-
-  compute_growth(
-    census_1 = census_2013_scbi,
-    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
-    id = "stemID"
-  ) %>%
-  left_join(sp_info, by = "sp") %>%
-  mutate(
-    canopy_position = str_replace(canopy_position, " ", "_"),
-    canopy_position = str_replace(canopy_position, ",", ""),
-    canopy_position = ifelse(is.na(canopy_position), "shrub_layer", canopy_position),
-    sp = as.factor(canopy_position),
-    basal_area = 0.0001 * pi * (dbh1 / 2)^2
-  )
-
-study_region_scbi <- tibble(
-  x = c(0, 300, 300, 0, 0),
-  y = c(300, 300, 600, 600, 300)
-) %>%
-  sf_polygon()
-
-n_fold <- 4
-fold1 <- cbind(c(0, 150, 150, 0), c(300, 300, 450, 450))
-fold2 <- cbind(c(150, 300, 300, 150), c(300, 300, 450, 450))
-fold3 <- cbind(c(0, 150, 150, 0), c(450, 450, 600, 600))
-fold4 <- cbind(c(150, 300, 300, 150), c(450, 450, 600, 600))
-
-blocks_scbi <- bind_rows(
-  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3),
-  sf_polygon(fold4)
-) %>%
-  mutate(folds = c(1:n_fold) %>% factor())
-
-# Associate each observation to a fold
-spatial_block_scbi <-
-  spatialBlock(
-    speciesData = growth_scbi, k = n_fold,
-    selection = "systematic", blocks = blocks_scbi,
-    showBlocks = FALSE, verbose = FALSE
-  )
-
-growth_scbi_sp <- growth_scbi_sp %>%
-  mutate(foldID = spatial_block_scbi$foldID %>% factor())
-growth_scbi_can_pos <- growth_scbi_can_pos %>%
-  mutate(foldID = spatial_block_scbi$foldID %>% factor())
-
-comp_dist <- 7.5
-
-growth_scbi_sp <- growth_scbi_sp %>%
-  add_buffer_variable(size = comp_dist, region = study_region_scbi)
-growth_scbi_can_pos <- growth_scbi_can_pos %>%
-  add_buffer_variable(size = comp_dist, region = study_region_scbi)
-
-focal_vs_comp_sp <- growth_scbi_sp %>%
-  create_focal_vs_comp(
-    comp_dist = comp_dist,
-    blocks = blocks_scbi,
-    id = "stemID",
-    comp_x_var = "basal_area"
-  ) %>%
-  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
-
-focal_vs_comp_can_pos <- growth_scbi_can_pos %>%
-  create_focal_vs_comp(
-    comp_dist = comp_dist,
-    blocks = blocks_scbi,
-    id = "stemID",
-    comp_x_var = "basal_area"
-  ) %>%
-  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
-
-focal_vs_comp_sp %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
-  pull(.estimate)
-
-focal_vs_comp_can_pos %>%
-  rmse(truth = growth, estimate = growth_hat) %>%
-  pull(.estimate)
-```
-
-We find that species identity has a lower RMSE, so does a better job. But we can still plot the competition posteriors for the canopy position groupings.
-
-```{r can-pos-comp}
-fit_mod_can_pos <- growth_scbi_can_pos %>%
-  create_focal_vs_comp(
-    comp_dist = comp_dist,
-    blocks = blocks_scbi,
-    id = "stemID",
-    comp_x_var = "basal_area"
-  ) %>%
-  comp_bayes_lm(prior_param = NULL)
-autoplot(fit_mod_can_pos, type = "competition")
-```
-
-Unsurprisingly we see that canopy and canopy emergent competitors generally have negative effects on their neighbors, while shrubs and understory competitors have neutral or even positive effects. 
 
 
 # References
