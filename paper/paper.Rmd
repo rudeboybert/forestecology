@@ -648,7 +648,7 @@ for (i in 1:length(mult_dist_comp$dist)) {
 }
 ```
 
-```{r appendix2-plot, out.width="100%", fig.cap="Cross-validated RMSE estimates for 5 `comp_dist` competitive distances.", echo = FALSE}
+```{r appendix2-plot, out.width="100%", fig.cap="Cross-validated RMSE estimates for 5 competitive distances2.", echo = FALSE}
 mult_dist_comp %>%
   ggplot(aes(dist, rmse)) +
   geom_point() +
@@ -660,8 +660,6 @@ mult_dist_comp %>%
 # Appendix: Compare competitor explanatory variables {#compare-pred-var}
 
 In the above code we use the basal area of an individual as a continuous competitor explanatory variable. But the package allows the user to specify any competitor explanatory variable in the `comp_x_var` argument of `create_focal_vs_comp` function. Here we use the cross-validated model comparison to see which of two possible competitor explanatory variables computed in Section \ref{compute-growth}, basal area or above ground biomass, best explains growth. 
-
-We observe in Figure \ref{fig:appendix2-code} that a cut-off distance of approximately 6m minimizes the cross-validation estimated RMSE.
 
 ```{r compar-pred-var}
 census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
