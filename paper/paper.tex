@@ -1198,55 +1198,6 @@ cross- validated error estimates.
     \KeywordTok{str_c}\NormalTok{(}\StringTok{"Shuffle with permutation "}\NormalTok{, j, }\StringTok{" at "}\NormalTok{, }\KeywordTok{Sys.time}\NormalTok{()) }\OperatorTok{%>%}
 \StringTok{        }\KeywordTok{print}\NormalTok{()}
 \NormalTok{\}}
-\CommentTok{## [1] "Shuffle with permutation 1 at 2021-08-09 18:21:51"}
-\CommentTok{## [1] "Shuffle with permutation 2 at 2021-08-09 18:26:48"}
-\CommentTok{## [1] "Shuffle with permutation 3 at 2021-08-09 18:31:46"}
-\CommentTok{## [1] "Shuffle with permutation 4 at 2021-08-09 18:36:41"}
-\CommentTok{## [1] "Shuffle with permutation 5 at 2021-08-09 18:41:31"}
-\CommentTok{## [1] "Shuffle with permutation 6 at 2021-08-09 18:46:03"}
-\CommentTok{## [1] "Shuffle with permutation 7 at 2021-08-09 18:50:32"}
-\CommentTok{## [1] "Shuffle with permutation 8 at 2021-08-09 18:55:09"}
-\CommentTok{## [1] "Shuffle with permutation 9 at 2021-08-09 18:59:38"}
-\CommentTok{## [1] "Shuffle with permutation 10 at 2021-08-09 19:04:06"}
-\CommentTok{## [1] "Shuffle with permutation 11 at 2021-08-09 19:08:36"}
-\CommentTok{## [1] "Shuffle with permutation 12 at 2021-08-09 19:13:01"}
-\CommentTok{## [1] "Shuffle with permutation 13 at 2021-08-09 19:17:25"}
-\CommentTok{## [1] "Shuffle with permutation 14 at 2021-08-09 19:21:47"}
-\CommentTok{## [1] "Shuffle with permutation 15 at 2021-08-09 19:26:20"}
-\CommentTok{## [1] "Shuffle with permutation 16 at 2021-08-09 19:30:42"}
-\CommentTok{## [1] "Shuffle with permutation 17 at 2021-08-09 19:35:05"}
-\CommentTok{## [1] "Shuffle with permutation 18 at 2021-08-09 19:39:28"}
-\CommentTok{## [1] "Shuffle with permutation 19 at 2021-08-09 19:43:51"}
-\CommentTok{## [1] "Shuffle with permutation 20 at 2021-08-09 19:48:14"}
-\CommentTok{## [1] "Shuffle with permutation 21 at 2021-08-09 19:52:37"}
-\CommentTok{## [1] "Shuffle with permutation 22 at 2021-08-09 19:57:01"}
-\CommentTok{## [1] "Shuffle with permutation 23 at 2021-08-09 20:01:29"}
-\CommentTok{## [1] "Shuffle with permutation 24 at 2021-08-09 20:06:09"}
-\CommentTok{## [1] "Shuffle with permutation 25 at 2021-08-09 20:10:42"}
-\CommentTok{## [1] "Shuffle with permutation 26 at 2021-08-09 20:15:06"}
-\CommentTok{## [1] "Shuffle with permutation 27 at 2021-08-09 20:19:29"}
-\CommentTok{## [1] "Shuffle with permutation 28 at 2021-08-09 20:23:52"}
-\CommentTok{## [1] "Shuffle with permutation 29 at 2021-08-09 20:28:15"}
-\CommentTok{## [1] "Shuffle with permutation 30 at 2021-08-09 20:32:37"}
-\CommentTok{## [1] "Shuffle with permutation 31 at 2021-08-09 20:36:59"}
-\CommentTok{## [1] "Shuffle with permutation 32 at 2021-08-09 20:41:21"}
-\CommentTok{## [1] "Shuffle with permutation 33 at 2021-08-09 20:45:43"}
-\CommentTok{## [1] "Shuffle with permutation 34 at 2021-08-09 20:50:06"}
-\CommentTok{## [1] "Shuffle with permutation 35 at 2021-08-09 20:54:29"}
-\CommentTok{## [1] "Shuffle with permutation 36 at 2021-08-09 20:58:51"}
-\CommentTok{## [1] "Shuffle with permutation 37 at 2021-08-09 21:03:16"}
-\CommentTok{## [1] "Shuffle with permutation 38 at 2021-08-09 21:07:38"}
-\CommentTok{## [1] "Shuffle with permutation 39 at 2021-08-09 21:12:01"}
-\CommentTok{## [1] "Shuffle with permutation 40 at 2021-08-09 21:16:24"}
-\CommentTok{## [1] "Shuffle with permutation 41 at 2021-08-09 21:20:47"}
-\CommentTok{## [1] "Shuffle with permutation 42 at 2021-08-09 21:25:11"}
-\CommentTok{## [1] "Shuffle with permutation 43 at 2021-08-09 21:29:34"}
-\CommentTok{## [1] "Shuffle with permutation 44 at 2021-08-09 21:33:57"}
-\CommentTok{## [1] "Shuffle with permutation 45 at 2021-08-09 21:38:20"}
-\CommentTok{## [1] "Shuffle with permutation 46 at 2021-08-09 21:42:42"}
-\CommentTok{## [1] "Shuffle with permutation 47 at 2021-08-09 21:47:05"}
-\CommentTok{## [1] "Shuffle with permutation 48 at 2021-08-09 21:51:27"}
-\CommentTok{## [1] "Shuffle with permutation 49 at 2021-08-09 21:56:05"}
 
 \CommentTok{# 5. Save results ----}
 \NormalTok{clock <-}\StringTok{ }\KeywordTok{toc}\NormalTok{(}\DataTypeTok{quiet =} \OtherTok{TRUE}\NormalTok{)}
@@ -1289,8 +1240,6 @@ cross- validated error estimates.
 \StringTok{    }\KeywordTok{ggsave}\NormalTok{(}\DataTypeTok{plot =}\NormalTok{ cv_plot, }\DataTypeTok{width =} \DecValTok{16}\OperatorTok{/}\DecValTok{2}\NormalTok{, }\DataTypeTok{height =} \DecValTok{9}\OperatorTok{/}\DecValTok{2}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
-
-\begin{center}\includegraphics[width=1\linewidth]{Figures/appendix1-code-1} \end{center}
 
 \hypertarget{mult-dist}{%
 \section{Appendix 2: Compare different competitive
