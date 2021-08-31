@@ -95,10 +95,11 @@ We address this shortcoming with the `forestecology` R package providing methods
 
 Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species $j$; let $j = 1, \ldots, J$ index all $J$ focal species; and let $k = 1, \ldots, K$ index all $K$ "competitor" species. The average annual growth in diameter at breast height (DBH) $y_{ij}$ (in centimeters/year) of the $i^{th}$ tree of focal species $j$ is modeled as
 
-\begin{equation}
-\label{eq:model}
-y_{ij} = \beta_{0,j} + \beta_{\text{dbh},j} \cdot \text{dbh}_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot x^{\text{comp}}_{ijk} + \epsilon_{ij}
-\end{equation} 
+
+
+\begin{eqnarray}
+y_{ij} = \beta_{0,j} + \beta_{\text{dbh},j} \cdot \text{dbh}_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot x^{\text{comp}}_{ijk} + \epsilon_{ij} (\#eq:model)
+\begin{eqnarray}
 
 where $\beta_{0,j}$ is the diameter-independent growth rate of species $j$; $\text{dbh}_{ij}$ is the DBH of the focal tree at the earlier census and $\beta_{\text{dbh},j}$ the slope of that species's diameter-growth relationship;  $x^{\text{comp}}_{ijk}$ is the sum of some numerical explanatory variable of all trees of competitor species $k$, and $\lambda_{jk}$ quantifies the corresponding change in growth for individuals of species $j$ from these competitors; and $\epsilon_{ij}$ is a random error term distributed $\text{Normal}(0, \sigma^2)$. 
 
@@ -107,9 +108,8 @@ where $\beta_{0,j}$ is the diameter-independent growth rate of species $j$; $\te
 To evaluate whether competitor species identity matters, @allen_permutation_2020 run a permutation test where a null hypothesis of no species grouping-specific effects of competition is assumed, thus the species identity of all competitors can be permuted:
 
 \begin{eqnarray}
-\label{eq:permutation-hypothesis-test}
-&&H_0: \lambda_{jk} = \lambda_{j} \mbox{ for all } k = 1, \ldots, K\\
-\text{vs.}&&H_A: \text{at least one } \lambda_{jk} \mbox{ is different} \nonumber
+&&H_0: \lambda_{jk} = \lambda_{j} \mbox{ for all } k = 1, \ldots, K (\#eq:permutation-hypothesis-test)\\
+\text{vs.}&&H_A: \text{at least one } \lambda_{jk} \mbox{ is different} \notag
 \end{eqnarray}
 
 Furthermore, to account for the spatial autocorrelation in their estimates of out-of-sample model error, @allen_permutation_2020 use spatial cross-validation. Estimates of model error that do not account for this dependence tend to underestimate the true model error [@roberts_cross-validation_2017].
