@@ -1,0 +1,1117 @@
+---
+title: The forestecology R package for fitting and assessing neighborhood models of the effect of interspecific competition on the growth of trees
+authors: 
+- name: Albert Y. Kim 
+  affiliation: Program in Statistical & Data Sciences, Smith College
+  thanks: "Assistant Professor, Statistical & Data Sciences, Smith College, Northampton, MA 01063 (e-mail: akim04@smith.edu)."
+- name: David N. Allen
+  affiliation: Biology Department, Middlebury College
+- name: Simon P. Couch
+  affiliation: Mathematics Department, Reed College
+bibliography: paper.bib
+output:
+  bookdown::word_document2:
+  fig_caption: yes
+link-citations: yes
+header-includes:
+- \usepackage{xcolor, soul, xspace, float, subfig, lineno, setspace, fancyhdr}
+# Add line numbers:
+# - \linenumbers
+# Add running header:
+- \pagestyle{fancy}
+- \fancyhead[LO,LE]{forestecology R package}
+- \renewcommand{\sectionmark}[1]{\markright{#1}{}}
+---
+
+
+
+```{r setup, include = FALSE, cache = FALSE}
+# Internally used packages
+library(tidyverse)
+library(conflicted)
+library(viridis)
+library(knitr)
+library(here)
+
+# knitr settings
+opts_chunk$set(
+  # Code output:
+  warning = FALSE,
+  message = FALSE,
+  echo = TRUE,
+  cache = TRUE,
+  # Figure:
+  out.width = "100%",
+  fig.path = "Figures/",
+  fig.width = 16 / 2.5,
+  fig.height = 9 / 2.5,
+  fig.align = "center",
+  fig.show = "hold",
+  # Etc:
+  collapse = TRUE,
+  comment = "##",
+  tidy.opts = list(width.cutoff = 72),
+  tidy = TRUE
+)
+
+# Random number generator seed value
+set.seed(76)
+
+# Set ggplot defaults output:
+if (!is_html_output()) {
+  # Grey theme:
+  ggplot2::theme_set(theme_light())
+  # Color scheme:
+  # scale_colour_discrete <- scale_colour_viridis_d
+}
+
+# Set output width
+options(
+  width = 72,
+  # Decimal precision
+  digits = 3,
+  # Number of rows for tibble printing
+  tibble.print_max = 5,
+  tibble.print_min = 5
+)
+```
+
+\doublespacing
+
+# Abstract
+
+1. Neighborhood competition models are powerful tools to measure the effect of interspecific competition. Statistical methods to ease the application of these models are currently lacking.
+2. We present the `forestecology` package providing methods to i) specify neighborhood competition models, ii) evaluate the effect of competitor species identity using permutation tests, and iii) measure model performance using spatial cross-validation.  Following @allen_permutation_2020, we implement a Bayesian linear regression neighborhood competition model.
+3. We demonstrate the package's functionality using data from the Smithsonian Conservation Biology Institute's large forest dynamics plot, part of the ForestGEO global network of research sites. Given ForestGEO's data collection protocols and data formatting standards, the package was designed with cross-site compatibility in mind. We highlight the importance of spatial cross-validation when interpreting model results. 
+4. The package features i) `tidyverse`-like structure whereby verb-named functions can be modularly "piped" in sequence, ii) functions with standardized inputs/outputs of simple features `sf` package class, and iii) an S3 object-oriented implementation of the Bayesian linear regression model. These three facts allow for clear articulation of all the steps in the sequence of analysis and easy wrangling and visualization of the geospatial data. Furthermore, while the package only has Bayesian linear regression implemented, the package was designed with extensibility to other methods in mind. 
+
+Keywords: forest ecology, interspecific competition, neighborhood competition, tree growth, R, ForestGEO, spatial cross-validation
+
+# Introduction
+
+Repeat-censused forest plots offer excellent opportunities to test neighborhood models of the effect of competition on the growth of trees [@canham_neighborhood_2004]. Neighborhood models of competition have been used to: test whether the species identity of a competitor matters [@uriarte_spatially_2004; measure species-specific competition coefficients [@das_effect_2012 @tatsumi_estimating_2016]; test competing models to see what structures competitive interactions, e.g. traits or phylogeny [@allen_permutation_2020; @uriarte_trait_2010]; and inform selective logging practices [@canham_neighborhood_2006]. Although these are well-described methods, few methods are currently available for easy application. 
+
+We address this shortcoming with the `forestecology` R package providing methods and data for forest ecology model fitting and assessment, available on CRAN (https://cran.r-project.org/package=forestecology) and on GitHub (https://github.com/rudeboybert/forestecology). The package is written to model stem diameter growth between two censuses based on neighborhood competition, largely following the methods in @allen_permutation_2020. 
+
+Let $i = 1, \ldots, n_j$ index all $n_j$ trees of "focal" species $j$; let $j = 1, \ldots, J$ index all $J$ focal species; and let $k = 1, \ldots, K$ index all $K$ "competitor" species. The average annual growth in diameter at breast height (DBH) $y_{ij}$ (in centimeters/year) of the $i^{th}$ tree of focal species $j$ is modeled as
+
+\begin{equation}
+\label{eq:model}
+y_{ij} = \beta_{0,j} + \beta_{\text{dbh},j} \cdot \text{dbh}_{ij} + \sum_{k=1}^{K} \lambda_{jk} \cdot x^{\text{comp}}_{ijk} + \epsilon_{ij}
+\end{equation} 
+
+where $\beta_{0,j}$ is the diameter-independent growth rate of species $j$; $\text{dbh}_{ij}$ is the DBH of the focal tree at the earlier census and $\beta_{\text{dbh},j}$ the slope of that species's diameter-growth relationship;  $x^{\text{comp}}_{ijk}$ is the sum of some numerical explanatory variable of all trees of competitor species $k$, and $\lambda_{jk}$ quantifies the corresponding change in growth for individuals of species $j$ from these competitors; and $\epsilon_{ij}$ is a random error term distributed $\text{Normal}(0, \sigma^2)$. 
+
+@allen_permutation_2020 use the sum of the basal area of all trees of competitor species $k$ as $x^{\text{comp}}_{ijk}$. Furthermore, they estimate all parameters via Bayesian linear regression, while exploiting Normal/Inverse Gamma conjugacy to derive closed-form solutions to all posterior distributions^[See S1 Appendix of @allen_permutation_2020, available at https://doi.org/10.1371/journal.pone.0229930.s004]. These closed-form solutions are not as computationally expensive as approximations from Markov Chain Monte Carlo algorithms.
+
+To evaluate whether competitor species identity matters, @allen_permutation_2020 run a permutation test where a null hypothesis of no species grouping-specific effects of competition is assumed, thus the species identity of all competitors can be permuted:
+
+\begin{eqnarray}
+\label{eq:permutation-hypothesis-test}
+&&H_0: \lambda_{jk} = \lambda_{j} \mbox{ for all } k = 1, \ldots, K\\
+\text{vs.}&&H_A: \text{at least one } \lambda_{jk} \mbox{ is different} \nonumber
+\end{eqnarray}
+
+Furthermore, to account for the spatial autocorrelation in their estimates of out-of-sample model error, @allen_permutation_2020 use spatial cross-validation. Estimates of model error that do not account for this dependence tend to underestimate the true model error [@roberts_cross-validation_2017].
+
+The package is designed with "tidy" design principles in mind [@wickham_welcome_2019]. Much like all `tidyverse` packages, `forestecology` has verb-named functions that can be modularly composed using the pipe `%>%` operator to sequentially complete all necessary analysis steps [@bache_pipe_2020]. 
+
+Furthermore, the inputs and outputs of most functions use the same "simple features for R" data structures for spatial data from the `sf` package [@pebesma_simple_2018]. Previously `sp` package classes were commonly used for storing spatial data and interfacing with geospatial libraries [@bivand_sp_2013]; the `sf` package aims to improve on the `sp` package by:
+
+1. Using simple feature access as the base standard for representing and encoding spatial data, rather than shapefiles [@herring_2011]. 
+1. Leveraging improvements in external libraries for reading and writing spatial data (GDAL) and for geometrical operations (GEOS) [@warmerdam_geospatial_2008, @geos_2017].
+1. Integrating closely with the popular `tidyverse` suite of packages for data science [@wickham_welcome_2019]. 
+
+By using the `sf` package classes to represent spatial data rather than the `sp` package, the implementation and use of the `forestecology` package's spatial algorithms was greatly simplified. 
+
+
+
+# forestecology workflow: a case study {#casestudy}
+
+We present a case-study of `forestecology`'s functionality on data from the Smithsonian Conservation Biology Institute (SCBI) large forest dynamics plot in Front Royal, VA, USA, part of the ForestGEO global network of research sites [@bourg_initial_2013, @andersonteixeira_ctfs-forestgeo_2015, @davies_forestgeo_2021]. The 25.6 ha (640 x 400 m) plot is located at the intersection of three of the major physiographic provinces of the eastern US---the Blue Ridge, Ridge and Valley, and Piedmont provinces---and is adjacent to the northern end of Shenandoah National Park. 
+
+The package has the following goals: to evaluate i) the effect of competitor species identity using permutation tests and ii) model performance using spatial cross-validation. We outline the four-step basic analysis sequence:
+
+1. Compute the growth of stems based on two censuses.
+1. Add spatial information:
+    1. Define a buffer region of trees.
+    1. Add spatial cross-validation block information.
+1. Identify all focal trees and their competitors.
+1. Apply model, which includes:
+    1. Fit model.
+    1. Compute predicted values.
+    1. Visualize posterior distributions.
+
+We start by loading all packages.
+
+```{r load-packages}
+library(tidyverse)
+library(lubridate)
+library(sf)
+library(patchwork)
+library(forestecology)
+library(blockCV)
+
+# Resolve conflicting functions
+filter <- dplyr::filter
+select <- dplyr::select
+```
+
+
+
+## Step 1: Compute the growth of trees based on census data {#compute-growth}
+
+We first compute the growth of trees using data from two censuses. `compute_growth()` computes the average annual growth based on census data that roughly follows ForestGEO standards. Despite such standards, minor variations will still exist between sites, thereby necessitating some data wrangling. For example, the SCBI site records all DBH values in millimeters [@bourg_initial_2013], whereas the Michigan Big Woods site used in @allen_permutation_2020 records them in centimeters [@allen_michigan_2020].
+
+We load both 2008 and 2014 SCBI census `.csv` files as they existed on GitHub on 2021/08/02 and perform minor data wrangling [@gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020]. We then only consider a 9 ha subsection of the 25.6 ha of the site to speed up computation for this example: `gx` from 0--300 instead of 0--400 and `gy` from 300--600 instead of 0--640.
+
+```{r scbi-load-data}
+census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    # Convert date from character to date
+    date = mdy(date),
+    # Convert dbh to be in cm
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+```
+
+These two data frames are then used as inputs to `compute_growth()`, along with `id` specifying the variable that uniquely identifies each tree-stem. We also discard all resprouts with `code == R` in the later census, since we are only interested in the growth of surviving, and not resprouted, stems.
+
+```{r scbi-compute-growth}
+growth_scbi <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  )
+growth_scbi %>%
+  select(stemID, sp, dbh1, dbh2, growth, geometry)
+```
+
+The output `growth_scbi` is a data frame of class `sf` that includes among other variables the species variable `sp` converted to a factor, the average annual `growth` in DBH (cm $\cdot$ y^-1^) for all stems that were alive at both time points, and the `sf` package's encoding of geolocations of `geometry` type `<POINT>`. Given that `growth_scbi` is of class `sf`, it can be easily plotted in `ggplot2` using `geom_sf()` as seen in Figure \ref{fig:scbi-trees}.
+
+```{r scbi-trees, out.width="66%", fig.cap="Step 1 - Compute growth of trees based on census data. A map of the growth of a random sample of 500 trees from a 9 ha subsection of the Smithsonian Conservation Biology Institute (SCBI) forest plot."}
+ggplot() +
+  geom_sf(data = growth_scbi %>% sample_n(500), aes(size = growth)) +
+  scale_size_binned(limits = c(0.1, 1)) +
+  labs(size = expression(paste(Growth, " (cm ", y^{-1}, ")")))
+```
+
+We also load species information as it existed on GitHub on 2021/08/02, which includes family, genus, and species information; as well as classifications of the canopy position (canopy, canopy emergent, understory, shrub layer), drought tolerance (intolerant, resistant), and other characteristics of the species. 
+
+```{r scbi-load-sp-data}
+sp_info <- read_csv("SCBI_ForestGEO_sp_ecology.csv") %>%
+  select(
+    sp = spcode, family, genus, species, canopy_position,
+    drought_tolerance
+  )
+sp_info
+```
+
+We join this species information to our `growth_scbi` data frame and convert the species variable to a factor.
+
+```{r}
+growth_scbi <- growth_scbi %>%
+  left_join(sp_info, by = "sp") %>%
+  mutate(sp = as.factor(sp))
+```
+
+Furthermore, we compute two potential competitor explanatory variables $x^{\text{comp}}_{ijk}$ from Equation \ref{eq:model}. First, the basal area of each tree as a function of its DBH in the earlier census. Second, the above ground biomass as estimated by allometric equations encoded in the `get_biomass()` function from the `allodb` package [@allodb_package]; this function has DBH, species, and geographic coordinates as arguments.
+
+```{r scbi-compute-comp-explanatory-variables}
+# Install development version of allodb using:
+# remotes::install_github("forestgeo/allodb")
+library(allodb)
+growth_scbi <- growth_scbi %>%
+  mutate(
+    # Compute basal area:
+    basal_area = 0.0001 * pi * (dbh1 / 2)^2,
+    # Compute above ground biomass:
+    agb = get_biomass(
+      dbh = dbh1,
+      genus = genus,
+      species = species,
+      coords = c(-78.2, 38.9)
+    )
+  )
+```
+
+
+
+## Step 2: Add spatial information {#spatial-information}
+
+We then add spatial information to `growth_scbi`. We first add a "buffer region" to the periphery of the study region. Since some of our model's explanatory variables are cumulative, we must ensure that all trees being modeled are not biased to have different neighbor structures. This is of concern for trees at the boundary of the study region who will not have all their neighbors included in the census stems. To account for such edge effects, only trees that are not part of this buffer region, i.e. are part of the interior of the study region, will have their growth modeled [@waller_applied_2004].
+
+Our model of interspecific competition relies on a spatial definition of who competitor trees are: all trees within a distance `comp_dist` of a focal tree. Here we set `comp_dist` to 7.5m, a value informed by other studies [@canham_neighborhood_2004, @uriarte_spatially_2004, @canham_neighborhood_2006], but the package could also be used to compare multiple distances and see which is best supported (see Appendix \ref{mult-dist}). We use `comp_dist` and a manually constructed `sf` representation of the study region's boundary as inputs to `add_buffer_variable()` to add a `buffer` boolean variable to `growth_scbi`. All trees with `buffer` equal to `FALSE` will be our focal trees whose growth will be modeled, whereas those with `TRUE` will only act as competitor trees. 
+
+```{r add-buffer}
+# Define competitive distance range
+comp_dist <- 7.5
+
+# Manually construct study region boundary
+study_region_scbi <- tibble(
+  x = c(0, 300, 300, 0, 0),
+  y = c(300, 300, 600, 600, 300)
+) %>%
+  sf_polygon()
+
+growth_scbi <- growth_scbi %>%
+  add_buffer_variable(size = comp_dist, region = study_region_scbi)
+```
+
+The second element of spatial information we add are blocks corresponding to folds of a spatial cross-validation algorithm. Conventional cross-validation algorithms assign individual observations to folds by randomly resampling them all while assuming they are statistically independent. In the case of forest census data however, observations exhibit spatial autocorrelation. We therefore incorporate this dependence into the cross-validation algorithm by resampling spatial blocks of trees [@roberts_cross-validation_2017 @pohjankukka_estimating_2017].
+
+We first manually define an `sf` object defining four folds that partition the study region. We then use the output of the `spatialBlock()` function from the `blockCV` package to associate each tree in `growth_scbi` to the correct `foldID` [@valavi_blockcv_2019]. This `foldID` variable will be used in Section \ref{spatial-cross-validation}.
+
+Figure \ref{fig:scbi-spatial-information} illustrates the net effect of adding these two elements of spatial information to `growth_scbi`.
+
+```{r manually-define-folds}
+# Manually define spatial blocks to act as folds
+n_fold <- 4
+fold1 <- cbind(c(0, 150, 150, 0), c(300, 300, 450, 450))
+fold2 <- cbind(c(150, 300, 300, 150), c(300, 300, 450, 450))
+fold3 <- cbind(c(0, 150, 150, 0), c(450, 450, 600, 600))
+fold4 <- cbind(c(150, 300, 300, 150), c(450, 450, 600, 600))
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2),
+  sf_polygon(fold3), sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+spatial_block_scbi <-
+  spatialBlock(
+    speciesData = growth_scbi, k = n_fold,
+    selection = "systematic", blocks = blocks_scbi,
+    showBlocks = FALSE, verbose = FALSE
+  )
+
+growth_scbi <- growth_scbi %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+```
+
+```{r scbi-spatial-information, out.width="66%", fig.cap="Step 2 - Add spatial information. A buffer region and spatial cross-validation blocks 1 through 4. The location of each tree is marked with its fold number where the folds are delineated with solid lines. The color of each digit indicates whether the tree is part of the buffer region (thus will only be considered as a competitor tree) or is part of the interior of the study region (thus is a focal tree whose growth is of modeled interest)."}
+ggplot() +
+  geom_sf(data = blocks_scbi, fill = "transparent", linetype = "dashed") +
+  geom_sf_text(
+    data = growth_scbi %>% sample_n(1000),
+    aes(label = foldID, col = buffer)
+  )
+```
+
+
+
+## Step 3: Identify all focal and corresponding competitor trees {#focal-vs-comp}
+
+We then identify all focal trees and their corresponding competitor trees. More specifically, identify all trees that are not part of the buffer region, have a valid `growth` measurement, and have at least one neighbor within `r comp_dist`m. We do this using `create_focal_vs_comp()`, which takes the previously detailed `comp_dist` and `id` arguments, the `sf` representation of the spatial cross-validation blocks `blocks_scbi`, and a specification `comp_x_var` of the `basal_area` variable we use as the competitor explanatory variable $x^{\text{comp}}_{ijk}$ from Equation \ref{eq:model}. This function returns a new data frame `focal_vs_comp_scbi`.
+
+```{r scbi-focal-vs-comp}
+focal_vs_comp_scbi <- growth_scbi %>%
+  create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID", comp_x_var = "basal_area")
+focal_vs_comp_scbi %>%
+  select(focal_ID, focal_sp, geometry, growth, comp)
+```
+
+```{r internal, echo = FALSE, eval = FALSE}
+# Internal: after removing trees in buffer and have NA for growth, there is one
+# tree that is not included in focal_vs_comp_scbi b/c it has no neighbors within
+# comp_dist = 7.5m of it
+growth_scbi %>%
+  filter(!buffer & !is.na(growth)) %>%
+  filter(!stemID %in% focal_vs_comp_scbi$focal_ID)
+
+growth_scbi %>%
+  mutate(flag = stemID == 18823) %>%
+  ggplot() +
+  geom_sf(aes(col = flag))
+```
+
+The resulting `focal_vs_comp_scbi` has `r nrow(focal_vs_comp_scbi)` rows, representing the subset of the `r nrow(growth_scbi)` trees in `growth_scbi` that will be considered as focal trees. The variables `focal_ID` and `focal_sp` relate to tree-stem identification and species information. Most notably however is the variable `comp`, which contains information on all competitor trees saved in `tidyr` package list-column format [@tidyr_package]. To inspect this information, we flatten the `comp` list-column for the tree with `focal_ID` 4 in the first row, here a `tibble [20 × 4]`, into regular columns using `unnest()` from the `tidyr` package. 
+
+```{r demonstrate-unnest, scbi-focal-vs-comp-3}
+focal_vs_comp_scbi %>%
+  filter(focal_ID == 4) %>%
+  select(focal_ID, dbh, comp) %>%
+  unnest(cols = "comp")
+```
+
+We observe 4 variables describing 20 competitor trees: the unique tree-stem ID, the distance to the focal tree (all $\leq$ `r comp_dist`m), the species, and the basal area (in m$^2$) calculated as $\frac{\pi \times (\text{DBH/2})^2}{10000}$ for the DBH in cm from the earlier census. Saving competitor information in list-column format minimizes redundancy since we do not need to repeat information on the focal tree 20 times. We visualize the spatial distribution of these trees in Figure \ref{fig:scbi-focal-vs-comp-map}. 
+
+Here we use basal area as the continuous competitor explanatory variable but the package is flexible to allow the user to specify any competitor explanatory variable (basal area, biomass, tree height, a soil nutrient value, \dots). The package can also be used to compare competitor explanatory variables and see which best explains tree growth, see Appendix \ref{compare-pred-var} for an example comparing basal area and above ground biomass. Similarly, the package can use any categorical variable as an explanatory variable and compare between different categorical variables. For example in @allen_permutation_2020 we compare grouping individuals based on species, family, and based on trait-based groups. In Appendix \ref{compare-group-var} we give another example and compare grouping individuals by species or by potential canopy position (canopy, understory, shrub layer). 
+
+```{r scbi-focal-vs-comp-map, out.width="66%", echo = FALSE, fig.cap="Step 3 - Identify all focal and corresponding competitor trees. The dashed circle extends 7.5m away from the focal tree 4 while all 20 competitor trees are within this circle.", fig.height=4}
+comp_radius <- growth_scbi %>%
+  filter(stemID == 4) %>%
+  st_buffer(dist = comp_dist)
+
+comp_radius_box <- growth_scbi %>%
+  filter(stemID == 4) %>%
+  st_buffer(dist = comp_dist + 10) %>%
+  st_bbox() %>%
+  st_as_sfc() %>%
+  st_intersects(growth_scbi, ., sparse = FALSE)
+
+growth_scbi_subset <- growth_scbi %>%
+  mutate(inside = comp_radius_box) %>%
+  filter(inside)
+
+ggplot() +
+  geom_sf(data = growth_scbi_subset, aes(col = sp, size = dbh1)) +
+  geom_sf(data = comp_radius, linetype = "dashed", alpha = 0, inherit.aes = FALSE) +
+  coord_sf(xlim = st_bbox(comp_radius)[c("xmin", "xmax")], ylim = st_bbox(comp_radius)[c("ymin", "ymax")]) +
+  geom_sf_text(data = growth_scbi %>% filter(stemID == 4), aes(label = stemID), size = 12) +
+  labs(size = "DBH at first census", col = "species")
+```
+
+
+
+
+
+
+## Step 4: Fit model {#model-fit-predict}
+
+Lastly, we fit the competition Bayesian linear regression model for tree growth outlined in Equation \ref{eq:model} using `comp_bayes_lm()`. This function has an option to specify prior distributions of all parameters, chosen here to be the defaults detailed in `?comp_bayes_lm`. 
+
+```{r scbi-model-fit}
+comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
+  comp_bayes_lm(prior_param = NULL)
+```
+
+The resulting `comp_bayes_lm_scbi` is an object of S3 class type `comp_bayes_lm` containing the posterior values of all parameters. Furthermore, this class includes generics for three methods. First, the generic for `print()` displays the names of all prior and posterior parameters and the model formula:
+
+```{r show-comp-bayes}
+comp_bayes_lm_scbi
+```
+
+Next, the generic for `predict()` takes the posterior parameter values in `comp_bayes_lm_scbi` and a `newdata` data frame, and outputs a vector `growth_hat` of predicted DBH values $\widehat{y_{ij}}$ computed from the posterior predictive distribution.
+
+```{r scbi-model-predict}
+focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
+  mutate(growth_hat = predict(comp_bayes_lm_scbi,
+    newdata = focal_vs_comp_scbi
+  ))
+```
+```{r show-focal-vs-comp}
+focal_vs_comp_scbi %>%
+  select(focal_ID, focal_sp, dbh, growth, growth_hat)
+```
+
+We can now compare the observed and predicted growths to compute the root mean squared error (RMSE) of our model:
+
+```{r scbi-model-rmse}
+model_rmse <- focal_vs_comp_scbi %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+model_rmse
+```
+
+Lastly, the generic for `ggplot2::autoplot()` allows us to visualize all posterior distributions, as seen in Figure \ref{fig:scbi-posterior-viz}. Setting `type` to `"intercepts"` and `"dbh_slopes"` returns species-specific posterior distributions for $\beta_{0,j}$ and $\beta_{dbh,j}$ respectively, while setting `type = "competition"` returns competition coefficients $\lambda_{j,k}$. 
+
+```{r scbi-posterior-viz, out.width="100%", fig.cap= "Step 4 - Fit model. Posterior distributions of all parameters. For compactness we include only three species.", fig.width = 8, fig.height = 6}
+# Plot posteriors for only a subset of species
+sp_to_plot <- c("litu", "quru", "cagl")
+
+plot1 <- autoplot(comp_bayes_lm_scbi,
+  type = "intercepts",
+  sp_to_plot = sp_to_plot
+)
+plot2 <- autoplot(comp_bayes_lm_scbi,
+  type = "dbh_slopes",
+  sp_to_plot = sp_to_plot
+)
+plot3 <- autoplot(comp_bayes_lm_scbi,
+  type = "competition",
+  sp_to_plot = sp_to_plot
+)
+
+# Combine plots using the patchwork package
+(plot1 | plot2) / plot3
+```
+
+For many users the visualizations of $\lambda_{j,k}$ will be of particular interest as they provide insight into species-specific competitive interactions, where negative values indicate a competitor species which slows the growth of a focal species. Here, for example, we see that tulip poplars (litu) have a strong negative effect on the growth of conspecifics but relatively lesser effect on pignut hickory (cagl) and red oak (quru) neighbors.
+
+Currently the `forestecology` package can only fit the competition Bayesian linear regression model in Equation \ref{eq:model}. However, it can be extended to any model as long as it is implemented in a function similar to `comp_bayes_lm()`.
+
+
+## Evaluate the effect of competitor species identity using permutation tests {#permutation-test}
+
+To evaluate the effect of competitor species identity, we use the above four steps along with the permutation test in Equation \ref{eq:permutation-hypothesis-test}. Under a null hypothesis where competitor species identity does not matter, we can permute the competitor species identities within each focal tree, compute the RMSE test statistic, repeat this process several times to construct a null distribution, and compare it to the observed RMSE to assess significance. Going back to our example in Section \ref{focal-vs-comp} of focal tree with `focal_ID` 4 and its 20 competitors, the permutation test only randomly resamples the `comp_sp` variable without replacement, leaving all other variables intact. This resampling is nested within each focal tree in order to preserve neighborhood structure. We perform this permutation test once again using `comp_bayes_lm()` but by setting `run_shuffle = TRUE`.
+
+```{r scbi-permutation-model-fit}
+comp_bayes_lm_scbi_shuffle <- focal_vs_comp_scbi %>%
+  comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
+
+focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
+  mutate(growth_hat_shuffle = predict(comp_bayes_lm_scbi_shuffle,
+    newdata = focal_vs_comp_scbi
+  ))
+```
+```{r show-rmse-shuffle}
+model_rmse_shuffle <- focal_vs_comp_scbi %>%
+  rmse(truth = growth, estimate = growth_hat_shuffle) %>%
+  pull(.estimate)
+model_rmse_shuffle
+```
+
+The resulting permutation test RMSE of `r model_rmse_shuffle` is `r ifelse(model_rmse_shuffle < model_rmse, "smaller", "larger")` than the earlier RMSE of `r model_rmse`, suggesting that models that do incorporate competitor species identity better fit the data.  
+
+
+## Evaluate model performance using spatial cross-validation {#spatial-cross-validation}
+
+To evaluate model performance, we use spatial cross-validation. The model fit in Section \ref{model-fit-predict} uses the same data to both fit and assess model performance. Given the spatial-autocorrelation of our data, this can potentially lead to overfit models [@roberts_cross-validation_2017]. To mitigate this risk, we use the spatial cross-validation blocking scheme encoded in the `foldID` variable from Section \ref{spatial-information} and visualized in Figure \ref{fig:scbi-spatial-information}.
+
+At each iteration of the cross-validation, one fold acts as the test set and the remaining three act as the training set. We fit the model to all focal trees in the training set, apply the model to all focal trees in the test set, compute predicted values, and compute the RMSE. Furthermore, to maintain spatial independence between the test and training sets, a "fold buffer" that extends `r comp_dist`m outwards from the boundary of the test set is considered; all trees within this "fold buffer" are excluded from the training set (see Figure \ref{fig:scbi-spatial-cross-validation-schematic}). 
+
+```{r scbi-spatial-cross-validation-schematic, out.width="66%", fig.cap= "Schematic of spatial cross-validation. Using the k = 1 fold (bottom-left) as the test set, k = 2 through 4 as the training set, along with a fold buffer extending outwards from the test set to maintain spatial independence between it and the training set.", echo = FALSE}
+fold_number <- 1
+
+test_fold_buffer <- blocks_scbi %>%
+  filter(folds == fold_number)
+
+test_vs_train <- focal_vs_comp_scbi %>%
+  st_as_sf() %>%
+  add_buffer_variable(
+    direction = "out", size = comp_dist, region = test_fold_buffer
+  ) %>%
+  mutate(
+    fold = case_when(
+      foldID == fold_number ~ "test",
+      foldID != fold_number & buffer ~ "training",
+      foldID != fold_number & !buffer ~ "fold buffer"
+    ),
+    fold = factor(fold, levels = c("test", "fold buffer", "training"))
+  )
+
+ggplot() +
+  geom_sf(data = compute_buffer_region(test_fold_buffer, direction = "out", size = comp_dist), col = "red", fill = "transparent") +
+  geom_sf(data = blocks_scbi, fill = "transparent", linetype = "dashed") +
+  geom_sf(data = test_vs_train %>% st_as_sf() %>% sample_n(1000), aes(col = fold, shape = fold))
+```
+
+This process is repeated for each of the four folds acting as the test set, then the four RMSE's are averaged to provide a single estimate of model error. This algorithm is implemented in `run_cv()`, which acts as a wrapper function to both `comp_bayes_lm()` that fits the model and `predict()` that returns predicted values.
+
+```{r scbi-spatial-cv}
+focal_vs_comp_scbi <- focal_vs_comp_scbi %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+```
+```{r show-rmse-cv}
+model_rmse_cv <- focal_vs_comp_scbi %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+model_rmse_cv
+```
+
+The resulting RMSE of `r model_rmse_cv` computed using cross-validation is `r ifelse(model_rmse_cv > model_rmse, "larger", "smaller")` than the earlier RMSE of `r model_rmse`, suggesting that models that do not account for spatial autocorrelation generate model error estimates that are overly optimistic, i.e. RMSE values that are too low.  
+
+
+# Importance of spatial cross-validation
+
+`run_cv()` also accepts the `run_shuffle` argument in order to permute competitor species identity as described in Section \ref{permutation-test}. Figure \ref{fig:scbi-simulation} compares model performance for 49 permutations of competitor species and RMSE calculations, both with and without cross-validation. Without cross-validation, competitor species identity does matter as the observed RMSE was significantly lower than the permutation null distribution of RMSE. However, once we incorporate spatial cross-validation, this improvement disappears. These results suggest that in this 9 ha subplot of the SCBI plot, competitive interactions do not depend on the identity of the competitor, which is the opposite of what has been observed in other locations [@allen_permutation_2020 @uriarte_spatially_2004]. This provides a striking example of the importance of cross-validation, as without it the over-fit model gives rise to an incorrect conclusion.
+
+```{r scbi-simulation, out.width="100%", fig.cap="Comparison of root mean squared error of models for standard, permuted, and spatially cross-validated error estimates. The dotted lines show observed RMSE while the histograms show the null distribution of RMSE for 49 permutations under the null hypothesis of no competitor species identity effects. The colors indicate whether spatial cross-validation was used or not.", echo = FALSE}
+include_graphics("simulation_results/2021-03-03_scbi_49_shuffles.pdf")
+```
+
+
+# Conclusion and future work
+
+The `forestecology` package provides an accessible way to fit and test models of neighborhood competition. The package follows the `tidy` data design principles, leverages the `sf` package for spatial data, and S3 open-oriented model implementation structure [@pebesma_simple_2018]. We hope that the package will increase the use of neighborhood competition models to better understand what structures plant competition.
+
+While the package is designed with ForestGEO plot data in mind, we envision that it can be modified to work on any single large, mapped forest plot in which at least two measurements of each individual have been taken. Furthermore, we hope that future versions of the package will be flexible to other plot layouts, for example inventory plot-structure with many spatially separated plots like the US Forest Service Forest Inventory and Analysis plots [@smith_forest_2002]. 
+
+We also hope to extend the `forestecology` package's functionality to account for a larger variety of models for tree growth. One clear future direction would be to allow competition based on species trait values rather than species identity. There is evidence that traits predict competitive outcomes [@kunstler_competitive_2012, @lasky_trait-mediated_2014, @uriarte_trait_2010]. Thus an extension of the model would allow $\lambda$ values from Equation \ref{eq:model} to be a function of the traits of competing species. 
+
+Lastly, the `forestecology` current uses the `blockCV` package behind the scenes to create the spatial blocks acting as folds for our spatial cross-validation algorithm detailed in Sections \ref{spatial-information} and \ref{spatial-cross-validation} [@valavi_blockcv_2019]. This back-end functionality could be substituted with the `spatialsample` package for spatial resampling infrastructure; a `tidymodels` package under active development as of 2021 [@spatialsample_package, @tidymodels_package].
+
+
+
+
+Lastly, currently the package only implements the Bayesian linear regression model detailed in Equation \ref{eq:model}. As we demonstrate in Section \ref{model-fit-predict} however, the fitting of this model is self-contained in a single function `comp_bayes_lm()` which returns an object of S3 class type `comp_bayes_lm`. This class has generic methods implemented to print, make predictions, and plot all results. Therefore the package can be modularly extended to fit other models as long as they are coded similarly to `comp_bayes_lm()` and have equivalent generic methods implemented.
+
+
+# Acknowledgements {-}
+
+We thank Sophie Li for their feedback on the package interface.
+
+
+# Conflict of Interest {-}
+
+We declare no competing interests.
+
+
+# Author's contributions {-}
+
+**Albert Y. Kim**: Conceptualization (equal); Methodology (equal); Software (equal); Writing-original draft (lead); Writing-review & editing (equal). **David N. Allen**: Conceptualization (equal); Methodology (equal); Software (equal); Writing-original draft (supporting); Writing-review & editing (equal). **Simon P. Couch**: Software (supporting); Writing-review & editing (supporting).
+
+
+# Data accessibility {-}
+
+All data and source code for this manuscript on GitHub at https://github.com/rudeboybert/forestecology and are archived on Zenodo at https://doi.org/10.5281/zenodo.5348060. The example Smithsonian Conservation Biology Institute census and species information data are available on GitHub at https://github.com/SCBI-ForestGEO/SCBI-ForestGEO-Data/tree/master/ and are archived on Zenodo at https://doi.org/10.5281/zenodo.2649301 [@gonzalez-akre_scbi-forestgeoscbi-forestgeo-data_2020].
+
+
+<div id="refs"></div>
+
+\appendix
+
+# Appendix: Compare different competitive distances {#mult-dist}
+
+For all the above analyses we set the cut off distance (`comp_dist`) for two stems to compete as `r comp_dist`m. This distance has been estimated in previous neighborhood competition studies in forests [@canham_neighborhood_2004, @uriarte_spatially_2004, @canham_neighborhood_2006]. We used `r comp_dist`m in @allen_permutation_2020 as an average of the values estimated in other studies. But our package can be used to find which distance is best supported by the data. Here we provide an example using another section of the SCBI plot to provide an additional example of the cross-validation block layout. To speed computation we do not consider species differences in competitive effects and treat all species as the same.
+
+We observe in Figure \ref{fig:appendix2-plot} that a cut-off distance of approximately 6m minimizes the cross-validation estimated RMSE.
+
+```{r appendix2-code}
+census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 400, gy < 400)
+
+census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 400, gy < 400)
+
+growth_scbi <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  # make all species the same, needs to be factor with at least two levels
+  mutate(sp = factor("A", levels = c("A", "B"))) %>%
+  # Compute basal area:
+  mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2)
+
+study_region_scbi <- tibble(
+  x = c(0, 400, 400, 0, 0),
+  y = c(0, 0, 400, 400, 0)
+) %>%
+  sf_polygon()
+
+n_fold <- 4
+fold1 <- cbind(c(0, 200, 200, 0), c(0, 0, 200, 200))
+fold2 <- cbind(c(200, 400, 400, 200), c(0, 0, 200, 200))
+fold3 <- cbind(c(0, 200, 200, 0), c(200, 200, 400, 400))
+fold4 <- cbind(c(200, 400, 400, 200), c(200, 200, 400, 400))
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3),
+  sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+spatial_block_scbi <-
+  spatialBlock(
+    speciesData = growth_scbi, k = n_fold,
+    selection = "systematic", blocks = blocks_scbi,
+    showBlocks = FALSE, verbose = FALSE
+  )
+
+growth_scbi <- growth_scbi %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+
+mult_dist_comp <- tibble(
+  dist = c(5, 6.25, 7.5, 8.75, 10),
+  rmse = 0
+)
+
+for (i in 1:length(mult_dist_comp$dist)) {
+  comp_dist <- mult_dist_comp$dist[i]
+
+  growth_scbi <- growth_scbi %>%
+    add_buffer_variable(size = comp_dist, region = study_region_scbi)
+
+  focal_vs_comp_scbi <- growth_scbi %>%
+    create_focal_vs_comp(comp_dist = comp_dist, blocks = blocks_scbi, id = "stemID", comp_x_var = "basal_area") %>%
+    run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+  mult_dist_comp$rmse[i] <- focal_vs_comp_scbi %>%
+    rmse(truth = growth, estimate = growth_hat) %>%
+    pull(.estimate)
+}
+```
+
+```{r appendix2-plot, out.width="100%", fig.cap="Cross-validated RMSE estimates for 5 competitive distances.", echo = FALSE}
+mult_dist_comp %>%
+  ggplot(aes(dist, rmse)) +
+  geom_point() +
+  xlab("Distance (m)") +
+  ylab("RMSE (cm)")
+```
+
+
+# Appendix: Compare competitor explanatory variables {#compare-pred-var}
+
+In the above code we use the basal area of an individual as a continuous competitor explanatory variable. But the package allows the user to specify any competitor explanatory variable in the `comp_x_var` argument of `create_focal_vs_comp` function. Here we use the cross-validated model comparison to see which of two possible competitor explanatory variables computed in Section \ref{compute-growth}, basal area or above ground biomass, best explains growth. 
+
+```{r compar-pred-var}
+census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+growth_scbi <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  left_join(sp_info, by = "sp") %>%
+  mutate(
+    sp = as.factor(sp),
+    basal_area = 0.0001 * pi * (dbh1 / 2)^2,
+    agb = get_biomass(
+      dbh = dbh1,
+      genus = genus,
+      species = species,
+      coords = c(-78.2, 38.9)
+    )
+  )
+
+study_region_scbi <- tibble(
+  x = c(0, 300, 300, 0, 0),
+  y = c(300, 300, 600, 600, 300)
+) %>%
+  sf_polygon()
+
+n_fold <- 4
+fold1 <- cbind(c(0, 150, 150, 0), c(300, 300, 450, 450))
+fold2 <- cbind(c(150, 300, 300, 150), c(300, 300, 450, 450))
+fold3 <- cbind(c(0, 150, 150, 0), c(450, 450, 600, 600))
+fold4 <- cbind(c(150, 300, 300, 150), c(450, 450, 600, 600))
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3),
+  sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+spatial_block_scbi <-
+  spatialBlock(
+    speciesData = growth_scbi, k = n_fold,
+    selection = "systematic", blocks = blocks_scbi,
+    showBlocks = FALSE, verbose = FALSE
+  )
+
+growth_scbi <- growth_scbi %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+
+comp_dist <- 7.5
+
+growth_scbi <- growth_scbi %>%
+  add_buffer_variable(size = comp_dist, region = study_region_scbi)
+
+focal_vs_comp_ba <- growth_scbi %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "basal_area"
+  ) %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+focal_vs_comp_agb <- growth_scbi %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "agb"
+  ) %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+focal_vs_comp_ba %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
+focal_vs_comp_agb %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+```
+
+Here we observe that basal area is a better competitor explanatory variable competitor explanatory variables $x^{\text{comp}}_{ijk}$ from Equation \ref{eq:model} than above ground biomass as suggested by the lower estimated RMSE.
+
+
+# Appendix: Compare grouping variables {#compare-group-var}
+
+The package also allows the user to specify the categorical explanatory grouping variable. Here we compare two different such variables: species and the potential canopy position of that species. If we had individual-level crown classes (@smith_practice_1986 dominant, codominant, intermediate and suppressed) that could also be used.  
+
+```{r compare-group-var}
+census_2013_scbi <- read_csv("scbi.stem2.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+census_2018_scbi <- read_csv("scbi.stem3.csv") %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+growth_scbi_sp <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  mutate(
+    sp = as.factor(sp),
+    basal_area = 0.0001 * pi * (dbh1 / 2)^2
+  )
+
+growth_scbi_can_pos <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  left_join(sp_info, by = "sp") %>%
+  mutate(
+    canopy_position = str_replace(canopy_position, " ", "_"),
+    canopy_position = str_replace(canopy_position, ",", ""),
+    canopy_position = ifelse(is.na(canopy_position), "shrub_layer", canopy_position),
+    sp = as.factor(canopy_position),
+    basal_area = 0.0001 * pi * (dbh1 / 2)^2
+  )
+
+study_region_scbi <- tibble(
+  x = c(0, 300, 300, 0, 0),
+  y = c(300, 300, 600, 600, 300)
+) %>%
+  sf_polygon()
+
+n_fold <- 4
+fold1 <- cbind(c(0, 150, 150, 0), c(300, 300, 450, 450))
+fold2 <- cbind(c(150, 300, 300, 150), c(300, 300, 450, 450))
+fold3 <- cbind(c(0, 150, 150, 0), c(450, 450, 600, 600))
+fold4 <- cbind(c(150, 300, 300, 150), c(450, 450, 600, 600))
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3),
+  sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+spatial_block_scbi <-
+  spatialBlock(
+    speciesData = growth_scbi, k = n_fold,
+    selection = "systematic", blocks = blocks_scbi,
+    showBlocks = FALSE, verbose = FALSE
+  )
+
+growth_scbi_sp <- growth_scbi_sp %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+growth_scbi_can_pos <- growth_scbi_can_pos %>%
+  mutate(foldID = spatial_block_scbi$foldID %>% factor())
+
+comp_dist <- 7.5
+
+growth_scbi_sp <- growth_scbi_sp %>%
+  add_buffer_variable(size = comp_dist, region = study_region_scbi)
+growth_scbi_can_pos <- growth_scbi_can_pos %>%
+  add_buffer_variable(size = comp_dist, region = study_region_scbi)
+
+focal_vs_comp_sp <- growth_scbi_sp %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "basal_area"
+  ) %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+focal_vs_comp_can_pos <- growth_scbi_can_pos %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "basal_area"
+  ) %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi)
+
+focal_vs_comp_sp %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
+focal_vs_comp_can_pos %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+```
+
+We find that species identity has a lower RMSE, so does a better job. We still however plot the competition posteriors for the canopy position groupings in Figure \ref{fig:can-pos-comp-plot}. Unsurprisingly we see that canopy and canopy emergent competitors generally have negative effects on their neighbors, while shrubs and understory competitors have neutral or even positive effects. 
+
+```{r can-pos-comp}
+fit_mod_can_pos <- growth_scbi_can_pos %>%
+  create_focal_vs_comp(
+    comp_dist = comp_dist,
+    blocks = blocks_scbi,
+    id = "stemID",
+    comp_x_var = "basal_area"
+  ) %>%
+  comp_bayes_lm(prior_param = NULL)
+``` 
+  
+```{r can-pos-comp-plot, out.width="100%", fig.cap="Posterior distributions of all competition parameters.", echo = FALSE}
+autoplot(fit_mod_can_pos, type = "competition")
+```
+
+
+# Appendix: Replicate RMSE comparison
+
+This code replicates Figure \ref{fig:scbi-simulation}: A comparison of root mean squared error of
+models for standard, permuted, and spatial cross-validated error estimates.
+
+```{r appendix1-code, eval=FALSE}
+library(tidyverse)
+library(lubridate)
+library(here)
+library(sf)
+library(viridis)
+library(forestecology)
+library(blockCV)
+library(tictoc)
+
+
+# Compute growth of trees based on census data -------------------------
+census_2013_scbi <- here("paper/scbi.stem2.csv") %>%
+  read_csv() %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+census_2018_scbi <- here("paper/scbi.stem3.csv") %>%
+  read_csv() %>%
+  select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
+  mutate(
+    date = mdy(date),
+    dbh = as.numeric(dbh) / 10
+  ) %>%
+  filter(gx < 300, between(gy, 300, 600))
+
+growth_scbi <-
+  compute_growth(
+    census_1 = census_2013_scbi,
+    census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
+    id = "stemID"
+  ) %>%
+  # Compute basal area:
+  mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2)
+
+
+# Add spatial information ----------------------------------------------
+# Define buffer region using competitive distance range
+comp_dist <- 7.5
+
+study_region_scbi <- tibble(
+  x = c(0, 300, 300, 0, 0),
+  y = c(300, 300, 600, 600, 300)
+) %>%
+  sf_polygon()
+
+growth_scbi <- growth_scbi %>%
+  add_buffer_variable(size = comp_dist, region = study_region_scbi)
+
+# Manually define spatial blocks to act as folds
+fold1 <- rbind(c(0, 300), c(150, 300), c(150, 450), c(0, 450))
+fold2 <- rbind(c(150, 300), c(300, 300), c(300, 450), c(150, 450))
+fold3 <- rbind(c(0, 450), c(150, 450), c(150, 600), c(0, 600))
+fold4 <- rbind(c(150, 450), c(300, 450), c(300, 600), c(150, 600))
+n_fold <- 4
+
+blocks_scbi <- bind_rows(
+  sf_polygon(fold1), sf_polygon(fold2),
+  sf_polygon(fold3), sf_polygon(fold4)
+) %>%
+  mutate(folds = c(1:n_fold) %>% factor())
+
+# Associate each observation to a fold
+SpatialBlock_scbi <- spatialBlock(
+  speciesData = growth_scbi, k = n_fold, selection = "systematic",
+  blocks = blocks_scbi, showBlocks = FALSE, verbose = FALSE
+)
+
+growth_scbi <- growth_scbi %>%
+  mutate(foldID = SpatialBlock_scbi$foldID %>% factor())
+
+# Compute focal versus competitor tree information ---------------------
+focal_vs_comp_scbi <- growth_scbi %>%
+  create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID", comp_x_var = "basal_area")
+
+
+# Fit model and make predictions ---------------------------------------
+# Number of permutation shuffles:
+num_shuffle <- 49
+
+# Save results here
+run_time <- 0
+observed_RMSE <- 0
+observed_RMSE_CV <- 0
+shuffle_RMSE <- vector("list", 1)
+shuffle_RMSE_CV <- vector("list", 1)
+filename <- here("paper/simulation_results/") %>%
+  str_c("2021-03-03_scbi_", num_shuffle, "_shuffles")
+
+# Run all simulations
+# 0. Setup simulation for this species type ----
+# Start clock
+tic()
+
+# 1. Compute observed test statistic: RMSE with no cross-validation ----
+# Fit model (compute posterior parameters)
+comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
+  comp_bayes_lm(prior_param = NULL, run_shuffle = FALSE)
+
+# Make predictions and compute RMSE
+observed_RMSE <- focal_vs_comp_scbi %>%
+  mutate(
+    growth_hat =
+      predict(comp_bayes_lm_scbi, focal_vs_comp_scbi)
+  ) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
+# 2. Compute observed test statistic: RMSE with cross-validation -------
+observed_RMSE_CV <- focal_vs_comp_scbi %>%
+  run_cv(comp_dist = comp_dist, blocks = blocks_scbi) %>%
+  rmse(truth = growth, estimate = growth_hat) %>%
+  pull(.estimate)
+
+# 3. Permutation distribution: RMSE with no cross-validation -----------
+# Compute num_shuffle permutation test statistics
+shuffle_RMSE <- numeric(length = num_shuffle)
+for (j in 1:num_shuffle) {
+  # Fit model (compute posterior parameters) with shuffling
+  comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
+    comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
+
+  # Make predictions and compute RMSE
+  shuffle_RMSE[j] <- focal_vs_comp_scbi %>%
+    mutate(
+      growth_hat = predict(comp_bayes_lm_scbi, focal_vs_comp_scbi)
+    ) %>%
+    rmse(truth = growth, estimate = growth_hat) %>%
+    pull(.estimate)
+}
+
+# 4. Permutation distribution: RMSE with cross-validation --------------
+# Compute num_shuffle permutation test statistics
+shuffle_RMSE_CV <- numeric(length = num_shuffle)
+
+# Compute num_shuffle permutation test statistics
+for (j in 1:num_shuffle) {
+  # Compute and save RMSE
+  shuffle_RMSE_CV[j] <- focal_vs_comp_scbi %>%
+    run_cv(
+      comp_dist = comp_dist, blocks = blocks_scbi,
+      run_shuffle = TRUE
+    ) %>%
+    rmse(truth = growth, estimate = growth_hat) %>%
+    pull(.estimate)
+
+  # Status update
+  str_c("Shuffle with permutation ", j, " at ", Sys.time()) %>% print()
+}
+
+# 5. Save results ----
+clock <- toc(quiet = TRUE)
+run_time <- clock$toc - clock$tic
+
+model_comp_tbl <- tibble(
+  run_time = run_time,
+  observed_RMSE = observed_RMSE,
+  observed_RMSE_CV = observed_RMSE_CV,
+  shuffle_RMSE = shuffle_RMSE,
+  shuffle_RMSE_CV = shuffle_RMSE_CV,
+)
+save(model_comp_tbl, file = filename %>% str_c(".RData"))
+
+
+# Visualize results ----------------------------------------------------
+model_comp <- bind_rows(
+  model_comp_tbl %>%
+    select(run_time,
+      observed = observed_RMSE,
+      shuffle = shuffle_RMSE
+    ) %>%
+    mutate(CV = FALSE),
+  model_comp_tbl %>%
+    select(run_time,
+      observed = observed_RMSE_CV,
+      shuffle = shuffle_RMSE_CV
+    ) %>%
+    mutate(CV = TRUE)
+) %>%
+  gather(type, RMSE, -c(run_time, CV))
+
+model_comp_observed <- model_comp %>%
+  filter(type == "observed") %>%
+  unnest(cols = c(RMSE))
+model_comp_shuffle <- model_comp %>%
+  filter(type == "shuffle") %>%
+  unnest(cols = c(RMSE))
+
+cv_plot <- ggplot() +
+  geom_vline(
+    data = model_comp_observed,
+    aes(xintercept = RMSE, col = CV),
+    linetype = "dashed", show.legend = F
+  ) +
+  geom_histogram(
+    data = model_comp_shuffle,
+    aes(x = RMSE, fill = CV), bins = 50
+  ) +
+  labs(
+    fill = "Cross-validated?",
+    x = expression(paste("RMSE (cm ", y^{
+      -1
+    }, ")"))
+  ) +
+  scale_color_viridis(discrete = TRUE, option = "D") +
+  scale_fill_viridis(discrete = TRUE) +
+  theme_light()
+cv_plot
+
+filename %>%
+  str_c(".pdf") %>%
+  ggsave(plot = cv_plot, width = 16 / 2, height = 9 / 2)
+```
+
+
+# References
