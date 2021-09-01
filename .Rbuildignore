@@ -11,6 +11,7 @@
 ^README_cache$
 
 ^paper$
+^ecology_and_evolution$
 ^docs$
 ^CRAN-RELEASE$
 ^codecov\.yml$
