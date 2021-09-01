@@ -12,13 +12,13 @@ library(blockCV)
 library(tictoc)
 
 
-# Compute growth of trees based on census data ---------------------------------
+# Compute growth of trees based on census data -------------------------
 census_2013_scbi <- here("paper/scbi.stem2.csv") %>%
   read_csv() %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
     date = mdy(date),
-    dbh = as.numeric(dbh)/10
+    dbh = as.numeric(dbh) / 10
   ) %>%
   filter(gx < 300, between(gy, 300, 600))
 
@@ -27,7 +27,7 @@ census_2018_scbi <- here("paper/scbi.stem3.csv") %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
     date = mdy(date),
-    dbh = as.numeric(dbh)/10
+    dbh = as.numeric(dbh) / 10
   ) %>%
   filter(gx < 300, between(gy, 300, 600))
 
@@ -36,11 +36,12 @@ growth_scbi <-
     census_1 = census_2013_scbi,
     census_2 = census_2018_scbi %>% filter(!str_detect(codes, "R")),
     id = "stemID"
-  )
+  ) %>%
+  # Compute basal area:
+  mutate(basal_area = 0.0001 * pi * (dbh1 / 2)^2)
 
 
-
-# Add spatial information -----------------------------------------------------
+# Add spatial information ----------------------------------------------
 # Define buffer region using competitive distance range
 comp_dist <- 7.5
 
@@ -61,7 +62,8 @@ fold4 <- rbind(c(150, 450), c(300, 450), c(300, 600), c(150, 600))
 n_fold <- 4
 
 blocks_scbi <- bind_rows(
-  sf_polygon(fold1), sf_polygon(fold2), sf_polygon(fold3), sf_polygon(fold4)
+  sf_polygon(fold1), sf_polygon(fold2),
+  sf_polygon(fold3), sf_polygon(fold4)
 ) %>%
   mutate(folds = c(1:n_fold) %>% factor())
 
@@ -74,18 +76,14 @@ SpatialBlock_scbi <- spatialBlock(
 growth_scbi <- growth_scbi %>%
   mutate(foldID = SpatialBlock_scbi$foldID %>% factor())
 
-
-
-# Compute focal versus competitor tree information -----------------------------
+# Compute focal versus competitor tree information ---------------------
 focal_vs_comp_scbi <- growth_scbi %>%
-  create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID")
+  create_focal_vs_comp(comp_dist, blocks = blocks_scbi, id = "stemID", comp_x_var = "basal_area")
 
 
-
-# Fit model and make predictions -----------------------------------------------
+# Fit model and make predictions ---------------------------------------
 # Number of permutation shuffles:
 num_shuffle <- 49
-
 
 # Save results here
 run_time <- 0
@@ -96,12 +94,10 @@ shuffle_RMSE_CV <- vector("list", 1)
 filename <- here("paper/simulation_results/") %>%
   str_c("2021-03-03_scbi_", num_shuffle, "_shuffles")
 
-
 # Run all simulations
 # 0. Setup simulation for this species type ----
 # Start clock
 tic()
-
 
 # 1. Compute observed test statistic: RMSE with no cross-validation ----
 # Fit model (compute posterior parameters)
@@ -110,50 +106,54 @@ comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
 
 # Make predictions and compute RMSE
 observed_RMSE <- focal_vs_comp_scbi %>%
-  mutate(growth_hat = predict(comp_bayes_lm_scbi, focal_vs_comp_scbi)) %>%
+  mutate(
+    growth_hat =
+      predict(comp_bayes_lm_scbi, focal_vs_comp_scbi)
+  ) %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 
-
-# 2. Compute observed test statistic: RMSE with cross-validation ----
+# 2. Compute observed test statistic: RMSE with cross-validation -------
 observed_RMSE_CV <- focal_vs_comp_scbi %>%
   run_cv(comp_dist = comp_dist, blocks = blocks_scbi) %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 
-
-# 3. Permutation distribution: RMSE with no cross-validation ----
+# 3. Permutation distribution: RMSE with no cross-validation -----------
 # Compute num_shuffle permutation test statistics
 shuffle_RMSE <- numeric(length = num_shuffle)
-for(j in 1:num_shuffle){
+for (j in 1:num_shuffle) {
   # Fit model (compute posterior parameters) with shuffling
   comp_bayes_lm_scbi <- focal_vs_comp_scbi %>%
     comp_bayes_lm(prior_param = NULL, run_shuffle = TRUE)
 
   # Make predictions and compute RMSE
-  shuffle_RMSE[j] <-  focal_vs_comp_scbi %>%
-    mutate(growth_hat = predict(comp_bayes_lm_scbi, focal_vs_comp_scbi)) %>%
+  shuffle_RMSE[j] <- focal_vs_comp_scbi %>%
+    mutate(
+      growth_hat = predict(comp_bayes_lm_scbi, focal_vs_comp_scbi)
+    ) %>%
     rmse(truth = growth, estimate = growth_hat) %>%
     pull(.estimate)
 }
 
-
-# 4. Permutation distribution: RMSE with cross-validation ----
+# 4. Permutation distribution: RMSE with cross-validation --------------
 # Compute num_shuffle permutation test statistics
 shuffle_RMSE_CV <- numeric(length = num_shuffle)
 
 # Compute num_shuffle permutation test statistics
-for(j in 1:num_shuffle){
+for (j in 1:num_shuffle) {
   # Compute and save RMSE
   shuffle_RMSE_CV[j] <- focal_vs_comp_scbi %>%
-    run_cv(comp_dist = comp_dist, blocks = blocks_scbi, run_shuffle = TRUE) %>%
+    run_cv(
+      comp_dist = comp_dist, blocks = blocks_scbi,
+      run_shuffle = TRUE
+    ) %>%
     rmse(truth = growth, estimate = growth_hat) %>%
     pull(.estimate)
 
   # Status update
   str_c("Shuffle with permutation ", j, " at ", Sys.time()) %>% print()
 }
-
 
 # 5. Save results ----
 clock <- toc(quiet = TRUE)
@@ -169,12 +169,20 @@ model_comp_tbl <- tibble(
 save(model_comp_tbl, file = filename %>% str_c(".RData"))
 
 
-
-
-# Visualize results ------------------------------------------------------------
+# Visualize results ----------------------------------------------------
 model_comp <- bind_rows(
-  model_comp_tbl %>% select(run_time, observed = observed_RMSE, shuffle = shuffle_RMSE) %>% mutate(CV = FALSE),
-  model_comp_tbl %>% select(run_time, observed = observed_RMSE_CV, shuffle = shuffle_RMSE_CV) %>% mutate(CV = TRUE)
+  model_comp_tbl %>%
+    select(run_time,
+           observed = observed_RMSE,
+           shuffle = shuffle_RMSE
+    ) %>%
+    mutate(CV = FALSE),
+  model_comp_tbl %>%
+    select(run_time,
+           observed = observed_RMSE_CV,
+           shuffle = shuffle_RMSE_CV
+    ) %>%
+    mutate(CV = TRUE)
 ) %>%
   gather(type, RMSE, -c(run_time, CV))
 
@@ -186,18 +194,26 @@ model_comp_shuffle <- model_comp %>%
   unnest(cols = c(RMSE))
 
 cv_plot <- ggplot() +
-  geom_vline(data = model_comp_observed, aes(xintercept = RMSE, col = CV), linetype = "dashed", show.legend = F) +
-  geom_histogram(data = model_comp_shuffle, aes(x = RMSE, fill = CV), bins = 50) +
+  geom_vline(
+    data = model_comp_observed,
+    aes(xintercept = RMSE, col = CV),
+    linetype = "dashed", show.legend = F
+  ) +
+  geom_histogram(
+    data = model_comp_shuffle,
+    aes(x = RMSE, fill = CV), bins = 50
+  ) +
   labs(
     fill = "Cross-validated?",
-    x = expression(paste("RMSE (cm ", y^{-1}, ")"))
+    x = expression(paste("RMSE (cm ", y^{
+      -1
+    }, ")"))
   ) +
-  scale_color_viridis(discrete = TRUE, option = "D")+
+  scale_color_viridis(discrete = TRUE, option = "D") +
   scale_fill_viridis(discrete = TRUE) +
   theme_light()
 cv_plot
 
 filename %>%
   str_c(".pdf") %>%
-  ggsave(plot = cv_plot, width = 16/2, height = 9/2)
-
+  ggsave(plot = cv_plot, width = 16 / 2, height = 9 / 2)
