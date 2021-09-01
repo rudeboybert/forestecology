@@ -1,5 +1,6 @@
 # forestecology 0.1.0.9000: Development version
 
+* Added Ecology & Evolution paper
 * Made choice of competitor explanatory variable more flexible by adding `create_focal_vs_comp(comp_x_var = ...)` argument.
 
 
