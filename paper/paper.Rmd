@@ -87,6 +87,8 @@ options(
 
 Keywords: forest ecology, interspecific competition, neighborhood competition, tree growth, R, ForestGEO, spatial cross-validation
 
+Running head: `forestecology` R package
+
 # Introduction
 
 Repeat-censused forest plots offer excellent opportunities to test neighborhood models of the effect of competition on the growth of trees [@canham_neighborhood_2004]. Neighborhood models of competition have been used to: test whether the species identity of a competitor matters [@uriarte_spatially_2004; measure species-specific competition coefficients [@das_effect_2012; @tatsumi_estimating_2016]; test competing models to see what structures competitive interactions, e.g. traits or phylogeny [@allen_permutation_2020; @uriarte_trait_2010]; and inform selective logging practices [@canham_neighborhood_2006]. Although these are well-described methods, few methods are currently available for easy application. 
@@ -482,7 +484,7 @@ The resulting permutation test RMSE of `r model_rmse_shuffle` is `r ifelse(model
 
 To evaluate model performance, we use spatial cross-validation. The model fit in Section \@ref(model-fit-predict) uses the same data to both fit and assess model performance. Given the spatial-autocorrelation of our data, this can potentially lead to overfit models [@roberts_cross-validation_2017]. To mitigate this risk, we use the spatial cross-validation blocking scheme encoded in the `foldID` variable from Section \@ref(spatial-information) and visualized in Figure \@ref(fig:scbi-spatial-information).
 
-At each iteration of the cross-validation, one fold acts as the test set and the remaining three act as the training set. We fit the model to all focal trees in the training set, apply the model to all focal trees in the test set, compute predicted values, and compute the RMSE. Furthermore, to maintain spatial independence between the test and training sets, a "fold buffer" that extends `r comp_dist`m outwards from the boundary of the test set is considered; all trees within this "fold buffer" are excluded from the training set (see Figure \@ref(fig:scbi-spatial-cross-validation-schematic). 
+At each iteration of the cross-validation, one fold acts as the test set and the remaining three act as the training set. We fit the model to all focal trees in the training set, apply the model to all focal trees in the test set, compute predicted values, and compute the RMSE. Furthermore, to maintain spatial independence between the test and training sets, a "fold buffer" that extends `r comp_dist`m outwards from the boundary of the test set is considered; all trees within this "fold buffer" are excluded from the training set (see Figure \@ref(fig:scbi-spatial-cross-validation-schematic)). 
 
 ```{r scbi-spatial-cross-validation-schematic, out.width="66%", fig.cap= "Schematic of spatial cross-validation. Using the k = 1 fold (bottom-left) as the test set, k = 2 through 4 as the training set, along with a fold buffer extending outwards from the test set to maintain spatial independence between it and the training set.", echo = FALSE}
 fold_number <- 1
