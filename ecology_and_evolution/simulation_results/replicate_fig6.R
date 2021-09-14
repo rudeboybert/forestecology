@@ -13,7 +13,7 @@ library(tictoc)
 
 
 # Compute growth of trees based on census data -------------------------
-census_2013_scbi <- here("paper/scbi.stem2.csv") %>%
+census_2013_scbi <- here("ecology_and_evolution/scbi.stem2.csv") %>%
   read_csv() %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
@@ -22,7 +22,7 @@ census_2013_scbi <- here("paper/scbi.stem2.csv") %>%
   ) %>%
   filter(gx < 300, between(gy, 300, 600))
 
-census_2018_scbi <- here("paper/scbi.stem3.csv") %>%
+census_2018_scbi <- here("ecology_and_evolution/scbi.stem3.csv") %>%
   read_csv() %>%
   select(stemID, sp, date = ExactDate, gx, gy, dbh, codes, status) %>%
   mutate(
@@ -91,7 +91,7 @@ observed_RMSE <- 0
 observed_RMSE_CV <- 0
 shuffle_RMSE <- vector("list", 1)
 shuffle_RMSE_CV <- vector("list", 1)
-filename <- here("paper/simulation_results/") %>%
+filename <- here("ecology_and_evolution/simulation_results/") %>%
   str_c("2021-03-03_scbi_", num_shuffle, "_shuffles")
 
 # Run all simulations
@@ -215,5 +215,5 @@ cv_plot <- ggplot() +
 cv_plot
 
 filename %>%
-  str_c(".pdf") %>%
-  ggsave(plot = cv_plot, width = 16 / 2, height = 9 / 2, dpi = 600)
+  str_c(".tiff") %>%
+  ggsave(plot = cv_plot, width = 16 / 2, height = 9 / 2, dpi = 600, device = "tiff")
