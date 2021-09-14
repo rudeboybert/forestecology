@@ -216,4 +216,4 @@ cv_plot
 
 filename %>%
   str_c(".pdf") %>%
-  ggsave(plot = cv_plot, width = 16 / 2, height = 9 / 2)
+  ggsave(plot = cv_plot, width = 16 / 2, height = 9 / 2, dpi = 600)

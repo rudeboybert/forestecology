@@ -47,6 +47,7 @@ opts_chunk$set(
   fig.height = 9 / 2.5,
   fig.align = "center",
   fig.show = "hold",
+  dpi = 600,
   # Etc:
   collapse = TRUE,
   comment = "##",
@@ -902,7 +903,7 @@ fit_mod_can_pos <- growth_scbi_can_pos %>%
   comp_bayes_lm(prior_param = NULL)
 ``` 
 
-```{r can-pos-comp-plot, out.width="100%", fig.cap="Posterior distributions of all competition parameters.", echo = FALSE}
+```{r can-pos-comp-plot, out.width="100%", fig.cap="Posterior distributions of all competition parameters.", echo = FALSE, fig.width = 16 / 2.3}
 autoplot(fit_mod_can_pos, type = "competition")
 ```
 
