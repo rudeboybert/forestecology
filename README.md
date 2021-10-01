@@ -34,11 +34,10 @@ evaluated using a spatial cross-validation scheme to detect possible
 overfitting. Additionally, these models can test whether the species
 identity of competitors matters using a permutation test-style shuffling
 of competitor identity (under the null hypothesis) and subsequently
-evaluating if model performance changes. See Allen and Kim (2020) [A
-permutation test and spatial cross-validation approach to assess models
-of interspecific competition between
-trees](https://doi.org/10.1371/journal.pone.0229930) for a full
-description.
+evaluating if model performance changes. See Kim et al. (2021) [The
+`forestecology` R package for fitting and assessing neighborhood models
+of the effect of interspecific competition on the growth of
+trees](http://doi.org/10.1002/ece3.8129) for a full description.
 
 ## Example analysis
 
@@ -50,8 +49,6 @@ package where we will:
 3.  Identify all focal and corresponding competitor trees
 4.  Fit model and make predictions
 5.  Run spatial cross-validation
-
-<!-- end list -->
 
 ``` r
 library(tidyverse)
@@ -141,10 +138,9 @@ buffer_region <- study_region_ex %>%
 In the visualization below, the solid line represents the boundary of
 the study region while the dashed line delimits the buffer region
 within. All trees outside this buffer region (in red) will be our
-“focal” trees of interest in our model since we have complete
-competitor information on all of them. All trees inside this buffer
-region (in blue) will only be considered as “competitor” trees to
-“focal” trees.
+“focal” trees of interest in our model since we have complete competitor
+information on all of them. All trees inside this buffer region (in
+blue) will only be considered as “competitor” trees to “focal” trees.
 
 ``` r
 base_plot <- ggplot() +
