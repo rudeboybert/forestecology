@@ -21,6 +21,7 @@ set.seed(76)
 
 # forestecology 
 
+[![DOI](https://zenodo.org/badge/144327964.svg)](https://zenodo.org/badge/latestdoi/144327964)
 [![Build Status](https://github.com/rudeboybert/forestecology/workflows/R-CMD-check/badge.svg)](https://github.com/rudeboybert/forestecology/actions)
 [![Codecov test coverage](https://codecov.io/gh/rudeboybert/forestecology/branch/master/graph/badge.svg)](https://codecov.io/gh/rudeboybert/forestecology?branch=master)
 [![CRAN status](https://www.r-pkg.org/badges/version/forestecology)](https://cran.r-project.org/package=forestecology)

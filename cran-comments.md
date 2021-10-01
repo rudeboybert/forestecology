@@ -16,6 +16,8 @@
     + Fedora Linux, R-devel, clang, gfortran
     + Fedora Linux, R-devel, GCC
     + macOS 10.13.6 High Sierra, R-release, CRAN's setup
+    + Oracle Solaris 10, x86, 32 bit, R-release
+    + Oracle Solaris 10, x86, 32 bit, R release, Oracle Developer Studio 12.6
     + Windows Server 2008 R2 SP1, R-oldrel, 32/64 bit
     + Windows Server 2008 R2 SP1, R-release, 32/64 bit
     

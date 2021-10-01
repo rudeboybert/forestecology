@@ -3,6 +3,7 @@
 
 # forestecology
 
+[![DOI](https://zenodo.org/badge/144327964.svg)](https://zenodo.org/badge/latestdoi/144327964)
 [![Build
 Status](https://github.com/rudeboybert/forestecology/workflows/R-CMD-check/badge.svg)](https://github.com/rudeboybert/forestecology/actions)
 [![Codecov test
