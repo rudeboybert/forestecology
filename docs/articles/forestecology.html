@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">forestecology</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -70,7 +70,7 @@
 
       
 
-      </header><script src="forestecology_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
+      </header><script src="forestecology_files/header-attrs-2.9/header-attrs.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
       <h1 data-toc-skip>The <code>forestecology</code> R package for fitting and assessing neighborhood models of the effect of interspecific competition on the growth of trees</h1>
@@ -116,7 +116,7 @@
 <p>The starting point of our analysis are data from two repeat censuses <code>census_1_ex</code> and <code>census_2_ex</code>. For example, consider the forest census data in <code>census_1_ex</code>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">census_1_ex</span>
-<span class="co">#&gt; # A tibble: 10 x 7</span>
+<span class="co">#&gt; # A tibble: 10 × 7</span>
 <span class="co">#&gt;       ID sp                gx    gy date       codes   dbh</span>
 <span class="co">#&gt;    &lt;int&gt; &lt;chr&gt;          &lt;dbl&gt; &lt;dbl&gt; &lt;date&gt;     &lt;chr&gt; &lt;dbl&gt;</span>
 <span class="co">#&gt;  1     1 sugar maple     0.75  2.5  2015-06-01 M         5</span>
@@ -147,7 +147,9 @@
       <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html">filter</a></span><span class="op">(</span><span class="op">!</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_detect.html">str_detect</a></span><span class="op">(</span><span class="va">codes</span>, <span class="st">"R"</span><span class="op">)</span><span class="op">)</span> <span class="op">%&gt;%</span> 
       <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>sp <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/snakecase/man/to_any_case.html">to_any_case</a></span><span class="op">(</span><span class="va">sp</span><span class="op">)</span> <span class="op">%&gt;%</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html">factor</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,
     id <span class="op">=</span> <span class="st">"ID"</span>
-  <span class="op">)</span></code></pre></div>
+  <span class="op">)</span> <span class="op">%&gt;%</span> 
+  <span class="co"># Compute basal area:</span>
+  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>basal_area <span class="op">=</span> <span class="fl">0.0001</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="op">(</span><span class="va">dbh1</span> <span class="op">/</span> <span class="fl">2</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span></code></pre></div>
 </div>
 <div id="add-spatial-information" class="section level2">
 <h2 class="hasAnchor">
@@ -205,9 +207,9 @@
 <p>Based on our <code>growth</code> data frame, we now explicitly define all “focal” trees and their respective “competitor” trees in a <code>focal_vs_comp</code> data frame. This data frame has rows corresponding to each focal tree, and all information about its competitors are saved in the list-column variable <code>comp</code>. We implemented this nested format using <code><a href="https://tidyr.tidyverse.org/reference/nest.html">nest()</a></code> in order to minimize redundancy, given that the same tree can act as a competitor multiple times.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">focal_vs_comp_ex</span> <span class="op">&lt;-</span> <span class="va">growth_ex</span> <span class="op">%&gt;%</span>
-  <span class="fu"><a href="../reference/create_focal_vs_comp.html">create_focal_vs_comp</a></span><span class="op">(</span><span class="va">comp_dist</span>, blocks <span class="op">=</span> <span class="va">blocks_ex</span>, id <span class="op">=</span> <span class="st">"ID"</span><span class="op">)</span>
+  <span class="fu"><a href="../reference/create_focal_vs_comp.html">create_focal_vs_comp</a></span><span class="op">(</span><span class="va">comp_dist</span>, blocks <span class="op">=</span> <span class="va">blocks_ex</span>, id <span class="op">=</span> <span class="st">"ID"</span>, comp_x_var <span class="op">=</span> <span class="st">"basal_area"</span><span class="op">)</span>
 <span class="va">focal_vs_comp_ex</span>
-<span class="co">#&gt; # A tibble: 6 x 7</span>
+<span class="co">#&gt; # A tibble: 6 × 7</span>
 <span class="co">#&gt;   focal_ID focal_sp         dbh foldID    geometry growth comp            </span>
 <span class="co">#&gt;      &lt;dbl&gt; &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt;      &lt;POINT&gt;  &lt;dbl&gt; &lt;list&gt;          </span>
 <span class="co">#&gt; 1        2 american_beech    20 1        (1.5 2.5)  0.800 &lt;tibble [2 × 4]&gt;</span>
@@ -220,7 +222,7 @@
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">focal_vs_comp_ex</span> <span class="op">%&gt;%</span> 
   <span class="fu"><a href="https://tidyr.tidyverse.org/reference/nest.html">unnest</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="st">"comp"</span><span class="op">)</span>
-<span class="co">#&gt; # A tibble: 11 x 10</span>
+<span class="co">#&gt; # A tibble: 11 × 10</span>
 <span class="co">#&gt;    focal_ID focal_sp         dbh foldID    geometry growth comp_ID  dist</span>
 <span class="co">#&gt;       &lt;dbl&gt; &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt;      &lt;POINT&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;</span>
 <span class="co">#&gt;  1        2 american_beech    20 1        (1.5 2.5)  0.800       1 0.75 </span>
@@ -234,7 +236,7 @@
 <span class="co">#&gt;  9        9 sugar_maple       42 2       (8.75 1.5)  1.40        7 0.75 </span>
 <span class="co">#&gt; 10        9 sugar_maple       42 2       (8.75 1.5)  1.40        8 0.791</span>
 <span class="co">#&gt; 11        9 sugar_maple       42 2       (8.75 1.5)  1.40       10 0.25 </span>
-<span class="co">#&gt; # … with 2 more variables: comp_sp &lt;fct&gt;, comp_basal_area &lt;dbl&gt;</span></code></pre></div>
+<span class="co">#&gt; # … with 2 more variables: comp_sp &lt;fct&gt;, comp_x_var &lt;dbl&gt;</span></code></pre></div>
 </div>
 <div id="fit-model-and-make-predictions" class="section level2">
 <h2 class="hasAnchor">
@@ -270,7 +272,7 @@
 <code class="sourceCode R"><span class="va">focal_vs_comp_ex</span> <span class="op">&lt;-</span> <span class="va">focal_vs_comp_ex</span> <span class="op">%&gt;%</span>
   <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html">mutate</a></span><span class="op">(</span>growth_hat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/predict.html">predict</a></span><span class="op">(</span><span class="va">comp_bayes_lm_ex</span>, newdata <span class="op">=</span> <span class="va">focal_vs_comp_ex</span><span class="op">)</span><span class="op">)</span>
 <span class="va">focal_vs_comp_ex</span>
-<span class="co">#&gt; # A tibble: 6 x 8</span>
+<span class="co">#&gt; # A tibble: 6 × 8</span>
 <span class="co">#&gt;   focal_ID focal_sp         dbh foldID    geometry growth comp            </span>
 <span class="co">#&gt;      &lt;dbl&gt; &lt;fct&gt;          &lt;dbl&gt; &lt;fct&gt;      &lt;POINT&gt;  &lt;dbl&gt; &lt;list&gt;          </span>
 <span class="co">#&gt; 1        2 american_beech    20 1        (1.5 2.5)  0.800 &lt;tibble [2 × 4]&gt;</span>
