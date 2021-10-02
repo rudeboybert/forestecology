@@ -1,3 +1,9 @@
+# forestecology 0.2.0.9000: Development version
+
+* 
+
+
+
 # forestecology 0.2.0: Ecology and Evolution
 
 * Added Ecology & Evolution paper to `paper/` <https://doi.org/10.1002/ece3.8129>
