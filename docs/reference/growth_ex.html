@@ -185,10 +185,10 @@ this stands for resprout.</p></dd>
 #&gt; Bounding box:  xmin: 0.75 ymin: 0.75 xmax: 8.75 ymax: 4.5
 #&gt; CRS:           NA
 #&gt; <span style='color: #949494;'># A tibble: 2 × 3</span>
-#&gt;   sp           `mean(growth)`                                           geometry
-#&gt;   <span style='color: #949494; font-style: italic;'>&lt;fct&gt;</span>                 <span style='color: #949494; font-style: italic;'>&lt;dbl&gt;</span>                                       <span style='color: #949494; font-style: italic;'>&lt;MULTIPOINT&gt;</span>
-#&gt; <span style='color: #BCBCBC;'>1</span> american_be…         <span style='color: #BB0000;'>NA</span>     ((1.5 2.5), (3 1.5), (5.5 4.5), (8.5 0.75), (8.75…
-#&gt; <span style='color: #BCBCBC;'>2</span> sugar_maple           0.920 ((0.75 2.5), (1.75 2.25), (3.25 1.75), (8 1.5), (…</div><div class='input'>
+#&gt;   sp             `mean(growth)`                                         geometry
+#&gt;   <span style='color: #949494; font-style: italic;'>&lt;fct&gt;</span>                   <span style='color: #949494; font-style: italic;'>&lt;dbl&gt;</span>                                     <span style='color: #949494; font-style: italic;'>&lt;MULTIPOINT&gt;</span>
+#&gt; <span style='color: #BCBCBC;'>1</span> american_beech         <span style='color: #BB0000;'>NA</span>     ((1.5 2.5), (3 1.5), (5.5 4.5), (8.5 0.75), (8.…
+#&gt; <span style='color: #BCBCBC;'>2</span> sugar_maple             0.920 ((0.75 2.5), (1.75 2.25), (3.25 1.75), (8 1.5),…</div><div class='input'>
 <span class='co'># Add buffer</span>
 <span class='va'>growth_spatial_ex</span> <span class='op'>&lt;-</span> <span class='va'>growth_ex</span> <span class='op'>%&gt;%</span>
   <span class='fu'><a href='add_buffer_variable.html'>add_buffer_variable</a></span><span class='op'>(</span>direction <span class='op'>=</span> <span class='st'>"in"</span>, size <span class='op'>=</span> <span class='fl'>1</span>, region <span class='op'>=</span> <span class='va'>study_region_ex</span><span class='op'>)</span>
