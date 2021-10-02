@@ -75,7 +75,7 @@ versus comp for growth_spatial_ex." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">forestecology</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -148,8 +148,8 @@ versus comp for <a href='growth_spatial_ex.html'>growth_spatial_ex</a>.</p>
 <p>The <code>comp</code> list-column contains <a href='https://tibble.tidyverse.org/reference/tbl_df-class.html'>tibble::tbl_df</a>s with columns:</p><dl>
 <dt>comp_ID</dt><dd><p>Tree identification number for the competitor tree</p></dd>
 <dt>dist</dt><dd><p>The distance between the focal and comp tree, this will be less than the max distance specified.</p></dd>
-<dt>comp_so</dt><dd><p>Species of the comp tree</p></dd>
-<dt>comp_basal_area</dt><dd><p>Basal area of the comp tree</p></dd>
+<dt>comp_sp</dt><dd><p>Species of the comp tree</p></dd>
+<dt>comp_x_var</dt><dd><p>Numerical variable associated with comp tree</p></dd>
 
 </dl>
 
@@ -171,8 +171,7 @@ versus comp for <a href='growth_spatial_ex.html'>growth_spatial_ex</a>.</p>
 <code><a href='study_region_ex.html'>study_region_ex</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'>
-<span class='va'>comp_bayes_lm_ex</span> <span class='op'>&lt;-</span> <span class='va'>focal_vs_comp_ex</span> <span class='op'>%&gt;%</span>
+    <pre class="examples"><div class='input'><span class='va'>comp_bayes_lm_ex</span> <span class='op'>&lt;-</span> <span class='va'>focal_vs_comp_ex</span> <span class='op'>%&gt;%</span>
   <span class='fu'><a href='comp_bayes_lm.html'>comp_bayes_lm</a></span><span class='op'>(</span>prior_param <span class='op'>=</span> <span class='cn'>NULL</span>, run_shuffle <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span>
 </div></pre>
   </div>

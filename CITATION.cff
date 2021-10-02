@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Kim
+    given-names: Albert Y.
+    orcid: https://orcid.org/0000-0001-7824-306X
+  - family-names: Allen
+    given-names: David N.
+    orcid: https://orcid.org/0000-0002-0712-9603
+  - family-names: Couch
+    given-names: Simon P.
+    orcid: https://orcid.org/0000-0001-5676-5107
+title: "The forestecology R package for fitting and assessing neighborhood models of the effect of interspecific competition on the growth of trees"
+version: 0.2.0
+doi: 10.1002/ece3.8129
+date-released: 2021-10-01

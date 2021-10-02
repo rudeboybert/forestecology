@@ -3,6 +3,7 @@
 
 # forestecology
 
+[![DOI](https://zenodo.org/badge/144327964.svg)](https://zenodo.org/badge/latestdoi/144327964)
 [![Build
 Status](https://github.com/rudeboybert/forestecology/workflows/R-CMD-check/badge.svg)](https://github.com/rudeboybert/forestecology/actions)
 [![Codecov test
@@ -34,11 +35,13 @@ evaluated using a spatial cross-validation scheme to detect possible
 overfitting. Additionally, these models can test whether the species
 identity of competitors matters using a permutation test-style shuffling
 of competitor identity (under the null hypothesis) and subsequently
-evaluating if model performance changes. See Allen and Kim (2020) [A
-permutation test and spatial cross-validation approach to assess models
-of interspecific competition between
-trees](https://doi.org/10.1371/journal.pone.0229930) for a full
-description.
+evaluating if model performance changes.
+
+See Kim et al. (2021) [The `forestecology` R package for fitting and
+assessing neighborhood models of the effect of interspecific competition
+on the growth of trees](http://doi.org/10.1002/ece3.8129) for a full
+description; the source code for this paper can be found in the `paper/`
+folder.
 
 ## Example analysis
 

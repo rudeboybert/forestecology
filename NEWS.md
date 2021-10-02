@@ -1,6 +1,6 @@
-# forestecology 0.1.0.9000: Development version
+# forestecology 0.2.0: Ecology and Evolution
 
-* Added Ecology & Evolution paper
+* Added Ecology & Evolution paper to `paper/` <https://doi.org/10.1002/ece3.8129>
 * Made choice of competitor explanatory variable more flexible by adding `create_focal_vs_comp(comp_x_var = ...)` argument.
 
 

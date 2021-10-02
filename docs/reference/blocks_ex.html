@@ -73,7 +73,7 @@ comp data frame and run cross-validated models" />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">forestecology</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -157,7 +157,13 @@ can be used to connect trees between the two censuses.</p></dd>
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://ggplot2.tidyverse.org'>ggplot2</a></span><span class='op'>)</span>
 <span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://r-spatial.github.io/sf/'>sf</a></span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Linking to GEOS 3.8.1, GDAL 3.1.4, PROJ 6.3.1</span></div><div class='input'>
+</div><div class='output co'>#&gt; <span class='message'>Linking to GEOS 3.8.1, GDAL 3.2.1, PROJ 7.2.1</span></div><div class='input'><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='va'><a href='https://dplyr.tidyverse.org'>dplyr</a></span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'></span>
+#&gt; <span class='message'>Attaching package: ‘dplyr’</span></div><div class='output co'>#&gt; <span class='message'>The following objects are masked from ‘package:stats’:</span>
+#&gt; <span class='message'></span>
+#&gt; <span class='message'>    filter, lag</span></div><div class='output co'>#&gt; <span class='message'>The following objects are masked from ‘package:base’:</span>
+#&gt; <span class='message'></span>
+#&gt; <span class='message'>    intersect, setdiff, setequal, union</span></div><div class='input'>
 <span class='va'>comp_dist</span> <span class='op'>&lt;-</span> <span class='fl'>1</span>
 
 <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggplot.html'>ggplot</a></span><span class='op'>(</span><span class='va'>blocks_ex</span><span class='op'>)</span> <span class='op'>+</span>
@@ -165,7 +171,8 @@ can be used to connect trees between the two censuses.</p></dd>
   <span class='fu'><a href='https://ggplot2.tidyverse.org/reference/ggsf.html'>geom_sf</a></span><span class='op'>(</span>data <span class='op'>=</span> <span class='va'>growth_spatial_ex</span><span class='op'>)</span>
 </div><div class='img'><img src='blocks_ex-1.png' alt='' width='700' height='433' /></div><div class='input'>
 <span class='va'>focal_vs_comp_ex</span> <span class='op'>&lt;-</span> <span class='va'>growth_spatial_ex</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='create_focal_vs_comp.html'>create_focal_vs_comp</a></span><span class='op'>(</span><span class='va'>comp_dist</span>, blocks <span class='op'>=</span> <span class='va'>blocks_ex</span>, id <span class='op'>=</span> <span class='st'>"ID"</span><span class='op'>)</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>basal_area <span class='op'>=</span> <span class='fl'>0.0001</span> <span class='op'>*</span> <span class='va'>pi</span> <span class='op'>*</span> <span class='op'>(</span><span class='va'>dbh1</span> <span class='op'>/</span> <span class='fl'>2</span><span class='op'>)</span><span class='op'>^</span><span class='fl'>2</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='create_focal_vs_comp.html'>create_focal_vs_comp</a></span><span class='op'>(</span><span class='va'>comp_dist</span>, blocks <span class='op'>=</span> <span class='va'>blocks_ex</span>, id <span class='op'>=</span> <span class='st'>"ID"</span>, comp_x_var <span class='op'>=</span> <span class='st'>"basal_area"</span><span class='op'>)</span>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

@@ -5,6 +5,7 @@
 ^CODE_OF_CONDUCT\.md$
 ^data-raw$
 ^cran-comments\.md$
+CITATION.cff
 
 ^README\.Rmd$
 ^README\.md$

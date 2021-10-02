@@ -73,7 +73,7 @@ has been updated with spatial data. It starts from growth_ex." />
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">forestecology</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -180,7 +180,8 @@ this stands for resprout.</p></dd>
 </div><div class='img'><img src='growth_spatial_ex-2.png' alt='' width='700' height='433' /></div><div class='input'>
 <span class='co'># Create the focal versus comp data frame</span>
 <span class='va'>focal_vs_comp_ex</span> <span class='op'>&lt;-</span> <span class='va'>growth_spatial_ex</span> <span class='op'>%&gt;%</span>
-  <span class='fu'><a href='create_focal_vs_comp.html'>create_focal_vs_comp</a></span><span class='op'>(</span><span class='va'>comp_dist</span>, blocks <span class='op'>=</span> <span class='va'>blocks_ex</span>, id <span class='op'>=</span> <span class='st'>"ID"</span><span class='op'>)</span>
+  <span class='fu'><a href='https://dplyr.tidyverse.org/reference/mutate.html'>mutate</a></span><span class='op'>(</span>basal_area <span class='op'>=</span> <span class='fl'>0.0001</span> <span class='op'>*</span> <span class='va'>pi</span> <span class='op'>*</span> <span class='op'>(</span><span class='va'>dbh1</span> <span class='op'>/</span> <span class='fl'>2</span><span class='op'>)</span><span class='op'>^</span><span class='fl'>2</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
+  <span class='fu'><a href='create_focal_vs_comp.html'>create_focal_vs_comp</a></span><span class='op'>(</span><span class='va'>comp_dist</span>, blocks <span class='op'>=</span> <span class='va'>blocks_ex</span>, id <span class='op'>=</span> <span class='st'>"ID"</span>, comp_x_var <span class='op'>=</span> <span class='st'>"basal_area"</span><span class='op'>)</span>
 </div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

@@ -1,7 +1,7 @@
 Package: forestecology
 Type: Package
-Title: Methods and Data for Forest Ecology Model Fitting and Assessment
-Version: 0.1.0.9000
+Title: Fitting and Assessing Neighborhood Models of the Effect of Interspecific Competition on the Growth of Trees
+Version: 0.2.0
 Authors@R: c(
     person(given = "Albert Y.", family = "Kim", email = "albert.ys.kim@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0001-7824-306X")),
     person(given = "David", family = "Allen", email = "dallen@middlebury.edu", role = "aut", comment = c(ORCID = "0000-0002-0712-9603")),
@@ -36,7 +36,6 @@ Imports:
     stringr,
     dplyr,
     tidyr,
-    proxy,
     purrr,
     ggridges,
     mvnfast,

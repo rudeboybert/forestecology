@@ -83,7 +83,7 @@ individuals were tagged. This data frame has data from the third census
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">forestecology</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.1.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.2.0</span>
       </span>
     </div>
 
@@ -215,20 +215,20 @@ forest research sites. For complete details on this dataset see its
   <span class='fu'><a href='https://dplyr.tidyverse.org/reference/group_by.html'>group_by</a></span><span class='op'>(</span><span class='va'>sp_2008</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'><a href='https://dplyr.tidyverse.org/reference/summarise.html'>summarize</a></span><span class='op'>(</span>mortality <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/mean.html'>mean</a></span><span class='op'>(</span><span class='va'>mortality</span><span class='op'>)</span>, n <span class='op'>=</span> <span class='fu'><a href='https://dplyr.tidyverse.org/reference/context.html'>n</a></span><span class='op'>(</span><span class='op'>)</span><span class='op'>)</span> <span class='op'>%&gt;%</span>
   <span class='fu'><a href='https://dplyr.tidyverse.org/reference/arrange.html'>arrange</a></span><span class='op'>(</span><span class='fu'><a href='https://dplyr.tidyverse.org/reference/desc.html'>desc</a></span><span class='op'>(</span><span class='va'>n</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 36 x 3</span><span>
+</div><div class='output co'>#&gt; <span style='color: #949494;'># A tibble: 36 × 3</span>
 #&gt;    sp_2008              mortality     n
-#&gt;    </span><span style='color: #949494;font-style: italic;'>&lt;chr&gt;</span><span>                    </span><span style='color: #949494;font-style: italic;'>&lt;dbl&gt;</span><span> </span><span style='color: #949494;font-style: italic;'>&lt;int&gt;</span><span>
-#&gt; </span><span style='color: #BCBCBC;'> 1</span><span> black_cherry            0.203   </span><span style='text-decoration: underline;'>9</span><span>079
-#&gt; </span><span style='color: #BCBCBC;'> 2</span><span> red_maple               0.112   </span><span style='text-decoration: underline;'>5</span><span>958
-#&gt; </span><span style='color: #BCBCBC;'> 3</span><span> witch_hazel             0.239   </span><span style='text-decoration: underline;'>3</span><span>481
-#&gt; </span><span style='color: #BCBCBC;'> 4</span><span> serviceberry            0.122   </span><span style='text-decoration: underline;'>1</span><span>506
-#&gt; </span><span style='color: #BCBCBC;'> 5</span><span> white_oak               0.077</span><span style='text-decoration: underline;'>1</span><span>  </span><span style='text-decoration: underline;'>1</span><span>180
-#&gt; </span><span style='color: #BCBCBC;'> 6</span><span> black_oak               0.203   </span><span style='text-decoration: underline;'>1</span><span>171
-#&gt; </span><span style='color: #BCBCBC;'> 7</span><span> pignut_hickory          0.034</span><span style='text-decoration: underline;'>6</span><span>  </span><span style='text-decoration: underline;'>1</span><span>128
-#&gt; </span><span style='color: #BCBCBC;'> 8</span><span> sassafras               0.316    735
-#&gt; </span><span style='color: #BCBCBC;'> 9</span><span> american_elm            0.088</span><span style='text-decoration: underline;'>0</span><span>   591
-#&gt; </span><span style='color: #BCBCBC;'>10</span><span> black_red_oak_hybrid    0        536
-#&gt; </span><span style='color: #949494;'># … with 26 more rows</span><span></div></span></pre>
+#&gt;    <span style='color: #949494; font-style: italic;'>&lt;chr&gt;</span>                    <span style='color: #949494; font-style: italic;'>&lt;dbl&gt;</span> <span style='color: #949494; font-style: italic;'>&lt;int&gt;</span>
+#&gt; <span style='color: #BCBCBC;'> 1</span> black_cherry            0.203   <span style='text-decoration: underline;'>9</span>079
+#&gt; <span style='color: #BCBCBC;'> 2</span> red_maple               0.112   <span style='text-decoration: underline;'>5</span>958
+#&gt; <span style='color: #BCBCBC;'> 3</span> witch_hazel             0.239   <span style='text-decoration: underline;'>3</span>481
+#&gt; <span style='color: #BCBCBC;'> 4</span> serviceberry            0.122   <span style='text-decoration: underline;'>1</span>506
+#&gt; <span style='color: #BCBCBC;'> 5</span> white_oak               0.077<span style='text-decoration: underline;'>1</span>  <span style='text-decoration: underline;'>1</span>180
+#&gt; <span style='color: #BCBCBC;'> 6</span> black_oak               0.203   <span style='text-decoration: underline;'>1</span>171
+#&gt; <span style='color: #BCBCBC;'> 7</span> pignut_hickory          0.034<span style='text-decoration: underline;'>6</span>  <span style='text-decoration: underline;'>1</span>128
+#&gt; <span style='color: #BCBCBC;'> 8</span> sassafras               0.316    735
+#&gt; <span style='color: #BCBCBC;'> 9</span> american_elm            0.088<span style='text-decoration: underline;'>0</span>   591
+#&gt; <span style='color: #BCBCBC;'>10</span> black_red_oak_hybrid    0        536
+#&gt; <span style='color: #949494;'># … with 26 more rows</span></div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
