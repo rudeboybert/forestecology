@@ -10,3 +10,4 @@
 *.aux
 *.blg
 inst/doc
+~$*.docx
