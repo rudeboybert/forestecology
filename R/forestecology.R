@@ -5,9 +5,8 @@
 #' See the README on
 #' \href{https://github.com/rudeboybert/forestecology#readme}{GitHub}
 #'
-#' @docType package
 #' @name forestecology
-NULL
+"_PACKAGE"
 
 
 

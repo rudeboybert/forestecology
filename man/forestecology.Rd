@@ -2,6 +2,7 @@
 % Please edit documentation in R/forestecology.R
 \docType{package}
 \name{forestecology}
+\alias{forestecology-package}
 \alias{forestecology}
 \title{\code{forestecology} package}
 \description{
@@ -10,4 +11,22 @@ Methods and data for forest ecology model selection and assessment
 \details{
 See the README on
 \href{https://github.com/rudeboybert/forestecology#readme}{GitHub}
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/rudeboybert/forestecology}
+  \item Report bugs at \url{https://github.com/rudeboybert/forestecology/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Albert Y. Kim \email{albert.ys.kim@gmail.com} (\href{https://orcid.org/0000-0001-7824-306X}{ORCID})
+
+Authors:
+\itemize{
+  \item David Allen \email{dallen@middlebury.edu} (\href{https://orcid.org/0000-0002-0712-9603}{ORCID})
+  \item Simon Couch \email{simonpatrickcouch@gmail.com} (\href{https://orcid.org/0000-0001-5676-5107}{ORCID})
+}
+
 }

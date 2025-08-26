@@ -145,7 +145,7 @@
 #'
 #' @source For more information on trait clustering see Allen and Kim 2020 "A permutation
 #' test and spatial cross-validation approach to assess models of interspecific competition
-#' between trees." \doi{10.1371/journal.pone.0229930}{PLOS One 15: e0229930}.
+#' between trees." \doi{10.1371/journal.pone.0229930}.
 #'
 #' @family Big Woods data
 #' @family example data objects
