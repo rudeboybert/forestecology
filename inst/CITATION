@@ -1,15 +1,12 @@
-citHeader("To cite forestecology in publications, please use:")
-
-citEntry(
-    entry = "Article",
-    author = personList(as.person("Albert Y. Kim"), as.person("David N. Allen"), as.person("Simon P. Couch")),
-    title = "The forestecology R package for fitting and assessing neighborhood models of the effect of interspecific competition on the growth of trees",
-    journal = "Ecology and Evolution",
-    year = 2021,
-    volume = 00,
-    pages = "1-17",
-    url = "https://doi.org/10.1002/ece3.8129",
-    textVersion = paste("Kim, A. Y., Allen, D. N., & Couch, S. P. (2021)",
-        "The forestecology R package for fitting and assessing neighborhood models of the effect of interspecific competition on the growth of trees.",
-        "Ecology and Evolution, 00, 1– 17. https://doi.org/10.1002/ece3.8129")
-        )
+bibentry(
+  bibtype = "Article",
+  textVersion = "A.Y. Kim and D.N. Allen and S.P. Couch. The forestecology R package for fitting and assessing neighborhood models of the effect of interspecific competition on the growth of trees. Ecology and Evolution (2021).",
+  header = "To cite forestecology in publications, please use",
+  author = "Albert Y. Kim and David N. Allen and Simon P. Couch",
+  title = "The forestecology R package for fitting and assessing neighborhood models of the effect of interspecific competition on the growth of trees",
+  journal = "Ecology and Evolution",
+  year = "2021",
+  volume = 00,
+  pages = "1-17",
+  url = "https://doi.org/10.1002/ece3.8129",
+)
