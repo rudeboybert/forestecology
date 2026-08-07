@@ -39,7 +39,7 @@ families <- "data-raw/species_list.csv" %>%
   select(spcode, family, trait_group)
 
 species_bw <-
-  "https://deepblue.lib.umich.edu/data/downloads/000000086" %>%
+  "data-raw/species.txt" %>%
   read_delim(delim = "\t") %>%
   # convert all to snake case:
   mutate_at(c("species", "genus", "family", "idlevel", "spcode"), to_any_case) %>%
@@ -54,7 +54,7 @@ use_data(species_bw, overwrite = TRUE)
 
 # Import census data
 census_2008_bw <-
-  "https://deepblue.lib.umich.edu/data/downloads/z603qx485" %>%
+  "data-raw/2008census_cortag_gxy.txt" %>%
   read_delim(delim = "\t") %>%
   mutate(spcode = to_any_case(spcode)) %>%
   select(
@@ -64,7 +64,7 @@ census_2008_bw <-
 use_data(census_2008_bw, overwrite = TRUE)
 
 census_2014_bw <-
-  "https://deepblue.lib.umich.edu/data/downloads/1831ck00f" %>%
+  "data-raw/2014census_cortag_gxy.txt" %>%
   read_delim(delim = "\t") %>%
   mutate(spcode = to_any_case(spcode)) %>%
   select(
@@ -119,7 +119,7 @@ growth_ex <-
     census_2 = census_2_ex %>% filter(!str_detect(codes, "R")),
     id = "ID"
   ) %>%
-  mutate(sp = to_any_case(sp) %>% factor())
+  mutate(sp = to_any_case(as.character(sp)) %>% factor())
 use_data(growth_ex, overwrite = TRUE)
 
 
@@ -136,22 +136,25 @@ blocks <- bind_rows(
 ) %>%
   mutate(foldID = c(1, 2))
 
-SpatialBlock_ex <- spatialBlock(
-  speciesData = growth_ex,
+SpatialBlock_ex <- blockCV::cv_spatial(
+  x = growth_ex,
   k = 2,
   selection = "systematic",
-  blocks = blocks,
-  verbose = FALSE
+  user_blocks = blocks,
+  plot = FALSE,
+  report = FALSE
 )
+
 
 # Add foldID to data
 growth_spatial_ex <- growth_spatial_ex %>%
-  mutate(foldID = SpatialBlock_ex$foldID %>% as.factor())
+  mutate(foldID = factor(SpatialBlock_ex$folds_ids))
 use_data(growth_spatial_ex, overwrite = TRUE)
 
 
 ## Create spatial objects ----
 blocks_ex <- SpatialBlock_ex$blocks %>%
+  rename(foldID = block_id) %>%
   st_as_sf()
 use_data(blocks_ex, overwrite = TRUE)
 

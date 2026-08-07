@@ -145,13 +145,17 @@ blocks_ex <- bind_rows(
 Next we assign each tree to the correct folds using the `foldID` variable of the output returned by the `spatialBlock()` function from the [`blockCV`](https://github.com/rvalavi/blockCV) package.
 
 ```{r}
-SpatialBlock_ex <- blockCV::spatialBlock(
-  speciesData = growth_ex, k = 2, selection = "systematic", blocks = blocks_ex,
-  showBlocks = FALSE, verbose = FALSE
+SpatialBlock_ex <- blockCV::cv_spatial(
+  x = growth_ex,
+  k = 2,
+  selection = "systematic",
+  user_blocks = blocks_ex,
+  plot = FALSE,
+  report = FALSE
 )
 
 growth_ex <- growth_ex %>%
-  mutate(foldID = SpatialBlock_ex$foldID %>% factor())
+  mutate(foldID = factor(SpatialBlock_ex$folds_ids))
 ```
 
 In the visualization below, the spatial blocks that act as our cross-validation folds are delineated in orange. The shape of each point indicates which fold each tree has been assigned to. 

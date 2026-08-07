@@ -54,8 +54,6 @@ package where we will:
 4.  Fit model and make predictions
 5.  Run spatial cross-validation
 
-<!-- end list -->
-
 ``` r
 library(tidyverse)
 library(forestecology)
@@ -100,7 +98,7 @@ ggplot() +
   )
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" alt="" width="100%" />
 
 We first combine data from two repeat censuses into a single `growth`
 data frame that has the average annual growth of all trees alive at both
@@ -144,10 +142,9 @@ buffer_region <- study_region_ex %>%
 In the visualization below, the solid line represents the boundary of
 the study region while the dashed line delimits the buffer region
 within. All trees outside this buffer region (in red) will be our
-“focal” trees of interest in our model since we have complete
-competitor information on all of them. All trees inside this buffer
-region (in blue) will only be considered as “competitor” trees to
-“focal” trees.
+“focal” trees of interest in our model since we have complete competitor
+information on all of them. All trees inside this buffer region (in
+blue) will only be considered as “competitor” trees to “focal” trees.
 
 ``` r
 base_plot <- ggplot() +
@@ -158,7 +155,7 @@ base_plot +
   geom_sf(data = growth_ex, aes(col = buffer), size = 2)
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" alt="" width="100%" />
 
 Next we add information pertaining to our spatial cross-validation
 scheme. We first manually define the spatial blocks that will act as our
@@ -181,13 +178,17 @@ variable of the output returned by the `spatialBlock()` function from
 the [`blockCV`](https://github.com/rvalavi/blockCV) package.
 
 ``` r
-SpatialBlock_ex <- blockCV::spatialBlock(
-  speciesData = growth_ex, k = 2, selection = "systematic", blocks = blocks_ex,
-  showBlocks = FALSE, verbose = FALSE
+SpatialBlock_ex <- blockCV::cv_spatial(
+  x = growth_ex,
+  k = 2,
+  selection = "systematic",
+  user_blocks = blocks_ex,
+  plot = FALSE,
+  report = FALSE
 )
 
 growth_ex <- growth_ex %>%
-  mutate(foldID = SpatialBlock_ex$foldID %>% factor())
+  mutate(foldID = factor(SpatialBlock_ex$folds_ids))
 ```
 
 In the visualization below, the spatial blocks that act as our
@@ -200,7 +201,7 @@ base_plot +
   geom_sf(data = blocks_ex, fill = "transparent", col = "orange")
 ```
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" alt="" width="100%" />
 
 ### Compute focal versus competitor tree information
 
@@ -220,7 +221,7 @@ focal_vs_comp_ex
 #>   focal_ID focal_sp         dbh foldID    geometry growth comp            
 #>      <dbl> <fct>          <dbl> <fct>      <POINT>  <dbl> <list>          
 #> 1        2 american_beech    20 1        (1.5 2.5)  0.800 <tibble [2 × 4]>
-#> 2        3 sugar_maple       15 1      (1.75 2.25)  1.00  <tibble [1 × 4]>
+#> 2        3 sugar_maple       15 1      (1.75 2.25)  1.000 <tibble [1 × 4]>
 #> 3        4 american_beech    12 1          (3 1.5)  0.400 <tibble [1 × 4]>
 #> 4        5 sugar_maple       35 1      (3.25 1.75)  1.40  <tibble [1 × 4]>
 #> 5        7 sugar_maple       22 2          (8 1.5)  0.600 <tibble [3 × 4]>
@@ -236,20 +237,20 @@ distance from it.
 focal_vs_comp_ex %>% 
   unnest(cols = "comp")
 #> # A tibble: 11 × 10
-#>    focal_ID focal_sp         dbh foldID    geometry growth comp_ID  dist
-#>       <dbl> <fct>          <dbl> <fct>      <POINT>  <dbl>   <dbl> <dbl>
-#>  1        2 american_beech    20 1        (1.5 2.5)  0.800       1 0.75 
-#>  2        2 american_beech    20 1        (1.5 2.5)  0.800       3 0.354
-#>  3        3 sugar_maple       15 1      (1.75 2.25)  1.00        2 0.354
-#>  4        4 american_beech    12 1          (3 1.5)  0.400       5 0.354
-#>  5        5 sugar_maple       35 1      (3.25 1.75)  1.40        4 0.354
-#>  6        7 sugar_maple       22 2          (8 1.5)  0.600       8 0.901
-#>  7        7 sugar_maple       22 2          (8 1.5)  0.600       9 0.75 
-#>  8        7 sugar_maple       22 2          (8 1.5)  0.600      10 0.791
-#>  9        9 sugar_maple       42 2       (8.75 1.5)  1.40        7 0.75 
-#> 10        9 sugar_maple       42 2       (8.75 1.5)  1.40        8 0.791
-#> 11        9 sugar_maple       42 2       (8.75 1.5)  1.40       10 0.25 
-#> # … with 2 more variables: comp_sp <fct>, comp_x_var <dbl>
+#>    focal_ID focal_sp   dbh foldID    geometry growth comp_ID  dist
+#>       <dbl> <fct>    <dbl> <fct>      <POINT>  <dbl>   <dbl> <dbl>
+#>  1        2 america…    20 1        (1.5 2.5)  0.800       1 0.75 
+#>  2        2 america…    20 1        (1.5 2.5)  0.800       3 0.354
+#>  3        3 sugar_m…    15 1      (1.75 2.25)  1.000       2 0.354
+#>  4        4 america…    12 1          (3 1.5)  0.400       5 0.354
+#>  5        5 sugar_m…    35 1      (3.25 1.75)  1.40        4 0.354
+#>  6        7 sugar_m…    22 2          (8 1.5)  0.600       8 0.901
+#>  7        7 sugar_m…    22 2          (8 1.5)  0.600       9 0.75 
+#>  8        7 sugar_m…    22 2          (8 1.5)  0.600      10 0.791
+#>  9        9 sugar_m…    42 2       (8.75 1.5)  1.40        7 0.75 
+#> 10        9 sugar_m…    42 2       (8.75 1.5)  1.40        8 0.791
+#> 11        9 sugar_m…    42 2       (8.75 1.5)  1.40       10 0.25 
+#> # ℹ 2 more variables: comp_sp <fct>, comp_x_var <dbl>
 ```
 
 ### Fit model and make predictions
@@ -290,7 +291,7 @@ p3 <- autoplot(comp_bayes_lm_ex, type = "competition")
 (p1 | p2) / p3
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" alt="" width="100%" />
 
 Furthermore, we can apply a `predict()` method to the resulting
 `comp_bayes_lm` object to obtain fitted/predicted values of this model.
@@ -304,12 +305,12 @@ focal_vs_comp_ex
 #>   focal_ID focal_sp         dbh foldID    geometry growth comp            
 #>      <dbl> <fct>          <dbl> <fct>      <POINT>  <dbl> <list>          
 #> 1        2 american_beech    20 1        (1.5 2.5)  0.800 <tibble [2 × 4]>
-#> 2        3 sugar_maple       15 1      (1.75 2.25)  1.00  <tibble [1 × 4]>
+#> 2        3 sugar_maple       15 1      (1.75 2.25)  1.000 <tibble [1 × 4]>
 #> 3        4 american_beech    12 1          (3 1.5)  0.400 <tibble [1 × 4]>
 #> 4        5 sugar_maple       35 1      (3.25 1.75)  1.40  <tibble [1 × 4]>
 #> 5        7 sugar_maple       22 2          (8 1.5)  0.600 <tibble [3 × 4]>
 #> 6        9 sugar_maple       42 2       (8.75 1.5)  1.40  <tibble [3 × 4]>
-#> # … with 1 more variable: growth_hat <dbl>
+#> # ℹ 1 more variable: growth_hat <dbl>
 ```
 
 We then compute the root mean squared error (RMSE) of the observed
