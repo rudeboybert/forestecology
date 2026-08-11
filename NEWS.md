@@ -1,6 +1,7 @@
-# forestecology 0.2.1.9000
+# forestecology 0.2.2
 
--   
+-   Replaced deprecated `blockCV::spatialBlock()` with `blockCV::cv_spatial()` for compatibility with blockCV 4.0.
+-   Included Big Woods data directly because Deep Blue Data was blocking R/curl.
 
 # forestecology 0.2.1: Minor updates
 

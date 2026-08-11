@@ -1,0 +1,47 @@
+species	genus	family	idlevel	spcode
+rubrum	Acer	Sapindaceae	species	red maple
+saccharum	Acer	Sapindaceae	species	sugar maple
+canadensis	Sambucus	Adoxaceae	species	elderberry
+sp1	Rhus	Anacardiaceae	genus	rhus
+verticillata	Ilex	Aquifoliaceae	species	winterberry
+alleghaniensis	Betula	Betulaceae	species	yellow birch
+caroliniana	Carpinus	Betulaceae	species	musclewood
+americana	Corylus	Betulaceae	species	hazelnut
+virginiana	Ostrya	Betulaceae	species	hophornbeam
+sp1	Lonicera	Caprifoliaceae	genus	honeysuckle
+florida	Cornus	Cornaceae	species	flowering dogwood
+alternifolia	Cornus	Cornaceae	species	alternate-leaf dogwood
+racemosa	Cornus	Cornaceae	species	gray dogwood
+amomum	Cornus	Cornaceae	species	silky dogwood
+virginiana	Juniperus	Cupressaceae	species	eastern red cedar
+communis	Juniperus	Cupressaceae	species	juniper
+occidentalis	Thuja	Cupressaceae	species	northern white cedar
+umbellata	Elaeagnus	Elaeagnaceae	species	autumn olive
+corymbosum	Vaccinium	Ericaceae	species	highbush blueberry
+pseudoacacia	Robinia	Fabaceae	species	black locust
+grandifolia	Fagus	Fagaceae	species	american beech
+velutina	Quercus	Fagaceae	species	black oak
+rubra	Quercus	Fagaceae	species	red oak
+x hawkinsiae	Quercus	Fagaceae	species	black/red oak hybrid
+x palaeolithicola	Quercus	Fagaceae	species	black/northern pin hybrid
+alba	Quercus	Fagaceae	species	white oak
+cynosbati	Ribes	grossulariaceae	species	prickly gooseberry
+virginiana	Hamamelis	Hamamelidaceae	species	witch hazel
+cordiformis	Carya	Juglandaceae	species	bitternut hickory
+glabra	Carya	Juglandaceae	species	pignut hickory
+ovata	Carya	Juglandaceae	species	shagbark hickory
+nigra	Juglans	Juglandaceae	species	black walnut
+benzoin	Lindera	Lauraceae	species	spicebush
+albidum	Sassafras	Lauraceae	species	sassafras
+americana	Fraxinus	Oleaceae	species	white ash
+arborea	Amelanchier	Rosaceae	species	serviceberry
+sp1	Crataegus	Rosaceae	genus	hawthorn
+sp1	Malus	Rosaceae	genus	apple
+serotina	Prunus	Rosaceae	species	black cherry
+virginiana	Prunus	Rosaceae	species	choke cherry
+sp1	Pyrus	Rosaceae	genus	pear
+americanum	Zanthoxylum	Rutaceae	species	prickly ash
+grandidentata	Populus	Salicaceae	species	big tooth aspen
+altissima	Ailanthus	Simaroubaceae	species	tree of heaven
+americana	Tilia	Tiliaceae	species	american basswood
+americana	Ulmus	Ulmaceae	species	american elm
