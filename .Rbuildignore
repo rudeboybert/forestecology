@@ -16,3 +16,4 @@ CITATION.cff
 ^docs$
 ^CRAN-RELEASE$
 ^codecov\.yml$
+^CRAN-SUBMISSION$

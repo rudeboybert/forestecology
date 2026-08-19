@@ -1,3 +1,7 @@
+# forestecology 0.2.2.9000
+
+-   
+
 # forestecology 0.2.2
 
 -   Replaced deprecated `blockCV::spatialBlock()` with `blockCV::cv_spatial()` for compatibility with blockCV 4.0.
