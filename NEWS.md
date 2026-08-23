@@ -1,8 +1,7 @@
 # forestecology 0.2.3
 
-# forestecology 0.2.2.9000
-
--   
+-   Replaced missed `blockCV::spatialBlock()` in test-readme. 
+-   Removed non-standard etc/ directory and leftover log file from the package build.
 
 # forestecology 0.2.2
 
