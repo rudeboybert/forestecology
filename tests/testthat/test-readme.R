@@ -1,5 +1,3 @@
-context("utilities")
-
 test_that("readme code works", {
   set.seed(76)
 
@@ -39,13 +37,17 @@ test_that("readme code works", {
   ) %>%
     mutate(folds = c(1, 2) %>% factor())
 
-  SpatialBlock_ex <- spatialBlock(
-    speciesData = growth_ex, k = 2, selection = "systematic", blocks = blocks_ex,
-    showBlocks = FALSE, verbose = FALSE
+  SpatialBlock_ex <- blockCV::cv_spatial(
+    x = growth_ex,
+    k = 2,
+    selection = "systematic",
+    user_blocks = blocks_ex,
+    plot = FALSE,
+    report = FALSE
   )
 
   growth_ex <- growth_ex %>%
-    mutate(foldID = SpatialBlock_ex$foldID %>% factor())
+    mutate(foldID = factor(SpatialBlock_ex$folds_ids))
 
   focal_vs_comp_ex <- growth_ex %>%
     create_focal_vs_comp(comp_dist, blocks = blocks_ex, id = "ID", comp_x_var = "basal_area")
