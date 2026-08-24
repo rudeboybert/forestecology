@@ -68,13 +68,13 @@ blocks_scbi <- bind_rows(
   mutate(folds = c(1:n_fold) %>% factor())
 
 # Associate each observation to a fold
-SpatialBlock_scbi <- spatialBlock(
-  speciesData = growth_scbi, k = n_fold, selection = "systematic",
-  blocks = blocks_scbi, showBlocks = FALSE, verbose = FALSE
+SpatialBlock_scbi <- cv_spatial(
+  x = growth_scbi, k = n_fold, selection = "systematic",
+  user_blocks = blocks_scbi, plot = FALSE
 )
 
 growth_scbi <- growth_scbi %>%
-  mutate(foldID = SpatialBlock_scbi$foldID %>% factor())
+  mutate(foldID = SpatialBlock_scbi$folds_ids %>% factor())
 
 # Compute focal versus competitor tree information ---------------------
 focal_vs_comp_scbi <- growth_scbi %>%

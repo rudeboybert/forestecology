@@ -208,7 +208,7 @@ create_focal_vs_comp <- function(growth_df, comp_dist, blocks, id, comp_x_var) {
     # Identify trees that satisfy competitor tree criteria
     filter(dbh1 > 0) %>%
     mutate(comp_ID = .data[[id]]) %>%
-    select(comp_ID, foldID, comp_sp = sp, comp_x_var = .data[[comp_x_var]])
+    select(comp_ID, foldID, comp_sp = sp, comp_x_var = all_of(comp_x_var))
 
 
   # 3. For each focal tree, identify all candidate competitor trees that are

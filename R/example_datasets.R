@@ -156,17 +156,16 @@
 #' ) %>%
 #'   mutate(foldID = c(1, 2))
 #'
-#' SpatialBlock_ex <- spatialBlock(
-#'   speciesData = growth_ex,
-#'   verbose = FALSE,
+#' SpatialBlock_ex <- cv_spatial(
+#'   x = growth_ex,
 #'   k = 2,
 #'   selection = "systematic",
-#'   blocks = blocks
+#'   user_blocks = blocks
 #' )
 #'
 #' # Add foldID to data
 #' growth_spatial_ex <- growth_spatial_ex %>%
-#'   mutate(foldID = SpatialBlock_ex$foldID %>% as.factor())
+#'   mutate(foldID = SpatialBlock_ex$folds_ids %>% as.factor())
 "growth_ex"
 
 

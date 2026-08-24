@@ -1,6 +1,6 @@
 # Resubmission
 
-With blockCV being resubmitted and back on CRAN I am submitting this package as well.
+This fixes the CRAN package check errors for the recent v0.2.2 published on 2026-08-19: <https://cran.r-project.org/web/checks/check_results_forestecology.html>
 
 ## Test environments
 
@@ -8,7 +8,3 @@ With blockCV being resubmitted and back on CRAN I am submitting this package as 
 -   win-builder (release, devel, oldrel)
 
 ## R CMD check results
-
-NOTES:
-
--   Interspecific (4:9) flagged as spelling error, when it isn't

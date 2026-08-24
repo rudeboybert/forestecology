@@ -98,7 +98,7 @@ ggplot() +
   )
 ```
 
-<img src="man/figures/README-unnamed-chunk-5-1.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-5-1.png" width="100%" />
 
 We first combine data from two repeat censuses into a single `growth`
 data frame that has the average annual growth of all trees alive at both
@@ -155,7 +155,7 @@ base_plot +
   geom_sf(data = growth_ex, aes(col = buffer), size = 2)
 ```
 
-<img src="man/figures/README-unnamed-chunk-8-1.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-8-1.png" width="100%" />
 
 Next we add information pertaining to our spatial cross-validation
 scheme. We first manually define the spatial blocks that will act as our
@@ -174,8 +174,8 @@ blocks_ex <- bind_rows(
 ```
 
 Next we assign each tree to the correct folds using the `foldID`
-variable of the output returned by the `spatialBlock()` function from
-the [`blockCV`](https://github.com/rvalavi/blockCV) package.
+variable of the output returned by the `cv_spatial()` function from the
+[`blockCV`](https://github.com/rvalavi/blockCV) package.
 
 ``` r
 SpatialBlock_ex <- blockCV::cv_spatial(
@@ -201,7 +201,7 @@ base_plot +
   geom_sf(data = blocks_ex, fill = "transparent", col = "orange")
 ```
 
-<img src="man/figures/README-unnamed-chunk-11-1.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-11-1.png" width="100%" />
 
 ### Compute focal versus competitor tree information
 
@@ -291,7 +291,7 @@ p3 <- autoplot(comp_bayes_lm_ex, type = "competition")
 (p1 | p2) / p3
 ```
 
-<img src="man/figures/README-unnamed-chunk-15-1.png" alt="" width="100%" />
+<img src="man/figures/README-unnamed-chunk-15-1.png" width="100%" />
 
 Furthermore, we can apply a `predict()` method to the resulting
 `comp_bayes_lm` object to obtain fitted/predicted values of this model.

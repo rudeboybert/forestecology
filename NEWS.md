@@ -1,7 +1,9 @@
 # forestecology 0.2.3
 
--   Replaced missed `blockCV::spatialBlock()` in test-readme. 
+-   Replaced missed `blockCV::spatialBlock()` in test-readme.
 -   Removed non-standard etc/ directory and leftover log file from the package build.
+-   Replaced deprecated use of `.data[[]]` with `dplyr::all_of()`
+-   Updated `paper/` code to use `blockCV::cv_spatial()`
 
 # forestecology 0.2.2
 

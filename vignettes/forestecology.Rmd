@@ -24,18 +24,17 @@ set.seed(76)
 
 # Purpose
 
-This package is designed to work for spatially mapped, repeat censused forests plots. The package has commands to fit models of tree growth based on neighborhood competition which can be used to estimate species-specific competition coefficients. The model fits can then be evaluated using a spatial cross-validation scheme to detect possible overfitting. Additionally, these models can test whether the species identity of competitors matters using a permutation test-style shuffling of competitor identity (under the null hypothesis) and subsequently evaluating if model performance changes. See Allen and Kim (2020) [A permutation test and spatial cross-validation approach to assess models of interspecific competition between trees](https://doi.org/10.1371/journal.pone.0229930) for a full description.  
-
+This package is designed to work for spatially mapped, repeat censused forests plots. The package has commands to fit models of tree growth based on neighborhood competition which can be used to estimate species-specific competition coefficients. The model fits can then be evaluated using a spatial cross-validation scheme to detect possible overfitting. Additionally, these models can test whether the species identity of competitors matters using a permutation test-style shuffling of competitor identity (under the null hypothesis) and subsequently evaluating if model performance changes. See Allen and Kim (2020) [A permutation test and spatial cross-validation approach to assess models of interspecific competition between trees](https://doi.org/10.1371/journal.pone.0229930) for a full description.
 
 # Example analysis
 
 We present an example analysis using toy data pre-loaded into the package where we will:
 
-1. Compute growth of trees based on census data
-1. Add spatial information
-1. Identify all focal and corresponding competitor trees
-1. Fit model and make predictions
-1. Run spatial cross-validation
+1.  Compute growth of trees based on census data
+2.  Add spatial information
+3.  Identify all focal and corresponding competitor trees
+4.  Fit model and make predictions
+5.  Run spatial cross-validation
 
 ```{r}
 library(ggplot2)
@@ -58,7 +57,7 @@ The starting point of our analysis are data from two repeat censuses `census_1_e
 census_1_ex
 ```
 
-We convert the `census_1_ex` data frame to an object of type `sf` and then plot using `geom_sf()`. 
+We convert the `census_1_ex` data frame to an object of type `sf` and then plot using `geom_sf()`.
 
 ```{r}
 ggplot() +
@@ -125,19 +124,19 @@ blocks_ex <- bind_rows(
   mutate(folds = c(1, 2) %>% factor())
 ```
 
-Next we assign each tree to the correct folds using the `foldID` variable of the output returned by the `spatialBlock()` function from the [`blockCV`](https://github.com/rvalavi/blockCV) package.
+Next we assign each tree to the correct folds using the `foldID` variable of the output returned by the `cv_spatial()` function from the [`blockCV`](https://github.com/rvalavi/blockCV) package.
 
 ```{r}
-SpatialBlock_ex <- blockCV::spatialBlock(
-  speciesData = growth_ex, k = 2, selection = "systematic", blocks = blocks_ex,
-  showBlocks = FALSE, verbose = FALSE
+SpatialBlock_ex <- blockCV::cv_spatial(
+  x = growth_ex, k = 2, selection = "systematic", user_blocks = blocks_ex,
+  plot = FALSE, report = FALSE
 )
 
 growth_ex <- growth_ex %>%
-  mutate(foldID = SpatialBlock_ex$foldID %>% factor())
+  mutate(foldID = SpatialBlock_ex$folds_ids %>% factor())
 ```
 
-In the visualization below, the spatial blocks that act as our cross-validation folds are delineated in orange. The shape of each point indicates which fold each tree has been assigned to. 
+In the visualization below, the spatial blocks that act as our cross-validation folds are delineated in orange. The shape of each point indicates which fold each tree has been assigned to.
 
 ```{r}
 base_plot + 
@@ -147,7 +146,7 @@ base_plot +
 
 ## Compute focal versus competitor tree information
 
-Based on our `growth` data frame, we now explicitly define all "focal" trees and their respective "competitor" trees in a `focal_vs_comp` data frame. This data frame has rows corresponding to each focal tree, and all information about its competitors are saved in the list-column variable `comp`. We implemented this nested format using `nest()` in order to minimize redundancy, given that the same tree can act as a competitor multiple times. 
+Based on our `growth` data frame, we now explicitly define all "focal" trees and their respective "competitor" trees in a `focal_vs_comp` data frame. This data frame has rows corresponding to each focal tree, and all information about its competitors are saved in the list-column variable `comp`. We implemented this nested format using `nest()` in order to minimize redundancy, given that the same tree can act as a competitor multiple times.
 
 ```{r}
 focal_vs_comp_ex <- growth_ex %>%
@@ -155,7 +154,7 @@ focal_vs_comp_ex <- growth_ex %>%
 focal_vs_comp_ex
 ```
 
-Using `unnest()` we can fully expand the competitor information saved in the `focal_vs_comp` data frame. For example, the tree with `focal_ID` equal to 2 located at (1.5, 2.5) has two competitors within `comp_dist` distance from it.  
+Using `unnest()` we can fully expand the competitor information saved in the `focal_vs_comp` data frame. For example, the tree with `focal_ID` equal to 2 located at (1.5, 2.5) has two competitors within `comp_dist` distance from it.
 
 ```{r}
 focal_vs_comp_ex %>% 
@@ -202,7 +201,7 @@ focal_vs_comp_ex %>%
 
 ## Run spatial cross-validation
 
-Whereas in our example above we fit our model to the entirety of the data and then generate fitted/predicted growths on this same data, we now apply the same model with spatial cross-validation. All the trees in a given fold will be given a turn as the "test" data while the trees in all remaining folds will be the "training" data. We then fit the model to the training data, but compute fitted/predicted growths for the separate and independent data. 
+Whereas in our example above we fit our model to the entirety of the data and then generate fitted/predicted growths on this same data, we now apply the same model with spatial cross-validation. All the trees in a given fold will be given a turn as the "test" data while the trees in all remaining folds will be the "training" data. We then fit the model to the training data, but compute fitted/predicted growths for the separate and independent data.
 
 ```{r}
 focal_vs_comp_ex <- focal_vs_comp_ex %>%
@@ -216,4 +215,3 @@ focal_vs_comp_ex %>%
   rmse(truth = growth, estimate = growth_hat) %>%
   pull(.estimate)
 ```
-

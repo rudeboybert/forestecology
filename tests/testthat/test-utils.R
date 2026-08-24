@@ -1,5 +1,3 @@
-context("utilities")
-
 test_that("prompts work", {
   yall <- "y'all"
 
